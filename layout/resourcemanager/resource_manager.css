@@ -1,0 +1,979 @@
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * CSS  for layout-resource component ONLY
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-resource-manager {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.exp-container-grid {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.exp-container-preview, .exp-container-preview .k-tabstrip-wrapper {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.exp-container-form {
+  display: none;
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * OTHER CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.k-filter-menu {
+  font-weight: normal !important;
+  font-size: 90%;
+}
+
+.exp-upload-div {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.exp-upload-div .k-upload .k-clear-selected,
+.exp-upload-div .k-upload .k-upload-selected {
+  display: none !important;
+}
+
+.k-grid .k-grid-toolbar .search-overall-input {
+  height: 2.3em;
+  width: 11em;
+  margin: 0 0.15em 0.2em 0.15em;
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * LAYOUT (SPLITTER) CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-splitter-filter {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.exp-splitter-preview {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+.exp-splitter-preview .k-splitbar {
+  background: transparent;
+  padding-top: 4px;
+  height: 10px;
+  border-left: 0;
+  border-right: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: none;
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * GRID CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-grid {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+.exp-grid table {
+  min-width: 10em;
+}
+.exp-grid .k-grid-content {
+  padding-bottom: 0;
+}
+.exp-grid .k-grid-toolbar {
+  background: linear-gradient(180deg, rgba(216, 216, 216, 0.2) 0%, rgba(216, 216, 216, 0.4) 100%);
+  border-bottom: 1px solid #ceced2;
+  display: block;
+  width: 100%;
+  padding: 0.2em 0.125em 0.1875em 0.5em;
+}
+.exp-grid .k-grid-toolbar .exp-toolbar-marker {
+  display: none;
+}
+.exp-grid .k-grid-toolbar .exp-toolbar-separator {
+  width: 0.1em;
+  height: 1em;
+  margin: 0 0.3em 0.2em 0.3em;
+  border-left: 1px solid #77AAFF;
+}
+.exp-grid .k-grid-toolbar .exp-stack-button .fa-stack {
+  width: 1em;
+  height: 0.9em;
+  line-height: 1;
+}
+.exp-grid .k-grid-toolbar .exp-clearfilters-button .fa-times {
+  color: rgba(255, 0, 0, 0.61);
+  margin: 0.6em 0 0 0.6em;
+  font-size: 90%;
+}
+.exp-grid .k-grid-toolbar .exp-clearfilters-button span.exp-button-label {
+  margin-left: 0.9em;
+}
+.exp-grid .k-grid-toolbar .exp-active-only-button .exp-switch {
+  position: relative;
+  display: inline-block;
+  width: 1.95em;
+  height: 1.2em;
+}
+.exp-grid .k-grid-toolbar .exp-active-only-button .exp-switch input {
+  display: none;
+}
+.exp-grid .k-grid-toolbar .exp-active-only-button .exp-switch .exp-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+}
+.exp-grid .k-grid-toolbar .exp-active-only-button .exp-switch .exp-slider:before {
+  position: absolute;
+  content: "";
+  height: 1.2em;
+  width: 1.2em;
+  left: 0.05em;
+  bottom: 0;
+  background-color: white;
+  transition: 0.4s;
+}
+.exp-grid .k-grid-toolbar .exp-active-only-button .exp-switch input:checked + .exp-slider {
+  background-color: #77AAFF;
+}
+.exp-grid .k-grid-toolbar .exp-active-only-button .exp-switch input:focus + .exp-slider {
+  box-shadow: 0 0 1px #77AAFF;
+}
+.exp-grid .k-grid-toolbar .exp-active-only-button .exp-switch input:checked + .exp-slider:before {
+  transform: translateX(0.7em);
+}
+.exp-grid .k-grid-toolbar .exp-active-only-button .exp-switch .exp-slider-round {
+  border-radius: 0.7em;
+}
+.exp-grid .k-grid-toolbar .exp-active-only-button .exp-switch .exp-slider-round:before {
+  border-radius: 50%;
+}
+.exp-grid .k-grid-toolbar .exp-upload-button.k-dropzone-active {
+  background-color: red;
+  width: 180px;
+  height: 80px;
+}
+.exp-grid .k-grid-toolbar .exp-upload-button.k-dropzone-hovered {
+  background-color: green;
+  width: 180px;
+  height: 80px;
+}
+.exp-grid .k-grid-toolbar .k-upload {
+  display: none;
+}
+.exp-grid .k-grid-toolbar [name=file] {
+  display: none;
+}
+.exp-grid .k-grid-toolbar .grid-extra-filter {
+  display: inline-block;
+  margin-left: 0.3em;
+}
+.exp-grid .k-grid-toolbar .grid-extra-filter .k-combobox {
+  width: 12em;
+}
+.exp-grid .k-grid-toolbar .grid-extra-filter label {
+  margin-left: 5px;
+  text-align: right;
+  font-weight: bold;
+  padding-right: 5px;
+}
+.exp-grid .k-grid-toolbar .view-selector {
+  width: 12em;
+  margin: 0 0.5em 0.3em 0.2em;
+  font-weight: bold;
+}
+.exp-grid .k-grid-toolbar .view-selector .k-dropdown-wrap {
+  background-color: #aacaff;
+  padding: 1px 0;
+}
+.exp-grid .k-grid-toolbar .view-selector .k-dropdown-wrap .k-input {
+  padding-left: 3px;
+}
+.exp-grid .k-grid-toolbar .exp-grid-nbr-items {
+  display: block;
+  float: right;
+  margin: 7px 2px 0 2px;
+  font-size: 95%;
+}
+.exp-grid .k-grid-header {
+  border: 0;
+}
+.exp-grid .k-grid-header th {
+  color: #49535D;
+  font-size: 90%;
+  font-weight: bold;
+  line-height: 15px;
+  border: 0;
+}
+.exp-grid .k-grid-header th:not(:nth-child(2)) .k-header-column-menu {
+  display: none;
+}
+.exp-grid .k-grid-header th .k-link {
+  margin-right: 16px;
+  padding-right: 0;
+}
+.exp-grid .k-grid-header th .k-link .k-i-sort-desc-sm, .exp-grid .k-grid-header th .k-link .k-i-sort-asc-sm {
+  margin-left: 0;
+  margin-top: -2px;
+  color: red;
+}
+.exp-grid .k-grid-header th .k-link .k-i-sort-desc-sm.k-icon, .exp-grid .k-grid-header th .k-link .k-i-sort-asc-sm.k-icon {
+  width: 0.8em;
+}
+.exp-grid .k-grid-header tr[role=row] th {
+  border-right: 0.2em solid transparent;
+}
+.exp-grid .k-grid-header tr[role=row] th:hover {
+  border-color: lightgray;
+}
+.exp-grid .k-grid-header .k-filter-row th {
+  padding: 0 0.1em 0.3em 0.1em;
+  font-weight: normal;
+  text-align: center;
+}
+.exp-grid .k-grid-header .k-filter-row .k-filtercell > span {
+  padding-right: 0;
+}
+.exp-grid .k-grid-header .k-filter-row .k-filtercell > span > .k-button, .exp-grid .k-grid-header .k-filter-row .k-filtercell .k-dropdown-operator {
+  display: none;
+}
+.exp-grid .k-grid-header .k-filter-row .k-filtercell .k-numeric-wrap {
+  padding-right: 0;
+}
+.exp-grid .k-grid-header .k-filter-row .k-filtercell .k-numeric-wrap .k-select {
+  display: none;
+}
+.exp-grid .k-grid-header .k-filter-row input.exp-key-field {
+  background-color: #fff5f5;
+}
+.exp-grid .k-grid-header .k-grid-filter {
+  margin-right: -0.5em;
+}
+.exp-grid .k-grid-header .k-grid-filter .k-i-filter {
+  font-size: 140%;
+}
+.exp-grid .k-grid-header .k-grid-filter.k-state-active {
+  background-color: #e66e62;
+}
+.exp-grid .k-grid-header .select-all {
+  margin-left: -0.2em;
+}
+.exp-grid .k-grid-header th.k-header:first-child {
+  text-align: center;
+  text-overflow: clip;
+}
+.exp-grid tbody .k-button {
+  min-width: 0.75em;
+  padding: 0.0625em 0.25em;
+  margin: 0.125em;
+  line-height: 1;
+}
+.exp-grid tbody .fa {
+  font-size: 100%;
+}
+.exp-grid tbody tr {
+  color: #49535D;
+  font-size: 100%;
+}
+.exp-grid tbody tr.k-grouping-row td {
+  padding-top: 0.6em;
+}
+.exp-grid tbody tr.k-grouping-row td:first-child {
+  text-align: left;
+}
+.exp-grid tbody tr td {
+  white-space: nowrap;
+  line-height: 1.3;
+  padding: 0.2em 0.2em;
+}
+.exp-grid tbody tr td:first-child {
+  text-align: center;
+}
+.exp-grid tbody tr td.center {
+  text-align: center;
+}
+.exp-grid tbody tr td.number {
+  text-align: right;
+  padding-right: 0.5em;
+}
+.exp-grid tbody tr td div.number {
+  text-align: right;
+  padding-right: 0.4em;
+}
+.exp-grid tbody tr .tooltip {
+  text-decoration: underline dotted #49535D;
+}
+.exp-grid tbody tr .tooltip:hover {
+  color: #4A90E2;
+  text-decoration: underline dotted #4A90E2;
+  cursor: help;
+}
+.exp-grid tbody tr a:link:not(.k-button),
+.exp-grid tbody tr a:visited:not(.k-button) {
+  color: #49535D;
+}
+.exp-grid tbody tr a:hover:not(.k-button) {
+  color: #4A90E2;
+}
+.exp-grid tbody tr.k-alt:not(.k-state-selected):not(:hover) {
+  background-color: #f4f4f4;
+}
+.exp-grid tbody tr:hover {
+  background-color: #e7f0ff;
+}
+.exp-grid tbody tr.k-state-selected {
+  background-color: #aacaff;
+  color: #49535D;
+  font-weight: 600;
+}
+.exp-grid tbody tr.k-state-selected a:link:not(.k-button),
+.exp-grid tbody tr.k-state-selected a:visited:not(.k-button) {
+  color: #49535D;
+}
+.exp-grid tbody tr.k-state-selected a:hover:not(.k-button) {
+  color: #4A90E2;
+}
+.exp-grid tbody tr.k-state-selected:hover {
+  background-color: #aacaff;
+}
+.exp-grid tbody tr.highlighted-row:not(.k-state-selected), .exp-grid tbody tr.k-alt.highlighted-row:not(.k-state-selected), .exp-grid tbody tr.highlighted-row.k-state-selected, .exp-grid tbody tr.highlighted-row a:link:not(.k-button) {
+  color: #ff1111;
+}
+.exp-grid tbody tr.highlighted-warning-background-row:not(.k-state-selected), .exp-grid tbody tr.k-alt.highlighted-warning-background-row:not(.k-state-selected), .exp-grid tbody tr.highlighted-warning-background-row.k-state-selected {
+  background-color: #FFFF99 !important;
+}
+.exp-grid tbody tr.highlighted-positive-row:not(.k-state-selected), .exp-grid tbody tr.k-alt.highlighted-positive-row:not(.k-state-selected) {
+  color: green;
+}
+.exp-grid tbody tr.highlighted-positive-row.k-state-selected {
+  color: green;
+}
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * PREVIEW CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-preview {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+.exp-preview.k-header {
+  background: rgba(216, 216, 216, 0.1);
+}
+.exp-preview .k-button.k-bare {
+  background-color: #aacaff !important;
+}
+.exp-preview .k-tabstrip-items {
+  height: 3.3em;
+  padding: 0;
+}
+.exp-preview .k-tabstrip-items .k-item {
+  box-sizing: border-box;
+  padding: 0 0.6em;
+  margin: 0.6em 0 0 0.3em;
+  height: 2.3em;
+  border: 1px solid #F0F0F0;
+  border-radius: 1em;
+  background-color: transparent;
+}
+.exp-preview .k-tabstrip-items .k-item:hover {
+  border-color: #4A90E2;
+}
+.exp-preview .k-tabstrip-items .k-item .k-loading.k-progress {
+  display: none;
+}
+.exp-preview .k-tabstrip-items .k-item .k-link {
+  text-transform: uppercase;
+  height: 1em;
+  color: #4A90E2;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+}
+.exp-preview .k-tabstrip-items .k-item .count-label {
+  background: #4A90E2;
+  color: white;
+  font-size: 0.8em;
+  min-width: 0.8em;
+  line-height: 1;
+  font-weight: normal;
+  width: auto;
+  height: auto;
+  text-align: center;
+  margin: 0;
+  border-radius: 10px;
+  position: absolute;
+  top: 0.4em;
+  right: 0.6em;
+  padding: 0.15em 0.2em 0 0.2em;
+}
+.exp-preview .k-tabstrip-items .k-item.k-state-active {
+  background-color: #4A90E2;
+}
+.exp-preview .k-tabstrip-items .k-item.k-state-active .k-link {
+  color: #FFFFFF;
+}
+.exp-preview .k-tabstrip-items .k-item.k-state-active .count-label {
+  background: white;
+  color: #4A90E2;
+}
+.exp-preview .k-content {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  overflow-x: hidden;
+}
+.exp-preview .k-content.k-state-active {
+  border: 0;
+}
+.exp-preview .k-content > div {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+.exp-preview .k-content > div > form {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  overflow-y: auto;
+  padding: 10px 20px;
+  height: calc(100% - 20px);
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * FORM CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-form {
+  width: calc(100% - 1.25em - 1.25em);
+  padding: 0 1.25em 0 1.25em;
+  margin-bottom: 0.8em;
+  min-height: 10em;
+}
+
+.exp-form, .exp-filter, .exp-window-content {
+  color: #49535D;
+}
+.exp-form .input-wrap, .exp-form span.info, .exp-filter .input-wrap, .exp-filter span.info, .exp-window-content .input-wrap, .exp-window-content span.info {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  box-sizing: border-box;
+  display: inline-block;
+  position: relative;
+  width: calc(50% - 0.14em);
+  padding: 0.5em 1.25em;
+  vertical-align: middle;
+}
+.exp-form .input-wrap.full-length, .exp-form span.info.full-length, .exp-filter .input-wrap.full-length, .exp-filter span.info.full-length, .exp-window-content .input-wrap.full-length, .exp-window-content span.info.full-length {
+  width: 100%;
+}
+.exp-form span.info, .exp-filter span.info, .exp-window-content span.info {
+  color: #49535D;
+}
+.exp-form span.help-label, .exp-filter span.help-label, .exp-window-content span.help-label {
+  color: #49535D;
+}
+.exp-form .input-wrap, .exp-filter .input-wrap, .exp-window-content .input-wrap {
+  line-height: 1.7;
+}
+.exp-form .input-wrap label:not(.k-checkbox-label):not(.k-radio-label), .exp-filter .input-wrap label:not(.k-checkbox-label):not(.k-radio-label), .exp-window-content .input-wrap label:not(.k-checkbox-label):not(.k-radio-label) {
+  display: block;
+  font-size: 95%;
+  font-weight: bold;
+  padding: 0 0 0.3125em 0.125em;
+}
+.exp-form .input-wrap label.k-checkbox-label, .exp-form .input-wrap label.k-radio-label, .exp-filter .input-wrap label.k-checkbox-label, .exp-filter .input-wrap label.k-radio-label, .exp-window-content .input-wrap label.k-checkbox-label, .exp-window-content .input-wrap label.k-radio-label {
+  font-weight: bold;
+  margin: 1.5em 0 0 0.6em;
+  display: inline-block;
+  max-width: calc(100% - 2em);
+}
+.exp-form .input-wrap [type=checkbox], .exp-form .input-wrap [type=radio], .exp-filter .input-wrap [type=checkbox], .exp-filter .input-wrap [type=radio], .exp-window-content .input-wrap [type=checkbox], .exp-window-content .input-wrap [type=radio] {
+  margin-top: 1.3em;
+}
+.exp-form .input-wrap .k-input, .exp-form .input-wrap .k-textbox:not(.k-combobox), .exp-form .input-wrap .k-widget, .exp-filter .input-wrap .k-input, .exp-filter .input-wrap .k-textbox:not(.k-combobox), .exp-filter .input-wrap .k-widget, .exp-window-content .input-wrap .k-input, .exp-window-content .input-wrap .k-textbox:not(.k-combobox), .exp-window-content .input-wrap .k-widget {
+  width: 100%;
+}
+.exp-form .input-wrap.exp-ref-with-buttons:not(.exp-ref-no-view) > .k-widget, .exp-filter .input-wrap.exp-ref-with-buttons:not(.exp-ref-no-view) > .k-widget, .exp-window-content .input-wrap.exp-ref-with-buttons:not(.exp-ref-no-view) > .k-widget {
+  width: calc(100% - 4.7em);
+}
+.exp-form .input-wrap.exp-ref-with-buttons.exp-ref-no-view > .k-widget, .exp-filter .input-wrap.exp-ref-with-buttons.exp-ref-no-view > .k-widget, .exp-window-content .input-wrap.exp-ref-with-buttons.exp-ref-no-view > .k-widget {
+  width: calc(100% - 2.26em);
+}
+.exp-form .input-wrap.exp-ref-with-buttons .exp-ref-button, .exp-filter .input-wrap.exp-ref-with-buttons .exp-ref-button, .exp-window-content .input-wrap.exp-ref-with-buttons .exp-ref-button {
+  height: 2.1em;
+  width: 2.1em;
+  margin: 0 0 0 0.16em;
+}
+.exp-form .input-wrap.checkbox-group .input-wrap, .exp-filter .input-wrap.checkbox-group .input-wrap, .exp-window-content .input-wrap.checkbox-group .input-wrap {
+  padding: 0;
+}
+.exp-form .input-wrap.checkbox-group .input-wrap label, .exp-filter .input-wrap.checkbox-group .input-wrap label, .exp-window-content .input-wrap.checkbox-group .input-wrap label {
+  margin-top: 4px;
+}
+.exp-form.exp-form-single-column div.input-wrap, .exp-filter.exp-form-single-column div.input-wrap, .exp-window-content.exp-form-single-column div.input-wrap {
+  width: 100%;
+}
+.exp-form.exp-form-single-column div.input-wrap.full-length, .exp-filter.exp-form-single-column div.input-wrap.full-length, .exp-window-content.exp-form-single-column div.input-wrap.full-length {
+  width: 100%;
+}
+.exp-form.exp-form-three-columns div.input-wrap, .exp-filter.exp-form-three-columns div.input-wrap, .exp-window-content.exp-form-three-columns div.input-wrap {
+  width: calc(33% - 2px);
+}
+.exp-form.exp-form-three-columns div.input-wrap.double-length, .exp-filter.exp-form-three-columns div.input-wrap.double-length, .exp-window-content.exp-form-three-columns div.input-wrap.double-length {
+  width: calc(66% - 2px);
+}
+.exp-form.exp-form-three-columns div.input-wrap.full-length, .exp-filter.exp-form-three-columns div.input-wrap.full-length, .exp-window-content.exp-form-three-columns div.input-wrap.full-length {
+  width: 100%;
+}
+.exp-form.exp-form-four-columns div.input-wrap, .exp-filter.exp-form-four-columns div.input-wrap, .exp-window-content.exp-form-four-columns div.input-wrap {
+  width: calc(25% - 3px);
+}
+.exp-form.exp-form-four-columns div.input-wrap.double-length, .exp-filter.exp-form-four-columns div.input-wrap.double-length, .exp-window-content.exp-form-four-columns div.input-wrap.double-length {
+  width: calc(50% - 2px);
+}
+.exp-form.exp-form-four-columns div.input-wrap.full-length, .exp-filter.exp-form-four-columns div.input-wrap.full-length, .exp-window-content.exp-form-four-columns div.input-wrap.full-length {
+  width: 100%;
+}
+.exp-form fieldset:not(.k-donotconvert), .exp-filter fieldset:not(.k-donotconvert), .exp-window-content fieldset:not(.k-donotconvert) {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  height: auto;
+  border-top: 2px solid rgba(53, 64, 82, 0.5);
+  border-bottom: 2px solid rgba(53, 64, 82, 0.5);
+  padding: 5px 0 10px 0;
+  margin: 10px 0 10px 0;
+}
+.exp-form fieldset:not(.k-donotconvert) legend, .exp-filter fieldset:not(.k-donotconvert) legend, .exp-window-content fieldset:not(.k-donotconvert) legend {
+  float: left;
+  width: 100%;
+  margin: 10px 0 3px 18px;
+  color: #4A90E2;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.exp-form fieldset:not([style*="display: none"]):not(.k-donotconvert) + fieldset, .exp-filter fieldset:not([style*="display: none"]):not(.k-donotconvert) + fieldset, .exp-window-content fieldset:not([style*="display: none"]):not(.k-donotconvert) + fieldset {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+.exp-form label.help:hover, .exp-filter label.help:hover, .exp-window-content label.help:hover {
+  color: lightgray;
+  cursor: help;
+}
+.exp-form [readonly] .k-input, .exp-form [readonly] .k-select, .exp-form [readonly] .k-textbox, .exp-form [readonly] .k-multiselect-wrap, .exp-form .readonly .k-input, .exp-form .readonly .k-select, .exp-form .readonly .k-textbox, .exp-form .readonly .k-multiselect-wrap, .exp-filter [readonly] .k-input, .exp-filter [readonly] .k-select, .exp-filter [readonly] .k-textbox, .exp-filter [readonly] .k-multiselect-wrap, .exp-filter .readonly .k-input, .exp-filter .readonly .k-select, .exp-filter .readonly .k-textbox, .exp-filter .readonly .k-multiselect-wrap, .exp-window-content [readonly] .k-input, .exp-window-content [readonly] .k-select, .exp-window-content [readonly] .k-textbox, .exp-window-content [readonly] .k-multiselect-wrap, .exp-window-content .readonly .k-input, .exp-window-content .readonly .k-select, .exp-window-content .readonly .k-textbox, .exp-window-content .readonly .k-multiselect-wrap {
+  background-color: #ededee;
+}
+.exp-form [readonly] .k-icon, .exp-form .readonly .k-icon, .exp-filter [readonly] .k-icon, .exp-filter .readonly .k-icon, .exp-window-content [readonly] .k-icon, .exp-window-content .readonly .k-icon {
+  visibility: hidden;
+}
+.exp-form [readonly] .k-state-disabled, .exp-form .readonly .k-state-disabled, .exp-filter [readonly] .k-state-disabled, .exp-filter .readonly .k-state-disabled, .exp-window-content [readonly] .k-state-disabled, .exp-window-content .readonly .k-state-disabled {
+  color: #49535D;
+}
+.exp-form [readonly] .k-numerictextbox .k-select, .exp-form .readonly .k-numerictextbox .k-select, .exp-filter [readonly] .k-numerictextbox .k-select, .exp-filter .readonly .k-numerictextbox .k-select, .exp-window-content [readonly] .k-numerictextbox .k-select, .exp-window-content .readonly .k-numerictextbox .k-select {
+  background-color: #ededee;
+  border: 0;
+}
+.exp-form input[readonly], .exp-form input:hover[readonly], .exp-filter input[readonly], .exp-filter input:hover[readonly], .exp-window-content input[readonly], .exp-window-content input:hover[readonly] {
+  background-color: #ededee;
+}
+.exp-form div.input-wrap:not(.readonly) .k-dropdown .k-dropdown-wrap.k-state-default:not(.k-state-hover) .k-input, .exp-form div.input-wrap:not(.readonly) .k-dropdowntree .k-dropdown-wrap.k-state-default:not(.k-state-hover) .k-input, .exp-filter div.input-wrap:not(.readonly) .k-dropdown .k-dropdown-wrap.k-state-default:not(.k-state-hover) .k-input, .exp-filter div.input-wrap:not(.readonly) .k-dropdowntree .k-dropdown-wrap.k-state-default:not(.k-state-hover) .k-input, .exp-window-content div.input-wrap:not(.readonly) .k-dropdown .k-dropdown-wrap.k-state-default:not(.k-state-hover) .k-input, .exp-window-content div.input-wrap:not(.readonly) .k-dropdowntree .k-dropdown-wrap.k-state-default:not(.k-state-hover) .k-input {
+  background-color: white;
+  opacity: 1;
+}
+.exp-form div.input-wrap.readonly .k-picker-wrap .k-select, .exp-filter div.input-wrap.readonly .k-picker-wrap .k-select, .exp-window-content div.input-wrap.readonly .k-picker-wrap .k-select {
+  border-width: 0;
+}
+.exp-form .k-multiselect-wrap li.k-button, .exp-filter .k-multiselect-wrap li.k-button, .exp-window-content .k-multiselect-wrap li.k-button {
+  display: inline-block;
+  width: 100%;
+  text-align: left;
+}
+
+button.exp-create-main-button {
+  position: absolute;
+  top: 40px;
+  left: calc(50% - 55px);
+  z-index: 3;
+  background-color: #4A90E2;
+  color: white;
+  padding: 5px 5px;
+  width: 150px;
+}
+
+/*
+WINDOW  STRUCTURE
+k-widget k-window
+	k-window-titlebar k-header
+		k-window-title
+		k-window-actions
+
+	k-popup-edit-form k-window-content k-content
+		k-edit-form-container
+			???????? (refer to the 3 possibilities below)
+			k-edit-buttons
+
+1- EDIT FORM
+	exp-form
+
+
+2- EDIT FORM WITH TABS
+	exp-form-wrapper k-widget k-splitter
+		exp-form k-pane k-scrollable
+		k-splitbar
+		exp-form-preview k-pane k-scrollable
+
+3- FROM BUILDWINDOW
+	exp-window-content	//  is converted to ExpressoForm
+
+ */
+.k-window {
+  background-color: white;
+  box-shadow: 3px 3px 7px 0 rgba(0, 0, 0, 0.19);
+}
+.k-window .k-window-titlebar {
+  height: 50px;
+  border-bottom: 2px solid rgba(53, 64, 82, 0.5);
+  overflow: hidden;
+}
+.k-window .k-window-titlebar .k-window-title {
+  display: inline-block;
+  padding: 0.625em 0 0 calc(1.25em + 2px);
+  color: #4A90E2;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.k-window > div.k-popup-edit-form {
+  padding: 0;
+}
+.k-window .k-window-content {
+  overflow: hidden;
+}
+.k-window .k-window-content .k-edit-form-container {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+.k-window .k-window-content .k-edit-form-container > .exp-form, .k-window .k-window-content .k-edit-form-container > .exp-window-content, .k-window .k-window-content .k-edit-form-container > .exp-form-wrapper {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  padding: 0 1.25em;
+  width: calc(100% - 1.25em - 1.25em);
+  height: initial;
+  overflow: auto;
+}
+.k-window .k-window-content .k-edit-form-container > .exp-window-content {
+  padding: 0;
+  width: 100%;
+}
+.k-window .k-window-content .k-edit-form-container > .exp-form-wrapper {
+  overflow: hidden;
+}
+.k-window .k-window-content .k-edit-form-container > .exp-form-wrapper .k-splitbar {
+  margin-left: 1.25em;
+  color: #cccccc;
+  background-color: #aacaff;
+  border-color: #aacaff;
+}
+.k-window .k-window-content .k-edit-form-container > .exp-form-wrapper .k-ghost-splitbar {
+  margin-left: 1.25em;
+}
+.k-window .k-window-content .k-edit-form-container > .exp-form-wrapper .exp-form {
+  padding: 0;
+  visibility: hidden;
+}
+.k-window .k-window-content .k-edit-form-container > .exp-form-wrapper .exp-form-preview {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  height: 12em;
+  border: 1px solid #ebebeb;
+}
+.k-window .k-window-content .k-edit-form-container > .exp-form-wrapper .exp-form-preview .k-tabstrip-wrapper {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+.k-window .k-window-content .k-edit-form-container .creation-div {
+  padding: 15px 10px 10px 0;
+}
+.k-window .k-window-content .k-edit-form-container .creation-div span {
+  display: block;
+  color: #6F8294;
+  font-size: 90%;
+  font-style: italic;
+  text-align: right;
+}
+.k-window .k-window-content .k-edit-buttons {
+  bottom: 0;
+  right: 0;
+  padding: 12px 1.25em;
+  width: calc(100% - 1.25em - 1.25em);
+  background: transparent;
+  min-height: 27px;
+}
+.k-window .k-window-content .k-edit-buttons .k-button {
+  border: 1px solid rgba(111, 130, 148, 0.3);
+  border-radius: 1.25em;
+  background-color: white;
+  color: #49535D;
+  font-weight: bold;
+  margin-top: 0.3em;
+}
+.k-window .k-window-content .k-edit-buttons .k-button.k-primary {
+  color: white;
+  background-color: #4A90E2;
+}
+.k-window .k-window-content .k-edit-buttons .k-button .fa {
+  margin-right: 5px;
+}
+.k-window .k-window-content .k-edit-buttons .k-toolbar {
+  border: 0;
+  display: inline;
+}
+.k-window .k-window-content .k-edit-buttons .k-toolbar .k-split-button .k-button:not(.k-split-button-arrow) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.k-window .k-window-content .k-edit-buttons .k-toolbar .k-split-button .k-split-button-arrow {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.k-window .exp-application-base {
+  box-shadow: none;
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * FILTER CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-filter {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 10px;
+}
+.exp-filter .filter-title {
+  font-weight: bold;
+  margin: 10px auto;
+  text-align: center;
+  color: #4A90E2;
+}
+.exp-filter div.input-wrap {
+  width: calc(100% - 2px);
+}
+.exp-filter .exp-footer {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  margin: 0;
+  width: 100%;
+}
+.exp-filter .exp-footer .exp-buttons-div {
+  border-top: 1px solid gray;
+  padding: 10px;
+  margin: 10px auto;
+}
+.exp-filter .exp-footer .exp-buttons-div button {
+  width: 100px;
+}
+.exp-filter .exp-footer .exp-buttons-div button[type=reset] {
+  float: right;
+}
+.exp-filter .exp-footer .exp-buttons-div button[type=submit] {
+  float: left;
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * PREFERENCES AND COLUMN MENU CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.favorite-grid-preference {
+  font-size: 120%;
+}
+.favorite-grid-preference.selected-favorite {
+  color: #77AAFF;
+}
+
+.delete-grid-preference {
+  color: red;
+  font-size: 120%;
+}
+
+.k-state-hover .favorite-grid-preference:hover {
+  color: yellow;
+}
+.k-state-hover .delete-grid-preference:hover {
+  color: white;
+}
+
+.column-menu {
+  width: 180px;
+}
+.column-menu .close-button {
+  height: 20px;
+  background-color: #cccccc;
+}
+.column-menu .close-button span {
+  float: right;
+  margin: 2px 2px 2px 2px;
+  font-size: 130%;
+}
+.column-menu .close-button span:hover {
+  color: white;
+}
+.column-menu .column-list {
+  max-height: 20em;
+  overflow-y: auto;
+}
+
+.menu-preferences .filter-name {
+  margin-left: 0.1em;
+}
+.menu-preferences .fa:hover {
+  color: #aacaff;
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * CUSTOM FILTERS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.date-range-filter {
+  min-width: 200px;
+}
+.date-range-filter label {
+  font-weight: bold;
+}
+.date-range-filter div.date-range {
+  margin: 5px 0 5px 20px;
+}
+.date-range-filter .k-action-buttons .k-button {
+  width: 47%;
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * MOBILE CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.km-phone .km-android .k-grid table {
+  width: 20em;
+}
+
+.exp-screen-mode-phone .k-window-titlebar .k-window-action, .exp-screen-mode-tablet .k-window-titlebar .k-window-action {
+  padding: 0.1em;
+  width: 1.5em;
+  height: 1.5em;
+}
+.exp-screen-mode-phone .k-window-titlebar .k-window-action .k-icon, .exp-screen-mode-tablet .k-window-titlebar .k-window-action .k-icon {
+  font-size: 1.25em;
+}
+.exp-screen-mode-phone .exp-grid tbody tr td, .exp-screen-mode-tablet .exp-grid tbody tr td {
+  line-height: 1.5;
+}
+
+.exp-screen-mode-phone .exp-form .input-wrap {
+  width: 100%;
+}
+.exp-screen-mode-phone .exp-form .input-wrap [type=checkbox], .exp-screen-mode-phone .exp-form .input-wrap [type=radio] {
+  margin-top: 2em;
+}
+.exp-screen-mode-phone .exp-grid .k-grid-header {
+  display: none;
+}
+.exp-screen-mode-phone .exp-grid tbody tr.k-state-selected {
+  font-weight: normal;
+}
+.exp-screen-mode-phone .exp-grid tbody tr td {
+  white-space: normal;
+  text-align: left;
+  padding: 0.4em 0.5em;
+}
+.exp-screen-mode-phone .exp-grid tbody tr td .mobile-grid-column {
+  height: 5.7em;
+}
+.exp-screen-mode-phone .exp-grid tbody tr td .mobile-grid-column .mobile-grid-column-number {
+  color: #4A90E2;
+  font-weight: bold;
+  display: block;
+}
+.exp-screen-mode-phone .exp-grid tbody tr td .mobile-grid-column .mobile-grid-column-top-right {
+  float: right;
+  font-size: 95%;
+}
+.exp-screen-mode-phone .exp-grid tbody tr td .mobile-grid-column .mobile-grid-column-middle-right {
+  float: right;
+  font-size: 85%;
+}
+.exp-screen-mode-phone .exp-grid tbody tr td .mobile-grid-column .mobile-grid-column-middle-left {
+  font-size: 85%;
+  font-weight: bold;
+  display: block;
+}
+.exp-screen-mode-phone .exp-grid tbody tr td .mobile-grid-column .mobile-grid-column-description {
+  font-size: 95%;
+}
+
+/*# sourceMappingURL=resource_manager.css.map */

@@ -1,0 +1,57 @@
+@charset "UTF-8";
+.km-nova .km-list.exp-mobile-form-listview .km-label-above {
+  min-height: 65px;
+}
+.km-nova .km-list.exp-mobile-form-listview .km-label-above > input[type=text], .km-nova .km-list.exp-mobile-form-listview .km-label-above > input[type=number] {
+  position: absolute;
+  top: 28px;
+  width: calc(100% - 30px);
+}
+.km-nova .km-list.exp-mobile-form-listview .km-label-above .k-combobox {
+  position: absolute;
+  top: 25px;
+  left: 10px;
+  width: calc(100% - 20px);
+}
+.km-nova .km-list.exp-mobile-form-listview .km-label-above .k-dropdown {
+  position: absolute;
+  top: 37px;
+  margin-left: -3px;
+}
+.km-nova .km-list.exp-mobile-form-listview .km-label-above .k-datepicker {
+  position: absolute;
+  top: 30px;
+  left: 10px;
+}
+.km-nova .km-list.exp-mobile-form-listview .km-label-above textarea {
+  left: -7px;
+  width: 100% !important;
+}
+.km-nova .k-popup .k-list-scroller li {
+  padding: 5px 4px;
+}
+.km-nova .km-tabstrip {
+  color: white;
+}
+.km-nova .km-view-title {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+.km-nova .fa .km-icon:after,
+.km-nova .fa .km-icon:before {
+  font: 1em/1em "FontAwesome";
+}
+.km-nova .km-lock:after,
+.km-nova .km-lock:before {
+  content: "";
+}
+.km-nova .km-unlock:after,
+.km-nova .km-unlock:before {
+  content: "";
+}
+.km-nova .km-gavel:after,
+.km-nova .km-gavel:before {
+  content: "";
+}
+
+/*# sourceMappingURL=mobile_base.css.map */
