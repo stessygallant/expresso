@@ -106,6 +106,8 @@ $.extend(expresso.Labels, {
     noSelection: "", //"-- None --",
     allSelection: "-- All --",
     allSelection_e: "-- All --",
+    selectFilterNone: "-- No value --",
+
     confirmation: "Confirmation",
     searchMenu: "Search",
     print: "Print",
@@ -215,6 +217,7 @@ $.extend(expresso.Labels, {
     enterReason: "Please enter the reason",
 
     confirmTitle: "Confirmation",
+    confirmAction: "Are you sure you want to execute this action: ",
     deleteConfirmation: "Are you sure you want to delete this record ?",
     deleteConfirmationMany: "Are you sure you want to delete the {count} selected records ?",
 

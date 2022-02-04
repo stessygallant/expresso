@@ -1131,6 +1131,11 @@ expresso.util.UIUtil = (function () {
                 return $deferred.reject();
             }
 
+            // patch: if the input has .k-textbox class, remove it
+            if ($input.hasClass("k-textbox")) {
+                $input.removeClass("k-textbox");
+            }
+
             // deal with undefined customOptions
             customOptions = customOptions || {};
             var dataValueField = customOptions.dataValueField || "id";

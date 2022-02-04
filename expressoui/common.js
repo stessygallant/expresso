@@ -557,7 +557,7 @@ expresso.Common = (function () {
 
     /**
      *
-     * @param sm  Possibitities: [desktop|tablet|phone]
+     * @param sm  Possibilities: [desktop|tablet|phone]
      */
     var setScreenMode = function (sm) {
         screenMode = sm;
@@ -1399,18 +1399,26 @@ expresso.Common = (function () {
         customOptions = customOptions || {};
         customOptions.queryParameters = customOptions.queryParameters || {};
 
-        // register this new application to the browser history
-        var url = "?app=" + appName + (expresso.Common.getImpersonateUser() ? "&impersonate=" + expresso.Common.getImpersonateUser() : "");
         var data = {
             appName: appName,
             _: new Date().getTime()
         };
 
+        // register this new application to the browser history
+        var url = "?app=" + appName;
+        if (expresso.Common.getImpersonateUser()) {
+            url += "&impersonate=" + expresso.Common.getImpersonateUser();
+        }
+        if (expresso.util.Util.getUrlParameter("screenMode")) {
+            url += "&screenMode=" + expresso.util.Util.getUrlParameter("screenMode");
+        }
+
         delete customOptions.queryParameters.app;
         delete customOptions.queryParameters.impersonate;
+        delete customOptions.queryParameters.screenMode;
         delete customOptions.queryParameters.securityToken;
         delete customOptions.queryParameters.userName;
-        //  delete customOptions.queryParameters.loginToken;
+        // delete customOptions.queryParameters.loginToken;
         // delete customOptions.queryParameters.fullScreen;
 
         // add the queryParameters to the URL
@@ -1419,7 +1427,7 @@ expresso.Common = (function () {
             url += "&" + queryParameters;
         }
 
-        // console.log("url [" + url + "]");
+        //console.log("url [" + url + "]");
         window.history.pushState(data, null, url);
 
         // update the title

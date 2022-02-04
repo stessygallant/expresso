@@ -81,7 +81,7 @@ expresso.layout.resourcemanager.SectionBase = kendo.Class.extend({
      * Resize the section if needed
      */
     resizeContent: function () {
-        //console.log("CALLING resizeContent - " + this.resourceManager.resourceName, this);
+        // console.log("CALLING resizeContent - " + this.resourceManager.resourceName, this);
 
         // by default, do nothing
     },

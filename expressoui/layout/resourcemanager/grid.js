@@ -87,13 +87,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     // reference to the context menu for column
     $columnMenu: undefined,
 
-    // MOBILE settings
-    mobileNumberFieldName: undefined,
-    mobileDescriptionFieldName: undefined,
-    mobileTopRightFieldName: undefined,
-    mobileMiddleLeftFieldName: undefined,
-    mobileMiddleRightFieldName: undefined,
-
     /**
      * Set the reference to the jquery object for the DOM element
      * @param $domElement reference to the jquery object for the DOM element
@@ -286,7 +279,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             }
 
             // update columns
-            for (i = 0; i < this.columns.length; i++) {
+            // do it reverse to be able to remove some columns
+            var removeRestrictedColumn = true;
+            for (i = this.columns.length - 1; i >= 0; i--) {
                 var column = this.columns[i];
 
                 if (!column.field) {
@@ -295,6 +290,26 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     column.sortable = false;
                 } else {
                     field = model.fields[column.field];
+
+                    var restrictedField = model.fields[column.field];
+                    if (column.field.indexOf('.') != -1) {
+                        // sub resource. get the first resource only
+                        var fieldName = column.field.substring(0, column.field.indexOf('.')) + "Id";
+                        restrictedField = model.fields[fieldName];
+                    }
+
+                    // if field is restricted, hide/remove it
+                    if (restrictedField && restrictedField.restrictedRole) {
+                        if (!expresso.Common.isUserInRole(restrictedField.restrictedRole)) {
+                            //console.log("Restricted field[" + column.field + "] role[" + field.restrictedRole + "]");
+                            if (removeRestrictedColumn) {
+                                this.columns.splice(i, 1);
+                                continue;
+                            } else {
+                                column.hidden = true;
+                            }
+                        }
+                    }
 
                     // if a field is not filterable, cannot filter nor sort
                     if (field && field.filterable === false) {
@@ -455,7 +470,17 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                     // add values to the column if defined in the app_class
                     if (field && field.values && field.values.data && !column.values) {
-                        column.values = field.values.data;
+                        column.values = $.extend([], field.values.data);
+
+                        // if field is nullable, add a new values
+                        if (field.nullable) {
+                            column.values.unshift({
+                                id: -1,
+                                value: -1,
+                                label: _this.getLabel("selectFilterNone"),
+                                text: _this.getLabel("selectFilterNone")
+                            });
+                        }
 
                         // allow multi selection
                         if (column.filterable !== false) {
@@ -715,62 +740,50 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     getMobileColumnTemplate: function () {
         var fields = this.resourceManager.model.fields;
-        // mandatory fields
-        var mobileNumberFieldName = this.mobileNumberFieldName || this.resourceManager.resourceName + "No";
-        var mobileDescriptionFieldName = this.mobileDescriptionFieldName || "description";
-
-        // optional fields
-        var mobileTopRightFieldName = this.mobileTopRightFieldName || "person";
-        var mobileMiddleLeftFieldName = this.mobileMiddleLeftFieldName || "status";
-        var mobileMiddleRightFieldName = this.mobileMiddleRightFieldName || "date";
+        var mobileColumns = this.getMobileColumns();
 
         var mobileTemplate = [];
         mobileTemplate.push("<div class='mobile-grid-column'>");
 
-        // mobileTopRightFieldName
-        mobileTemplate.push("<span class='mobile-grid-column-top-right'>" +
-            (mobileTopRightFieldName.indexOf(".") != -1 || fields[mobileTopRightFieldName] ?
-                "#:(" + mobileTopRightFieldName + "?" +
-                (fields[mobileTopRightFieldName] && fields[mobileTopRightFieldName].type == "date" ?
-                        "expresso.util.Formatter.formatDate(" + mobileTopRightFieldName + ")" : mobileTopRightFieldName
-                ) +
-                ":'')#" : "") +
-            "</span>");
+        // the order in this list is important
+        $.each(["mobileTopRightFieldName", "mobileNumberFieldName", "mobileMiddleRightFieldName",
+            "mobileMiddleLeftFieldName", "mobileDescriptionFieldName"], function () {
+            var column = "" + this; // convert to string
+            var fieldName = mobileColumns[column];
+            if (fieldName) {
+                var field = fields[fieldName];
+                //console.log("fieldName: " + column + "=" + fieldName, field);
 
-        // number
-        mobileTemplate.push("<span class='mobile-grid-column-number clear'>" +
-            (mobileNumberFieldName.indexOf(".") != -1 || fields[mobileNumberFieldName] ?
-                "#:(" + mobileNumberFieldName + "?" + mobileNumberFieldName + ":'')#" : "") +
-            "</span>");
+                var clazz;
+                switch (column) {
+                    case "mobileNumberFieldName":
+                        clazz = "mobile-grid-column-number clear";
+                        break;
+                    case "mobileDescriptionFieldName":
+                        clazz = "mobile-grid-column-description";
+                        break;
+                    case "mobileTopRightFieldName":
+                        clazz = "mobile-grid-column-top-right";
+                        break;
+                    case "mobileMiddleLeftFieldName":
+                        clazz = "mobile-grid-column-middle-left clear";
+                        break;
+                    case "mobileMiddleRightFieldName":
+                        clazz = "mobile-grid-column-middle-right";
+                        break;
+                }
 
-        // mobileMiddleRightFieldName
-        mobileTemplate.push("<span class='mobile-grid-column-middle-right'>" +
-            (mobileMiddleRightFieldName.indexOf(".") != -1 || fields[mobileMiddleRightFieldName] ?
-                "#:(" + mobileMiddleRightFieldName + "?" +
-                (fields[mobileMiddleRightFieldName] && fields[mobileMiddleRightFieldName].type == "date" ?
-                        "expresso.util.Formatter.formatDate(" + mobileMiddleRightFieldName + ")" : mobileMiddleRightFieldName
-                ) +
-                ":'')#" : "") +
-            "</span>");
-
-        // mobileMiddleLeftFieldName
-        mobileTemplate.push("<span class='mobile-grid-column-middle-left clear'>" +
-            (mobileMiddleLeftFieldName.indexOf(".") != -1 || fields[mobileMiddleLeftFieldName] ?
-                "#:(" + mobileMiddleLeftFieldName + "?" +
-                (fields[mobileMiddleLeftFieldName] && fields[mobileMiddleLeftFieldName].type == "date" ?
-                        "expresso.util.Formatter.formatDate(" + mobileMiddleLeftFieldName + ")" : mobileMiddleLeftFieldName
-                ) +
-                ":'')#" : "") +
-            "</span>");
-
-        // description
-        mobileTemplate.push("<span class='mobile-grid-column-description'>" +
-            (mobileDescriptionFieldName.indexOf(".") != -1 || fields[mobileDescriptionFieldName] ?
-                "#:(" + mobileDescriptionFieldName + "?" + mobileDescriptionFieldName + ":'')#" : "") +
-            "</span>");
+                // only display the field if it exists
+                if (field || fieldName.indexOf(".") != -1) {
+                    if (field && field.type == "date") {
+                        fieldName = "expresso.util.Formatter.formatDate(" + fieldName + ")";
+                    }
+                    mobileTemplate.push("<span class='" + clazz + "'>#:" + fieldName + "#</span>");
+                }
+            }
+        });
 
         mobileTemplate.push("</div>");
-
         return mobileTemplate.join("");
     },
 
@@ -1044,6 +1057,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                                 // assume a promise
                                 $windowDeferred = result;
                             }
+                        } else if (expresso.Common.getScreenMode() != expresso.Common.SCREEN_MODES.DESKTOP) {
+                            // display a confirmation window
+                            $windowDeferred = expresso.util.UIUtil.buildYesNoWindow(_this.getLabel("confirmTitle"),
+                                _this.getLabel("confirmAction") +
+                                "\"" + _this.getLabel(action.name + "ButtonTitle") + "\" ?");
                         } else {
                             $windowDeferred = $.Deferred().resolve(null);
                         }
@@ -2845,6 +2863,20 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     },
 
     /**
+     * Return the columns for the mobile (phone) view
+     * @returns {*}
+     */
+    getMobileColumns: function () {
+        return {
+            mobileNumberFieldName: this.resourceManager.resourceName + "No",
+            mobileDescriptionFieldName: "description",
+            mobileTopRightFieldName: "person",
+            mobileMiddleLeftFieldName: "status",
+            mobileMiddleRightFieldName: "date"
+        };
+    },
+
+    /**
      * Allow the user to overwrite default options
      * @returns {*} a map with initial grid options
      */
@@ -3177,11 +3209,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         if (this.isFilterable() && this.virtualScroll) {
             // add the clear filter button
             toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-clearfilters-button exp-stack-button" title="clearFilters"><span class="fa-stack"><i class="fa fa-filter fa-stack-1x"></i><i class="fa fa-times fa-stack-1x"></i></span><span class="exp-button-label" data-text-key="clearFiltersButton"></span></button>'});
-            needSeparator = true;
-        }
 
-        if (this.isFilterable() && this.virtualScroll) {
-            // add the clear filter button
+            // add the search overall input
             toolbar.push({template: "<input type='search' class='k-textbox exp-always-active-button search-overall-input' placeholder='searchPlaceHolder'>"});
             needSeparator = true;
         }

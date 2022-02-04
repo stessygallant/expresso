@@ -761,8 +761,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
      */
     getAvailableActions: function () {
         // by default, no addionnal action buttons
-        var actions = [];
-
+        // var actions = [];
         // var action = {
         //     name: "myaction",
         //     icon: "myicon",
@@ -797,8 +796,8 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         // actions.push({
         //     name: "submit"
         // });
-
-        return actions;
+        // return actions;
+        return [];
     },
 
     /**

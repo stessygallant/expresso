@@ -49,7 +49,6 @@ expresso.util.Model = (function () {
 
             // once the model is loaded
             $deferredModel.done(function (model) {
-
                 model = $.extend(true, {}, model && model.fields ? model : {fields: model});
 
                 // create the model for the kendo UI Grid
@@ -118,7 +117,6 @@ expresso.util.Model = (function () {
                         }
                     }
                 }, model);
-
 
                 for (var f in model.fields) {
                     var field = model.fields[f];
@@ -315,8 +313,30 @@ expresso.util.Model = (function () {
                 // overwrite the model
                 resourceManager.model = model;
 
-                // load values if needed
-                loadValues(resourceManager.model, resourceManager.labels).done(function () {
+                $.when(
+                    // load values if needed
+                    loadValues(resourceManager.model, resourceManager.labels),
+
+                    // get the appClass
+                    expresso.Common.sendRequest(resourceManager.getWebServicePath() + "/appClass", null, null, {jsonCompliance: true}).done(function (appClassFields) {
+                        for (var fieldName in appClassFields) {
+                            var field = appClassFields[fieldName];
+
+                            // verify if the field is mapped
+                            var modelField = resourceManager.model.fields[fieldName];
+
+                            if (!modelField) {
+                                // if a transient field is not define, it is not an issue (but it should be defined)
+                                if (!field.transient) {
+                                    console.error("AppClass [" + resourceManager.getResourceName() + "] missing field mapping[" + fieldName + "]");
+                                }
+                            } else {
+                                // override the restrictedRole
+                                modelField.restrictedRole = field.restrictedRole;
+                            }
+                        }
+                    })
+                ).done(function () {
                     $deferred.resolve(resourceManager.model);
                 });
             });

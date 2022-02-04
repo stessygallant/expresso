@@ -334,6 +334,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                             _this.verifyUniqueField(resource, $this, field.name);
                         });
                     }
+
+                    // hide the input if the field is restricted
+                    if (field.restrictedRole && !expresso.Common.isUserInRole(field.restrictedRole)) {
+                        expresso.util.UIUtil.hideField($this);
+                    }
                 }
             }
         });

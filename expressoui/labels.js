@@ -107,6 +107,7 @@ $.extend(expresso.Labels, {
     noSelection: "", //"-- Aucun --",
     allSelection: "-- Tous --",
     allSelection_e: "-- Toutes --",
+    selectFilterNone: "-- Aucune valeur --",
 
     // Framework
     save: "Enregistrer",
@@ -221,6 +222,7 @@ $.extend(expresso.Labels, {
     enterReason: "Entrer une raison",
 
     confirmTitle: "Confirmation",
+    confirmAction: "Êtes-vous sûr de vouloir exécuter l'action suivante: ",
     deleteConfirmation: "Êtes-vous sûr de vouloir effacer l'enregistrement sélectionné ?",
     deleteConfirmationMany: "Êtes-vous sûr de vouloir effacer les {count} enregistrements sélectionnés ?",
 
