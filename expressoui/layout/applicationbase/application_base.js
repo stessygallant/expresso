@@ -72,13 +72,6 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
                 _this.setFullScreenMode(!_this.fullScreen);
             });
         }
-
-        // resize the section at the end of this call
-        setTimeout(function () {
-            if (_this.$domElement) {
-                _this.resizeContent();
-            }
-        }, 100);
     },
 
     /**

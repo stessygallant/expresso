@@ -391,30 +391,35 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         var _this = this;
         var $deferred = $.Deferred();
 
-        $.when(
-            // default initData
-            expresso.layout.applicationbase.ApplicationBase.fn.initData.call(this)
-        ).done(function () {
-            // include the labels from the master resourcemanager if defined
-            if (_this.masterResourceManager) {
-                _this.labels = $.extend({}, _this.masterResourceManager.labels, _this.labels);
-            }
-
-            _this.initialized = true;
-
-            // load the the model
-            expresso.util.Model.initModel(_this).done(function () {
-
-                if (_this.siblingResourceManager) {
-                    _this.model.masterIdProperty = null; // remove the masterIdProperty set by the masterResourceManager
-                    _this.setMasterIdProperty(_this.siblingResourceManager);
-                } else if (_this.masterResourceManager) {
-                    _this.setMasterIdProperty(_this.masterResourceManager);
+        if (!_this.initialized) {
+            $.when(
+                // default initData
+                expresso.layout.applicationbase.ApplicationBase.fn.initData.call(this)
+            ).done(function () {
+                // include the labels from the master resourcemanager if defined
+                if (_this.masterResourceManager) {
+                    _this.labels = $.extend({}, _this.masterResourceManager.labels, _this.labels);
                 }
 
-                $deferred.resolve();
+                _this.initialized = true;
+
+                // load the the model
+                expresso.util.Model.initModel(_this).done(function () {
+
+                    if (_this.siblingResourceManager) {
+                        _this.model.masterIdProperty = null; // remove the masterIdProperty set by the masterResourceManager
+                        _this.setMasterIdProperty(_this.siblingResourceManager);
+                    } else if (_this.masterResourceManager) {
+                        _this.setMasterIdProperty(_this.masterResourceManager);
+                    }
+
+                    $deferred.resolve();
+                });
             });
-        });
+        }
+        else {
+            $deferred.resolve();
+        }
 
         return $deferred;
     },

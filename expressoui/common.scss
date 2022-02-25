@@ -379,6 +379,127 @@
 
 //
 // ------------------------------------------------------------------------------------------------------------------
+// FILTER CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+.exp-widget-filter {
+    $borderColor: #ceced2;
+    $border: 1px solid $borderColor;
+
+    border: $border;
+    border-radius: 4px;
+    min-height: 2em;
+
+    .exp-widget-filter-remove-button {
+        opacity: 0.3;
+
+        &:hover {
+            opacity: 1;
+            cursor: pointer;
+            color: red;
+        }
+    }
+
+    .exp-widget-filter-tabstrip {
+        background-color: white;
+        border-width: 1px;
+
+        .k-tabstrip-item {
+            border: $border;
+            border-bottom-color: transparent;
+        }
+
+        .exp-widget-filter-source {
+            min-height: 5em;
+            overflow: auto;
+            padding: 0.5em 0.2em;
+            border: $border;
+            border-radius: 0 4px 4px 4px;
+            // width: calc(100% - 1em);
+        }
+
+        .exp-widget-filter-visual {
+            max-height: 20em;
+            overflow: auto;
+            border: $border;
+            border-radius: 0 4px 4px 4px;
+
+            // do not allow to delete the first group
+            & > .exp-widget-filter-group > .exp-widget-filter-remove-button {
+                display: none;
+            }
+
+            .exp-widget-filter-group {
+                padding: 0.2em;
+                margin: 0.5em;
+                border: $border;
+                border-radius: 4px;
+                background-color: white;
+                position: relative;
+
+                &.exp-highlight-widget-filter-group {
+                    background-color: #eeeeee;
+                }
+
+                .exp-widget-filter-logic.k-widget {
+                    width: 5em;
+                }
+
+                .exp-widget-filter-filters {
+
+                }
+
+                & > .exp-widget-filter-remove-button {
+                    position: absolute;
+                    top: 0.1em;
+                    right: 0.1em;
+                }
+
+                .exp-widget-filter-add-group-button, .exp-widget-filter-add-rule-button {
+                    height: 1.7em;
+                    float: right;
+
+                    span {
+                        margin-top: 0;
+                    }
+                }
+
+                .exp-widget-filter-add-group-button {
+                    margin-right: 1em;
+                }
+
+                .exp-widget-filter-add-rule-button {
+
+                }
+            }
+
+            .exp-widget-filter-rule {
+                padding: 0.1em;
+                margin: 0.1em;
+                position: relative;
+
+                .exp-widget-filter-field.k-widget {
+                    width: 23em;
+                }
+
+                .exp-widget-filter-operator.k-widget {
+                    width: 12em;
+                }
+
+                .exp-widget-filter-value.k-textbox {
+                    width: 12em !important;
+                }
+
+                .exp-widget-filter-remove-button {
+                    font-size: 120%;
+                }
+            }
+        }
+    }
+}
+
+//
+// ------------------------------------------------------------------------------------------------------------------
 // MESSAGE WINDOW CSS
 // ------------------------------------------------------------------------------------------------------------------
 //
@@ -601,10 +722,23 @@ label input + span {
     font-size: 1.4em;
 }
 
+.k-split-container {
+    background-color: white;
+}
+
 .k-toolbar {
     padding: 0;
     border: 0;
     background-color: transparent;
+
+    .k-split-button {
+        .k-split-button-arrow {
+            background-color: transparent;
+            margin: $toolbarButtonMargin;
+            margin-left: -0.25em;
+            height: $toolbarButtonHeight;
+        }
+    }
 }
 
 .exp-button,
@@ -618,6 +752,10 @@ label input + span {
     background-color: transparent;
 
     // icon
+    .k-icon {
+        color: $themeIconColor;
+    }
+
     .fa {
         color: $themeIconColor;
         text-align: center;
@@ -641,7 +779,7 @@ label input + span {
     }
 
     // text with no icon
-    & > span:not(.fa):not(.fa-stack) {
+    & > span:not(.fa):not(.fa-stack):not(.k-icon) {
         color: $themeTextColor;
         margin-top: 0;
     }

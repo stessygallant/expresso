@@ -2235,9 +2235,18 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // make sure to resize the grid accordingly
         // because of the text in exp-grid-nbr-items that could wrap, we need to trigger a grid resize
         var gridHeight = this.$domElement.find(".k-grid-toolbar").outerHeight(true) +
+
+            // header
             (this.$domElement.find(".k-grid-header").is(":visible") ?
                 this.$domElement.find(".k-grid-header").outerHeight(true) : 0) +
+
+            // footer
+            (this.$domElement.find(".k-grid-footer").is(":visible") ?
+                this.$domElement.find(".k-grid-footer").outerHeight(true) : 0) +
+
+            // body
             this.$domElement.find(".k-grid-content").outerHeight(true);
+
         var diff = this.$domElement.height() - gridHeight;
         if (diff) {
             // console.log("Resizing grid to fit [" + this.resourceManager.resourceName + "]: " + diff);

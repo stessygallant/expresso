@@ -120,6 +120,9 @@ expresso.util.UIUtil = (function () {
                     case "expressomultilookupselection":
                         widget = $element.data("kendoExpressoMultiLookupSelection");
                         break;
+                    case "expressofilter":
+                        widget = $element.data("kendoExpressoFilter");
+                        break;
 
                     // Cezinc Widget (BACKWARD compatibility only)
                     case "cezincsingleselect":
@@ -997,7 +1000,14 @@ expresso.util.UIUtil = (function () {
 
                     if (customOptions.change) {
                         //console.log("Calling application change event listener");
-                        customOptions.change.call(this, ev);
+
+                        // PATCH: because KendoUI will trigger twice the same event on blur,
+                        // we need to keep the previous value and do not fire the event
+                        // if the value is the same
+                        if (this.previousValue === undefined || this.previousValue != value) {
+                            this.previousValue = value;
+                            customOptions.change.call(this, ev);
+                        }
                     }
                 }
 
@@ -1218,6 +1228,7 @@ expresso.util.UIUtil = (function () {
                 dataTextField: dataTextField,
                 valuePrimitive: true,
                 dataSource: dataSource,
+                enable: customOptions.enable,
                 value: retrieveCurrentValue($input, customOptions),
                 height: 400,
                 filter: (customOptions.grouping && customOptions.grouping.filter !== false ? "contains" : customOptions.inplaceFilter),
@@ -1309,6 +1320,10 @@ expresso.util.UIUtil = (function () {
                 // tagMode: "single",
                 dataSource: [],
 
+                change: function (e) {
+                    // PATCH: Kendo does not trigger the change event
+                    $input.trigger("change");
+                },
                 treeview: {
                     // avoid node selection
                     select: function (e) {
@@ -2068,8 +2083,9 @@ expresso.util.UIUtil = (function () {
          *
          * @param $field jQuery object for the DOM element
          * @param [readonly] default is true
+         * @param [setReadOnlyOnInputWrap] default is true. Set it to false if you do not want to set readonly on input-wrap
          */
-        var setFieldReadOnly = function ($field, readonly) {
+        var setFieldReadOnly = function ($field, readonly, setReadOnlyOnInputWrap) {
 
             // if not specified, default is true
             if (readonly === undefined) {
@@ -2103,17 +2119,19 @@ expresso.util.UIUtil = (function () {
                     }
                 }
 
-                var $inputWrap = $el.closest(".input-wrap");
-                if ($inputWrap.length) {
-                    if (readonly) {
-                        $inputWrap.addClass("readonly");
-                    } else {
-                        $inputWrap.removeClass("readonly");
-                    }
+                if (setReadOnlyOnInputWrap !== false) {
+                    var $inputWrap = $el.closest(".input-wrap");
+                    if ($inputWrap.length) {
+                        if (readonly) {
+                            $inputWrap.addClass("readonly");
+                        } else {
+                            $inputWrap.removeClass("readonly");
+                        }
 
-                    // if there is an action button beside the input (exemple a lookup)
-                    if ($inputWrap.hasClass("exp-ref-with-buttons")) {
-                        $inputWrap.find("button.exp-ref-search-button").prop("disabled", readonly);
+                        // if there is an action button beside the input (exemple a lookup)
+                        if ($inputWrap.hasClass("exp-ref-with-buttons")) {
+                            $inputWrap.find("button.exp-ref-search-button").prop("disabled", readonly);
+                        }
                     }
                 }
             });

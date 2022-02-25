@@ -57,7 +57,7 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
         $domElement.data("object-instance", this);
 
         // resize the section at the end of this call
-        setTimeout(function () {
+       window.setTimeout(function () {
             if (_this.$domElement) {
                 _this.resizeContent();
             }

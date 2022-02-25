@@ -351,7 +351,7 @@ expresso.Common = (function () {
                                 if (expresso.Security) {
                                     expresso.Security.displayLoginPage();
                                 } else {
-                                    siteNamespace.Main.displayLoginPage();
+                            siteNamespace.Main.displayLoginPage();
                                 }
                             });
                         } else if (jqxhr.status == HTTP_CODES.FORBIDDEN) {
@@ -611,7 +611,7 @@ expresso.Common = (function () {
                 }
             }
 
-            console.log($window.width() + "X" + $window.height() + " - " + sm + " (" + navigator.userAgent + ")");
+            // console.log($window.width() + "X" + $window.height() + " - " + sm + " (" + navigator.userAgent + ")");
             setScreenMode(sm);
         }
         return screenMode;
@@ -626,7 +626,7 @@ expresso.Common = (function () {
             var h = $span.height();
             var fontSize = h - 2;
             fontRatio = fontSize / 12;
-            console.log("Default font size: " + fontSize + "  ratio: " + fontRatio);
+            // console.log("Default font size: " + fontSize + "  ratio: " + fontRatio);
             $span.remove();
         }
         return fontRatio;
@@ -689,6 +689,70 @@ expresso.Common = (function () {
 
     /**
      *
+     * @param app application name or application definition
+     * @returns {string}
+     */
+    var getApplicationPath = function (app) {
+        var appPath = null;
+        app = getApplication(app);
+        if (app && app.appClass) {
+            if (app.appClass.startsWith("expresso")) {
+                // remove only the application name (last)
+                appPath = app.appClass.split(".").slice(0, -1).join('/');
+            } else {
+                // remove common (first namespace) and the application name (last)
+                appPath = app.appClass.split(".").slice(1, -1).join('/');
+            }
+        }
+        return appPath;
+    };
+
+    /**
+     *
+     * @param appNameOrPath application name, application definition or application path
+     * @returns {string}
+     */
+    var getApplicationNamespace = function (appNameOrPath) {
+        var appNamespace = appNameOrPath;
+        if (appNameOrPath) {
+            if (typeof appNameOrPath == "string" && appNameOrPath.indexOf('/') != -1) {
+                // app is the path
+                appNamespace = appNameOrPath.replace(/\//g, '.');
+                if (!appNamespace.startsWith("expresso")) {
+                    // add the name of the site
+                    appNamespace = expresso.Common.getSiteName() + "." + appNamespace;
+                }
+            } else {
+                // get the definition of the app
+                var app = getApplication(appNameOrPath);
+                if (app && app.appClass) {
+                    appNamespace = app.appClass;
+                    // remove the application name
+                    appNamespace = appNamespace.substring(0, appNamespace.lastIndexOf('.'));
+                }
+            }
+        }
+        return appNamespace;
+    };
+
+    /**
+     *
+     * @param appNamespace application namespace
+     */
+    var createApplicationNamespace = function (appNamespace) {
+        if (appNamespace) {
+            var subNamespaces = appNamespace.split("\.");
+            var namespace = window;
+            subNamespaces.forEach((ns) => {
+                // console.log("Creating [" + ns + "]");
+                namespace[ns] = namespace[ns] || {};
+                namespace = namespace[ns];
+            });
+        }
+    };
+
+    /**
+     *
      * @param path
      * @param [filename] by default, labels
      * @param [lang]
@@ -711,25 +775,28 @@ expresso.Common = (function () {
 
         var labelFullFileName = (path ? path + "/" : "") + filename + (lang ? "_" + lang : "") + ".js";
 
+        // console.log("Loading label file [" + labelFullFileName + "]");
+
+        if (filename != "labels") {
+            var prefix = filename.substring(0, filename.indexOf('-'));
+            path = (path ? path + "/" : "") + prefix;
+        } else {
+            path = path || "";
+        }
+
+        // before evaluating, make sure the namespace already exists
+        var namespace = getApplicationNamespace(path);
+        createApplicationNamespace(namespace);
+
         // get the label.js file
         getScript(labelFullFileName).done(function () {
-            if (filename != "labels") {
-                var prefix = filename.substring(0, filename.indexOf('-'));
-                path = (path ? path + "/" : "") + prefix;
-            } else {
-                path = path || "";
+            try {
+                var labels = namespace + ".Labels";
+                // console.log("Labels [" + labels + "]");
+                labels = eval(labels);
+            } catch (e) {
+                console.error("Errors parsing labels [" + labels + "]");
             }
-
-            // get the object-class and instantiate the object
-            var labels = path.replace(/\//g, '.') + ".Labels";
-            if (!labels.startsWith("expresso")) {
-                // add the name of the site
-                labels = expresso.Common.getSiteName() + "." + labels;
-            }
-
-            // change the string to a pointer to the labels
-            //console.log("Labels [" + labels + "]");
-            labels = eval(labels);
             $deferred.resolve(labels);
         }).fail(function () {
             if (stopIfFail) {
@@ -739,7 +806,7 @@ expresso.Common = (function () {
                 loadLabels(path, filename, null, true).done(function (labels) {
                     $deferred.resolve(labels);
                 }).fail(function (jqxhr) {
-                    console.warn("Cannot load labels [" + path + ":" + filename + "]", jqxhr);
+                    console.warn("Cannot load labels [" + labelFullFileName + "]", jqxhr);
                     $deferred.reject();
                 });
             }
@@ -1282,7 +1349,9 @@ expresso.Common = (function () {
     var getApplication = function (appName) {
         var app;
         if (typeof appName === "string") {
-            app = siteNamespace.config.Applications.appNameMap[appName];
+            if (siteNamespace.config.Applications && siteNamespace.config.Applications.appNameMap) {
+                app = siteNamespace.config.Applications.appNameMap[appName];
+            }
         } else {
             app = appName;
         }
@@ -1332,16 +1401,12 @@ expresso.Common = (function () {
 
             // when the master is loaded (if needed)
             masterDeferred.done(function (masterApplication) {
-
                 // find the application path from the appClass
-                var appPath;
-                if (appDef.appClass.startsWith("expresso")) {
-                    // remove only the application name (last)
-                    appPath = appDef.appClass.split(".").slice(0, -1).join('/');
-                } else {
-                    // remove common (first namespace) and the application name (last)
-                    appPath = appDef.appClass.split(".").slice(1, -1).join('/');
-                }
+                var appPath = getApplicationPath(appDef);
+
+                // make sure the namespace is created
+                var namespace = getApplicationNamespace(appPath);
+                createApplicationNamespace(namespace);
 
                 getScript(appPath + "/app_class.js").done(function () {
                     try {
@@ -1373,7 +1438,11 @@ expresso.Common = (function () {
                             appInstance.displayAsMaster = true;
                         }
 
-                        $deferred.resolve(appInstance);
+                        appInstance.initData().done(function () {
+                            $deferred.resolve(appInstance);
+                        }).fail(function () {
+                            $deferred.reject();
+                        });
                     } catch (ex) {
                         console.trace(ex);
                         alert("Cannot instantiate the app_class: " + ex);
@@ -1418,7 +1487,7 @@ expresso.Common = (function () {
         delete customOptions.queryParameters.screenMode;
         delete customOptions.queryParameters.securityToken;
         delete customOptions.queryParameters.userName;
-        // delete customOptions.queryParameters.loginToken;
+        //  delete customOptions.queryParameters.loginToken;
         // delete customOptions.queryParameters.fullScreen;
 
         // add the queryParameters to the URL
@@ -1427,7 +1496,7 @@ expresso.Common = (function () {
             url += "&" + queryParameters;
         }
 
-        //console.log("url [" + url + "]");
+        // console.log("url [" + url + "]");
         window.history.pushState(data, null, url);
 
         // update the title
@@ -1991,6 +2060,9 @@ expresso.Common = (function () {
 
         getSiteName: getSiteName,
         getSiteNamespace: getSiteNamespace,
+        createApplicationNamespace: createApplicationNamespace,
+        getApplicationNamespace: getApplicationNamespace,
+        getApplicationPath: getApplicationPath,
         getApplication: getApplication,
         addApplication: addApplication,
         getApplicationNameMap: getApplicationNameMap,

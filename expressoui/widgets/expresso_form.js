@@ -359,10 +359,11 @@
                                 clearPromptChar: true,
                                 unmaskOnPost: true,
                                 change: function () {
+                                    var maskedTextBox = this;
                                     if ($el.data("raw") == true) {
-                                        var raw = this.raw(); //the result value will be "123456"
+                                        var raw = maskedTextBox.raw(); //the result value will be "123456"
                                         if (resource && name) {
-                                            if (this.options.mask) {
+                                            if (maskedTextBox.options.mask) {
                                                 resource.set(name, raw);
                                             }
                                         }
@@ -408,7 +409,7 @@
                         }
                         $el.kendoNumericTextBox({
                             format: format,
- 							decimals: decimals,
+                            decimals: decimals,
                             restrictDecimals: true
                         });
                         break;
@@ -437,14 +438,14 @@
                         $el.attr("type", "date");
                         $el.addClass("date");
                         $el.kendoDateTimePicker({
-                            interval: field.interval,
+                            interval: (field ? field.interval : undefined)
                         });
                         break;
                     case "time":
                         $el.attr("type", "text");
                         $el.addClass("time");
                         $el.kendoExpressoTimePicker({ // kendoExpressoMaskedTimePicker?
-                            interval: field.interval
+                            interval: (field ? field.interval : undefined)
                         });
                         break;
                     case "select":

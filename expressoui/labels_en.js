@@ -218,6 +218,8 @@ $.extend(expresso.Labels, {
 
     confirmTitle: "Confirmation",
     confirmAction: "Are you sure you want to execute this action: ",
+    confirmDeleteElement: "Are you sure you want to delete this item?",
+
     deleteConfirmation: "Are you sure you want to delete this record ?",
     deleteConfirmationMany: "Are you sure you want to delete the {count} selected records ?",
 
@@ -359,6 +361,12 @@ $.extend(expresso.Labels, {
     emailTokenInvalidText: "The token is not valid. Do you want to get a new token?",
 
     userNotAllowedToLoadApplication: "You are not allowed to load this application",
+
+    // filter
+    addFilterGroup: "Group",
+    addFilterRule: "Rule",
+    visualFilter: "Visual",
+    sourceFilter: "Source code",
 
     _: ""
 });
