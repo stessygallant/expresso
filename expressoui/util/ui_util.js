@@ -1833,7 +1833,7 @@ expresso.util.UIUtil = (function () {
                         var id = widget.value();
 
                         if (id || reference.allowCreate === true) {
-                            expresso.Common.loadResourceManager(reference.resourceManagerDef).done(function (resourceManager) {
+                            expresso.Common.loadApplication(reference.resourceManagerDef).done(function (resourceManager) {
                                 resourceManager.displayForm(id ? {id: id} : null, function ($window, resource) {
                                     // the form is now opened
                                     if (reference.onEdit) {
@@ -1946,7 +1946,7 @@ expresso.util.UIUtil = (function () {
                     var $windowDiv = $(this);
 
                     // load the manager
-                    expresso.Common.loadResourceManager(resourceManagerDef, {
+                    expresso.Common.loadApplication(resourceManagerDef, {
                         multipleSelectionEnabled: multipleSelectionEnabled === true,
                         filter: filter,
                         sort: sort

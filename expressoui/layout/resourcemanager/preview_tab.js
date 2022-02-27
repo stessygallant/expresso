@@ -122,11 +122,8 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
         // by default, we display all sub resources (not only active)
         options = $.extend({}, {activeOnly: false}, options);
 
-        expresso.Common.loadResourceManager(subResourceManagerDef, options, null, true).done(function (subResourceManager) {
+        expresso.Common.loadApplication(subResourceManagerDef, options, null, _this.resourceManager).done(function (subResourceManager) {
             _this.subResourceManager = subResourceManager;
-
-            // keep a reference on the master resource manager
-            _this.subResourceManager.setMasterResourceManager(_this.resourceManager);
 
             // when there is a change in subresource (update or create or delete), publish an update on the current resource
             _this.subResourceManager.eventCentral.subscribeEvent([_this.RM_EVENTS.RESOURCE_UPDATED, _this.RM_EVENTS.RESOURCE_CREATED,
@@ -172,11 +169,9 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
         // by default, we display all sibling resources (not only active)
         options = $.extend({}, {activeOnly: false}, options);
 
-        expresso.Common.loadResourceManager(resourceManagerDef, options, null, false).done(function (resourceManager) {
+        expresso.Common.loadApplication(resourceManagerDef, options, null, null,
+            _this.resourceManager).done(function (resourceManager) {
             _this.subResourceManager = resourceManager;
-
-            // keep a reference on the sibling resource manager
-            _this.subResourceManager.setSiblingResourceManager(_this.resourceManager);
 
             // when there is a change in sibling (update or create or delete), publish an update on the current resource
             _this.subResourceManager.eventCentral.subscribeEvent([_this.RM_EVENTS.RESOURCE_UPDATED, _this.RM_EVENTS.RESOURCE_CREATED,

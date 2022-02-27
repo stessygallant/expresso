@@ -54,6 +54,11 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                     resourceSecurityPath = expresso.Common.getResourceSecurityPathFromPath(content.countUrl);
                 }
 
+                if (resourceSecurityPath == "document") {
+                    // the user needs to have read access to <resourcePath>/document
+                    resourceSecurityPath = this.resourceManager.getResourceSecurityPath() + "/document";
+                }
+
                 // if the resource name is defined, verify if the user has access
                 if (resourceSecurityPath && !expresso.Common.isUserAllowed(resourceSecurityPath)) {
                     userAllowed = false;

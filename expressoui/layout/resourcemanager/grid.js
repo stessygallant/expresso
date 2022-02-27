@@ -778,7 +778,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     if (field && field.type == "date") {
                         fieldName = "expresso.util.Formatter.formatDate(" + fieldName + ")";
                     }
-                    mobileTemplate.push("<span class='" + clazz + "'>#:" + fieldName + "#</span>");
+                    mobileTemplate.push("<span class='" + clazz + "'>#:(" + fieldName + "?" + fieldName + ":'')#</span>");
                 }
             }
         });
@@ -810,9 +810,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // fix object references in mobile template
         var _this = this;
+        var mobileColumns = this.getMobileColumns();
         $.each(["mobileNumberFieldName", "mobileDescriptionFieldName", "mobileTopRightFieldName",
             "mobileMiddleLeftFieldName", "mobileMiddleRightFieldName"], function () {
-            var fieldName = _this[this];
+            var fieldName = mobileColumns[this];
             // console.log("Mobile [" + fieldName + "]");
 
             if (fieldName && fieldName.indexOf(".") != -1) {
@@ -2008,7 +2009,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (this.referenceResourceManagers[referenceManager]) {
                     this.referenceResourceManagers[referenceManager].displayForm({id: referenceId});
                 } else {
-                    expresso.Common.loadResourceManager(referenceManager).done(function (resourceManager) {
+                    expresso.Common.loadApplication(referenceManager).done(function (resourceManager) {
                         _this.referenceResourceManagers[referenceManager] = resourceManager;
                         resourceManager.displayForm({id: referenceId});
                     });
@@ -3191,7 +3192,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     needSeparator = true;
                     toolbar.push({
                         template: "<button type='button' class='k-button exp-button exp-" + action.name + "-button" +
-                            (action.resourceCollectionAction ? " exp-creation-button" :
+                            (action.resourceCollectionAction ? " exp-always-active-button" :
                                 (action.supportMultipleSelections === false ? " exp-single-selection" : " exp-multiple-selection")) +
                             "' title='" + action.title + "'><span class='fa " + action.icon + "'>" +
                             "<span class='exp-button-label' data-text-key='" + action.label + "'></span></span></button>"

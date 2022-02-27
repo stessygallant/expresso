@@ -538,7 +538,7 @@
                 font-weight: 600;
                 line-height: 1.3;
                 text-align: center;
-                padding-top: 0.6em;
+                padding-top: 0.5em;
             }
 
             .count-label {
@@ -1186,6 +1186,18 @@ k-widget k-window
             tr {
                 td {
                     line-height: 1.5;
+                }
+            }
+        }
+    }
+}
+
+.exp-screen-mode-tablet {
+    .exp-grid {
+        tbody {
+            tr {
+                td {
+                    line-height: 1.8;
                 }
             }
         }

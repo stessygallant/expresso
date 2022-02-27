@@ -26,6 +26,7 @@ expresso.util.Model = (function () {
             var $deferredModel;
             if (typeof resourceManager.model === "string") {
                 var modelPath = resourceManager.model;
+                // console.log("MODEL PATH [" + modelPath + "]");
                 $deferredModel = $.get(modelPath).then(function (model) {
                     // backward compatibility: model could use _this to refer to resourceManager
                     var _this = resourceManager; // DO NOT TOUCH _this
@@ -35,10 +36,8 @@ expresso.util.Model = (function () {
                     } else {
                         // model is assigned to the namespace .Model
                         // sherpa.applications.operation.gatetransactionmanager.Model
-                        var modelNamespace = expresso.Common.getSiteName() + "." +
-                            modelPath.substring(0, modelPath.lastIndexOf('/'))
-                                .replace(/\//g, '.') + ".Model";
-                        // console.log(modelNamespace);
+                        var modelNamespace = expresso.Common.getApplicationNamespace(modelPath) + ".Model";
+                        // console.log("modelNamespace [" + modelNamespace + "]");
                         model = eval(modelNamespace);
                     }
                     return model;
@@ -313,6 +312,7 @@ expresso.util.Model = (function () {
                 // overwrite the model
                 resourceManager.model = model;
 
+                // console.log(resourceManager.resourceName + " - Model: ", resourceManager.masterResourceManager);
                 $.when(
                     // load values if needed
                     loadValues(resourceManager.model, resourceManager.labels),

@@ -206,7 +206,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         }
         wsPath += this.resourcePath + (id !== undefined && id !== null ? "/" + id : "");
 
-        //console.log("wsPath: [" + wsPath + "]");
+        // console.log("wsPath: [" + wsPath + "]");
         return wsPath;
     },
 
@@ -416,8 +416,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
                     $deferred.resolve();
                 });
             });
-        }
-        else {
+        } else {
             $deferred.resolve();
         }
 
@@ -940,6 +939,13 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
                         // define default title
                         if (!action.title) {
                             action.title = action.name + "ButtonTitle";
+                        }
+
+                        // if the action is applicable for collection, it is only
+                        // available in the grid and not the form
+                        if (action.resourceCollectionAction) {
+                            action.showButtonInGridToolbar = true;
+                            action.showButtonInForm = false;
                         }
 
                         // add the performAction method if needed

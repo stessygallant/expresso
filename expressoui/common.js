@@ -351,7 +351,7 @@ expresso.Common = (function () {
                                 if (expresso.Security) {
                                     expresso.Security.displayLoginPage();
                                 } else {
-                            siteNamespace.Main.displayLoginPage();
+                                    siteNamespace.Main.displayLoginPage();
                                 }
                             });
                         } else if (jqxhr.status == HTTP_CODES.FORBIDDEN) {
@@ -415,7 +415,7 @@ expresso.Common = (function () {
 
         // try to get the label (if not, keep the current text for backward compatibility)
         description = expresso.Common.getLabel(description, currentRequestLabels, params, true) || description;
-        expresso.util.UIUtil.buildMessageWindow(description, {type: "error"});
+        return expresso.util.UIUtil.buildMessageWindow(description, {type: "error"});
     };
 
     /**
@@ -716,6 +716,10 @@ expresso.Common = (function () {
         var appNamespace = appNameOrPath;
         if (appNameOrPath) {
             if (typeof appNameOrPath == "string" && appNameOrPath.indexOf('/') != -1) {
+                // if there is the filename, remove it
+                if (appNameOrPath.indexOf('.') != -1) {
+                    appNameOrPath = appNameOrPath.substr(0, appNameOrPath.lastIndexOf('/'));
+                }
                 // app is the path
                 appNamespace = appNameOrPath.replace(/\//g, '.');
                 if (!appNamespace.startsWith("expresso")) {
@@ -1371,36 +1375,32 @@ expresso.Common = (function () {
      * @param appName name of the application (or the application definition)
      * @param [options] options for the resource manager
      * @param [$containerDiv] div where to put the $domElement
-     * @param [loadingFromMaster] if true, it means that the application is loaded from the Master application
+     * @param [masterResourceManager]  the master resource manager
+     * @param [siblingResourceManager]  the sibling resource manager
      * @returns {*} a Promise when the script is loaded and the instance is created
      */
-    var loadApplication = function (appName, options, $containerDiv, loadingFromMaster) {
+    var loadApplication = function (appName, options, $containerDiv, masterResourceManager, siblingResourceManager) {
         var $deferred = $.Deferred();
 
         var appDef = getApplication(appName);
-
-        //console.log("loadApplication: " + appDef.appClass);
+        // console.log("loadApplication: " + appDef.appClass + " parent:" + appDef.parent + " masterResourceManager:" + masterResourceManager);
 
         if (appDef && appDef.appClass) {
 
             // if the application has a master application that need to be loaded, load it first
             var masterDeferred = $.Deferred();
-            if (!loadingFromMaster && appDef.parent) {
-                loadApplication(appDef.parent, null, null, false).done(function (ancestor) {
+            if (!masterResourceManager && appDef.parent) {
+                loadApplication(appDef.parent).done(function (ancestor) {
                     ancestor.loadedBySubApplication = true;
-
-                    // we need to initialize the data for the ancestor (they will not be rendered)
-                    ancestor.initData().done(function () {
-                        masterDeferred.resolve(ancestor);
-                    });
+                    masterDeferred.resolve(ancestor);
                 });
             } else {
                 // no master parent to be loaded
-                masterDeferred.resolve(null);
+                masterDeferred.resolve(masterResourceManager);
             }
 
             // when the master is loaded (if needed)
-            masterDeferred.done(function (masterApplication) {
+            masterDeferred.done(function (masterResourceManager) {
                 // find the application path from the appClass
                 var appPath = getApplicationPath(appDef);
 
@@ -1428,16 +1428,22 @@ expresso.Common = (function () {
                             appInstance.setCustomOptions(options);
                         }
 
-                        // for Resource Manager
+                        // keep a reference on the master resource manager
                         if (appInstance.setMasterResourceManager) {
-                            appInstance.setMasterResourceManager(masterApplication);
+                            appInstance.setMasterResourceManager(masterResourceManager);
+                        }
+
+                        // keep a reference on the sibling resource manager
+                        if (appInstance.setSiblingResourceManager) {
+                            appInstance.setSiblingResourceManager(siblingResourceManager);
                         }
 
                         // if the application is displayed in the $containerDiv, it means it is a master view
-                        if ($containerDiv || (loadingFromMaster === undefined)) {
+                        if ($containerDiv || (masterResourceManager === undefined)) {
                             appInstance.displayAsMaster = true;
                         }
 
+                        // then initialize the data for the application
                         appInstance.initData().done(function () {
                             $deferred.resolve(appInstance);
                         }).fail(function () {
@@ -1579,12 +1585,13 @@ expresso.Common = (function () {
      * @param resourceManagerDef name of the application (or the application definition).
      * @param [options] options for the resource manager
      * @param [$containerDiv] div where to put the $domElement
-     * @param [loadingFromMaster] if true, it means that the resource manager is loaded from the Master resource manager
+     * @param [masterResourceManager] the master resource manager
      * so it means that we do not need to load the ancestor
      * @returns {*} a promise when the resource manager is loaded
      */
-    var loadResourceManager = function (resourceManagerDef, options, $containerDiv, loadingFromMaster) {
-        return loadApplication(resourceManagerDef, options, $containerDiv, loadingFromMaster);
+    var loadResourceManager = function (resourceManagerDef, options, $containerDiv, masterResourceManager) {
+        console.warn("DEPRECATED loadResourceManager. Use loadApplication instead");
+        return loadApplication(resourceManagerDef, options, $containerDiv, masterResourceManager);
     };
 
     /**
