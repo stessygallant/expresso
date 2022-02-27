@@ -26,7 +26,7 @@
             value: undefined,
             autoLoad: true,
             dataValueField: "id",
-            dataTextField: "label",
+            dataTextField: "label"
         },
         events: ["change"],
 
