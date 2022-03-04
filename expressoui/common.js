@@ -51,6 +51,9 @@ expresso.Common = (function () {
     // reference the current labels used by the current application
     var currentRequestLabels = undefined;
 
+    // script cache
+    var scriptsCache = {};
+
     /**
      * Helper method to create a filter
      * @param criteria  list of criteria for the filter (object or array)
@@ -471,23 +474,32 @@ expresso.Common = (function () {
     var getScript = function (path) {
         path += (path.indexOf("?") != -1 ? "&" : "?") + "ver=" + siteNamespace.config.Configurations.version;
 
-        var options = {
-            dataType: "script",
-            cache: true,
-            url: path
-        };
+        if (scriptsCache[path]) {
+            // do not load the same script multiple times
+            return $.Deferred().resolve();
+        } else {
+            var options = {
+                dataType: "script",
+                cache: true,
+                url: path
+            };
 
-        // Use $.ajax() since it is more flexible than $.getScript
-        // Return the jqXHR object so we can chain callbacks
-        return $.ajax(options).fail(function (jqxhr) {
-            if (path.indexOf("labels") != -1) {
-                // if a labels file does not exists, it is not a problem: we will load the default one
-                jqxhr.alreadyProcessed = true;
-            } else {
-                // this is usually a development issue
-                console.error("Error loading script [" + path + "]", jqxhr);
-            }
-        });
+            // Use $.ajax() since it is more flexible than $.getScript
+            // Return the jqXHR object so we can chain callbacks
+            return $.ajax(options)
+                .done(function () {
+                    scriptsCache[path] = true;
+                })
+                .fail(function (jqxhr) {
+                    if (path.indexOf("labels") != -1) {
+                        // if a labels file does not exists, it is not a problem: we will load the default one
+                        jqxhr.alreadyProcessed = true;
+                    } else {
+                        // this is usually a development issue
+                        console.error("Error loading script [" + path + "]", jqxhr);
+                    }
+                });
+        }
     };
 
     /**

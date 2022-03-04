@@ -146,11 +146,6 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
         return expresso.Common.updateValues(va, data, field, allValuesLabel, this.labels);
     },
 
-    // @override
-    onDomElementInitialized: function () {
-        return this.$domElement.kendoExpressoForm({labels: this.labels}).data("kendoExpressoForm").ready();
-    },
-
     /**
      * A utility method to handle the creation and removal of interval when not needed anymore
      *

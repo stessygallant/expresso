@@ -57,7 +57,7 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
         $domElement.data("object-instance", this);
 
         // resize the section at the end of this call
-       window.setTimeout(function () {
+        window.setTimeout(function () {
             if (_this.$domElement) {
                 _this.resizeContent();
             }
@@ -103,35 +103,25 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
         var $domElement = $("<div class='exp-application-base'></div>");
         $domElement.appendTo($containerDiv);
 
-        // load the data (if any)
+        // load the HTML page
         this.$readyPromise = $.Deferred();
-        _this.initData().done(function () {
+        expresso.Common.loadHTML($domElement, _this.applicationPath + "/app.html", null, false).done(function () {
+            // application could have been destroyed while waiting for HTML
+            if (_this.applicationPath) {
+                //console.log("app.html loaded successfully");
+                _this.initDOMElement($domElement);
 
-            // load the HTML page
-            expresso.Common.loadHTML($domElement, _this.applicationPath + "/app.html", null, false).done(function () {
-                // application could have been destroyed while waiting for HTML
-                if (_this.applicationPath) {
-                    //console.log("app.html loaded successfully");
-                    _this.initDOMElement($domElement);
+                // localize the application
+                expresso.Common.localizePage(_this.$domElement, _this.labels);
 
-                    // then customize the form if needed
-                    _this.onDomElementInitialized().done(function () {
-                        _this.$readyPromise.resolve();
-                    });
-                }
-            });
+                // then customize the form if needed
+                _this.$domElement.kendoExpressoForm({labels: this.labels}).data("kendoExpressoForm").ready().done(function() {
+                    _this.$readyPromise.resolve();
+                });
+            }
         });
-        return this.$readyPromise;
-    },
 
-    /**
-     *
-     * @return {*}
-     */
-    onDomElementInitialized: function () {
-        // localize the application
-        expresso.Common.localizePage(this.$domElement, this.labels);
-        return $.Deferred().resolve();
+        return this.$readyPromise;
     },
 
     /**

@@ -206,7 +206,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         }
         wsPath += this.resourcePath + (id !== undefined && id !== null ? "/" + id : "");
 
-        // console.log("wsPath: [" + wsPath + "]");
+        //console.log("wsPath: [" + wsPath + "]");
         return wsPath;
     },
 
@@ -457,42 +457,40 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
         this.$readyPromise = $.Deferred();
 
-        // load the data (if any)
-        this.initData().done(function () {
-            _this.initDOMElement($domElement);
+        // init the IU
+        _this.initDOMElement($domElement);
 
-            // now load each sections in the layout
-            $.when(_this.loadSections()).done(function () {
-                _this.sections.grid.initGrid();
-                if (autoLoad) {
-                    var query;
+        // now load each sections in the layout
+        $.when(_this.loadSections()).done(function () {
+            _this.sections.grid.initGrid();
+            if (autoLoad) {
+                var query;
 
-                    // if there is an initial filter, use it
-                    if (_this.options.initialFilter) {
-                        query = {filter: _this.options.initialFilter};
-                    } else if (_this.options.query) {
-                        query = _this.options.query;
-                    } else {
-                        // verify if there is a favorite grid preferences to be loaded
-                        var gridPreference = _this.getApplicationPreferences().favoriteGridPreference ?
-                            _this.getApplicationPreferences().gridPreferences[_this.getApplicationPreferences().favoriteGridPreference] :
-                            null;
-                        if (gridPreference) {
-                            query = gridPreference.query;
-                        }
-                    }
-
-                    // load the grid
-                    _this.sections.grid.isReady().done(function () {
-                        // if there is a query, overwrite the current default grid filter
-                        _this.sections.grid.loadResources(query, _this.options.autoEdit, !!query).done(function () {
-                            _this.$readyPromise.resolve();
-                        });
-                    });
+                // if there is an initial filter, use it
+                if (_this.options.initialFilter) {
+                    query = {filter: _this.options.initialFilter};
+                } else if (_this.options.query) {
+                    query = _this.options.query;
                 } else {
-                    _this.$readyPromise.resolve();
+                    // verify if there is a favorite grid preferences to be loaded
+                    var gridPreference = _this.getApplicationPreferences().favoriteGridPreference ?
+                        _this.getApplicationPreferences().gridPreferences[_this.getApplicationPreferences().favoriteGridPreference] :
+                        null;
+                    if (gridPreference) {
+                        query = gridPreference.query;
+                    }
                 }
-            });
+
+                // load the grid
+                _this.sections.grid.isReady().done(function () {
+                    // if there is a query, overwrite the current default grid filter
+                    _this.sections.grid.loadResources(query, _this.options.autoEdit, !!query).done(function () {
+                        _this.$readyPromise.resolve();
+                    });
+                });
+            } else {
+                _this.$readyPromise.resolve();
+            }
         });
 
         return this.$readyPromise;
