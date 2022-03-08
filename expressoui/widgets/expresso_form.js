@@ -144,10 +144,11 @@
                 }
             } else if (field && field.widget) {
                 // if there is a widget define on the field, use it
-                $el[field.widget]({
+                var widgetOptions = $.extend({}, true, {
                     field: field,
                     value: resource ? resource[name] : undefined
-                });
+                }, field.widgetOptions)
+                $el[field.widget](widgetOptions);
             } else if (field && field.reference) {
                 if (field.multipleSelection) {
                     if (field.lookupSelection) {

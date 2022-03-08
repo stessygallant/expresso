@@ -25,6 +25,7 @@
             },
             value: undefined,
             autoLoad: true,
+            showHeader: true,
             dataValueField: "id",
             dataTextField: "label"
         },
@@ -55,7 +56,9 @@
             if (initialValue !== undefined) {
                 if (this.url) {
                     var values;
-                    if (initialValue.length !== undefined) {
+                    if (initialValue === null) {
+                        values = initialValue;
+                    } else if (initialValue.length !== undefined) {
                         values = initialValue;
                     } else if (initialValue.indexOf && initialValue.indexOf(",") != -1) {
                         values = initialValue.split(",");
@@ -103,45 +106,49 @@
             // create the fieldset
             var $div = $("<div class='exp-multicheckbox-div'><div class='header'></div><div class='content'></div></div>").appendTo(this.$wrapper);
 
-            var $header = $div.children(".header");
             var $content = $div.children(".content");
 
-            // add a search input
-            var $searchInput = $("<input type='search' class='k-textbox' placeholder='searchPlaceHolder'>").appendTo($header);
+            var $header = $div.children(".header");
+            if (this.options.showHeader === false) {
+                $header.hide();
+            } else {
+                // add a search input
+                var $searchInput = $("<input type='search' class='k-textbox' placeholder='searchPlaceHolder'>").appendTo($header);
 
-            // add the checkall in the legend
-            $header.append(expresso.util.UIUtil.buildCheckBox("checkAll", expresso.Common.getLabel("checkAll")));
-            var $checkAllCheckbox = $header.find("input[type=checkbox]");
+                // add the checkall in the legend
+                $header.append(expresso.util.UIUtil.buildCheckBox("checkAll", expresso.Common.getLabel("checkAll")));
+                var $checkAllCheckbox = $header.find("input[type=checkbox]");
 
-            // listen to the search input
-            $searchInput.on("change paste keyup search", function () {
-                var text = this.value.trim().latinize().toLowerCase();
+                // listen to the search input
+                $searchInput.on("change paste keyup search", function () {
+                    var text = this.value.trim().latinize().toLowerCase();
 
-                // always clear the checkbox
-                $checkAllCheckbox.prop("checked", false);
+                    // always clear the checkbox
+                    $checkAllCheckbox.prop("checked", false);
 
-                if (text) {
-                    // hide is no match with the label
-                    $content.find("label").each(function () {
-                        var $label = $(this);
-                        if ($label.text().latinize().toLowerCase().indexOf(text) == -1) {
-                            $label.parent().hide();
-                        } else {
-                            $label.parent().show();
-                        }
-                    });
-                } else {
-                    // show all
-                    $content.find("label").parent().show();
-                }
-            });
+                    if (text) {
+                        // hide is no match with the label
+                        $content.find("label").each(function () {
+                            var $label = $(this);
+                            if ($label.text().latinize().toLowerCase().indexOf(text) == -1) {
+                                $label.parent().hide();
+                            } else {
+                                $label.parent().show();
+                            }
+                        });
+                    } else {
+                        // show all
+                        $content.find("label").parent().show();
+                    }
+                });
 
-            // listen to checkAll checkbox
-            $checkAllCheckbox.on("click", function () {
-                // select only visible
-                $content.find("input[type=checkbox]:visible").prop("checked", this.checked);
-                _this._refreshValue(true);
-            });
+                // listen to checkAll checkbox
+                $checkAllCheckbox.on("click", function () {
+                    // select only visible
+                    $content.find("input[type=checkbox]:visible").prop("checked", this.checked);
+                    _this._refreshValue(true);
+                });
+            }
 
             // listen to checkboxes
             $content.on("change", "input[type=checkbox]", function () {
@@ -206,7 +213,7 @@
                 dataItem[this.options.dataValueField]).appendTo(this.$wrapper.find(".content"));
 
             // add all possible values to $select
-            var $option = $("<option value='" + dataItem[this.options.dataValueField] + "'>" +
+            $("<option value='" + dataItem[this.options.dataValueField] + "'>" +
                 dataItem[this.options.dataTextField] + "</option>").appendTo(this.$element);
             $checkboxDiv.find("input").data("dataItem", dataItem);
 

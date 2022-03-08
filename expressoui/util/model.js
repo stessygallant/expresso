@@ -155,6 +155,15 @@ expresso.util.Model = (function () {
                             if (field.nullable && field.defaultValue && field.defaultValue.length === 0) {
                                 field.defaultValue = null;
                             }
+
+                            // then add the Labels conterpart
+                            var labelField = f.substring(0, f.length - 3) + "Labels";
+                            if (!model.fields[labelField]) {
+                                model.fields[labelField] = {
+                                    type: "string",
+                                    transient: true
+                                };
+                            }
                         }
 
                         // if nullable is true, the defaultValue is ignored

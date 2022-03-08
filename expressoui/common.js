@@ -1648,9 +1648,25 @@ expresso.Common = (function () {
         }
 
         if (label === undefined) {
+            // if it is a Labels, try with Ids
+            if (key.endsWith("Labels")) {
+                key = key.substring(0, key.length - "Labels".length) + "Ids";
+            }
+            label = labels[key];
+        }
+
+        if (label === undefined) {
             // if it is an Id, use the entity name only
             if (key.endsWith("Id")) {
                 key = key.substring(0, key.length - 2);
+            }
+            label = labels[key];
+        }
+
+        if (label === undefined) {
+            // if it is an Ids, use the entity name only
+            if (key.endsWith("Ids")) {
+                key = key.substring(0, key.length - 3);
             }
             label = labels[key];
         }

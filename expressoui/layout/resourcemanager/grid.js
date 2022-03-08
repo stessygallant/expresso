@@ -323,6 +323,22 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         column.filterable = false;
                     }
 
+                    // Ids column: show Labels (usually values)
+                    if (field && column.field.endsWith("Ids")) {
+                        // display the labels, but filter on id
+                        var labelColumn = column.field.substring(0, column.field.length - 3) + "Labels";
+                        column.template = column.template ||
+                            "<div class='exp-grid-multiple-lines' title='#=(" + labelColumn
+                            + "||'').replace(/,/g, \"\\r\\n\")#'>#=(" + labelColumn + "||'').replace(/,/g, \"<br>\")#</div>";
+                    }
+
+                    // Labels column (usually references as persons, etc)
+                    if (field && column.field.endsWith("Labels")) {
+                        column.template = column.template ||
+                            "<div class='exp-grid-multiple-lines' title='#=(" + column.field
+                            + "||'').replace(/,/g, \"\\r\\n\")#'>#=(" + column.field + "||'').replace(/,/g, \"<br>\")#</div>";
+                    }
+
                     // remove the filter if it is set to false
                     if (column.filterable !== false) {
                         //  remove the filter

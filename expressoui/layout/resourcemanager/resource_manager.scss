@@ -358,7 +358,7 @@
         }
 
         th.k-header:first-child {
-            text-align: center;
+
             text-overflow: clip;
         }
     }
@@ -393,10 +393,6 @@
                 line-height: 1.3;
                 padding: 0.2em 0.2em;
 
-                &:first-child {
-                    text-align: center;
-                }
-
                 &.center {
                     text-align: center;
                 }
@@ -410,6 +406,13 @@
                 div.number {
                     text-align: right;
                     padding-right: 0.4em;
+                }
+
+                div.exp-grid-multiple-lines {
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
                 }
             }
 

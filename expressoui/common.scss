@@ -48,6 +48,17 @@
     border: 1px solid red !important;
 }
 
+::placeholder { // Chrome, Firefox, Opera, Safari 10.1+
+    color: #666666;
+    font-style: italic;
+    opacity: 1; // Firefox
+}
+
+::-ms-input-placeholder { // Microsoft Edge
+    color: #666666;
+    font-style: italic;
+}
+
 //
 // ------------------------------------------------------------------------------------------------------------------
 // WINDOW CSS
@@ -202,7 +213,8 @@
 
 .k-multiselect-wrap {
     max-height: 140px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 
@@ -352,7 +364,7 @@
     }
 
     .content {
-        height: 150px;
+        // height: 150px;
         max-height: 200px;
         overflow-y: auto;
         width: 100%;
