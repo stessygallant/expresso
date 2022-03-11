@@ -108,14 +108,14 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
         expresso.Common.loadHTML($domElement, _this.applicationPath + "/app.html", null, false).done(function () {
             // application could have been destroyed while waiting for HTML
             if (_this.applicationPath) {
-                //console.log("app.html loaded successfully");
+                // console.log("app.html loaded successfully");
                 _this.initDOMElement($domElement);
-
-                // localize the application
-                expresso.Common.localizePage(_this.$domElement, _this.labels);
 
                 // then customize the form if needed
                 _this.$domElement.kendoExpressoForm({labels: this.labels}).data("kendoExpressoForm").ready().done(function() {
+                    // localize the application
+                    expresso.Common.localizePage(_this.$domElement, _this.labels);
+
                     _this.$readyPromise.resolve();
                 });
             }

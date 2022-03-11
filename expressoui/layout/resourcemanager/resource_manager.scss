@@ -470,21 +470,21 @@
             &.k-alt.highlighted-row:not(.k-state-selected),
             &.highlighted-row.k-state-selected,
             &.highlighted-row a:link:not(.k-button) {
-                color: #ff1111;
+                color: $gridRowFontRed;
             }
 
             &.highlighted-warning-background-row:not(.k-state-selected),
             &.k-alt.highlighted-warning-background-row:not(.k-state-selected),
             &.highlighted-warning-background-row.k-state-selected {
-                background-color: #FFFF99 !important;
+                background-color: $gridRowBackgroundYellow !important;
             }
 
             &.highlighted-positive-row:not(.k-state-selected), &.k-alt.highlighted-positive-row:not(.k-state-selected) {
-                color: green;
+                color: $gridRowFontGreen;
             }
 
             &.highlighted-positive-row.k-state-selected {
-                color: green;
+                color: $gridRowFontGreen;
             }
 
             &.highlighted-row.k-alt {

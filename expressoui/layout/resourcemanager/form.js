@@ -382,10 +382,10 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         // add the creator and the last modified user if present
         if (resource && resource.id && (resource.creationUserFullName || resource.lastModifiedUserFullName)) {
             var s = "<div class='creation-div'>";
-            if (resource && resource.creationUserId) {
+            if (resource && resource.creationUserFullName) {
                 s += "<span>" + this.getLabel("createdByLabel") + " " + resource.creationUserFullName + " " + this.getLabel("createdByDateLabel") + " " + expresso.util.Formatter.formatDate(resource.creationDate, expresso.util.Formatter.DATE_FORMAT.DATE_TIME) + "</span>";
             }
-            if (resource && resource.lastModifiedUserId) {
+            if (resource && resource.lastModifiedUserFullName) {
                 s += "<span>" + this.getLabel("lastModificationLabel") + " " + resource.lastModifiedUserFullName + " " + this.getLabel("createdByDateLabel") + " " + expresso.util.Formatter.formatDate(resource.lastModifiedDate, expresso.util.Formatter.DATE_FORMAT.DATE_TIME) + "</span>";
             }
             s += "</div>";
