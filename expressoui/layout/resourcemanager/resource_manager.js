@@ -368,7 +368,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
             if ((_this.currentResource == null && resource != null) ||
                 (_this.currentResource != null && resource == null) ||
                 ((_this.currentResource != null && resource != null) && (_this.currentResource.id != resource.id))) {
-                //console.log(_this.getResourceSecurityPath() + " - RM RESOURCE_SELECTED: " + (resource ? resource.id : null));
+                // console.log(_this.getResourceSecurityPath() + " - RM RESOURCE_SELECTED: " + (resource ? resource.id : null));
                 _this.currentResource = resource;
 
                 // get the actions restrictions for this resource
@@ -405,14 +405,6 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
                 // load the the model
                 expresso.util.Model.initModel(_this).done(function () {
-
-                    if (_this.siblingResourceManager) {
-                        _this.model.masterIdProperty = null; // remove the masterIdProperty set by the masterResourceManager
-                        _this.setMasterIdProperty(_this.siblingResourceManager);
-                    } else if (_this.masterResourceManager) {
-                        _this.setMasterIdProperty(_this.masterResourceManager);
-                    }
-
                     $deferred.resolve();
                 });
             });
@@ -519,7 +511,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
     /**
      * Open the form in a dialog window.
-     * @param [resource] the resource object to be modify. If null, new resource
+     * @param [resource] the resource object to be modified. If null, new resource
      * @param [onFormOpen] callback when the form is opened
      * @returns {*}  a promise when the form is closed
      */
@@ -632,7 +624,6 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         if (actionName == "create") {
             if (this.createActionPromise) {
                 return this.createActionPromise.then(function (result) {
-                    //console.log(_this.getResourceSecurityPath() + " isActionAllowed: " + result.allowed);
                     return result.allowed;
                 });
             } else {

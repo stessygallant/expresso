@@ -469,12 +469,13 @@ expresso.Common = (function () {
      * Refer to jQuery getScript.
      * Add a version to the URL for caching
      * @param path
+     * @param [cache] by default, false (do not cache)
      * @returns {*} a Ajax promise
      */
-    var getScript = function (path) {
+    var getScript = function (path, cache) {
         path += (path.indexOf("?") != -1 ? "&" : "?") + "ver=" + siteNamespace.config.Configurations.version;
 
-        if (scriptsCache[path]) {
+        if (cache === true && scriptsCache[path]) {
             // do not load the same script multiple times
             return $.Deferred().resolve();
         } else {
@@ -488,7 +489,9 @@ expresso.Common = (function () {
             // Return the jqXHR object so we can chain callbacks
             return $.ajax(options)
                 .done(function () {
-                    scriptsCache[path] = true;
+                    if (cache === true) {
+                        scriptsCache[path] = true;
+                    }
                 })
                 .fail(function (jqxhr) {
                     if (path.indexOf("labels") != -1) {

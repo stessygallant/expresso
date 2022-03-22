@@ -20,7 +20,7 @@
             options.change = this._onChange;
             MaskedTextBox.fn.init.call(this, element, options);
 
-            // TODO make sure that there is not 2 change event triggerred
+            // make sure that there is not 2 change event triggerred
             // the first by the browser and the second by KendoMaskedTextBox
             $(element).on("change", function (e) {
                 if (!e.isTrigger) {

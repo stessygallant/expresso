@@ -14,6 +14,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     // reference to the grid object
     kendoGrid: undefined,
 
+    // when local data, do not sync the data source automatically
+    autoSyncGridDataSource: undefined,
+
     // define if the widget is a TreeList or a Grid
     hierarchical: undefined,
 
@@ -117,6 +120,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.activeOnly = this.resourceManager.options.activeOnly;
         }
 
+        // when using local data, do not sync datasource
+        this.autoSyncGridDataSource = (this.resourceManager.options.autoSyncGridDataSource !== false);
+        if (!this.autoSyncGridDataSource) {
+            this.virtualScroll = false;
+        }
+
         if (this.hierarchical === undefined && this.getParentId()) {
             this.hierarchical = true;
             this.multipleSelectionEnabled = false;
@@ -124,7 +133,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // we cannot support virtual scrolling if there is a group or aggregate
         if (this.virtualScroll === undefined) {
-            this.virtualScroll = (!(this.getGroup() || this.getAggregate()) && !this.hierarchical);
+            this.virtualScroll = (!(this.getGroup() || this.getAggregate()) && !this.hierarchical && this.autoSyncGridDataSource);
         }
 
         if (this.serverSideDuplicate === undefined) {
@@ -1872,23 +1881,26 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     });
                 });
             } else {
+
                 for (i = 0; i < deletedRows.length; i++) {
                     dataItem = deletedRows[i];
-                    //console.log("Removing dataitem: " + dataItem.id);
+                    // console.log("Removing dataitem: " + dataItem.id);
                     _this.kendoGrid.dataSource.remove(dataItem); // this will cause a grid refresh
                 }
 
-                _this.kendoGrid.dataSource.sync()
-                    .done(function () {
-                        // dataBound will select the first row
-                        _this.publishEvent(_this.RM_EVENTS.RESOURCE_DELETED, null);
-                        _this.selectFirstRow();
-                    })
-                    .fail(function () {
-                        // reload the grid
-                        _this.kendoGrid.dataSource.cancelChanges();
-                        _this.loadResources();
-                    });
+                if (_this.autoSyncGridDataSource) {
+                    _this.kendoGrid.dataSource.sync()
+                        .done(function () {
+                            // dataBound will select the first row
+                            _this.publishEvent(_this.RM_EVENTS.RESOURCE_DELETED, null);
+                            _this.selectFirstRow();
+                        })
+                        .fail(function () {
+                            // reload the grid
+                            _this.kendoGrid.dataSource.cancelChanges();
+                            _this.loadResources();
+                        });
+                }
             }
         });
     },
@@ -2387,21 +2399,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 _this.initializeNewResource(dataItem);
             }
 
-            var dates = {};
-            var $closeButton = $window.closest(".k-window").find(".k-window-actions");
-            $closeButton.on("click", function (/*ev*/) {
-                dates.startTime = new Date().getTime();
-            });
-
-            // put it first
-            var eventList = $._data($closeButton[0], "events");
-            eventList.click.unshift(eventList.click.pop());
-
             // when the window is closed, verify if there is one row selected
             $window.data("kendoWindow").bind("close", function () {
-                if (dates["startTime"]) {
-                    // console.log("Window has been closed (" + (new Date().getTime() - dates["startTime"]) + " ms)");
-                }
+                // console.log("Kendo Window has been closed");
                 // this event is call twice when the window is closed by the Escape key or X button
                 var dataItem = _this.kendoGrid.dataItem(_this.kendoGrid.select());
                 if (_this.selectedRows.length == 1 && !dataItem) {
@@ -2662,7 +2662,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // if filter is defined on the method, add it
             expresso.Common.addKendoFilter(dataSourceOptions.filter, query.filter);
         }
-        //console.log("1-dataSourceOptions.filter: " + JSON.stringify(dataSourceOptions.filter));
+        // console.log("1-dataSourceOptions.filter: " + JSON.stringify(dataSourceOptions.filter));
 
         // if there is a masterFilter defined, always use it
         if (this.masterFilter) {
@@ -2678,6 +2678,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // because Kendo will modify the filter and sort, we need to clone it first
         dataSourceOptions = $.extend(true, {}, dataSourceOptions);
+        // console.log("********** " + this.resourceManager.resourceName + " v:" + this.virtualScroll + ": " + JSON.stringify(dataSourceOptions));
 
         // if virtual scroll, use the query method.
         // but when using local data, we need to force the request, then we need to use "read"
@@ -2688,8 +2689,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             $queryDeferred = this.kendoGrid.dataSource.read(dataSourceOptions);
         }
 
-        //console.log("********** " + this.resourceManager.resourceName + " v:" + this.virtualScroll + ": " + JSON.stringify(dataSourceOptions));
         return $queryDeferred.done(function () {
+
+            if (!_this.autoSyncGridDataSource) {
+                // after loading, set offline
+                _this.kendoGrid.dataSource.online(false);
+            }
+
             if (autoEdit) {
                 // wait for the selection of the first row in dataBound
                 //setTimeout(function () {
@@ -3350,7 +3356,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // verify if the creation is allowed as a child of the current selection
             return this.resourceManager.isActionAllowed("create");
         } else {
-            //console.log(this.resourceManager.getResourceSecurityPath() + " - isCreatable");
+            // console.log(this.resourceManager.getResourceSecurityPath() + " - isCreatable");
             if (this.resourceManager.masterResourceManager) {
                 if (this.resourceManager.siblingResourceManager || this.resourceManager.displayAsMaster) {
                     // this is sub resource displayed as sibling or as master
@@ -3358,7 +3364,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     return this.resourceManager.isActionAllowed("create");
                 } else {
                     // if this is a sub manager, it is creatable only if the master resource is selected
-                    if (this.resourceManager.masterResourceManager.currentResource) {
+                    if (this.resourceManager.masterResourceManager.currentResource || !this.autoSyncGridDataSource) {
                         return this.resourceManager.isActionAllowed("create");
                     } else {
                         return $.Deferred().resolve(false);
@@ -3454,9 +3460,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (fields[prop].transient || fields[prop].refreshable) {
                     if ((resource[prop] && resource[prop].length > 30) || (updatedResource[prop] && updatedResource[prop].length > 30)) {
                         // do not log into the console a huge amount of data for nothing
-                        console.log("Attribute [" + prop + "] updated");
+                        //console.log("Attribute [" + prop + "] updated");
                     } else {
-                        console.log("Attribute [" + prop + "] updated [" + resource[prop] + "] to [" + updatedResource[prop] + "]");
+                        //console.log("Attribute [" + prop + "] updated [" + resource[prop] + "] to [" + updatedResource[prop] + "]");
                     }
                     resource.set(prop, updatedResource[prop]);
 

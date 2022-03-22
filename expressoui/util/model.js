@@ -117,6 +117,17 @@ expresso.util.Model = (function () {
                     }
                 }, model);
 
+                // overwrite the model
+                resourceManager.model = model;
+
+                // set the masterIdProperty
+                if (resourceManager.siblingResourceManager) {
+                    model.masterIdProperty = null; // remove the masterIdProperty set by the masterResourceManager
+                    resourceManager.setMasterIdProperty(resourceManager.siblingResourceManager);
+                } else if (resourceManager.masterResourceManager) {
+                    resourceManager.setMasterIdProperty(resourceManager.masterResourceManager);
+                }
+
                 for (var f in model.fields) {
                     var field = model.fields[f];
                     if (field) {
@@ -163,6 +174,14 @@ expresso.util.Model = (function () {
                                     type: "string",
                                     transient: true
                                 };
+                            }
+                        }
+
+                        // when using inline grid, the master resource may not be defined yet
+                        if (resourceManager.options.autoSyncGridDataSource === false) {
+                            if (field.name == model.masterIdProperty) {
+                                field.nullable = true;
+                                field.defaultValue = null;
                             }
                         }
 
@@ -317,9 +336,6 @@ expresso.util.Model = (function () {
                         }
                     }
                 }
-
-                // overwrite the model
-                resourceManager.model = model;
 
                 // console.log(resourceManager.resourceName + " - Model: ", resourceManager.masterResourceManager);
                 $.when(

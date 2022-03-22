@@ -15,6 +15,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
     kendoUpload: undefined,
 
     // this promise is used to listen to a save event
+    preventWindowClosing: undefined,
     savedDeferred: undefined,
     closedDeferred: undefined,
 
@@ -26,8 +27,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
     // flag when we are saving the main resource only
     savingMainResourceOnly: undefined,
-
-    doNotCloseWindow: undefined,
 
     showTabs: undefined,
 
@@ -82,7 +81,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param [windowOptions] could be used to provide the window dimension
      */
     initForm: function ($window, resource, windowOptions) {
-        //console.log("FORM - initForm");
+        // console.log("FORM - initForm - " + this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]");
 
         var _this = this;
         var kendoWindow = $window.data("kendoWindow");
@@ -90,8 +89,10 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         var model = this.resourceManager.model;
         var screenMode = expresso.Common.getScreenMode();
 
+        // init class attributes
         this.$window = $window;
         this.windowOptions = windowOptions || {};
+        this.closedDeferred = $.Deferred();
 
         // add a flag on the form when it is ready
         var $formReadyPromise = $.Deferred();
@@ -185,7 +186,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 }
             });
 
-
             // move the preview tabs in the form
             this.resourceManager.$domElement.find(".exp-container-preview").children().appendTo($previewTabs);
             this.resourceManager.sections["preview"].resizeContent();
@@ -203,7 +203,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     this.getLabel("createMainButtonLabel") + "</button>");
 
                 $window.find(".exp-form-preview .exp-create-main-button").on("click", function () {
-                    _this.createMainResource($window);
+                    _this.createMainResource();
                 });
             }
         }
@@ -427,7 +427,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     widget.value(""); //reset widget
                 }
             });
-
         });
 
         // auto select the text on focus for combobox
@@ -500,11 +499,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         var $saveDeferred;
                         if (!resource.id) {
                             // create the main resource
-                            $saveDeferred = _this.createMainResource($window);
+                            $saveDeferred = _this.createMainResource();
                         } else if (action.saveBeforeAction !== false && _this.resourceManager.sections.grid.isUpdatable(resource) &&
                             _this.isUserAllowed("update")) {
                             // only save if the resource is updatable
-                            $saveDeferred = _this.save($window);
+                            $saveDeferred = _this.save();
                         } else {
                             // make sure the resource is not dirty
                             if (resource.dirtyFields) {
@@ -564,7 +563,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                                                     // refresh only the resource
                                                     _this.resourceManager.sections.grid.updateResource(resource, updatedResource);
                                                 }
-                                                _this.close($window);
+                                                _this.destroyForm();
 
                                                 if (action.afterPerformAction) {
                                                     action.afterPerformAction.call(_this.resourceManager, resource);
@@ -629,11 +628,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
     /**
      *
      */
-    removePreviewOverlay: function ($window) {
+    removePreviewOverlay: function () {
         // console.log("FORM - removePreviewOverlay - " + this.resourceManager.resourceName);
-        if ($window) {
-            $window.find(".exp-form-preview .exp-overlay").remove();
-            $window.find(".exp-form-preview .exp-create-main-button").remove();
+        if (this.$window) {
+            this.$window.find(".exp-form-preview .exp-overlay").remove();
+            this.$window.find(".exp-form-preview .exp-create-main-button").remove();
 
             expresso.util.UIUtil.showLoadingMask(this.$window, false);
         }
@@ -641,40 +640,52 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
     /**
      * Remove all allocated resources in the initForm
-     * @param $window
+     *
+     * @param [closeWindow] default is true
      */
-    destroyForm: function ($window) {
-        //console.log("FORM - destroyForm - " + this.resourceManager.resourceName);
+    destroyForm: function (closeWindow) {
+        // console.log("FORM - destroyForm - " + this.resourceManager.resourceName);
+
+        this.removePreviewOverlay();
+
+        if (this.savedDeferred) {
+            this.savedDeferred.reject();
+            this.savedDeferred = null;
+        }
+
+        if (this.closedDeferred) {
+            this.closedDeferred.reject();
+            this.closedDeferred = null;
+        }
 
         if (this.showTabs) {
             // put back the preview
-            if ($window) {
-                $window.find(".exp-form-preview").children().appendTo(this.resourceManager.$domElement.find(".exp-container-preview"));
+            if (this.$window) {
+                this.$window.find(".exp-form-preview").children().appendTo(this.resourceManager.$domElement.find(".exp-container-preview"));
                 this.resourceManager.sections["preview"].resizeContent();
             }
         }
 
         if (this.kendoUpload) {
-            //console.log("FORM - destroyForm kendoUpload " + new Date());
             this.kendoUpload.destroy();
             this.kendoUpload = null;
         }
 
         if (this.tooltipWidget) {
-            //console.log("FORM - destroyForm tooltipWidget " + new Date());
             this.tooltipWidget.destroy();
             this.tooltipWidget = null;
         }
 
-        // do not do it here because the destroyForm is called before the onSaved()
-        //this.savedDeferred = null;
+        if (this.$window && this.$window.data("kendoWindow") && (closeWindow !== false)) {
+            this.$window.data("kendoWindow").close();
+        }
 
         this.$window = null;
     },
 
     // @override
     destroy: function () {
-        //console.log("FORM - destroy - " + this.resourceManager.resourceName);
+        // console.log("FORM - destroy - " + this.resourceManager.resourceName);
         expresso.layout.resourcemanager.SectionBase.fn.destroy.call(this);
     },
 
@@ -751,53 +762,39 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
     /**
      *
-     * @param $window
      * @return {*} a promise when the form is saved
      */
-    saveAndClose: function ($window) {
-        //console.log("FORM - saveAndClose - " + this.resourceManager.resourceName);
+    saveAndClose: function (preventWindowClosing) {
+        var _this = this;
+        this.preventWindowClosing = preventWindowClosing;
+        // console.log("FORM - saveAndClose - " + this.resourceManager.resourceName + " (preventWindowClosing:" + preventWindowClosing + ")");
+
+        // always create a new promise
+        if (this.savedDeferred) {
+            this.savedDeferred.reject();
+            this.savedDeferred = null;
+        }
+        this.savedDeferred = $.Deferred().always(function () {
+            // at the end of the save, always reset the flag
+            _this.preventWindowClosing = false;
+        });
 
         // simulate a click by the user on the update button
         // this could generate a network call or it could execute the onSaved method immediately
         // in that case, the saveDeferred will be automatically resolve
         setTimeout(function () {
-            $window.find(".k-grid-update").trigger("click");
+            _this.$window.find(".k-grid-update").trigger("click");
         }, 10);
 
-        if (this.savedDeferred) {
-            this.savedDeferred.reject();
-            this.savedDeferred = null;
-        }
-        this.savedDeferred = $.Deferred();
         return this.savedDeferred;
     },
 
     /**
      *
-     * @param $window
      * @return {*} a promise when the form is saved
      */
-    save: function ($window) {
-        //console.log("FORM - Save - " + this.resourceManager.resourceName);
-
-        var _this = this;
-        this.doNotCloseWindow = true;
-        //console.log("Closing window is NOT allowed");
-        return this.saveAndClose($window).always(function () {
-            //console.log("Closing window is now allowed");
-            _this.doNotCloseWindow = false;
-        });
-    },
-
-    /**
-     *
-     * @param $window
-     */
-    close: function ($window) {
-        //console.log("Close - " + this.resourceManager.resourceName);
-        if ($window && $window.data("kendoWindow")) {
-            $window.data("kendoWindow").close();
-        }
+    save: function () {
+        return this.saveAndClose(true);
     },
 
     /**
@@ -805,33 +802,33 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param e
      */
     onClose: function (e) {
-        //console.log("FORM - kendoWindow.bind(close) - " + this.resourceManager.resourceName +
-        //    " - doNotCloseWindow:" + this.doNotCloseWindow + " - e.isDefaultPrevented():" + e.isDefaultPrevented());
+        // console.log("FORM - onClose - " + this.resourceManager.resourceName);
 
         if (!e.isDefaultPrevented()) {
-            if (this.doNotCloseWindow) {
+            if (this.preventWindowClosing) {
+                // when the save method is called, stop the close
                 e.preventDefault();
             } else {
-                //console.log("Closing the window");
-                this.removePreviewOverlay(this.$window);
-                this.destroyForm(this.$window);
+                // the onClose event is called before the onSaved event.
+                var _this = this;
+                window.setTimeout(function () {
+                    _this.destroyForm(false);
+                }, 10);
             }
         }
     },
 
-
     /**
      * Create the main resource only (activate the tabs, but do not close the window)
-     * @param $window
      * @return {promise}
      */
-    createMainResource: function ($window) {
+    createMainResource: function () {
         var _this = this;
 
         // save the main resource
         _this.savingMainResourceOnly = true;
-        return _this.save($window).done(function () {
-            _this.removePreviewOverlay($window);
+        return _this.save().done(function () {
+            _this.removePreviewOverlay();
         }).always(function () {
             _this.savingMainResourceOnly = false;
         });
@@ -967,14 +964,32 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param originalResource resource before the save (which refresh the resource)
      */
     onSaved: function (resource, originalResource) {
-        // console.log("EVENT Form-onSaved", resource);
+        // console.log("FORM - onSaved - " + this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]");
 
         // if it is a validation problem, the resource will be null
         if (resource) {
-            // if the window is not closed, close it
-            if (this.$window && !this.doNotCloseWindow) {
-                //console.log("Window is still active. Closing it");
-                this.close(this.$window);
+            // now we need to verify if there is inline grid
+            if (this.$window) {
+                this.$window.find(".exp-grid-inline").each(function () {
+                    var inlineGridResourceManager = $(this).data("resourceManager");
+                    // console.log("FORM - onSaved - inlineGrid " + inlineGridResourceManager.resourceName);
+
+                    // set the current resource
+                    inlineGridResourceManager.masterResourceManager.currentResource = resource;
+
+                    // for each dataItem, we need to set the masterIdProperty
+                    var dataSource = $(this).children(".k-grid").data("kendoGrid").dataSource;
+                    $.each(dataSource.data(), function () {
+                        var dataItem = this;
+                        if (!dataItem[inlineGridResourceManager.model.masterIdProperty] ||
+                            dataItem[inlineGridResourceManager.model.masterIdProperty] == -1) {
+                            dataItem.set(inlineGridResourceManager.model.masterIdProperty, resource.id);
+                        }
+                    });
+
+                    // this will automatically sync (no need for dataSource.sync())
+                    dataSource.online(true);
+                });
             }
 
             if (this.savedDeferred) {
@@ -985,15 +1000,15 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 this.closedDeferred.resolve(resource);
                 this.closedDeferred = null;
             }
-
         } else {
-            if (this.$window) {
-                expresso.util.UIUtil.showLoadingMask(this.$window, false);
-            }
             if (this.savedDeferred) {
                 this.savedDeferred.reject();
                 this.savedDeferred = null;
             }
+        }
+
+        if (this.$window) {
+            expresso.util.UIUtil.showLoadingMask(this.$window, false);
         }
     },
 
@@ -1002,12 +1017,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @return {undefined|*} promise that will contain the new resource once saved
      */
     bindOnClose: function () {
-        //console.log("bindOnClose: " + this.closedDeferred);
-        if (this.closedDeferred) {
-            this.closedDeferred.reject();
-            this.closedDeferred = null;
-        }
-        this.closedDeferred = $.Deferred();
         return this.closedDeferred;
     },
 
@@ -1229,7 +1238,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     expresso.util.UIUtil.showLoadingMask($window, false);
 
                     // close the window
-                    _this.close($window);
+                    _this.destroyForm();
                 },
                 error: function (e) {
                     // remove the progress
@@ -1246,7 +1255,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             // add the upload button
             this.addButton($window, this.getLabel("save"), {primary: true}, function () {
                 if (!_this.kendoUpload.getFiles().length) {
-                    _this.saveAndClose($window);
+                    _this.saveAndClose();
                 } else {
                     expresso.util.UIUtil.showLoadingMask($window, true);
 

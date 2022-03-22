@@ -98,7 +98,7 @@
         border-bottom: 1px solid #ceced2;
         display: block;
         width: 100%;
-        padding: 0.2em 0.125em 0.1875em 0.5em;
+        padding: 0.2em 0.125em 0.1875em 0.2em;
 
         .exp-toolbar-marker {
             display: none;
@@ -271,6 +271,7 @@
             font-weight: bold;
             line-height: 15px;
             border: 0;
+            padding-left: 0.2em;
 
             // only show the column menu for the first row
             &:not(:nth-child(2)) .k-header-column-menu {
@@ -494,6 +495,19 @@
     }
 }
 
+.exp-grid-inline {
+    height: 10em;
+    border: 0.1em solid #aaaaaa;
+
+    .exp-grid {
+        .k-grid-toolbar {
+            .exp-grid-nbr-items, .exp-always-active-button, .exp-toolbar-separator {
+                display: none;
+            }
+        }
+    }
+}
+
 /*
  * ------------------------------------------------------------------------------------------------------------------
  * PREVIEW CSS
@@ -658,7 +672,7 @@ $formPreviewHeight: 12em;
             max-width: calc(100% - 2em);
         }
 
-        [type=checkbox], [type=radio] {
+        & > [type=checkbox], [type=radio] {
             margin-top: 1.3em;
         }
 

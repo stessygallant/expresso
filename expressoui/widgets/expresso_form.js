@@ -149,6 +149,8 @@
                     value: resource ? resource[name] : undefined
                 }, field.widgetOptions)
                 $el[field.widget](widgetOptions);
+            } else if (field && field.inlineGridResourceManager) {
+                this.displayInlineGrid(resource, field, $el);
             } else if (field && field.reference) {
                 if (field.multipleSelection) {
                     if (field.lookupSelection) {
@@ -554,6 +556,27 @@
                 $label.attr("for", uniqueID);
                 $label.addClass("k-radio-label");
             }
+        },
+
+        /**
+         *
+         * @param resource
+         * @param field
+         * @param $input
+         */
+        displayInlineGrid: function (resource, field, $input) {
+            $input.hide();
+
+            var $div = $("<div class='exp-grid-inline'></div>").appendTo($input.parent());
+            expresso.Common.loadApplication(field.inlineGridResourceManager, {
+                autoSyncGridDataSource: false,
+                multipleSelectionEnabled: false
+            }).done(function (appInstance) {
+                $div.data("resourceManager", appInstance);
+                // we must fake a master current resource
+                appInstance.masterResourceManager.currentResource = {id: (resource && resource.id ? resource.id : -1)};
+                appInstance.list($div, {});
+            });
         },
 
         options: {

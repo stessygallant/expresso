@@ -611,7 +611,7 @@ expresso.util.UIUtil = (function () {
                     if ($formWrapper.length) {
                         $userRootDivContent = $formWrapper.children("div,form").first();
                     } else {
-                        alert("Unexpected window structure");
+                        console.error("Unexpected window structure");
                     }
                 }
             }
