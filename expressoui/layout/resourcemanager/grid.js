@@ -500,8 +500,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         // if field is nullable, add a new values
                         if (field.nullable) {
                             column.values.unshift({
-                                id: -1,
-                                value: -1,
+                                id: -2, // special id for backend predicate
+                                value: -2,
                                 label: _this.getLabel("selectFilterNone"),
                                 text: _this.getLabel("selectFilterNone")
                             });

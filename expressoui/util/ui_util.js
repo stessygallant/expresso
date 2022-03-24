@@ -880,6 +880,12 @@ expresso.util.UIUtil = (function () {
             // to be called when window is loaded and ready to be opened
             var $deferred = $.Deferred();
             var openWindow = function () {
+                // protect window against form auto submit (if present)
+                $windowDiv.find("form").on("submit", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+
                 $deferred.resolve($windowDiv);
                 if (options.autoOpen) {
                     kendoWindow.open();

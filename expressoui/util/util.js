@@ -316,6 +316,12 @@ expresso.util.Util = (function () {
         return hash[rootLevel];
     };
 
+    var trunc = function (numToTruncate, intDecimalPlaces) {
+
+        var numPower = Math.pow(10, intDecimalPlaces); // "numPowerConverter" might be better
+        return ~~(numToTruncate * numPower) / numPower;
+    };
+
     // return public properties and methods
     return {
         // public methods
@@ -333,6 +339,7 @@ expresso.util.Util = (function () {
         getBrowser: getBrowser,
         getFirstBrowserLanguage: getFirstBrowserLanguage,
         copyToClipboard: copyToClipboard,
-        makeTreeFromFlatList: makeTreeFromFlatList
+        makeTreeFromFlatList: makeTreeFromFlatList,
+        trunc: trunc
     }
 }());

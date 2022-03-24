@@ -16,6 +16,9 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
     // apply only for sub resource.
     subResourceManager: undefined,
 
+    // instance of the application
+    appInstance: undefined,
+
     // indicate if the tab is the current shown tab
     currentTab: false,
 
@@ -101,6 +104,11 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
             this.subResourceManager.verifyCreationRestrictions();
 
             this.subResourceManager.sections.grid.loadResources();
+        } else if (this.appInstance) {
+            // if there is a refresh method, call it
+            if (this.appInstance.refresh) {
+                this.appInstance.refresh(resource);
+            }
         } else {
             // reset the form
             var $form = this.$domElement;
@@ -220,6 +228,22 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
     },
 
     /**
+     * Load a standalone application in a tab.
+     * The application shall implement a method: refresh: function(resource)
+     *
+     * @param appDef
+     * @param options
+     */
+    loadApplication: function (appDef, options) {
+        var _this = this;
+        var $div = this.$domElement.children("div").first();
+        this.addPromise(expresso.Common.loadApplication(appDef, options, $div).done(function (appInstance) {
+            _this.appInstance = appInstance;
+            _this.appInstance.render();
+        }));
+    },
+
+    /**
      * Publish an event. Shortcut to the resourceManager.eventCentral.publishEvent
      * @param e event type. Refer to RM_EVENTS
      * @param data data for the event
@@ -239,6 +263,9 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
         if (this.subResourceManager) {
             this.subResourceManager.resizeContent();
         }
+        else if (this.appInstance) {
+            this.appInstance.resizeContent();
+        }
     },
 
     /**
@@ -257,6 +284,11 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
         if (this.subResourceManager) {
             this.subResourceManager.destroy();
             this.subResourceManager = null;
+        }
+
+        if (this.appInstance) {
+            this.appInstance.destroy();
+            this.appInstance = null;
         }
 
         expresso.layout.resourcemanager.SectionBase.fn.destroy.call(this);

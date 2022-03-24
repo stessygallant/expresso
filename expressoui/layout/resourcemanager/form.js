@@ -798,6 +798,13 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
     },
 
     /**
+     * Close the window
+     */
+    close: function () {
+        this.destroyForm();
+    },
+
+    /**
      * On Window close event
      * @param e
      */
@@ -841,15 +848,29 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param fieldName
      */
     verifyMissingRequiredField: function ($window, resource, fieldName) {
-        var value = resource[fieldName];
-        // console.log(fieldName, value);
-        if (value === undefined || value === null || value === "" || (value && value.length == 0)) {
-            //$f.attr("validationMessage", field.validation.required.message);
-            console.log("Required field is null [" + fieldName + "]");
-            expresso.util.UIUtil.highlightMissingRequiredField($window, fieldName);
-            return false;
+        var field = this.resourceManager.model.fields[fieldName];
+        if (field && field.inlineGridResourceManager) {
+            // verify if there is at least one row in the grid
+            var $div = $window.find("[name='" + fieldName + "']").siblings(".exp-grid-inline");
+            var inlineGridResourceManager = $div.data("resourceManager");
+            var inlineGridDataSource = inlineGridResourceManager.sections.grid.dataSource;
+            if (inlineGridDataSource.total() == 0) {
+                console.log("Required field is null [" + fieldName + "]");
+                $div.addClass("exp-invalid");
+                return false;
+            } else {
+                return true;
+            }
         } else {
-            return true;
+            var value = resource[fieldName];
+            if (value === undefined || value === null || value === "" || (value && value.length == 0)) {
+                //$f.attr("validationMessage", field.validation.required.message);
+                console.log("Required field is null [" + fieldName + "]");
+                expresso.util.UIUtil.highlightMissingRequiredField($window, fieldName);
+                return false;
+            } else {
+                return true;
+            }
         }
     },
 

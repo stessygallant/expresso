@@ -161,6 +161,15 @@ expresso.util.Model = (function () {
                             field.transient = (field.transient !== false);
                         }
 
+                        // inline grids are always transient
+                        if (field.inlineGridResourceManager) {
+                            field.transient = true;
+                            if (!field.nullable) {
+                                field.validation = field.validation || {};
+                                field.validation.required = true;
+                            }
+                        }
+
                         if (f.endsWith("Ids")) {
                             // if default value is an array, set it to null (backward compatibility)
                             if (field.nullable && field.defaultValue && field.defaultValue.length === 0) {
