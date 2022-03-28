@@ -656,6 +656,35 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             $(this).attr("autocomplete", "off");
         });
 
+        $.each(this.kendoGrid.columns, function () {
+            var column = this;
+            if (column && column.field && model && model.fields[column.field]) {
+                var field = model.fields[column.field];
+                _this.$domElement.find(".k-grid-header .k-filter-row [data-field='" + column.field + "'] input[data-role=datepicker]").each(function () {
+                    var kendoDatePicker = $(this).data("kendoDatePicker");
+
+                    // Override kendo's on change event to force "eq" filter
+                    kendoDatePicker.dateView.options.change = function () {
+                        //Remove all filter for the column
+                        var filter = _this.kendoGrid.dataSource.filter();
+                        expresso.Common.removeKendoFilter(filter, field.name);
+
+                        filter.filters.push({
+                            field: field.name,
+                            operator: "eq",
+                            value: this.value()
+                        });
+
+                        // Refresh the datasource with the new filter
+                        _this.kendoGrid.dataSource.filter(filter);
+
+                        //Close the datepicker
+                        kendoDatePicker.close();
+                    };
+                });
+            }
+        });
+
         // once the grid is built, register the event handlers
         this.registerButtonEventHandler($grid);
 
@@ -1622,7 +1651,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 } else {
                     // set it to static
                     $filterMenu.find("input[name=dateRangeType][value=static]").prop("checked", true);
-                    if (f.operator == "gte" || f.operator == "gt" || f.operator == "eq") {
+                    if (f.operator == "eq") {
+                        $filterMenu.find("input.start-date").setval(f.value);
+                        $filterMenu.find("input.end-date").setval(f.value);
+                    } else if (f.operator == "gte" || f.operator == "gt") {
                         $filterMenu.find("input.start-date").setval(f.value);
                     } else {
                         $filterMenu.find("input.end-date").setval(f.value ? expresso.util.Formatter.parseDate(f.value).addDays(-1) : null);
