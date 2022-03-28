@@ -44,7 +44,6 @@ expresso.Common = (function () {
     var fontRatio = undefined;
 
     var doNotDisplayAjaxErrorMessageFlag = false;
-    var doNotDisplayLoadingMaskFlag = false;
     var reloading = false;
     var authenticationPath = undefined;
 
@@ -553,6 +552,12 @@ expresso.Common = (function () {
                         // get the label text
                         var labelText = getLabel(key, labels);
                         $label.text(labelText);
+
+                        // if the label has a text for the title, use it
+                        if (!$label.attr("title") && getLabel(key + "Help", labels, null, true)) {
+                            $label.attr("title", getLabel(key + "Help", labels));
+                            $label.addClass("help");
+                        }
                     }
                 }
             });
@@ -912,7 +917,7 @@ expresso.Common = (function () {
         }
 
         // do not display the spinner when we ignore the errors (usually full screen mode)
-        if (doNotDisplayAjaxErrorMessageFlag || options.ignoreErrors || doNotDisplayLoadingMaskFlag) {
+        if (doNotDisplayAjaxErrorMessageFlag || options.ignoreErrors) {
             options.waitOnElement = null;
         }
 
@@ -923,14 +928,9 @@ expresso.Common = (function () {
         }
 
         if ($domElement) {
-            // if there is already a k-loading-mask, do not add one
-            if ($domElement.children(".k-loading-mask").length) {
-                $domElement = null;
-            } else {
-                // console.log("1-START progress path[" + path + "] action[" + action + "] div[" +
-                //      $domElement[0].nodeName + "] class[" + $domElement[0].className + "]");
-                expresso.util.UIUtil.showLoadingMask($domElement, true);
-            }
+            // console.log("1-START progress path[" + path + "] action[" + action + "] div[" +
+            //     $domElement[0].nodeName + "] class[" + $domElement[0].className + "]");
+            expresso.util.UIUtil.showLoadingMask($domElement, true);
         }
 
         if (!action) {
@@ -1349,15 +1349,6 @@ expresso.Common = (function () {
      */
     var doNotDisplayAjaxErrorMessage = function (display) {
         doNotDisplayAjaxErrorMessageFlag = display;
-    };
-
-    /**
-     * If true, the loading mask will not be displayed on sendRequest
-     *
-     * @param display
-     */
-    var doNotDisplayLoadingMask = function (display) {
-        doNotDisplayLoadingMaskFlag = display;
     };
 
     /**
@@ -2105,7 +2096,6 @@ expresso.Common = (function () {
         addApplication: addApplication,
         getApplicationNameMap: getApplicationNameMap,
         doNotDisplayAjaxErrorMessage: doNotDisplayAjaxErrorMessage,
-        doNotDisplayLoadingMask: doNotDisplayLoadingMask,
         setCurrentRequestLabels: setCurrentRequestLabels,
         sendAnalytics: sendAnalytics,
 

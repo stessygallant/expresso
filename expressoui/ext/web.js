@@ -1033,9 +1033,6 @@ expresso.Main = function () {
             var labels = expresso.Labels;
             var $overlayDiv = $("<div class='overlay-content'></div>").appendTo($("body"));
             expresso.Common.loadHTML($overlayDiv, "expresso/ext/splash.html", labels).done(function ($div) {
-                // avoid the loading mask on the splash screen
-                expresso.Common.doNotDisplayLoadingMask(true);
-
                 //$div.find(".title").show().html(expresso.Common.getLabel("splashTitle"));
 
                 var today = new Date();

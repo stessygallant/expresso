@@ -362,14 +362,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         }
 
         // add tooltip if needed
-        var tooltipNeeded = false;
-        if (tooltipNeeded) {
-            this.tooltipWidget = $window.kendoTooltip({
-                filter: "label[title]",
-                width: 500,
-                position: "top"
-            }).data("kendoTooltip");
-        }
+        this.tooltipWidget = $window.kendoTooltip({
+            filter: "label[title]",
+            width: 500,
+            position: "top"
+        }).data("kendoTooltip");
 
         // add the validation on the fields (maxLength, etc)
         this.addValidationAttributes($form, model, resource);
@@ -563,7 +560,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                                                     // refresh only the resource
                                                     _this.resourceManager.sections.grid.updateResource(resource, updatedResource);
                                                 }
-                                                _this.destroyForm();
+                                                _this.close();
 
                                                 if (action.afterPerformAction) {
                                                     action.afterPerformAction.call(_this.resourceManager, resource);
@@ -641,9 +638,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
     /**
      * Remove all allocated resources in the initForm
      *
-     * @param [closeWindow] default is true
      */
-    destroyForm: function (closeWindow) {
+    destroyForm: function () {
         // console.log("FORM - destroyForm - " + this.resourceManager.resourceName);
 
         this.removePreviewOverlay();
@@ -676,10 +672,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             this.tooltipWidget = null;
         }
 
-        if (this.$window && this.$window.data("kendoWindow") && (closeWindow !== false)) {
+        if (this.$window && this.$window.data("kendoWindow")) {
             this.$window.data("kendoWindow").close();
         }
 
+        this.preventWindowClosing = false;
         this.$window = null;
     },
 
@@ -774,10 +771,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             this.savedDeferred.reject();
             this.savedDeferred = null;
         }
-        this.savedDeferred = $.Deferred().always(function () {
-            // at the end of the save, always reset the flag
-            _this.preventWindowClosing = false;
-        });
+        this.savedDeferred = $.Deferred();
 
         // simulate a click by the user on the update button
         // this could generate a network call or it could execute the onSaved method immediately
@@ -801,6 +795,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * Close the window
      */
     close: function () {
+        // console.log("FORM - close - " + this.resourceManager.resourceName);
         this.destroyForm();
     },
 
@@ -809,18 +804,14 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param e
      */
     onClose: function (e) {
-        // console.log("FORM - onClose - " + this.resourceManager.resourceName);
+        // console.log("FORM - onClose - " + this.resourceManager.resourceName + ":" + this.preventWindowClosing, e);
 
-        if (!e.isDefaultPrevented()) {
+        if (!e.isDefaultPrevented() && e.userTriggered) {
+            e.preventDefault(); // do not allow the close here, it will be close inside close()
+            this.close();
+        } else {
             if (this.preventWindowClosing) {
-                // when the save method is called, stop the close
                 e.preventDefault();
-            } else {
-                // the onClose event is called before the onSaved event.
-                var _this = this;
-                window.setTimeout(function () {
-                    _this.destroyForm(false);
-                }, 10);
             }
         }
     },
@@ -985,7 +976,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param originalResource resource before the save (which refresh the resource)
      */
     onSaved: function (resource, originalResource) {
-        // console.log("FORM - onSaved - " + this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]");
+        // console.log("FORM - onSaved - " + this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]: " + this.preventWindowClosing);
 
         // if it is a validation problem, the resource will be null
         if (resource) {
@@ -1021,6 +1012,13 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 this.closedDeferred.resolve(resource);
                 this.closedDeferred = null;
             }
+
+            if (!this.preventWindowClosing) {
+                var _this = this;
+                window.setTimeout(function () {
+                    _this.destroyForm();
+                }, 10);
+            }
         } else {
             if (this.savedDeferred) {
                 this.savedDeferred.reject();
@@ -1029,6 +1027,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         }
 
         if (this.$window) {
+            this.preventWindowClosing = false;
             expresso.util.UIUtil.showLoadingMask(this.$window, false);
         }
     },

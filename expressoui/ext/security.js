@@ -123,16 +123,19 @@ expresso.Security = function () {
 
         var $userDeferred;
         if (impersonateUser) {
-            $userDeferred = expresso.Common.sendRequest("user", null, null, expresso.Common.buildKendoFilter({userName: impersonateUser}))
-                .then(function (result) {
-                    if (result && result.total) {
-                        return result.data[0];
-                    } else {
-                        return null;
-                    }
-                });
+            $userDeferred = expresso.Common.sendRequest("user", null, null, expresso.Common.buildKendoFilter({userName: impersonateUser}), {
+                waitOnElement: null
+            }).then(function (result) {
+                if (result && result.total) {
+                    return result.data[0];
+                } else {
+                    return null;
+                }
+            });
         } else {
-            $userDeferred = expresso.Common.sendRequest("user/me");
+            $userDeferred = expresso.Common.sendRequest("user/me", null, null, null, {
+                waitOnElement: null
+            });
         }
 
         // get the user profile and permissions
@@ -146,7 +149,9 @@ expresso.Security = function () {
 
                 $.when(
                     //  load the privileges
-                    expresso.Common.sendRequest("user/" + profile.id + "/privilege").done(function (privs) {
+                    expresso.Common.sendRequest("user/" + profile.id + "/privilege", null, null, null, {
+                        waitOnElement: null
+                    }).done(function (privs) {
                         // build the hashmap for fast access
                         privileges = {};
                         for (var i = 0; i < privs.length; i++) {
@@ -157,7 +162,9 @@ expresso.Security = function () {
                     }),
 
                     // get all applications that the user is allowed
-                    expresso.Common.sendRequest("user/" + profile.id + "/application").done(function (apps) {
+                    expresso.Common.sendRequest("user/" + profile.id + "/application", null, null, null, {
+                        waitOnElement: null
+                    }).done(function (apps) {
                         var appDef;
 
                         // reset all permissions
@@ -201,7 +208,9 @@ expresso.Security = function () {
 
                     // favorites
                     expresso.Common.sendRequest("user/" + profile.id + "/config", null, null,
-                        expresso.Common.buildKendoFilter({field: "key", operator: "eq", value: "MenuFavorites"}))
+                        expresso.Common.buildKendoFilter({field: "key", operator: "eq", value: "MenuFavorites"}), {
+                            waitOnElement: null
+                        })
                         .done(function (configs) {
                             if (configs.total > 0) {
                                 var config = configs.data[0];
@@ -214,13 +223,17 @@ expresso.Security = function () {
                         }),
 
                     // roles
-                    expresso.Common.sendRequest("user/" + profile.id + "/allroles").done(function (roles) {
+                    expresso.Common.sendRequest("user/" + profile.id + "/allroles", null, null, null, {
+                        waitOnElement: null
+                    }).done(function (roles) {
                         //console.log(roles);
                         userProfile.userRoles = roles;
                     }),
 
                     // user infos
-                    expresso.Common.sendRequest("user/" + profile.id + "/info").done(function (infos) {
+                    expresso.Common.sendRequest("user/" + profile.id + "/info", null, null, null, {
+                        waitOnElement: null
+                    }).done(function (infos) {
                         userProfile.userInfos = {};
                         $.each(infos.data, function (index, userInfo) {
                             userProfile.userInfos[userInfo.roleInfo.pgmKey] = userInfo;
@@ -228,7 +241,9 @@ expresso.Security = function () {
                     }),
 
                     //  get the IP address
-                    expresso.Common.sendRequest("support/myIP").done(function (result) {
+                    expresso.Common.sendRequest("support/myIP", null, null, null, {
+                        waitOnElement: null
+                    }).done(function (result) {
                         ipAddress = result.ipAddress;
                         internalIpAddress = result.internalIpAddress;
                     })
@@ -455,9 +470,6 @@ expresso.Security = function () {
         var $deferred = $.Deferred();
         var $overlayDiv = $("<div class='overlay-content'></div>").appendTo($("body"));
         expresso.Common.loadHTML($overlayDiv, "expresso/ext/splash.html").done(function ($div) {
-            // avoid the loading mask on the splash screen
-            expresso.Common.doNotDisplayLoadingMask(true);
-
             $div.find(".title").show().html(expresso.Common.getLabel("splashTitle"));
 
             loadProfile().done(function () {

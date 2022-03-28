@@ -11,6 +11,8 @@
             contents.push({title: "infos", contentUrl: "info"});
         }
 
+        contents.push({title: "audits", contentUrl: "audittrail"});
+
         return contents;
     }
 });
