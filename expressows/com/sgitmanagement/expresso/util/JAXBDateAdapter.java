@@ -2,7 +2,7 @@ package com.sgitmanagement.expresso.util;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 public class JAXBDateAdapter extends XmlAdapter<String, Date> {
 	@Override

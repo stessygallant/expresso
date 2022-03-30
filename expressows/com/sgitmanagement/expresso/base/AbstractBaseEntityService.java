@@ -56,9 +56,6 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.xml.bind.annotation.XmlElement;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -87,6 +84,10 @@ import com.sgitmanagement.expresso.util.ProgressSender;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expresso.util.ZipUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.xml.bind.annotation.XmlElement;
 
 abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends IUser, I> extends AbstractBaseService<U> {
 	final public static int MAX_SEARCH_RESULTS = 50;
@@ -306,8 +307,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				if (!NotVersionable.class.isAssignableFrom(getTypeOfE())) {
 					if (!Util.equals(updatable.getLastModifiedDate(), updatableNew.getLastModifiedDate())) {
-						logger.warn("WARNING: WrongVersionException: " + getTypeOfE().getSimpleName() + ":" + e.getId() + ":" + updatable.getLastModifiedDate() + ":"
-								+ updatableNew.getLastModifiedDate() + ":" + updatable.getLastModifiedUserId());
+						logger.info("WrongVersionException: " + getTypeOfE().getSimpleName() + ":" + e.getId() + ":" + updatable.getLastModifiedDate() + ":" + updatableNew.getLastModifiedDate() + ":"
+								+ updatable.getLastModifiedUserId());
 						throw new WrongVersionException();
 					}
 				}
@@ -729,7 +730,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				// if the query required the entity to be created if is does not exist, create it
-				if (data.size() == 0 && query.isCreateIfNotFound()) {
+				if (data.size() == 0 && (query.getCreateIfNotFound() != null && query.getCreateIfNotFound().booleanValue())) {
 					E e = createEntityFromUniqueConstraints(query);
 					if (e != null) {
 						data.add(e);
@@ -777,7 +778,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 								e = get(query.setCreateIfNotFound(false));
 							} catch (NoResultException ex) {
 								// still not found, create it
-								e = getTypeOfE().newInstance();
+								e = getTypeOfE().getDeclaredConstructor().newInstance();
 
 								// get the needed values from the filter for each unique constraint
 								for (String fieldName : constraintsAnnotation.fieldNames()) {
@@ -860,10 +861,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		// getTypeOfE().getName());
 
 		// if the query is already verified, skip it
-		if (!query.isVerified()) {
+		if (query.getVerified() == null || !query.getVerified().booleanValue()) {
 			query.setVerified(true);
 
-			if (!query.isKeySearch()) {
+			if (query.getKeySearch() == null || !query.getKeySearch().booleanValue()) {
 
 				// if active only is requested, get the active only filter
 				if (query.activeOnly()) {
@@ -932,9 +933,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	public long count(Query query) throws Exception {
 		try {
-			if (query == null || query.countOnly()) {
-				query = verifyQuery(query);
-			}
+			query = verifyQuery(query);
 
 			// use the CriteriaBuilder to create the query
 			CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
@@ -1165,12 +1164,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		Field parentEntityField = getParentEntityField();
 		if (parentEntityField != null) {
 			Class parentEntityClass = parentEntityField.getType();
-			// String parentEntityClassName = parentEntityClass.getCanonicalName();
-			// if (parentEntityClassName.contains(".Basic")) {
-			// parentEntityClassName = parentEntityClassName.replaceAll("\\.Basic", ".");
-			// parentEntityClass = Class.forName(parentEntityClassName);
-			// }
-
 			Class parentEntityServiceClass = Class.forName(parentEntityClass.getCanonicalName() + "Service");
 			return newService(parentEntityServiceClass, parentEntityClass);
 		} else {
@@ -1202,23 +1195,13 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				if (!eagerRelation) {
 
 					// if the relations is lazy but there is a filter on a descendant of the field,
-					// we still need
-					// to include it in the Entity Graph
+					// we still need to include it in the Entity Graph
 					if (field.isAnnotationPresent(ManyToOne.class)) {
 						List<Filter> filters = query.getFilters(filterName + ".", true);
 						if (filters != null && !filters.isEmpty()) {
 							eagerRelation = true;
 						}
 					}
-					// for an unknown reason it works...
-					// if you have problem with filter and many to many, here is the problem
-					// else if (field.isAnnotationPresent(ManyToMany.class)) {
-					// List<Filter> filters = query.getFilters(filterName + ".", true);
-					// if (filters != null && !filters.isEmpty()) {
-					// logger.warn("Filter on ManyToMany [" + filters.get(0).getField() + "] may not
-					// work");
-					// }
-					// }
 				}
 
 				if (eagerRelation) {
@@ -1408,8 +1391,15 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @throws Exception
 	 */
 	protected Filter getActiveOnlyFilter() throws Exception {
-		// by default, there is not active only filter
-		return null; // getParentActiveOnlyFilter();
+		// do not filter on parent active only status by default because in most cases,
+		// it does not make sense
+		// A sub resource could have 3 use cases that we need to address:
+		// 1) All subs
+		// 2) All active subs (regardless of the status of the parent)
+		// 3) All active subs for active parent
+		// If we use by default the parent status, we cannot address case 2 anymore
+		// return getParentActiveOnlyFilter();
+		return null;
 	}
 
 	/**
@@ -1428,6 +1418,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 			return filter;
 		} else {
+			// by default, there is not active only filter
 			return null;
 		}
 	}
@@ -1487,7 +1478,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	protected Filter getDeactivableFilter() {
 		// and remove deactivated option (deactivationDate)
 		Filter filter = new Filter(Logic.or);
-		filter.addFilter(new Filter("deactivationDate", null));
+		filter.addFilter(new Filter("deactivationDate", Operator.isNull));
 		filter.addFilter(new Filter("deactivationDate", Operator.gt, new Date()));
 		return filter;
 	}
@@ -1575,7 +1566,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		// handle all is [not] null cases here
 		if (filter.getValue() == null ||
 		// special case for filtering in the Grid on no value
-				(("" + filter.getValue()).equals("-1.0") && filter.getField().endsWith("Id"))
+				(("" + filter.getValue()).equals("-2.0") && filter.getField().endsWith("Id"))
 				// null or empty operators
 				|| (("" + filter.getValue()).length() == 0 || opName.indexOf("null") != -1 || opName.indexOf("empty") != -1) && !(filter.getValue().equals("") && opName.indexOf("contains") != -1)) {
 			switch (op) {
@@ -2036,6 +2027,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					integerSetValue = Integer.parseInt((String) filter.getValue());
 				}
 				switch (op) {
+				case eq:
+					// usually from a grid dropdownlist
+					predicate = cb.isMember(cb.literal(integerSetValue), (Expression<Set<Integer>>) path);
+					break;
 				case contains:
 					predicate = cb.isMember(cb.literal(integerSetValue), (Expression<Set<Integer>>) path);
 					break;
@@ -2128,7 +2123,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					predicate = getPredicate(cb, retrieveProperty(from, filter.getField(), joinMap), filter);
 				}
 			} catch (AttributeNotFoundException ex) {
-				if (from.getJavaType() == null || filter.getField() == null
+				if (from == null || from.getJavaType() == null || filter == null || filter.getField() == null
 						|| (!from.getJavaType().getSimpleName().equals("Document") && !from.getJavaType().getSimpleName().equals("AuditTrail") && !filter.getField().equals("unused"))) {
 					throw ex;
 				}
@@ -2495,7 +2490,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				}
 				if (!getterFound) {
-					logger.debug("Skipping [" + fieldName + "]. No getter method");
+					if (fieldName.endsWith("StringIds")) {
+						// ok
+					} else {
+						logger.debug("Skipping [" + fieldName + "]. No getter method");
+					}
 					continue;
 				}
 
@@ -2798,19 +2797,22 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param resourceName
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked" })
 	final public <S extends AbstractBaseEntityService<T, U, I>, T extends IEntity<I>> S newService(String resourceName) {
 
 		try {
 			Class<T> entityClass = (Class<T>) findEntityClassByName(StringUtils.capitalize(resourceName));
 			Class<S> serviceClass = (Class<S>) Class.forName(entityClass.getCanonicalName() + "Service");
 
-			S service = serviceClass.newInstance();
+			S service = serviceClass.getDeclaredConstructor().newInstance();
 
 			service.setUser(getUser());
 			service.setTypeOfE(entityClass);
 			service.setRequest(getRequest());
 			service.setResponse(getResponse());
+
+			// put service in request to be closed
+			registerService(service);
 
 			return service;
 		} catch (Exception e) {
@@ -2856,7 +2858,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	static public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newServiceStatic(Class<S> serviceClass, Class<T> entityClass, V user) {
 		try {
-			S service = serviceClass.newInstance();
+			S service = serviceClass.getDeclaredConstructor().newInstance();
 			service.setTypeOfE(entityClass);
 
 			if (user == null) {

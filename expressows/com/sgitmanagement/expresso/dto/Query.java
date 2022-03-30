@@ -19,11 +19,11 @@ public class Query {
 
 	private Boolean activeOnly;
 	private Boolean countOnly;
-	private boolean createIfNotFound;
+	private Boolean createIfNotFound;
 
 	private String searchFilterTerm;
-	private boolean keySearch;
-	private boolean verified;
+	private Boolean keySearch;
+	private Boolean verified;
 
 	public Query() {
 		super();
@@ -110,29 +110,29 @@ public class Query {
 		return sort != null && !sort.isEmpty();
 	}
 
-	public boolean isKeySearch() {
+	public Boolean getKeySearch() {
 		return keySearch;
 	}
 
-	public Query setKeySearch(boolean keySearch) {
+	public Query setKeySearch(Boolean keySearch) {
 		this.keySearch = keySearch;
 		return this;
 	}
 
-	public boolean isVerified() {
+	public Boolean getVerified() {
 		return verified;
 	}
 
-	public Query setVerified(boolean verified) {
+	public Query setVerified(Boolean verified) {
 		this.verified = verified;
 		return this;
 	}
 
-	public boolean isCreateIfNotFound() {
+	public Boolean getCreateIfNotFound() {
 		return createIfNotFound;
 	}
 
-	public Query setCreateIfNotFound(boolean createIfNotFound) {
+	public Query setCreateIfNotFound(Boolean createIfNotFound) {
 		this.createIfNotFound = createIfNotFound;
 		return this;
 	}
@@ -281,8 +281,32 @@ public class Query {
 
 	@Override
 	public String toString() {
-		return "Query [activeOnly=" + activeOnly + ", countOnly=" + countOnly + ", keySearch=" + keySearch + ", searchFilterTerm=" + searchFilterTerm + ", skip=" + skip + ", pageSize=" + pageSize
-				+ ", sort=" + sort + ", filter=" + filter + "]";
+		String s = "Query [";
+		if (activeOnly != null) {
+			s += "activeOnly=" + activeOnly + ";";
+		}
+		if (countOnly != null) {
+			s += "countOnly=" + countOnly + ";";
+		}
+		if (keySearch != null) {
+			s += "keySearch=" + keySearch + ";";
+		}
+		if (searchFilterTerm != null) {
+			s += "searchFilterTerm=" + searchFilterTerm + ";";
+		}
+		if (skip != null) {
+			s += "skip=" + skip + ";";
+		}
+		if (pageSize != null) {
+			s += "pageSize=" + pageSize + ";";
+		}
+		if (sort != null) {
+			s += "sort=" + sort + ";";
+		}
+		if (filter != null) {
+			s += "filter=" + filter + ";";
+		}
+		return s + "]";
 	}
 
 	@Override
@@ -592,7 +616,14 @@ public class Query {
 
 		@Override
 		public String toString() {
-			return "Filter [logic=" + logic + ", filters=" + filters + ", operator=" + operator + ", field=" + field + ", value=" + value + "]";
+			String s = "Filter [";
+			if (filters != null) {
+				s += "logic=" + logic + ", filters=" + filters + ";";
+			}
+			if (field != null) {
+				s += "field=" + field + ",operator=" + operator + ",value=" + value;
+			}
+			return s + "]";
 		}
 
 		@Override

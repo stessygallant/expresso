@@ -13,10 +13,13 @@ import java.util.List;
 import org.apache.commons.net.ftp.FTPFile;
 
 public class UnsecureFTPClient extends FTPClient {
+
 	org.apache.commons.net.ftp.FTPClient ftp;
 
 	public UnsecureFTPClient(String host, int port, String username, String password) throws Exception {
 		ftp = new org.apache.commons.net.ftp.FTPClient();
+		ftp.setDefaultTimeout(TIMEOUT_IN_SECONDS * 1000);
+
 		ftp.connect(host, port);
 		ftp.login(username, password);
 

@@ -2,12 +2,11 @@ package com.sgitmanagement.expresso.base;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.persistence.EntityManager;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
@@ -16,8 +15,15 @@ import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.security.Authorizable;
 import com.sgitmanagement.expresso.util.SystemEnv;
+import com.sgitmanagement.expresso.util.Util;
 
-abstract public class AbstractBaseService<U extends IUser> implements Authorizable<U> {
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.MultivaluedMap;
+
+abstract public class AbstractBaseService<U extends IUser> implements AutoCloseable, Authorizable<U> {
+	private static ThreadLocal<List<AbstractBaseService<?>>> servicesThreadLocal = new ThreadLocal<>();
+
 	protected Logger logger;
 	private HttpServletRequest request;
 	private HttpServletResponse response;
@@ -42,6 +48,11 @@ abstract public class AbstractBaseService<U extends IUser> implements Authorizab
 			this.entityManager = getPersistenceManager().getEntityManager(getPersistenceUnit());
 		}
 		return this.entityManager;
+	}
+
+	@Override
+	public void close() throws Exception {
+		// noop
 	}
 
 	final public Integer getParentId() {
@@ -160,6 +171,14 @@ abstract public class AbstractBaseService<U extends IUser> implements Authorizab
 
 	/**
 	 *
+	 * @return
+	 */
+	public boolean isInternalNetwork() {
+		return Util.isInternalIpAddress(Util.getIpAddress(getRequest()));
+	}
+
+	/**
+	 *
 	 * @param entityManager
 	 * @return
 	 */
@@ -177,9 +196,9 @@ abstract public class AbstractBaseService<U extends IUser> implements Authorizab
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public <S extends AbstractBaseService<U>> S newService(Class<?> serviceClass) {
+	public <S extends AbstractBaseService<U>> S newService(Class<S> serviceClass) {
 		try {
-			S service = (S) serviceClass.newInstance();
+			S service = serviceClass.getDeclaredConstructor().newInstance();
 			service.setUser(getUser());
 			service.setRequest(getRequest());
 			service.setResponse(getResponse());
@@ -188,6 +207,8 @@ abstract public class AbstractBaseService<U extends IUser> implements Authorizab
 				String entityClassName = serviceClass.getCanonicalName().substring(0, serviceClass.getCanonicalName().length() - "Service".length());
 				((AbstractBaseEntityService) service).setTypeOfE(Class.forName(entityClassName));
 			}
+
+			registerService(service);
 
 			return service;
 		} catch (Exception e) {
@@ -217,12 +238,13 @@ abstract public class AbstractBaseService<U extends IUser> implements Authorizab
 	 */
 	public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newService(Class<S> serviceClass, Class<T> entityClass, V user) {
 		try {
-			S service = serviceClass.newInstance();
+			S service = serviceClass.getDeclaredConstructor().newInstance();
 			service.setUser(user);
 			service.setTypeOfE(entityClass);
 			service.setRequest(getRequest());
 			service.setResponse(getResponse());
 
+			registerService(service);
 			return service;
 		} catch (Exception e) {
 			logger.error("Problem creating the service [" + serviceClass + "]");
@@ -245,7 +267,7 @@ abstract public class AbstractBaseService<U extends IUser> implements Authorizab
 	 * @throws InstantiationException
 	 */
 	static public <S extends AbstractBaseService<V>, V extends IUser> S newServiceStatic(Class<S> serviceClass, V user) throws Exception {
-		S service = serviceClass.newInstance();
+		S service = serviceClass.getDeclaredConstructor().newInstance();
 
 		if (user == null) {
 			user = service.getSystemUser();
@@ -274,5 +296,31 @@ abstract public class AbstractBaseService<U extends IUser> implements Authorizab
 	 */
 	static public Properties getApplicationConfigProperties(String applicationFolder) {
 		return getApplicationConfigProperties(applicationFolder, "config");
+	}
+
+	public <S extends AbstractBaseService<V>, V extends IUser> void registerService(S service) {
+		List<AbstractBaseService<?>> services = servicesThreadLocal.get();
+		if (services == null) {
+			services = new ArrayList<>();
+			servicesThreadLocal.set(services);
+		}
+		services.add(service);
+	}
+
+	/**
+	 * Close all service for the thread
+	 */
+	static public void closeServices() {
+		List<AbstractBaseService<?>> services = servicesThreadLocal.get();
+		if (services != null) {
+			for (AbstractBaseService<?> service : services) {
+				try {
+					service.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
+		servicesThreadLocal.remove();
 	}
 }

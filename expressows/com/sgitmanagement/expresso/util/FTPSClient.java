@@ -17,6 +17,7 @@ public class FTPSClient extends FTPClient {
 
 	public FTPSClient(String host, int port, String username, String password) throws Exception {
 		ftps = new org.apache.commons.net.ftp.FTPSClient("ssl");
+		ftps.setDefaultTimeout(TIMEOUT_IN_SECONDS * 1000);
 		ftps.connect(host, port);
 		ftps.login(username, password);
 

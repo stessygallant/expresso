@@ -3,7 +3,7 @@ package com.sgitmanagement.expresso.util;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 public class DeserializeOnlyIntegerSetAdapter extends XmlAdapter<Set<Integer>, Set<Integer>> {
 

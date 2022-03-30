@@ -1,6 +1,6 @@
 package com.sgitmanagement.expresso.base;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 public interface IUser extends IEntity<Integer> {
 

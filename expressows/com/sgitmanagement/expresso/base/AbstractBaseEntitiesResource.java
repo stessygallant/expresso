@@ -14,21 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
-
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
@@ -38,6 +23,21 @@ import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.exception.ValidationException;
 import com.sgitmanagement.expresso.util.ProgressSender;
 import com.sgitmanagement.expresso.util.Util;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
 
 /**
  * Methods allowed on a group of entities<br>
@@ -190,7 +190,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 				}
 			}
 
-			if (!query.isKeySearch()) {
+			if (query.getKeySearch() == null || !query.getKeySearch().booleanValue()) {
 				// if we need to add the search filter for overall search
 				String searchFilterTerm = query.getSearchFilterTerm();
 				if (searchFilterTerm != null && searchFilterTerm.length() > 0) {
@@ -578,8 +578,9 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 	 * @throws Exception
 	 */
 	public void sync(MultivaluedMap<String, String> formParams) throws Exception {
+		// only 1 sync at the same time per class
 		synchronized (this.getClass()) {
-			this.getService().commit();
+			this.getService().commit(); // we need to start a new transaction to refresh the database session
 			String section = Util.getParameterValue(getRequest(), "section");
 			String useProgressSender = Util.getParameterValue(getRequest(), "useProgressSender");
 			if (formParams != null && section == null) {
@@ -587,7 +588,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 			}
 			Method method = this.getService().getClass().getMethod("sync", String.class, ProgressSender.class);
 			method.invoke(this.getService(), section, new ProgressSender(useProgressSender != null ? getResponse() : null));
-			this.getService().commit();
+			this.getService().commit(); // we need to commit before the end of the synchronized to let the other session get our modifications
 		}
 	}
 

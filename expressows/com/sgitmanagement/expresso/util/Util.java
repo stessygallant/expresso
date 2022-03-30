@@ -23,11 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -38,6 +33,11 @@ import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
 import com.google.gson.Gson;
 import com.sgitmanagement.expresso.base.Sortable;
 import com.sgitmanagement.expresso.exception.BaseException;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 public class Util {
 	public static final String[] internalSubnets;
@@ -718,7 +718,7 @@ public class Util {
 	 * @param part
 	 * @return
 	 */
-	static public String getFileName(javax.servlet.http.Part part) {
+	static public String getFileName(jakarta.servlet.http.Part part) {
 		String filename = null;
 		String contentDisposition = part.getHeader("content-disposition");
 		if (contentDisposition == null) {
@@ -970,19 +970,19 @@ public class Util {
 		// Getting the runtime reference from system
 		Runtime runtime = Runtime.getRuntime();
 
-		sb.append("##### Heap utilization statistics [MB] #####\n");
-
-		// Print used memory
-		sb.append("Used Memory:" + (runtime.totalMemory() - runtime.freeMemory()) / mb + "\n");
-
-		// Print free memory
-		sb.append("Free Memory:" + runtime.freeMemory() / mb + "\n");
+		// sb.append("Memory (MB)");
 
 		// Print total available memory
-		sb.append("Total Memory:" + runtime.totalMemory() / mb + "\n");
+		sb.append("Total:" + runtime.totalMemory() / mb);
+
+		// Print used memory
+		sb.append(" Use:" + (runtime.totalMemory() - runtime.freeMemory()) / mb);
+
+		// Print free memory
+		// sb.append(" Free:" + runtime.freeMemory() / mb);
 
 		// Print Maximum available memory
-		sb.append("Max Memory:" + runtime.maxMemory() / mb + "\n");
+		// sb.append(" Max:" + runtime.maxMemory() / mb);
 
 		return sb.toString();
 

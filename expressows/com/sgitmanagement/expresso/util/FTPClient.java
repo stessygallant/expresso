@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 public abstract class FTPClient {
+	public static final int TIMEOUT_IN_SECONDS = 10;
 
 	public static FTPClient connect(String protocol, String host, int port, String username, String password) throws Exception {
 		if (protocol.equals("sftp")) {

@@ -17,6 +17,7 @@ import javax.mail.Authenticator;
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.PasswordAuthentication;
@@ -130,13 +131,17 @@ public class POP3MailboxUtil {
 	 */
 	public List<Message> getMessages(String subjectFilter, Date fromDateFilter) throws Exception {
 		List<Message> msgList = new ArrayList<>();
-		for (Message msg : inbox.getMessages()) {
-			String subject = msg.getSubject();
-			Date sendDate = msg.getSentDate();
+		try {
+			for (Message msg : inbox.getMessages()) {
+				String subject = msg.getSubject();
+				Date sendDate = msg.getSentDate();
 
-			if ((fromDateFilter == null || fromDateFilter.before(sendDate)) && (subjectFilter == null || (subject != null && subject.contains(subjectFilter)))) {
-				msgList.add(msg);
+				if ((fromDateFilter == null || fromDateFilter.before(sendDate)) && (subjectFilter == null || (subject != null && subject.contains(subjectFilter)))) {
+					msgList.add(msg);
+				}
 			}
+		} catch (MessagingException ex) {
+			// ignore
 		}
 		return msgList;
 	}
@@ -289,10 +294,10 @@ public class POP3MailboxUtil {
 
 			// verify invalid email
 			if (subject.startsWith("Réponse automatique :") || subject.startsWith("Réponse automatique :") || subject.startsWith("Automatic") || subject.startsWith("Fwd:") || subject.startsWith("Re:")
-					|| subject.startsWith("RE:")) {
+					|| subject.startsWith("RE:") || subject.startsWith("Out of Office")) {
 				deleteEmail = true;
 			} else if (subject.startsWith("Undeliverable:") || subject.startsWith("Message undeliverable:") || subject.startsWith("Failure") || subject.startsWith("Mail Delivery Subsystem")
-					|| subject.startsWith("Non remis :")) {
+					|| subject.startsWith("Non remis :") || subject.startsWith("Undelivered Mail") || subject.startsWith("Delivery Status Notification (Failure)")) {
 				// logger.warn("Undeliverable email Subject [" + subject + "] Sent: " + message.getSentDate());
 				deleteEmail = true;
 			} else if (subject.startsWith("Microsoft 365 Message center") || subject.startsWith("Weekly digest: Microsoft service updates") || subject.startsWith("Major update from Message center")) {

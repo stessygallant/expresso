@@ -5,7 +5,7 @@ import java.io.Writer;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

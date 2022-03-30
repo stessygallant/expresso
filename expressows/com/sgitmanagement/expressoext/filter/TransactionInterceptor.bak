@@ -1,0 +1,46 @@
+package com.sgitmanagement.expressoext.filter;
+
+import javax.persistence.EntityManager;
+
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+
+import com.sgitmanagement.expressoext.base.BaseResource;
+
+public class TransactionInterceptor implements MethodInterceptor {
+
+	@Override
+	public Object invoke(MethodInvocation methodInvocation) throws Throwable {
+
+		System.err.println("Intercept ******** " + methodInvocation.getThis().getClass().getName() + ":" + methodInvocation.getMethod().getName() + " on thread " + Thread.currentThread().getName());
+
+		// Thread.dumpStack();
+
+		// get the base resource
+		@SuppressWarnings("rawtypes")
+		BaseResource baseResource = (BaseResource) methodInvocation.getThis();
+		EntityManager entityManager = baseResource.getEntityManager();
+
+		// start a new transaction
+		entityManager.getTransaction().begin();
+
+		try {
+			System.err.println("111111111111111111111111");
+			// Invoke JAX-RS resource method.
+			// for sub resources, the GetSubResource is called and terminated here.
+			// Then Jersey will call the SubResource class, which is not intercepted
+			Object result = methodInvocation.proceed();
+			System.err.println("222222222222222222222222");
+
+			// Commit the transaction.
+			entityManager.getTransaction().commit();
+
+			return result;
+		} catch (Exception e) {
+			entityManager.getTransaction().rollback();
+
+			// Rethrow the Exception.
+			throw e;
+		}
+	}
+}

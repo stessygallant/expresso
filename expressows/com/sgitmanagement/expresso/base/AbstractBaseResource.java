@@ -4,12 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import javax.persistence.EntityManager;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +11,13 @@ import org.slf4j.LoggerFactory;
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.util.Util;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U extends IUser> {
 	protected Logger logger;
@@ -44,9 +45,8 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 		if (action == null) {
 			action = "performPost";
 		}
-		logger.info("Performing action [" + action + "] on [" + this.getClass().getSimpleName() + "]");
+		logger.info("PerformING action [" + action + "] on [" + this.getClass().getSimpleName() + "]"); // + Util.getMemoryStats());
 		// with " + formParams);
-
 		try {
 			getService().getPersistenceManager().startTransaction(getEntityManager());
 			Method method = this.getClass().getMethod(action, MultivaluedMap.class);
@@ -70,6 +70,7 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 		} finally {
 			getService().getPersistenceManager().commit(getEntityManager());
 		}
+		// logger.info("PerformED action [" + action + "] on [" + this.getClass().getSimpleName() + "] " + Util.getMemoryStats());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -106,10 +107,13 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 
 	protected S newService(Class<S> serviceClass) {
 		try {
-			S service = serviceClass.newInstance();
+			S service = serviceClass.getDeclaredConstructor().newInstance();
 			service.setUser(getUser());
 			service.setRequest(request);
 			service.setResponse(response);
+
+			// put service in request to be closed
+			service.registerService(service);
 
 			return service;
 		} catch (ForbiddenException e) {
@@ -128,7 +132,7 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 	 */
 	public void process(MultivaluedMap<String, String> formParams) throws Exception {
 		synchronized (this.getClass()) {
-			this.getService().commit();
+			this.getService().commit(); // we need to start a new transaction to refresh the database session
 			String section = Util.getParameterValue(getRequest(), "section");
 			if (section != null) {
 				// backward compatible when section is on query string
@@ -137,8 +141,7 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 			} else {
 				this.getService().process(formParams);
 			}
-			this.getService().commit();
+			this.getService().commit(); // we need to commit before the end of the synchronized to let the other session get our modifications
 		}
-
 	}
 }

@@ -1,0 +1,14 @@
+package com.sgitmanagement.expressoext.filter;
+
+import javax.inject.Singleton;
+
+import org.glassfish.hk2.api.InterceptionService;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+public class TransactionInterceptorBinder extends AbstractBinder {
+
+	@Override
+	protected void configure() {
+		bind(TransactionInterceptionService.class).to(InterceptionService.class).in(Singleton.class);
+	}
+}

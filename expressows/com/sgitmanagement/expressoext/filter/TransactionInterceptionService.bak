@@ -1,0 +1,76 @@
+package com.sgitmanagement.expressoext.filter;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
+
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+
+import org.aopalliance.intercept.ConstructorInterceptor;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.glassfish.hk2.api.Descriptor;
+import org.glassfish.hk2.api.Filter;
+import org.glassfish.hk2.api.InterceptionService;
+import org.jvnet.hk2.annotations.Service;
+
+@Service
+public class TransactionInterceptionService implements InterceptionService {
+	private final static MethodInterceptor METHOD_INTERCEPTOR = new TransactionInterceptor();
+	private final static List<MethodInterceptor> METHOD_LIST = Collections.singletonList(METHOD_INTERCEPTOR);
+
+	@Override
+	public Filter getDescriptorFilter() {
+		// We're only interested in classes (resources) from this applications packages.
+		return new Filter() {
+			@Override
+			public boolean matches(final Descriptor d) {
+				final String clazz = d.getImplementation();
+				return clazz.startsWith("com.sgitmanagement");
+			}
+		};
+	}
+
+	@Override
+	public List<MethodInterceptor> getMethodInterceptors(Method method) {
+		// List<MethodInterceptor> list = Stream.of(method).filter(a -> a.isAnnotationPresent(Transactional.class))
+		// .findAny().map(a -> Arrays.<MethodInterceptor> asList(new TransactionInterceptor()))
+		// .orElse(Collections.emptyList());
+
+		// intercept only
+
+		// @Transactional
+
+		// System.out.println("******** " + method.getDeclaringClass().getName() + ":" + method.getName());
+
+		// 1) Method with POST, PUT or DELETE
+		Annotation[] annotations = method.getAnnotations();
+		for (Annotation annotation : annotations) {
+			if (annotation instanceof POST || annotation instanceof PUT || annotation instanceof DELETE) {
+				System.out.println("1 ******** " + method.getDeclaringClass().getName() + ":" + method.getName());
+				return METHOD_LIST;
+			}
+		}
+
+		// 2) Method with @Path but no GET
+		// NOTE: for sub resource, we always define a TX because there is no way to intercept the call later
+		// with this Jersey Interceptor
+		if (method.isAnnotationPresent(Path.class) && !method.isAnnotationPresent(GET.class)) {
+			System.out.println("2 ******** " + method.getDeclaringClass().getName() + ":" + method.getName());
+			return METHOD_LIST;
+		}
+
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<ConstructorInterceptor> getConstructorInterceptors(Constructor<?> constructor) {
+		return Collections.emptyList();
+	}
+
+}

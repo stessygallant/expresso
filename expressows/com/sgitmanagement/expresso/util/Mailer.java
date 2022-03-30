@@ -379,6 +379,20 @@ public enum Mailer {
 		}
 	}
 
+	/**
+	 * 
+	 */
+	public void close() {
+		if (executor != null) {
+			try {
+				executor.shutdown();
+			} catch (Exception ex) {
+				// ignore
+			}
+			executor = null;
+		}
+	}
+
 	public static void main(String[] args) throws Exception {
 		System.out.println("Start");
 

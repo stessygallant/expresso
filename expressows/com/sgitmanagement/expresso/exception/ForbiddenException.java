@@ -1,6 +1,6 @@
 package com.sgitmanagement.expresso.exception;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class ForbiddenException extends BaseException {
 	private static final long serialVersionUID = 1L;

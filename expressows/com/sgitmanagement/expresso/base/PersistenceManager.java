@@ -142,8 +142,10 @@ public class PersistenceManager {
 		}
 
 		// increase the count
-		entityManagerCounter.incrementAndGet();
-
+		int activeConnections = entityManagerCounter.incrementAndGet();
+		if (activeConnections > 50) {
+			logger.warn("Number of active DB connections: " + activeConnections);
+		}
 		return entityManager;
 	}
 
@@ -261,7 +263,7 @@ public class PersistenceManager {
 				commitAndClose(entityManager);
 			}
 		}
-		entityManagersThreadLocal.set(null);
+		entityManagersThreadLocal.remove();
 	}
 
 	/**
@@ -282,12 +284,9 @@ public class PersistenceManager {
 			}
 		}
 
-		int activeConnections = entityManagerCounter.decrementAndGet();
+		// int activeConnections =
+		entityManagerCounter.decrementAndGet();
 		// logger.debug("CLOSED: Number of DB connections: " + activeConnections);
-
-		if (activeConnections > 50) {
-			logger.warn("Number of active DB connections: " + activeConnections);
-		}
 	}
 
 	/**

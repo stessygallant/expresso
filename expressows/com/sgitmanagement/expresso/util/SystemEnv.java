@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -49,6 +50,9 @@ public enum SystemEnv {
 		// print the Working directory
 		logger.info("Working directory [" + (new File("").getAbsolutePath()) + "]");
 
+		// memory
+		logger.info("Max memory (MB) [" + (Runtime.getRuntime().maxMemory() / (1024 * 1024)) + "]");
+
 		// Default printer
 		boolean debugPrinter = false;
 		if (debugPrinter) {
@@ -65,13 +69,23 @@ public enum SystemEnv {
 			}
 		}
 
+		String ipAddress = null;
 		try {
-			logger.info("IP Address [" + InetAddress.getLocalHost().getHostAddress() + "]");
+			ipAddress = InetAddress.getLocalHost().getHostAddress();
 		} catch (Exception ex) {
 			logger.error("Cannot get server IP Address: " + ex);
 		}
 
-		logger.info("System started - Environment: " + env);
+		// set the default locale
+		Locale.setDefault(Locale.ENGLISH);
+
+		String initMessage = "System started on [" + ipAddress + "] - Environment: " + env;
+		if (isInProduction()) {
+			// send an email
+			logger.error(initMessage);
+		} else {
+			logger.info(initMessage);
+		}
 	}
 
 	public boolean isInProduction() {

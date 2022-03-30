@@ -3,6 +3,7 @@ package com.sgitmanagement.expresso.util;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
@@ -314,8 +315,11 @@ public class DateUtil {
 			Duration duration = Duration.between(date1.toInstant(), date2.toInstant());
 			switch (timeUnit) {
 			case DAYS:
-				long between = ChronoUnit.DAYS.between(date1.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-				return between;
+				// long diffInMillies = Math.abs(date2.getTime() - date1.getTime());
+				// long diff = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+				// return diff;
+				// long between = ChronoUnit.DAYS.between(date1.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+				return LocalDate.ofInstant(date1.toInstant(), ZoneId.systemDefault()).until(LocalDate.ofInstant(date2.toInstant(), ZoneId.systemDefault()), ChronoUnit.DAYS);
 			case HOURS:
 				return duration.toHours();
 			case MINUTES:

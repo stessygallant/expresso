@@ -1,6 +1,6 @@
 package com.sgitmanagement.expresso.exception;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 public class InvalidCredentialsException extends BaseException {
 	private static final long serialVersionUID = 1L;

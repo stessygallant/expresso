@@ -1,6 +1,6 @@
 package com.sgitmanagement.expresso.util;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 public class DeserializeOnlyIntegerAdapter extends XmlAdapter<Integer, Integer> {
 
