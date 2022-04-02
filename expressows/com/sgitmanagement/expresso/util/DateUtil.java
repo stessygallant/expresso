@@ -126,6 +126,14 @@ public class DateUtil {
 		}
 	};
 
+	// Feb 8, 2022 7:00:00 AM
+	public static final ThreadLocal<DateFormat> DATETIME_USA_FORMAT_TL = new ThreadLocal<DateFormat>() {
+		@Override
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("MMM d, yyyy h:mm:ss a");
+		}
+	};
+
 	public static final ThreadLocal<DateFormat> DATETIME_FILE_FORMAT = new ThreadLocal<DateFormat>() {
 		@Override
 		protected DateFormat initialValue() {
@@ -160,7 +168,7 @@ public class DateUtil {
 			try {
 				if (dateString.length() == 0) {
 					// cannot convert
-				} else if (dateString.contains("AM") || dateString.contains("PM")) {
+				} else if (dateString.contains("/") && (dateString.contains("AM") || dateString.contains("PM"))) {
 					date = US_DATETIME_SHORT_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.length() == 8 && dateString.contains("/")) {
 					date = US_DATE_FORMAT_TL.get().parse(dateString);
@@ -188,6 +196,8 @@ public class DateUtil {
 					date = DATETIME_NOSEC_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.length() == 17) {
 					date = DATETIME_MMM_NOSEC_FORMAT_TL.get().parse(dateString);
+				} else if (dateString.length() >= 22 && dateString.length() <= 24 && (dateString.contains("AM") || dateString.contains("PM"))) {
+					date = DATETIME_USA_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.length() == 23) {
 					date = DATETIMEZ2_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.length() > 22) {

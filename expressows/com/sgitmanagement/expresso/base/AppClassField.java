@@ -7,6 +7,7 @@ import com.sgitmanagement.expresso.dto.Query;
 
 public class AppClassField {
 	private String type;
+	private String name;
 	private String label;
 	private String helpLabel;
 	private String placeHolder;
@@ -403,5 +404,13 @@ public class AppClassField {
 
 	public void setRestrictedRole(String restrictedRole) {
 		this.restrictedRole = restrictedRole;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

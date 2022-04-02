@@ -3,7 +3,6 @@ package com.sgitmanagement.expresso.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,12 +72,11 @@ public enum FieldRestrictionUtil {
 				if (bytes.length > 0 && httpServletResponse.getStatus() == HttpServletResponse.SC_OK) {
 					if (bytes[0] == '[' || bytes[0] == '{') {
 						String jsonResponse = new String(bytes);
-						Date date = new Date();
 
 						JsonElement rootJsonElement = null;
 						for (String resourceName : fieldRestrictionEntityMap.keySet()) {
 							if (jsonResponse.indexOf("\"type\":\"" + resourceName + "\"") != -1) {
-								logger.debug("Removing restricted fields in [" + resourceName + "]");
+								// logger.debug("Removing restricted fields in [" + resourceName + "]");
 
 								Map<String, String> fieldMap = fieldRestrictionEntityMap.get(resourceName);
 								if (rootJsonElement == null) {
@@ -95,8 +93,6 @@ public enum FieldRestrictionUtil {
 
 						// write back the JSON reponse
 						bytes = jsonResponse.getBytes();
-
-						logger.debug("FieldSecurityFilter time [" + (new Date().getTime() - date.getTime()) + "]");
 					}
 				}
 				response.setContentLength(bytes.length);

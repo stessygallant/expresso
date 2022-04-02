@@ -117,7 +117,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		this.typeOfE = typeOfE;
 	}
 
-	final public Class<E> getTypeOfE() {
+	public Class<E> getTypeOfE() {
 		return typeOfE;
 	}
 
@@ -1920,6 +1920,17 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 				break;
 
+			case "char":
+				char charValue = ((String) filter.getValue()).charAt(0);
+				switch (op) {
+				case eq:
+					predicate = cb.equal(path, charValue);
+					break;
+				default:
+					throw new Exception("Operator [" + filter.getOperator() + "] not supported for type [" + type + "]");
+				}
+				break;
+
 			case "String":
 				String stringValue = null;
 				List<String> stringValues = null;
@@ -2168,22 +2179,22 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 		// app_class.js
 		sb = new StringBuilder();
-		if (namespace != null && namespace.length() > 0) {
-			String ns = "";
-
-			// start from the top
-			String[] namespaces = namespace.split("\\.");
-			for (int i = 0; i < namespaces.length; i++) {
-				if (i == 0) {
-					ns = namespaces[i];
-					sb.append("var ");
-				} else {
-					ns = ns + "." + namespaces[i];
-				}
-				sb.append(ns + " = " + ns + " || {};\n");
-			}
-			sb.append("\n");
-		}
+		// if (namespace != null && namespace.length() > 0) {
+		// String ns = "";
+		//
+		// // start from the top
+		// String[] namespaces = namespace.split("\\.");
+		// for (int i = 0; i < namespaces.length; i++) {
+		// if (i == 0) {
+		// ns = namespaces[i];
+		// sb.append("var ");
+		// } else {
+		// ns = ns + "." + namespaces[i];
+		// }
+		// sb.append(ns + " = " + ns + " || {};\n");
+		// }
+		// sb.append("\n");
+		// }
 
 		// for sub manager, it does not work
 		// ValueManager
@@ -2312,7 +2323,21 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 
 		sb.append("        return columns;\n");
+		sb.append("    },\n");
+
+		// getMobileColumns
+		sb.append("    // @override\n");
+		sb.append("    getMobileColumns: function () {\n");
+		sb.append("        return {\n");
+		sb.append("            mobileNumberFieldName: null,\n");
+		sb.append("            mobileDescriptionFieldName: null,\n");
+		sb.append("            mobileTopRightFieldName: null,\n");
+		sb.append("            mobileMiddleLeftFieldName: null,\n");
+		sb.append("            mobileMiddleRightFieldName: null\n");
+		sb.append("        };\n");
 		sb.append("    }\n");
+
+		// end of grid.js
 		sb.append("});\n");
 
 		File gridJsFile = new File(resourceManagerPath.toFile().getAbsolutePath() + File.separator + "grid.js");
@@ -2390,7 +2415,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 * @throws Exception
 	 */
-	private Map<String, AppClassField> getAppClassFieldMap() throws Exception {
+	public Map<String, AppClassField> getAppClassFieldMap() throws Exception {
 		Map<String, AppClassField> appClassFieldMap = new LinkedHashMap<>();
 
 		// inner class to store column meta data
@@ -2445,6 +2470,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		// Create the mandatory "type"
 		AppClassField appClassField = new AppClassField();
 		appClassField.setType("string");
+		appClassField.setName("type");
 		appClassField.setEditable(false);
 		appClassField.setDefaultValue(StringUtils.uncapitalize(c.getSimpleName()));
 		appClassFieldMap.put("type", appClassField);
@@ -2675,6 +2701,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				}
 
+				// set the name
+				appClassField.setName(fieldName);
+
 				if (fieldName.endsWith("Key")) {
 					appClassField.setUnique(true);
 				}
@@ -2712,6 +2741,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							if (appClassFieldType != null) {
 								appClassField = new AppClassField();
 								appClassField.setType(appClassFieldType);
+								appClassField.setName(fieldName);
 								appClassField.setTransient(true);
 								appClassField.setFilterable(false);
 								appClassFieldMap.put(fieldName, appClassField);
