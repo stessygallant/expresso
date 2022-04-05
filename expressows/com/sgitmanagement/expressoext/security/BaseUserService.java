@@ -35,11 +35,6 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		user.setCreationDate(new Date()); // person
 		user.setUserCreationDate(new Date()); // user
 
-		// set the username if needed
-		if (user.getUserName() == null) {
-			user.setUserName(generateUserName(user));
-		}
-
 		if (user.getPersonId() != null) {
 			// make sure there is no user already existing for this id
 			U u = get(user.getPersonId());
@@ -51,8 +46,11 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 				PersonService personService = newService(PersonService.class, Person.class);
 				Person person = personService.get(user.getPersonId());
 
+				// set the username if needed
+				String userName = verifyUserName(user, user.getUserName());
+
 				// create the user from the person
-				U newUser = create(person);
+				U newUser = create(person, userName);
 				newUser.setUserCreationDate(new Date());
 
 				// overwrite some fields for the person
@@ -70,6 +68,9 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 				user = newUser;
 			}
 		} else {
+			// set the username if needed
+			user.setUserName(verifyUserName(user, user.getUserName()));
+
 			user = super.create(user);
 
 			// make sure that the user does create a user with a job title that it does not managed
@@ -95,17 +96,32 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		return user;
 	}
 
+	private String verifyUserName(Person person, String userName) throws Exception {
+		if (userName == null) {
+			userName = generateUserName(person, "e"); // add a suffix to avoid problem between AD and local username
+		} else {
+			// make sure the userName is not already taken
+			try {
+				get(new Filter("userName", userName));
+				throw new ValidationException("duplicatedUserName");
+			} catch (NoResultException ex) {
+				// ok
+			}
+		}
+
+		return userName;
+	}
+
 	/**
 	 * Create a user from a person (the person already exists in the database. We cannot use JPA for this as it will try to create the person at the same time
 	 *
 	 * @param person
 	 * @return
 	 */
-	private U create(Person person) throws Exception {
+	private U create(Person person, String userName) throws Exception {
 
 		// create the record
-		getEntityManager().createNativeQuery("INSERT INTO user (id, username) VALUES (:id, :userName)").setParameter("id", person.getId()).setParameter("userName", generateUserName(person))
-				.executeUpdate();
+		getEntityManager().createNativeQuery("INSERT INTO user (id, username) VALUES (:id, :userName)").setParameter("id", person.getId()).setParameter("userName", userName).executeUpdate();
 		getEntityManager().flush();
 		// getEntityManager().clear();
 		getEntityManager().detach(person);
@@ -222,7 +238,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		return roles;
 	}
 
-	private String generateUserName(Person person) throws Exception {
+	private String generateUserName(Person person, String suffix) throws Exception {
 
 		// generate base username
 		String firstName = person.getFirstName() != null && person.getFirstName().length() > 1 ? person.getFirstName() : " ";
@@ -244,9 +260,14 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 				// we got one, try the next
 				availableUsername = userName + increment++;
 			} catch (NoResultException e) {
-				return availableUsername;
+				break;
 			}
 		}
+
+		if (suffix != null) {
+			availableUsername += "-" + suffix;
+		}
+		return availableUsername;
 	}
 
 	public void syncRoleInfos(U user) {

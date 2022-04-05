@@ -2167,7 +2167,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			resourcePath = StringUtils.uncapitalize(resourcePath.substring(parentEntityField.getName().length()));
 		}
 
-		Map<String, AppClassField> appClassFieldMap = getAppClassFieldMap();
+		Map<String, AppClassField> appClassFieldMap = getAppClassFieldMap(false);
 
 		// remove type
 		appClassFieldMap.remove("type");
@@ -2323,7 +2323,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 
 		sb.append("        return columns;\n");
-		sb.append("    },\n");
+		sb.append("    },\n\n");
 
 		// getMobileColumns
 		sb.append("    // @override\n");
@@ -2399,7 +2399,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @throws Exception
 	 */
 	public String getAppClassFields(boolean jsonCompliance) throws Exception {
-		Map<String, AppClassField> appClassFieldMap = getAppClassFieldMap();
+		Map<String, AppClassField> appClassFieldMap = getAppClassFieldMap(jsonCompliance);
 		String jsonString = new GsonBuilder().setPrettyPrinting().create().toJson(appClassFieldMap);
 		if (!jsonCompliance) {
 			// remove the " for key (it is not JSON compliant, but it is better for the
@@ -2415,7 +2415,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 * @throws Exception
 	 */
-	public Map<String, AppClassField> getAppClassFieldMap() throws Exception {
+	public Map<String, AppClassField> getAppClassFieldMap(boolean includeName) throws Exception {
 		Map<String, AppClassField> appClassFieldMap = new LinkedHashMap<>();
 
 		// inner class to store column meta data
@@ -2470,7 +2470,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		// Create the mandatory "type"
 		AppClassField appClassField = new AppClassField();
 		appClassField.setType("string");
-		appClassField.setName("type");
+		if (includeName) {
+			appClassField.setName("type");
+		}
 		appClassField.setEditable(false);
 		appClassField.setDefaultValue(StringUtils.uncapitalize(c.getSimpleName()));
 		appClassFieldMap.put("type", appClassField);
@@ -2702,7 +2704,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				// set the name
-				appClassField.setName(fieldName);
+				if (includeName) {
+					appClassField.setName(fieldName);
+				}
 
 				if (fieldName.endsWith("Key")) {
 					appClassField.setUnique(true);
@@ -2741,7 +2745,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							if (appClassFieldType != null) {
 								appClassField = new AppClassField();
 								appClassField.setType(appClassFieldType);
-								appClassField.setName(fieldName);
+								if (includeName) {
+									appClassField.setName(fieldName);
+								}
 								appClassField.setTransient(true);
 								appClassField.setFilterable(false);
 								appClassFieldMap.put(fieldName, appClassField);

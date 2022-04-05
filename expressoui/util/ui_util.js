@@ -2370,6 +2370,11 @@ expresso.util.UIUtil = (function () {
                 $waitingPromise = $.Deferred().resolve();
             }
 
+            if (!onChangeCallback) {
+                console.error("onChangeCallback is mandatory for bindOnChange");
+                return;
+            }
+
             // if we need to wait for the form to be ready
             $waitingPromise.done(function () {
                 var widget = expresso.util.UIUtil.getKendoWidget($input);

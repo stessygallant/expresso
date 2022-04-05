@@ -351,6 +351,7 @@ $.extend(expresso.Labels, {
 
     msieNotSupported: "Microsoft Internet Explorer not supported. Please use another browser.",
     resourceDoesNotExistOrRestricted: "This resource cannot be displayed (it has been deleted or the access is restricted)",
+    duplicatedUserName: "User name is already taken",
 
     // email token
     emailTokenWindowTitle: "Security token",

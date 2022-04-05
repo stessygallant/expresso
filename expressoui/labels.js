@@ -355,6 +355,7 @@ $.extend(expresso.Labels, {
 
     msieNotSupported: "Le navigateur Microsoft Internet Explorer n'est plus supporté. SVP utiliser un autre navigateur.",
     resourceDoesNotExistOrRestricted: "La ressource ne peut pas être affichée (elle a été détruite ou vous n'avez pas accès à cette ressource)",
+    duplicatedUserName: "Le code d'utilisateur est déjà pris",
 
     // email token
     emailTokenWindowTitle: "Jeton de sécurité",
@@ -368,7 +369,7 @@ $.extend(expresso.Labels, {
 
     // filter
     addFilterGroup: "Groupe",
-    addFilterRule:"Règle",
+    addFilterRule: "Règle",
     visualFilter: "Visuel",
     sourceFilter: "Code source",
 

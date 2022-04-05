@@ -159,34 +159,6 @@
 
 //
 // ------------------------------------------------------------------------------------------------------------------
-// REPORT SELECTOR
-// ------------------------------------------------------------------------------------------------------------------
-//
-// Report selector
-.exp-report-selector.k-toolbar {
-    display: inline-table;
-    border: 0;
-    padding: 0;
-    margin: $toolbarButtonMargin;
-    border-radius: 3px;
-
-    .k-split-button {
-        margin-top: 0;
-
-        .k-button {
-            margin: 0;
-            padding: 2px 2px;
-            height: 29px;
-
-            &:not(.k-split-button-arrow) {
-                padding: 2px 10px;
-            }
-        }
-    }
-}
-
-//
-// ------------------------------------------------------------------------------------------------------------------
 // CUSTOM WIDGET CSS
 // ------------------------------------------------------------------------------------------------------------------
 //
@@ -744,11 +716,21 @@ label input + span {
     background-color: transparent;
 
     .k-split-button {
+        margin: $toolbarButtonMargin;
+        height: $toolbarButtonHeight;
+
+        .k-button {
+            // remove margin
+            margin: 0;
+
+            &:not(.k-split-button-arrow) {
+                // add space to the text field
+                padding: 0.1em 0.8em 0 0.8em;
+            }
+        }
+
         .k-split-button-arrow {
             background-color: transparent;
-            margin: $toolbarButtonMargin;
-            margin-left: -0.25em;
-            height: $toolbarButtonHeight;
         }
     }
 }
