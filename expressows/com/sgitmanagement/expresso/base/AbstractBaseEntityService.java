@@ -2521,7 +2521,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					if (fieldName.endsWith("StringIds")) {
 						// ok
 					} else {
-						logger.debug("Skipping [" + fieldName + "]. No getter method");
+						logger.debug("Skipping [" + fieldName + "] from [" + getResourceName() + "] No getter method");
 					}
 					continue;
 				}

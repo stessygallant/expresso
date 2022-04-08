@@ -21,13 +21,14 @@ expresso.Common = (function () {
         PRECONDITION_FAILED: 412, // When the version does not match
 
         UNPROCESSABLE_ENTITY: 422, // Used for validation errors.
-        LOCKED: 423, // Used for locked accout
+        LOCKED: 423, // Used for locked account
         EMAIL_TOKEN_REQUIRED: 424, // Failed Dependency
         UPGRADE_REQUIRED: 426, // Web service versions has been updated
         PASSWORD_EXPIRED: 460, // Password is expired
         CUSTOM_UNAUTHORIZED: 451, // Expresso Custom (to avoid browser to popup the basic auth window)
         SERVER_ERROR: 500, // When an exception is thrown while processing the request
-        BAD_GATEWAY: 502 // this happens when uploading a document when the session is expired
+        BAD_GATEWAY: 502, // this happens when uploading a document when the session is expired
+        SERVICE_UNAVAILABLE: 503, // Service is unavailable
     };
 
     var SCREEN_MODES = {
@@ -346,7 +347,10 @@ expresso.Common = (function () {
                             window.location.reload(true);
                         }
                     } else {
-                        if (jqxhr.status == HTTP_CODES.UNAUTHORIZED || jqxhr.status == HTTP_CODES.CUSTOM_UNAUTHORIZED) {
+                        if (expresso.Common.getSiteNamespace().config.Configurations.customErrorMessage && expresso.Common.getSiteNamespace().config.Configurations.customErrorMessage.includes(jqxhr.status)){
+                            //Custom error handling
+                            displayServerValidationMessage(jqxhr);
+                        } else if (jqxhr.status == HTTP_CODES.UNAUTHORIZED || jqxhr.status == HTTP_CODES.CUSTOM_UNAUTHORIZED) {
                             // 401 Unauthorized - When no or invalid authentication details are provided
                             // goto login page
                             expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("expiredSession")).done(function () {
@@ -368,9 +372,12 @@ expresso.Common = (function () {
                         } else if (jqxhr.status == HTTP_CODES.PRECONDITION_FAILED) {
                             // 412 Precondition Failed - When the rpcVersion does not match
                             expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("wrongEntityVersion", currentRequestLabels));
-                        } else if (jqxhr.status == HTTP_CODES.LOCKED && !expresso.Common.getSiteNamespace().config.Configurations.customAccountLocked) {
+                        } else if (jqxhr.status == HTTP_CODES.LOCKED) {
                             // 423 Locked - When the account is locked
                             expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("accountBlocked"));
+                        }  else if (jqxhr.status == HTTP_CODES.SERVICE_UNAVAILABLE) {
+                            // 503 Maintenance
+                            expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("serviceUnavailable"));
                         } else if (jqxhr.status == HTTP_CODES.PASSWORD_EXPIRED) {
                             // 460 Password expired
                             // do nothing. The framework will handle it

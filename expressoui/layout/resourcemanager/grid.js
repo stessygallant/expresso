@@ -2597,20 +2597,20 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @return {*} the row selected
      */
     selectFirstRow: function () {
-        //console.log("selectFirstRow");
         var $row = null;
         if (this.kendoGrid) {
+            //console.log("selectFirstRow");
             var total = this.kendoGrid.dataSource.total();
             if (total) {
                 // select the first row
                 $row = this.kendoGrid.tbody.find(">tr:not(.k-grouping-row)").first();
             }
-        }
-        if ($row && $row.length) {
-            //console.log("selecting row", $row);
-            this.kendoGrid.select($row);
-        } else {
-            this.clearSelection();
+            if ($row && $row.length) {
+                //console.log("selecting row", $row);
+                this.kendoGrid.select($row);
+            } else {
+                this.clearSelection();
+            }
         }
         return $row;
     },
@@ -2621,14 +2621,15 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     clearSelection: function () {
         //console.log(this.resourceManager.getResourceSecurityPath() + " - clearSelection");
-
-        if (this.multipleSelectionEnabled) {
-            // unselect all
-            this.kendoGrid.tbody.find('.selection').prop('checked', false);
-            this.kendoGrid.tbody.find("tr").removeClass("k-state-selected");
+        if (this.kendoGrid) {
+            if (this.multipleSelectionEnabled) {
+                // unselect all
+                this.kendoGrid.tbody.find('.selection').prop('checked', false);
+                this.kendoGrid.tbody.find("tr").removeClass("k-state-selected");
+            }
+            this.selectedRows = [];
+            this.onRowSelected();
         }
-        this.selectedRows = [];
-        this.onRowSelected();
     },
 
     /**

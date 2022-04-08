@@ -91,6 +91,7 @@ $.extend(expresso.Labels, {
     newUserRequestNotComplete: "Your request is not complete. Please fill in the form",
     emailNotValid: "Email is not a valid email address",
     accountBlocked: "Your account has been blocked",
+    serviceUnavailable: "Maintenance in progress",
 
     forgotPasswordTitle: "Forgot password",
     forgotPasswordText: "Please enter your username",

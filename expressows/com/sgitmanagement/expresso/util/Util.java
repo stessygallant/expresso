@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -241,6 +242,10 @@ public class Util {
 				// ignore
 			}
 		}
+	}
+
+	public static URL getResourceFile(String filePath) throws Exception {
+		return SystemEnv.class.getClassLoader().getResource(filePath);
 	}
 
 	public static boolean equals(Object a, Object b) {

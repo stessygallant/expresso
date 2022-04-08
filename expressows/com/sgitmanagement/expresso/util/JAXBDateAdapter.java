@@ -15,8 +15,10 @@ public class JAXBDateAdapter extends XmlAdapter<String, Date> {
 		// 1970-01-01 is the default date when no date
 		if (v != null) {
 			// v contains the timezone, verify up to 2 days
-			if (v.getTime() < (1000 * 60 * 60 * 24 * 2) && v.getTime() >= 0) {
+			if (v.getTime() < (1000 * 60 * 60 * 24 * 2) && v.getTime() > 0) {
 				return DateUtil.formatDate(v, DateUtil.TIME_FORMAT_TL.get());
+			} else if (v.getTime() == DateUtil.removeTime(v).getTime()) {
+				return DateUtil.formatDate(v, DateUtil.DATE_FORMAT_TL.get());
 			} else {
 				return DateUtil.formatDateTime(v);
 			}
