@@ -94,7 +94,7 @@ public class PrintUtil {
 	 * @throws Exception
 	 */
 	public static void printPdf(String printerName, InputStream pdfInputStream, PrintUserListener listener, boolean blackAndWhite, boolean duplex) throws Exception {
-		final String fPrinterName = (SystemEnv.INSTANCE.isInProduction() ? printerName : SystemEnv.INSTANCE.getDefaultProperties().getProperty("test_printer_name"));
+		final String fPrinterName = (SystemEnv.INSTANCE.isInProduction() ? printerName : SystemEnv.INSTANCE.getDefaultProperties().getProperty("default_printer"));
 
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		try {
@@ -105,34 +105,35 @@ public class PrintUtil {
 					PrintService printService = getPrintService(fPrinterName);
 
 					// Create the document to be printed
-					PDDocument document = PDDocument.load(pdfInputStream);
-					Doc doc = new SimpleDoc(new PDFPrintable(document, Scaling.SHRINK_TO_FIT), DocFlavor.SERVICE_FORMATTED.PRINTABLE, null);
+					try (PDDocument document = PDDocument.load(pdfInputStream)) {
+						Doc doc = new SimpleDoc(new PDFPrintable(document, Scaling.SHRINK_TO_FIT), DocFlavor.SERVICE_FORMATTED.PRINTABLE, null);
 
-					// Print it
-					PrintRequestAttributeSet pras = new HashPrintRequestAttributeSet();
-					// pras.add(MediaSizeName.NA_LETTER);
-					pras.add(duplex ? Sides.DUPLEX : Sides.ONE_SIDED);
-					pras.add(MediaSizeName.NA_LETTER);
-					pras.add(blackAndWhite ? Chromaticity.MONOCHROME : Chromaticity.COLOR);
-					pras.add(PrintQuality.HIGH);
-					DocPrintJob pjob = printService.createPrintJob();
-					PrintJobWatcher pjDone = new PrintJobWatcher(pjob);
+						// Print it
+						PrintRequestAttributeSet pras = new HashPrintRequestAttributeSet();
+						// pras.add(MediaSizeName.NA_LETTER);
+						pras.add(duplex ? Sides.DUPLEX : Sides.ONE_SIDED);
+						pras.add(MediaSizeName.NA_LETTER);
+						pras.add(blackAndWhite ? Chromaticity.MONOCHROME : Chromaticity.COLOR);
+						pras.add(PrintQuality.HIGH);
+						DocPrintJob pjob = printService.createPrintJob();
+						PrintJobWatcher pjDone = new PrintJobWatcher(pjob);
 
-					pjob.print(doc, pras);
+						pjob.print(doc, pras);
 
-					if (listener != null) {
+						if (listener != null) {
 
-						// Wait for the print job to be done
-						pjDone.waitForDone();
+							// Wait for the print job to be done
+							pjDone.waitForDone();
 
-						// the printing is completed
-						if (pjDone.isSucessful()) {
-							listener.jobPrinted();
-						} else {
-							listener.jobFailed(new Exception("" + pjDone.getPrintJobEvent()));
+							// the printing is completed
+							if (pjDone.isSucessful()) {
+								listener.jobPrinted();
+							} else {
+								listener.jobFailed(new Exception("" + pjDone.getPrintJobEvent()));
+							}
 						}
+						return null;
 					}
-					return null;
 				}
 			}).get(2, TimeUnit.MINUTES);
 		} finally {

@@ -347,7 +347,7 @@ expresso.Common = (function () {
                             window.location.reload(true);
                         }
                     } else {
-                        if (expresso.Common.getSiteNamespace().config.Configurations.customErrorMessage && expresso.Common.getSiteNamespace().config.Configurations.customErrorMessage.includes(jqxhr.status)){
+                        if (expresso.Common.getSiteNamespace().config.Configurations.customErrorMessage && expresso.Common.getSiteNamespace().config.Configurations.customErrorMessage.includes(jqxhr.status)) {
                             //Custom error handling
                             displayServerValidationMessage(jqxhr);
                         } else if (jqxhr.status == HTTP_CODES.UNAUTHORIZED || jqxhr.status == HTTP_CODES.CUSTOM_UNAUTHORIZED) {
@@ -375,7 +375,7 @@ expresso.Common = (function () {
                         } else if (jqxhr.status == HTTP_CODES.LOCKED) {
                             // 423 Locked - When the account is locked
                             expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("accountBlocked"));
-                        }  else if (jqxhr.status == HTTP_CODES.SERVICE_UNAVAILABLE) {
+                        } else if (jqxhr.status == HTTP_CODES.SERVICE_UNAVAILABLE) {
                             // 503 Maintenance
                             expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("serviceUnavailable"));
                         } else if (jqxhr.status == HTTP_CODES.PASSWORD_EXPIRED) {
@@ -914,6 +914,10 @@ expresso.Common = (function () {
         if (options.showProgress) {
             options.waitOnElement = null;
 
+            if (options.showProgress === true) {
+                options.showProgress = $("body");
+            }
+
             // add flag to the query
             queryString = queryString || {};
             if (typeof queryString === "string") {
@@ -1046,7 +1050,7 @@ expresso.Common = (function () {
         var kendoProgressBar;
         var kendoProgressBarText = {text: expresso.Common.getLabel("initialization", options.labels)};
         if (options.showProgress) {
-            $kendoProgressBarDiv = $("<div class='exp-progress-bar-div'><div class='progress-bar'></div><div class='progress-back'></div></div>").appendTo($("body"));
+            $kendoProgressBarDiv = $("<div class='exp-progress-bar-div'><div class='progress-bar'></div><div class='progress-back'></div></div>").appendTo(options.showProgress);
             kendoProgressBar = $kendoProgressBarDiv.find(".progress-bar").kendoProgressBar({
                 type: "percent",
                 animation: {

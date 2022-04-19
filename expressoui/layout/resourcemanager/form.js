@@ -560,6 +560,10 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                                                     // refresh only the resource
                                                     _this.resourceManager.sections.grid.updateResource(resource, updatedResource);
                                                 }
+                                                if (_this.closedDeferred) {
+                                                    _this.closedDeferred.resolve(updatedResource);
+                                                    _this.closedDeferred = null;
+                                                }
                                                 _this.close();
 
                                                 if (action.afterPerformAction) {
@@ -1008,12 +1012,13 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 this.savedDeferred.resolve(resource);
                 this.savedDeferred = null;
             }
-            if (this.closedDeferred) {
-                this.closedDeferred.resolve(resource);
-                this.closedDeferred = null;
-            }
 
             if (!this.preventWindowClosing) {
+                if (this.closedDeferred) {
+                    this.closedDeferred.resolve(resource);
+                    this.closedDeferred = null;
+                }
+
                 var _this = this;
                 window.setTimeout(function () {
                     _this.destroyForm();

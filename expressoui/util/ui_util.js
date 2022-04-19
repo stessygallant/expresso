@@ -2340,7 +2340,7 @@ expresso.util.UIUtil = (function () {
             customOptions = customOptions || {};
             if ($element && $element.length == 1) {
                 if (show || show === undefined) {
-                    if (!$element.children(".exp-loading-mask").length) {
+                    if (!$element.children(".exp-loading-mask").length || customOptions.id) {
                         return $("<div class='exp-loading-mask'" +
                             (customOptions.id ? " data-mask-id='" + customOptions.id + "'" : "") + ">" +
                             "<div class='k-loading-image'></div><div class='k-loading-color'></div>" +

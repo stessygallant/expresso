@@ -4,8 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import com.sgitmanagement.expresso.base.AbstractBaseEntityService;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
@@ -16,7 +14,10 @@ import com.sgitmanagement.expressoext.security.ResourceService;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.util.ReportUtil;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityService<E, User, Integer> {
+	@Override
 	final public boolean isUserInRole(String rolePgmKey) {
 		return AuthorizationHelper.isUserInRole(getUser(), rolePgmKey);
 	}
@@ -114,7 +115,7 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 		} catch (ForbiddenException ex) {
 			throw ex;
 		} catch (Exception ex) {
-			logger.error("Cannot validate document privileges", ex);
+			logger.error("Cannot validate privileges", ex);
 			throw new ForbiddenException();
 		}
 	}

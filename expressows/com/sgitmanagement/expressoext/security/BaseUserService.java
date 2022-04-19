@@ -47,7 +47,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 				Person person = personService.get(user.getPersonId());
 
 				// set the username if needed
-				String userName = verifyUserName(user, user.getUserName());
+				String userName = verifyUserName(person, user.getUserName());
 
 				// create the user from the person
 				U newUser = create(person, userName);

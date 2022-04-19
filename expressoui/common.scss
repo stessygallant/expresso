@@ -118,7 +118,8 @@
     .progress-bar {
         position: absolute;
         top: 35%;
-        left: 40%;
+        left: calc((100% - 30em) / 2);
+        width: 30em;
         z-index: 2;
     }
 

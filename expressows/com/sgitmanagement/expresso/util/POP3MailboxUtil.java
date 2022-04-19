@@ -59,7 +59,7 @@ public class POP3MailboxUtil {
 		properties.put("mail." + protocol + ".starttls.required", mailProps.getProperty("mail.pop3.starttls.required", "false"));
 
 		try {
-			Session emailSession = Session.getDefaultInstance(properties, new MailAuthenticator(username, password));
+			Session emailSession = Session.getInstance(properties, new MailAuthenticator(username, password));
 			// emailSession.setDebug(true);
 
 			// create the POP3 store object and connect with the pop server
