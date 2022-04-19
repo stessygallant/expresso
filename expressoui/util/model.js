@@ -352,6 +352,7 @@ expresso.util.Model = (function () {
                     loadValues(resourceManager.model, resourceManager.labels),
 
                     // get the appClass
+                    resourceManager.invalidManager ? $.Deferred().resolve() :
                     expresso.Common.sendRequest(resourceManager.getWebServicePath() + "/appClass", null, null, {jsonCompliance: true}).done(function (appClassFields) {
                         for (var fieldName in appClassFields) {
                             var field = appClassFields[fieldName];

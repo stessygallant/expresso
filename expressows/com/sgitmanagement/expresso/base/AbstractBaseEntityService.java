@@ -1565,6 +1565,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 		// handle all is [not] null cases here
 		if (filter.getValue() == null ||
+		// special case for Javascript/HTML option null value
+				filter.getValue().equals("null") || filter.getValue().equals("undefined") ||
 		// special case for filtering in the Grid on no value
 				(("" + filter.getValue()).equals("-2.0") && filter.getField().endsWith("Id"))
 				// null or empty operators

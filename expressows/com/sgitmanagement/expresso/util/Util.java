@@ -742,6 +742,18 @@ public class Util {
 	}
 
 	/**
+	 * 
+	 * @param directoryPath
+	 * @return
+	 * @throws IOException
+	 */
+	static public Set<String> listFiles(String directoryPath) throws IOException {
+		try (Stream<Path> stream = Files.list(Paths.get(directoryPath))) {
+			return stream.filter(file -> !Files.isDirectory(file)).map(Path::getFileName).map(Path::toString).collect(Collectors.toSet());
+		}
+	}
+
+	/**
 	 * Method to write a CSV
 	 *
 	 * @param separator

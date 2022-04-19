@@ -79,7 +79,12 @@ public enum SystemEnv {
 		// set the default locale
 		Locale.setDefault(Locale.ENGLISH);
 
-		logger.error("System started on [" + ipAddress + "] - Environment: " + env);
+		String msg = "System started on [" + ipAddress + "] - Environment: " + env;
+		if (isInProduction()) {
+			logger.error(msg);
+		} else {
+			logger.info(msg);
+		}
 	}
 
 	public boolean isInProduction() {

@@ -2190,8 +2190,9 @@ expresso.util.UIUtil = (function () {
          * @param $window
          * @param fieldName
          * @param [clazz]
+         * @param [removeHighlight] Removes the highlight when true
          */
-        var highlightMissingRequiredField = function ($window, fieldName, clazz) {
+        var highlightMissingRequiredField = function ($window, fieldName, clazz, removeHighlight) {
             //Check if KendoUI widget because it creates an extra span
             var $f = $window.find("[name='" + fieldName + "']");
             if ($f.is("[data-role]")) {
@@ -2203,7 +2204,11 @@ expresso.util.UIUtil = (function () {
                 $f = $f.siblings("label");
             }
 
-            $f.addClass(clazz || "exp-invalid");
+            if(removeHighlight){
+                $f.removeClass(clazz || "exp-invalid");
+            }else {
+                $f.addClass(clazz || "exp-invalid");
+            }
         };
 
         /**
