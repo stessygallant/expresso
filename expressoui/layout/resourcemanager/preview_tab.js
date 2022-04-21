@@ -57,6 +57,8 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
      * Method called when this tab is activated (already selected and initialized)
      */
     onTabActivationEvent: function (currentTab) {
+        // console.log("Preview tab [" + this.resourceManager.resourceName + "] - onTabActivationEvent");
+
         this.currentTab = currentTab;
 
         // if the tab is already loading resources, skip it
@@ -86,7 +88,7 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
         // this tab will be refreshed only when the tab is currently active or the tab is being shown
         $.when(_this.isReady()).done(function () {
             if (_this.currentTab) {
-                //console.log("Refreshing tab [" + _this.tabName + "]", resource);
+                // console.log("Refreshing tab [" + _this.tabName + "]", resource);
                 _this.refresh(resource);
             }
         });
@@ -97,7 +99,7 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
      * @param resource the resource object
      */
     refresh: function (resource) {
-        //console.log("Preview tab [" + this.resourceManager.resourceName + "] - refresh");
+        // console.log("Preview tab [" + this.resourceManager.resourceName + "] - refresh");
 
         if (this.subResourceManager) {
             // verify if the create is available
@@ -262,8 +264,7 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
 
         if (this.subResourceManager) {
             this.subResourceManager.resizeContent();
-        }
-        else if (this.appInstance) {
+        } else if (this.appInstance) {
             this.appInstance.resizeContent();
         }
     },

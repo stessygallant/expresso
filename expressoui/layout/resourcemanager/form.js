@@ -16,6 +16,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
     // this promise is used to listen to a save event
     preventWindowClosing: undefined,
+    forceClose: undefined,
     savedDeferred: undefined,
     closedDeferred: undefined,
 
@@ -554,6 +555,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
                                 $windowDeferred
                                     .done(function (data) {
+                                        // console.log("FORM - performAction - " + _this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]:" + action.name);
+
                                         action.performAction.call(_this.resourceManager, resource, data)
                                             .done(function (updatedResource) {
                                                 if (updatedResource && updatedResource.id == resource.id) {
@@ -677,9 +680,12 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         }
 
         if (this.$window && this.$window.data("kendoWindow")) {
+            this.forceClose = true;
             this.$window.data("kendoWindow").close();
         }
 
+        // reset flag
+        this.forceClose = false;
         this.preventWindowClosing = false;
         this.$window = null;
     },
@@ -808,13 +814,13 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param e
      */
     onClose: function (e) {
-        // console.log("FORM - onClose - " + this.resourceManager.resourceName + ":" + this.preventWindowClosing, e);
+        // console.log("FORM - onClose - " + this.resourceManager.resourceName + " forceClose:" + this.forceClose, e);
 
         if (!e.isDefaultPrevented() && e.userTriggered) {
             e.preventDefault(); // do not allow the close here, it will be close inside close()
             this.close();
         } else {
-            if (this.preventWindowClosing) {
+            if (!this.forceClose) {
                 e.preventDefault();
             }
         }
@@ -980,7 +986,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param originalResource resource before the save (which refresh the resource)
      */
     onSaved: function (resource, originalResource) {
-        // console.log("FORM - onSaved - " + this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]: " + this.preventWindowClosing);
+        // console.log("FORM - onSaved - " + this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "] preventWindowClosing:" + this.preventWindowClosing);
 
         // if it is a validation problem, the resource will be null
         if (resource) {
@@ -1021,7 +1027,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
                 var _this = this;
                 window.setTimeout(function () {
-                    _this.destroyForm();
+                    _this.close();
                 }, 10);
             }
         } else {
@@ -1031,8 +1037,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             }
         }
 
+        // always remove the flag
+        this.preventWindowClosing = false;
+
+        // remove the loading mask
         if (this.$window) {
-            this.preventWindowClosing = false;
             expresso.util.UIUtil.showLoadingMask(this.$window, false);
         }
     },

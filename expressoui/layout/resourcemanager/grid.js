@@ -2548,7 +2548,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * Based on the selected rows, it will defined the currentResource and trigger events as needed
      */
     verifySelection: function () {
-        //console.log(this.resourceManager.getResourceSecurityPath() + " - verifySelection");
+        // console.log(this.resourceManager.getResourceSecurityPath() + " - verifySelection");
 
         if (this.selectedRows.length == 0) {
             this.publishEvent(this.RM_EVENTS.RESOURCE_SELECTED, null);
@@ -2574,7 +2574,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @return {*} the row selected
      */
     selectRowById: function (id) {
-        //console.log("selectRowById");
+        // console.log(this.resourceManager.getResourceSecurityPath() + " - selectRowById");
+
         var $row = null;
         if (this.kendoGrid) {
             //get the dataItem by its ID
@@ -2597,6 +2598,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @return {*} the row selected
      */
     selectFirstRow: function () {
+        // console.log(this.resourceManager.getResourceSecurityPath() + " - selectFirstRow");
+
         var $row = null;
         if (this.kendoGrid) {
             //console.log("selectFirstRow");
@@ -2620,7 +2623,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * Then we need to clear the selection manually
      */
     clearSelection: function () {
-        //console.log(this.resourceManager.getResourceSecurityPath() + " - clearSelection");
+        // console.log(this.resourceManager.getResourceSecurityPath() + " - clearSelection");
         if (this.kendoGrid) {
             if (this.multipleSelectionEnabled) {
                 // unselect all

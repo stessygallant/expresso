@@ -950,9 +950,10 @@ expresso.Security = function () {
 
         // on Javascript error, send an email to the support
         window.onerror = function (msg, url, lineNo, columnNo, error) {
-            var string = msg.toLowerCase();
+            console.warn("Javascript error: " + msg + (error ? " (" + JSON.stringify(error) + ")" : ""));
+
             var substring = "script error";
-            if (string.indexOf(substring) > -1) {
+            if (msg.toLowerCase().indexOf(substring) > -1) {
                 // When an error occurs in a script, loaded from a different origin,
                 // the details of the error are not reported to prevent leaking information
             } else {
@@ -966,7 +967,7 @@ expresso.Security = function () {
                     "Error object: " + JSON.stringify(error)
                 ].join("\n<br>");
 
-                console.error(message);
+                // console.error(message);
                 // expresso.Common.sendRequest("support/mail", "execute",
                 //     "title=" + "Javascript error" + " &message=" + encodeURIComponent(message),
                 //     null, {ignoreErrors: true});
