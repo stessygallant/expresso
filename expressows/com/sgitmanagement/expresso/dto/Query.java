@@ -400,6 +400,7 @@ public class Query {
 		public enum Operator {
 			// string only
 			startsWith, doesNotStartWith, endsWith, doesNotEndWith, contains, doesNotContain, isEmpty, isNotEmpty, isNotNullOrEmpty, isNullOrEmpty, trimCompare, neqTrimCompare, equalsIgnoreCase,
+			trimIn,
 
 			// number and date only
 			gt, lt, lte, gte,

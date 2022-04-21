@@ -1567,7 +1567,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		if (filter.getValue() == null ||
 		// special case for Javascript/HTML option null value
 				filter.getValue().equals("null") || filter.getValue().equals("undefined") ||
-		// special case for filtering in the Grid on no value
+				// special case for filtering in the Grid on no value
 				(("" + filter.getValue()).equals("-2.0") && filter.getField().endsWith("Id"))
 				// null or empty operators
 				|| (("" + filter.getValue()).length() == 0 || opName.indexOf("null") != -1 || opName.indexOf("empty") != -1) && !(filter.getValue().equals("") && opName.indexOf("contains") != -1)) {
@@ -2002,7 +2002,15 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						predicate = null;
 					}
 					break;
-
+				case trimIn:
+					distinctNeeded = true;
+					if (stringValues != null && !stringValues.isEmpty()) {
+						stringValues.replaceAll(String::trim);
+						predicate = cb.trim(stringPath).in(stringValues);
+					} else {
+						predicate = null;
+					}
+					break;
 				default:
 					throw new Exception("Operator [" + filter.getOperator() + "] not supported for type [" + type + "]");
 				}

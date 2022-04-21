@@ -63,6 +63,14 @@ public class DateUtil {
 			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		}
 	};
+
+	public static final ThreadLocal<DateFormat> DATETIME_FORMAT_TL_SLASH = new ThreadLocal<DateFormat>() {
+		@Override
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		}
+	};
+
 	public static final ThreadLocal<DateFormat> DATETIME_NOSEC_FORMAT_TL = new ThreadLocal<DateFormat>() {
 		@Override
 		protected DateFormat initialValue() {
