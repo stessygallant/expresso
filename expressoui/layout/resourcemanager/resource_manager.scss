@@ -947,14 +947,16 @@ k-widget k-window
                 overflow: hidden;
 
                 .k-splitbar {
-                    margin-left: $formPadding;
+                    // margin-left: $formPadding;
+                    left: unset;
                     color: $splitBarColor;
                     background-color: $splitBarBackground;
                     border-color: $splitBarBorder;
                 }
 
                 .k-ghost-splitbar {
-                    margin-left: $formPadding;
+                    // margin-left: $formPadding;
+                    left: unset;
                 }
 
                 .exp-form {

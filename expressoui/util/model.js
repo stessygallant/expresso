@@ -204,7 +204,7 @@ expresso.util.Model = (function () {
                             field.editable !== false && field.type != "boolean") {
                             field.validation = field.validation || {};
                             if (field.validation.required === undefined) {
-                                //console.log("Adding required to [" + f + "]");
+                                // console.log("Adding required to [" + f + "]");
                                 field.validation.required = true;
                             }
                         }
@@ -353,24 +353,24 @@ expresso.util.Model = (function () {
 
                     // get the appClass
                     resourceManager.invalidManager ? $.Deferred().resolve() :
-                    expresso.Common.sendRequest(resourceManager.getWebServicePath() + "/appClass", null, null, {jsonCompliance: true}).done(function (appClassFields) {
-                        for (var fieldName in appClassFields) {
-                            var field = appClassFields[fieldName];
+                        expresso.Common.sendRequest(resourceManager.getWebServicePath() + "/appClass", null, null, {jsonCompliance: true}).done(function (appClassFields) {
+                            for (var fieldName in appClassFields) {
+                                var field = appClassFields[fieldName];
 
-                            // verify if the field is mapped
-                            var modelField = resourceManager.model.fields[fieldName];
+                                // verify if the field is mapped
+                                var modelField = resourceManager.model.fields[fieldName];
 
-                            if (!modelField) {
-                                // if a transient field is not define, it is not an issue (but it should be defined)
-                                if (!field.transient) {
-                                    console.error("AppClass [" + resourceManager.getResourceName() + "] missing field mapping[" + fieldName + "]");
+                                if (!modelField) {
+                                    // if a transient field is not define, it is not an issue (but it should be defined)
+                                    if (!field.transient) {
+                                        console.error("AppClass [" + resourceManager.getResourceName() + "] missing field mapping[" + fieldName + "]");
+                                    }
+                                } else {
+                                    // override the restrictedRole
+                                    modelField.restrictedRole = field.restrictedRole;
                                 }
-                            } else {
-                                // override the restrictedRole
-                                modelField.restrictedRole = field.restrictedRole;
                             }
-                        }
-                    })
+                        })
                 ).done(function () {
                     $deferred.resolve(resourceManager.model);
                 });

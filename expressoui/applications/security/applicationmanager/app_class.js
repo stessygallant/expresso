@@ -41,7 +41,8 @@ expresso.applications.security.applicationmanager.ApplicationManager = expresso.
                 type: "boolean"
             },
             internalOnly: {
-                type: "boolean"
+                type: "boolean",
+                defaultValue: true
             },
             deactivationDate: {
                 type: "date",

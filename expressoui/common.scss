@@ -734,6 +734,12 @@ label input + span {
             background-color: transparent;
         }
     }
+
+    // label
+    label {
+        font-weight: bold;
+        margin-right: 0.3em;
+    }
 }
 
 .exp-button,

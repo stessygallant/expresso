@@ -26,6 +26,10 @@
             field: "firstName",
             width: 110
         }, {
+            field: "fullName",
+            width: 150,
+            hidden: true
+        }, {
             field: "userName",
             width: 130
         }, {

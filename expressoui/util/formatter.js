@@ -9,7 +9,7 @@ expresso.util.Formatter = (function () {
     var DATE_FORMAT = {
         DATE_ONLY: "yyyy-MM-dd",
         DATE_TIME: "yyyy-MM-dd HH:mm",
-        TEXTUAL_DATE_TIME : "dddd, dd MMMM HH:mm:ss",
+        TEXTUAL_DATE_TIME: "dddd, dd MMMM HH:mm:ss",
         DATE_TIME_SEC: "yyyy-MM-dd HH:mm:ss",
         TIME_ONLY: "HH:mm",
         TIME_SEC_ONLY: "HH:mm:ss"
@@ -89,6 +89,45 @@ expresso.util.Formatter = (function () {
         return d;
     };
 
+    /**
+     * Format the seconds in datetime format
+     * @param seconds
+     * @param [options] {format: <datetime format>}
+     * @returns {string}
+     */
+    var formatSeconds = function (seconds, options) {
+        if (!isNaN(seconds) && seconds > 0) {
+            options = options || {};
+
+            var t = new Date(1970, 0, 1); // Epoch
+            t.setSeconds(seconds); // local time
+            //t.setTime(seconds * 1000);
+
+            if (!options.format) {
+                options.format = "";
+                if (options.showSeconds !== false) {
+                    options.format = seconds > 60 ? "ss" : "ss"; // cannot have only one s
+                }
+                if (seconds > 60) {
+                    options.format = (seconds > (60 * 60) ? "mm" : "m") + ":" + options.format;
+                }
+                if (seconds > (60 * 60)) {
+                    options.format = (seconds >= (60 * 60 * 24) ? "HH" : "H") + ":" + options.format;
+                }
+
+                if (seconds >= (60 * 60 * 24)) {
+                    var nbrDays = Math.floor(seconds / (60 * 60 * 24));
+                    options.format = "'" + nbrDays + "d'" + " " + options.format;
+                }
+            }
+
+            // console.log("format: " + options.format + " - " + t);
+            return kendo.toString(t, options.format);
+        } else {
+            return "";
+        }
+    };
+
     // return public properties and methods
     return {
         // PUBLIC PROPERTIES
@@ -97,7 +136,8 @@ expresso.util.Formatter = (function () {
         // DATE
         formatDate: formatDate,
         parseDate: parseDate,
-        parseDateTime: parseDateTime
+        parseDateTime: parseDateTime,
+        formatSeconds: formatSeconds
     }
 }());
 
