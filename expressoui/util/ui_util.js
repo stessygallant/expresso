@@ -105,6 +105,9 @@ expresso.util.UIUtil = (function () {
                     case "expressomaskedtimepicker":
                         widget = $element.data("kendoExpressoMaskedTimePicker");
                         break;
+                    case "expressomaskedtimeunitpicker":
+                        widget = $element.data("kendoExpressoMaskedTimeUnitPicker");
+                        break;
                     case "expressoform":
                         widget = null;
                         break;

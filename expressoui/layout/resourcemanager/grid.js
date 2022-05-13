@@ -911,6 +911,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     // force single row selection
                     if (_this.selectedRows.length != 1) {
                         console.warn("Fix single selection bug in Kendo for virtual grid");
+                        _this.kendoGrid._selectedIds = {};
                         _this.clearSelection();
                         _this.kendoGrid.select(this);
                     }

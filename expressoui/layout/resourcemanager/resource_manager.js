@@ -101,12 +101,12 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         this.eventCentral = new expresso.util.EventCentral(this.resourceName);
 
         // initialized the sections container
-        this.sections = sections || {
+        this.sections = $.extend({}, {
             grid: true,
             form: true,
-            preview: true,
+            preview: sections === undefined,
             filter: false // expresso.Common.getSiteNamespace().config.Configurations.supportFilter
-        };
+        }, sections);
 
         console.log("ResourceManager [" + this.resourceName + "] initialized");
     },

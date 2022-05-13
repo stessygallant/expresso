@@ -26,6 +26,8 @@ expresso.util.Model = (function () {
             var $deferredModel;
             if (typeof resourceManager.model === "string") {
                 var modelPath = resourceManager.model;
+                modelPath += (modelPath.indexOf("?") != -1 ? "&" : "?") + "ver=" + expresso.Common.getSiteNamespace().config.Configurations.version;
+
                 // console.log("MODEL PATH [" + modelPath + "]");
                 $deferredModel = $.get(modelPath).then(function (model) {
                     // backward compatibility: model could use _this to refer to resourceManager
