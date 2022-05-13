@@ -118,8 +118,8 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 			return service;
 		} catch (ForbiddenException e) {
 			throw e;
-		} catch (Exception e) {
-			logger.error("Problem creating the service [" + serviceClass + "]");
+		} catch (Exception ex) {
+			logger.error("Problem creating the service [" + serviceClass + "]", ex);
 			return null;
 		}
 	}

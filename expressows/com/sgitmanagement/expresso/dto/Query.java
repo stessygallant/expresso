@@ -20,6 +20,7 @@ public class Query {
 	private Boolean activeOnly;
 	private Boolean countOnly;
 	private Boolean createIfNotFound;
+	private Boolean hierarchical;
 
 	private String searchFilterTerm;
 	private Boolean keySearch;
@@ -135,6 +136,18 @@ public class Query {
 	public Query setCreateIfNotFound(Boolean createIfNotFound) {
 		this.createIfNotFound = createIfNotFound;
 		return this;
+	}
+
+	public Boolean getHierarchical() {
+		return hierarchical;
+	}
+
+	public void setHierarchical(Boolean hierarchical) {
+		this.hierarchical = hierarchical;
+	}
+
+	public boolean hierarchical() {
+		return this.hierarchical != null && this.hierarchical.booleanValue();
 	}
 
 	/**
@@ -287,6 +300,9 @@ public class Query {
 		}
 		if (countOnly != null) {
 			s += "countOnly=" + countOnly + ";";
+		}
+		if (hierarchical != null) {
+			s += "hierarchical=" + hierarchical + ";";
 		}
 		if (keySearch != null) {
 			s += "keySearch=" + keySearch + ";";

@@ -30,6 +30,15 @@ public class AppClassField {
 	private Boolean lookupSelection;
 	private Boolean hidden;
 	private String restrictedRole;
+	private Boolean hierarchicalParent;
+
+	public Boolean getHierarchicalParent() {
+		return hierarchicalParent;
+	}
+
+	public void setHierarchicalParent(Boolean hierarchicalParent) {
+		this.hierarchicalParent = hierarchicalParent;
+	}
 
 	private Object /* true|String|Reference */ reference;
 	private Object /* true|String|Values */ values;

@@ -50,6 +50,7 @@ import jakarta.ws.rs.core.UriInfo;
 public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S extends AbstractBaseEntityService<E, U, I>, R extends AbstractBaseEntityResource<E, S, U, I>, U extends IUser, I>
 		extends AbstractBaseResource<S, U> {
 	public final static int MAX_LIST_RESULTS = 10000;
+	public final static int MAX_HIERARCHICAL_RESULTS = 500;
 	private AbstractBaseEntityResource<E, S, U, I> baseEntityResource;
 	private Integer parentId;
 	private Class<E> typeOfE;
@@ -154,6 +155,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 						keyQuery.setKeySearch(true);
 						keyQuery.setActiveOnly(false);
 						keyQuery.setSort(query.getSort());
+						keyQuery.setHierarchical(query.getHierarchical());
 
 						// add support for multiple keys
 						Object[] keys;
@@ -222,6 +224,22 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 			}
 			// System.out.println(query);
 
+			// we cannot have a limit for hierarchical: to built the tree, we need all records
+			if (query.hierarchical()) {
+				boolean retrieveAll = false;
+				if (retrieveAll) {
+					query.setPageSize(null);
+
+					// but we must verify the number of records
+					long count = getService().count(query);
+					if (count > MAX_HIERARCHICAL_RESULTS) {
+						throw new ValidationException("tooManyResultsForHierarchical");
+					}
+				} else {
+					query.setPageSize(MAX_HIERARCHICAL_RESULTS);
+				}
+			}
+
 			long count;
 			List<E> data;
 			if (query.countOnly()) {
@@ -229,7 +247,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 				count = getService().count(query);
 			} else {
 				data = getService().list(query);
-				if (query.getPageSize() != null) {
+				if (query.getPageSize() != null && !query.hierarchical()) {
 					count = getService().count(query);
 					if (count == 0) {
 						count = data.size();

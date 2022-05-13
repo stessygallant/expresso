@@ -203,7 +203,7 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 			service.setRequest(getRequest());
 			service.setResponse(getResponse());
 
-			if (AbstractBaseEntityService.class.isAssignableFrom(serviceClass)) {
+			if (AbstractBaseEntityService.class.isAssignableFrom(serviceClass) && ((AbstractBaseEntityService) service).getTypeOfE() == null) {
 				String entityClassName = serviceClass.getCanonicalName().substring(0, serviceClass.getCanonicalName().length() - "Service".length());
 				((AbstractBaseEntityService) service).setTypeOfE(Class.forName(entityClassName));
 			}
@@ -211,8 +211,8 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 			registerService(service);
 
 			return service;
-		} catch (Exception e) {
-			logger.error("Problem creating the service [" + serviceClass + "]");
+		} catch (Exception ex) {
+			logger.error("Problem creating the service [" + serviceClass + "]", ex);
 			return null;
 		}
 	}
@@ -246,8 +246,8 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 
 			registerService(service);
 			return service;
-		} catch (Exception e) {
-			logger.error("Problem creating the service [" + serviceClass + "]");
+		} catch (Exception ex) {
+			logger.error("Problem creating the service [" + serviceClass + "]", ex);
 			return null;
 		}
 	}

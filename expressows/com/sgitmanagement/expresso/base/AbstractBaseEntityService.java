@@ -360,6 +360,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param source
 	 * @throws Exception
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	final private boolean setProperties(Class<?> typeOf, E dest, E source) throws Exception {
 		// from the base, set the properties on the entity
 		boolean updated = false;
@@ -391,13 +392,15 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					// + "]");
 
 					// this is a collection of ID (Integer).
-					@SuppressWarnings("unchecked")
-					Set<Integer> newIdSet = (Set<Integer>) field.get(source);
-					@SuppressWarnings("unchecked")
-					Set<Integer> previousIdSet = (Set<Integer>) oldValue;
+					Set newIdSet = (Set) field.get(source);
+					Set previousIdSet = (Set) oldValue;
+
+					if (newIdSet == null) {
+						newIdSet = new HashSet();
+					}
 
 					// add new ids
-					for (Integer id : newIdSet) {
+					for (Object id : newIdSet) {
 						if (!previousIdSet.contains(id)) {
 							updated = true;
 							previousIdSet.add(id);
@@ -406,13 +409,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 
 					// remove deleted ids
-					for (Integer id : new ArrayList<>(previousIdSet)) {
+					for (Object id : new ArrayList<>(previousIdSet)) {
 						if (!newIdSet.contains(id)) {
 							updated = true;
 							previousIdSet.remove(id);
 							// logger.debug("Removing " + id);
 						}
 					}
+
 				} else if (oldValue != null && Collection.class.isInstance(oldValue)) {
 					// do not assign them (OneToMany)
 					Object newValue = field.get(source);
@@ -717,17 +721,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// then issue the SQL query
 				Date startDate = new Date();
 				List<E> data = typedQuery.getResultList();
-				Date endDate = new Date();
-
-				if (data.size() > 5000) {
-					logger.warn(
-							"Got a request that returns " + data.size() + " resources [" + getTypeOfE().getSimpleName() + " from: " + getUser().getFullName() + ". Query: " + new Gson().toJson(query));
-				}
-
-				long delay = (endDate.getTime() - startDate.getTime());
-				if (delay > 500) {
-					logger.warn("Execution " + getTypeOfE().getSimpleName() + " SQL time: " + delay + " ms (" + data.size() + ") " + getTypeOfE().getSimpleName() + ": " + new Gson().toJson(query));
-				}
 
 				// if the query required the entity to be created if is does not exist, create it
 				if (data.size() == 0 && (query.getCreateIfNotFound() != null && query.getCreateIfNotFound().booleanValue())) {
@@ -737,11 +730,92 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				}
 
+				// if the query is for an hierarchical list, we need to include all parents and children
+				if (query.hierarchical()) {
+					appendHierarchicalEntities(data, query.activeOnly());
+				}
+
+				if (data.size() > 5000) {
+					logger.warn(
+							"Got a request that returns " + data.size() + " resources [" + getTypeOfE().getSimpleName() + " from: " + getUser().getFullName() + ". Query: " + new Gson().toJson(query));
+				}
+
+				Date endDate = new Date();
+				long delay = (endDate.getTime() - startDate.getTime());
+				if (delay > 500) {
+					logger.warn("Execution " + getTypeOfE().getSimpleName() + " SQL time: " + delay + " ms (" + data.size() + ") " + getTypeOfE().getSimpleName() + ": " + new Gson().toJson(query));
+				}
+
 				return data;
 			}
 		} catch (Exception ex) {
-			logger.error("Error executing query: " + ex + " - " + new Gson().toJson(query));
+			logger.error("Error executing query: " + ex + " - " + new Gson().toJson(query), ex);
 			throw ex;
+		}
+	}
+
+	/**
+	 * 
+	 * @param data
+	 */
+	private void appendHierarchicalEntities(List<E> data, boolean activeOnly) throws Exception {
+		// build a map with the key
+		Set<I> ids = new HashSet<>();
+		data.forEach(e -> ids.add(e.getId()));
+
+		for (E e : new ArrayList<>(data)) {
+			// append parents
+			appendHierarchicalParentEntities(e, data, ids);
+
+			// append children
+			appendHierarchicalChildEntities(e, data, ids, activeOnly);
+		}
+	}
+
+	/**
+	 * 
+	 * @param e
+	 * @param data
+	 * @param ids
+	 * @throws Exception
+	 */
+	private void appendHierarchicalParentEntities(E e, List<E> data, Set<I> ids) throws Exception {
+		if (e != null) {
+			if (!ids.contains(e.getId())) {
+				ids.add(e.getId());
+				data.add(e);
+			}
+
+			// get the hierarchy reference
+			E hierarchicalParent = getHierarchicalParentEntity(e);
+			appendHierarchicalParentEntities(hierarchicalParent, data, ids);
+		}
+	}
+
+	/**
+	 * 
+	 * @param e
+	 * @param data
+	 * @param ids
+	 * @param activeOnly
+	 * @throws Exception
+	 */
+	private void appendHierarchicalChildEntities(E e, List<E> data, Set<I> ids, boolean activeOnly) throws Exception {
+		// if we already reaches the maximum limit, do not include children
+		if (data.size() < AbstractBaseEntitiesResource.MAX_HIERARCHICAL_RESULTS) {
+			Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
+			if (hierarchicalParentEntityField != null) {
+				// get all resources where the hierarchicalParentEntity is the current entity
+				Query childrenQuery = new Query().setActiveOnly(activeOnly);
+				childrenQuery.addFilter(new Filter(hierarchicalParentEntityField.getName() + "Id", e.getId()));
+				for (E child : list(childrenQuery)) {
+					if (!ids.contains(child.getId())) {
+						ids.add(child.getId());
+						data.add(child);
+						appendHierarchicalChildEntities(child, data, ids, activeOnly);
+					}
+				}
+			}
 		}
 	}
 
@@ -962,7 +1036,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			// count the total number of records
 			return getEntityManager().createQuery(q).getSingleResult();
 		} catch (Exception ex) {
-			logger.error("Error executing query: " + ex + " - " + new Gson().toJson(query));
+			logger.error("Error executing count query: " + ex + " - " + new Gson().toJson(query));
 			throw ex;
 		}
 
@@ -1101,6 +1175,44 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					throw new ForbiddenException();
 				}
 			}
+		}
+	}
+
+	/**
+	 * Get the field annotated with the @HierarchicalParentEntity annotation
+	 *
+	 * @return
+	 */
+	private Field getHierarchicalParentEntityField() {
+		Field hierarchicalParentEntityField = null;
+		for (Field field : getTypeOfE().getDeclaredFields()) {
+			if (field.isAnnotationPresent(HierarchicalParentEntity.class)) {
+				field.setAccessible(true);
+				hierarchicalParentEntityField = field;
+				break;
+			}
+		}
+		return hierarchicalParentEntityField;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private E getHierarchicalParentEntity(E e) throws Exception {
+		Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
+		if (hierarchicalParentEntityField != null) {
+
+			// this does not work as it does not use the getter
+			// IEntity parentEntityInstance = (IEntity) getParentEntityField().get(e);
+			E hierarchicalParentEntity = (E) PropertyUtils.getProperty(e, hierarchicalParentEntityField.getName());
+
+			// if the parent is LAZY, then we get a proxy
+			// we need to initialize the proxy
+			if (hierarchicalParentEntity != null && hierarchicalParentEntity instanceof HibernateProxy) {
+				hierarchicalParentEntity = (E) Hibernate.unproxy(hierarchicalParentEntity);
+			}
+
+			return hierarchicalParentEntity;
+		} else {
+			return null;
 		}
 	}
 
@@ -1529,7 +1641,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 						// verify if the join already exists
 						// reuse it if it exists
-						joinString = (joinString == null ? s : "." + s);
+						joinString += (joinString == null ? s : "." + s);
 						if (joinMap.containsKey(joinString)) {
 							join = joinMap.get(joinString);
 						} else {
@@ -1544,6 +1656,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// get the path of the class attribute
 				p = join.get(field);
 			} catch (IllegalArgumentException ex) {
+				ex.printStackTrace();
 				// attribute not found
 				// ignore. it means that the filter contains other filter than the one on the
 				// entity
@@ -1708,11 +1821,13 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				case in:
 					distinctNeeded = true;
-					if (integerValues != null && !integerValues.isEmpty()) {
-						predicate = path.in(integerValues);
-					} else {
-						predicate = null;
+					if (integerValues == null) {
+						integerValues = new ArrayList<Integer>();
+						if (integerValue != null) {
+							integerValues.add(integerValue);
+						}
 					}
+					predicate = path.in(integerValues);
 					break;
 
 				default:
@@ -1996,20 +2111,24 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				case in:
 					distinctNeeded = true;
-					if (stringValues != null && !stringValues.isEmpty()) {
-						predicate = path.in(stringValues);
-					} else {
-						predicate = null;
+					if (stringValues == null) {
+						stringValues = new ArrayList<String>();
+						if (stringValue != null) {
+							stringValues.add(stringValue);
+						}
 					}
+					predicate = path.in(stringValues);
 					break;
 				case trimIn:
 					distinctNeeded = true;
-					if (stringValues != null && !stringValues.isEmpty()) {
-						stringValues.replaceAll(String::trim);
-						predicate = cb.trim(stringPath).in(stringValues);
-					} else {
-						predicate = null;
+					if (stringValues == null) {
+						stringValues = new ArrayList<String>();
+						if (stringValue != null) {
+							stringValues.add(stringValue);
+						}
 					}
+					stringValues.replaceAll(String::trim);
+					predicate = cb.trim(stringPath).in(stringValues);
 					break;
 				default:
 					throw new Exception("Operator [" + filter.getOperator() + "] not supported for type [" + type + "]");
@@ -2171,7 +2290,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	public void generateResourceManager(String namespace) throws Exception {
 		Field parentEntityField = getParentEntityField();
-		String resourceManagerName = getApplicationName();
+		String resourceManagerName = getResourceManager();
 		String resourcePath = StringUtils.uncapitalize(getTypeOfE().getSimpleName());
 		if (parentEntityField != null && resourcePath.startsWith(parentEntityField.getName())) {
 			resourcePath = StringUtils.uncapitalize(resourcePath.substring(parentEntityField.getName().length()));
@@ -2303,7 +2422,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			sb.append("            //   width: 250\n");
 			sb.append("            //});\n");
 			sb.append("         }\n\n");
-			sb.append("         columns.push.apply(columns, [{\n");
+			sb.append("         columns.push({\n");
 		} else {
 			sb.append("        var columns = [{\n");
 		}
@@ -2327,7 +2446,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			sb.append("        }, {\n");
 		}
 		if (getParentEntityField() != null) {
-			sb.append("        }]);\n");
+			sb.append("        });\n");
 		} else {
 			sb.append("        }];\n");
 		}
@@ -2731,6 +2850,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					appClassField.setDefaultValue(1);
 				}
 
+				if (field.isAnnotationPresent(HierarchicalParentEntity.class)) {
+					appClassField.setHierarchicalParent(true);
+				}
+
 				if (exported) {
 					appClassFieldMap.put(fieldName, appClassField);
 				}
@@ -2861,8 +2984,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			registerService(service);
 
 			return service;
-		} catch (Exception e) {
-			logger.error("Problem creating the service for resource [" + resourceName + "]", e);
+		} catch (Exception ex) {
+			logger.error("Problem creating the service for resource [" + resourceName + "]", ex);
 			return null;
 		}
 	}
