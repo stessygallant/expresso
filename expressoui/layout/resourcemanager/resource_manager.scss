@@ -2,7 +2,7 @@
 
 /*
  * ------------------------------------------------------------------------------------------------------------------
- * CSS  for layout-resource component ONLY
+ * CSS  for layout-resource component ONLY 
  * ------------------------------------------------------------------------------------------------------------------
  */
 .exp-resource-manager {
@@ -82,6 +82,7 @@
  */
 .exp-grid {
     @include default-div;
+    padding: 0 0 0 2px;
 
     table {
         // Grid columns with no width are collapsed if the space is not enough, thus min-width on the tables is needed
@@ -258,6 +259,10 @@
             float: right;
             margin: 7px 2px 0 2px;
             font-size: 95%;
+
+            .exp-grid-max-limit {
+                color: $red;
+            }
         }
     }
 
@@ -947,16 +952,14 @@ k-widget k-window
                 overflow: hidden;
 
                 .k-splitbar {
-                    // margin-left: $formPadding;
-                    left: unset;
+                    margin-left: $formPadding;
                     color: $splitBarColor;
                     background-color: $splitBarBackground;
                     border-color: $splitBarBorder;
                 }
 
                 .k-ghost-splitbar {
-                    // margin-left: $formPadding;
-                    left: unset;
+                    margin-left: $formPadding;
                 }
 
                 .exp-form {

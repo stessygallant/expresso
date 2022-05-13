@@ -337,7 +337,8 @@ expresso.Common = (function () {
 
         // handle any AJAX issues
         $(document).ajaxError(function (event, jqxhr, settings, exception) {
-                //console.log(JSON.stringify(jqxhr));
+                // console.log("jqxhr.alreadyProcessed: " + jqxhr.alreadyProcessed + "doNotDisplayAjaxErrorMessageFlag: "
+                //     + doNotDisplayAjaxErrorMessageFlag + " " + JSON.stringify(jqxhr));
                 if (!jqxhr.alreadyProcessed) {
 
                     if (doNotDisplayAjaxErrorMessageFlag) {

@@ -7,10 +7,12 @@ expresso.layout.resourcemanager = expresso.layout.resourcemanager || {};
  */
 expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBase.extend({
 
-
     TOOLBAR_BUTTONS: {
         EXCEL: {template: '<button type="button" class="k-button exp-button exp-always-active-button exp-excel-button" title="exportToExcel"><span class="fa fa-file-excel-o"><span data-text-key="exportToExcelButton"></span></span></button>'}
     },
+
+    MAX_PAGE_SIZE: 50,
+
     // reference to the grid object
     kendoGrid: undefined,
 
@@ -19,9 +21,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
     // define if the widget is a TreeList or a Grid
     hierarchical: undefined,
-
-    // flag to display the number of records
-    countRecords: true,
 
     // reference to the configuration object
     gridConfig: undefined,
@@ -97,7 +96,24 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     initDOMElement: function ($domElement) {
         expresso.layout.resourcemanager.SectionBase.fn.initDOMElement.call(this, $domElement);
 
-        this.selectedRows = [];
+        // set the master filter if defined
+        if (this.masterFilter === undefined) {
+            this.masterFilter = this.resourceManager.options.filter;
+
+            if (this.resourceManager.options.queryParameters.filter) {
+                this.masterFilter = JSON.parse(this.resourceManager.options.queryParameters.filter);
+            }
+        }
+
+        // options could contains configuration
+        if (this.resourceManager.options.activeOnly !== undefined) {
+            this.activeOnly = this.resourceManager.options.activeOnly;
+        }
+
+        // manager configuration overwrite local config
+        if (this.resourceManager.options.hierarchical !== undefined) {
+            this.hierarchical = this.resourceManager.options.hierarchical;
+        }
 
         // register a  listener to display a manager for reference
         var _this = this;
@@ -115,44 +131,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             expresso.util.UIUtil.buildMessageWindow(tooltip);
         });
 
-        // options could contains configuration
-        if (this.resourceManager.options.activeOnly !== undefined) {
-            this.activeOnly = this.resourceManager.options.activeOnly;
-        }
-
-        // when using local data, do not sync datasource
-        this.autoSyncGridDataSource = (this.resourceManager.options.autoSyncGridDataSource !== false);
-        if (!this.autoSyncGridDataSource) {
-            this.virtualScroll = false;
-        }
-
-        if (this.hierarchical === undefined && this.getParentId()) {
-            this.hierarchical = true;
-            this.multipleSelectionEnabled = false;
-        }
-
-        // we cannot support virtual scrolling if there is a group or aggregate
-        if (this.virtualScroll === undefined) {
-            this.virtualScroll = (!(this.getGroup() || this.getAggregate()) && !this.hierarchical && this.autoSyncGridDataSource);
-        }
-
-        if (this.serverSideDuplicate === undefined) {
-            this.serverSideDuplicate = expresso.Common.getSiteNamespace().config.Configurations.serverSideDuplicate;
-        }
-
-        // defined if we support multiple selection in grid
-        if (this.multipleSelectionEnabled === undefined) {
-            if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
-                if (this.resourceManager.options.multipleSelectionEnabled !== undefined) {
-                    this.multipleSelectionEnabled = this.resourceManager.options.multipleSelectionEnabled;
-                } else {
-                    this.multipleSelectionEnabled = expresso.Common.getSiteNamespace().config.Configurations.supportMultipleGridSelection;
-                }
-            } else {
-                this.multipleSelectionEnabled = false;
-            }
-        }
-
         // support auto refresh
         // only for main grid
         if (this.resourceManager.displayAsMaster) {
@@ -165,7 +143,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                         // make sure not to display an error message
                         expresso.Common.doNotDisplayAjaxErrorMessage(true);
-                        _this.loadResources().done(function () {
+                        _this.loadResources().always(function () {
                             // put back the error message
                             expresso.Common.doNotDisplayAjaxErrorMessage(false);
                         });
@@ -193,12 +171,63 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     initGrid: function () {
         var _this = this;
         var $grid = this.$domElement;
-        var i;
         var screenMode = expresso.Common.getScreenMode();
 
-        // set the master filter if defined
-        if (this.masterFilter === undefined) {
-            this.masterFilter = this.resourceManager.options.filter;
+        // destroy grid
+        if (this.kendoGrid) {
+            try {
+                this.kendoGrid.destroy();
+            } catch (e) {
+                /*ignore*/
+            }
+            this.kendoGrid = null;
+        }
+
+        // clean the DOM
+        this.$domElement.empty();
+
+        // remove all event listeners on the $domElement
+        this.$domElement.off(".grid");
+
+        // init selected
+        this.selectedRows = [];
+
+        // defined if the manager defined a custom form
+        this.customForm = this.resourceManager.sections["form"];
+
+        // TODO backward compatible - TO BE REMOVED
+        if (this.getParentId && this.getParentId() && !this.resourceManager.model.hierarchicalParent) {
+            this.resourceManager.model.hierarchicalParent = this.getParentId();
+        }
+
+        // if hierarchical is not defined but there is a hierarchicalParent, then it is hierarchical
+        if (this.hierarchical === undefined && this.resourceManager.model.hierarchicalParent) {
+            this.hierarchical = true;
+        }
+
+        // when using local data, do not sync datasource (default is auto sync)
+        this.autoSyncGridDataSource = (this.resourceManager.options.autoSyncGridDataSource !== false);
+
+        // we cannot support virtual scrolling if there is a group or aggregate
+        if (this.virtualScroll === undefined) {
+            this.virtualScroll = (!(this.getGroup() || this.getAggregate()) && !this.hierarchical && this.autoSyncGridDataSource);
+        }
+
+        if (this.serverSideDuplicate === undefined) {
+            this.serverSideDuplicate = expresso.Common.getSiteNamespace().config.Configurations.serverSideDuplicate;
+        }
+
+        // defined if we support multiple selection in grid
+        if (this.multipleSelectionEnabled === undefined) {
+            if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
+                if (this.resourceManager.options.multipleSelectionEnabled !== undefined) {
+                    this.multipleSelectionEnabled = this.resourceManager.options.multipleSelectionEnabled;
+                } else {
+                    this.multipleSelectionEnabled = expresso.Common.getSiteNamespace().config.Configurations.supportMultipleGridSelection;
+                }
+            } else {
+                this.multipleSelectionEnabled = false;
+            }
         }
 
         // if there is a deactivationDate field, set the activeOnly
@@ -206,16 +235,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.activeOnly = true;
         }
 
-        // defined if the manager defined a custom form
-        this.customForm = this.resourceManager.sections["form"];
-
-        var model = this.resourceManager.model;
-
         // update fields (cannot be done in ResourceManager because Labels not loaded)
-        var field;
+        var model = this.resourceManager.model;
         for (var f in model.fields) {
             if (f) {
-                field = model.fields[f];
+                var field = model.fields[f];
                 // add the validation message if needed
                 if (field && field.validation && field.validation.required === true) {
                     field.validation.required = {message: this.getLabel("requiredField", {field: this.getLabel(f)})};
@@ -224,323 +248,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
 
         if (screenMode != expresso.Common.SCREEN_MODES.PHONE) {
-            // get the columns
-            this.columns = this.getColumns();
-
-            // for standard grid, add standard columns
-            if (this.addStandardColumns !== false) {
-                // if there is no column for Id, put one hidden
-                if (this.columns.length == 0 || this.columns[0].field != "id") {
-                    this.columns.splice(0, 0, {
-                        field: "id",
-                        width: 70,
-                        format: "{0:#######}",
-                        hidden: true
-                    });
-                }
-
-                // add columns for creationUser, creationDate, lastModifiedUser and lastModifiedDate
-                $.each(["creationUserFullName", "creationDate", "lastModifiedUserFullName", "lastModifiedDate"], function () {
-                    // try to find the column
-                    var field = this;
-                    var found = false;
-                    for (var i = 0, l = _this.columns.length; i < l; i++) {
-                        if (_this.columns[i].field == field) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        _this.columns.push({
-                            field: field,
-                            width: field.endsWith("Date") ? undefined : 120,
-                            hidden: true
-                        });
-                    }
-                });
-
-                // always add an empty column to fill the void
-                //this.columns.push({});
-            }
-
-            // add the selection checkbox columns
-            if (this.multipleSelectionEnabled) {
-                this.columns.splice(0, 0, {
-                    template: "<input type='checkbox' class='selection k-checkbox' />",
-                    width: 24,
-                    headerTemplate: "<input type='checkbox' class='select-all k-checkbox' />",
-                    reorderable: false
-                });
-            }
-
-            // if the deactivation field exists in the model, add a column at the end
-            //console.log(this.deactivateFieldName + ":" + this.resourceManager.model.fields[this.deactivateFieldName]);
-            if (this.resourceManager.model.fields[this.deactivateFieldName] /*&& this.isUserAllowed("delete")*/) {
-                //console.log("Adding deactivated column");
-                this.columns.push({
-                    field: this.deactivateFieldName,
-                    headerTemplate: "",
-                    template: "#: (" + _this.deactivateFieldName + "?'*':'')#",
-                    width: "20px",
-                    attributes: {"class": "center"},
-                    filterable: false
-                });
-            }
-
-            // update columns
-            // do it reverse to be able to remove some columns
-            var removeRestrictedColumn = true;
-            for (i = this.columns.length - 1; i >= 0; i--) {
-                var column = this.columns[i];
-
-                if (!column.field) {
-                    // empty column (usually to span the available space)
-                    column.filterable = false;
-                    column.sortable = false;
-                } else {
-                    field = model.fields[column.field];
-
-                    var restrictedField = model.fields[column.field];
-                    if (column.field.indexOf('.') != -1) {
-                        // sub resource. get the first resource only
-                        var fieldName = column.field.substring(0, column.field.indexOf('.')) + "Id";
-                        restrictedField = model.fields[fieldName];
-                    }
-
-                    // if field is restricted, hide/remove it
-                    if (restrictedField && restrictedField.restrictedRole) {
-                        if (!expresso.Common.isUserInRole(restrictedField.restrictedRole)) {
-                            //console.log("Restricted field[" + column.field + "] role[" + field.restrictedRole + "]");
-                            if (removeRestrictedColumn) {
-                                this.columns.splice(i, 1);
-                                continue;
-                            } else {
-                                column.hidden = true;
-                            }
-                        }
-                    }
-
-                    // if a field is not filterable, cannot filter nor sort
-                    if (field && field.filterable === false) {
-                        column.sortable = false;
-                        column.filterable = false;
-                    }
-
-                    // label are generated by Java: it cannot be sorted
-                    if (column.field.endsWith("label")) {
-                        column.sortable = false;
-                        column.filterable = false;
-                    }
-
-                    // Ids column: show Labels (usually values)
-                    if (field && column.field.endsWith("Ids")) {
-                        // display the labels, but filter on id
-                        var labelColumn = column.field.substring(0, column.field.length - 3) + "Labels";
-                        column.template = column.template ||
-                            "<div class='exp-grid-multiple-lines' title='#=(" + labelColumn
-                            + "||'').replace(/,/g, \"\\r\\n\")#'>#=(" + labelColumn + "||'').replace(/,/g, \"<br>\")#</div>";
-                    }
-
-                    // Labels column (usually references as persons, etc)
-                    if (field && column.field.endsWith("Labels")) {
-                        column.template = column.template ||
-                            "<div class='exp-grid-multiple-lines' title='#=(" + column.field
-                            + "||'').replace(/,/g, \"\\r\\n\")#'>#=(" + column.field + "||'').replace(/,/g, \"<br>\")#</div>";
-                    }
-
-                    // remove the filter if it is set to false
-                    if (column.filterable !== false) {
-                        //  remove the filter
-                        column.filterable = column.filterable || {};
-                        column.filterable.cell = column.filterable.cell || {};
-                        column.filterable.cell.showOperators = column.filterable.cell.showOperators || false;
-                        // turn off autocomplete
-                        column.filterable.cell.minLength = 9999;
-                    }
-
-                    // for each string column, change the filter operator to "contains" instead of equals
-                    if (column.filterable !== false && (!field || !field.type || field.type == "string")) {
-                        column.filterable = column.filterable || {};
-                        column.filterable.cell = column.filterable.cell || {};
-                        if (field && field.keyField) {
-                            // keep equals by default
-                            column.filterable.cell.operator = column.filterable.cell.operator || "eq";
-                        } else {
-                            column.filterable.cell.operator = column.filterable.cell.operator || "contains";
-                        }
-                    }
-
-                    // date column
-                    if (field && (field.type == "date" || column.field == "date" || column.field.endsWith("Date") ||
-                        column.field.endsWith("DateTime") || column.field.endsWith("Timestamp"))) {
-                        field.type = "date";
-                        if (column.filterable !== false) {
-                            column.filterable = column.filterable || {};
-                            column.filterable.cell = column.filterable.cell || {};
-                            column.filterable.cell.operator = column.filterable.cell.operator || "eq";
-                        }
-                        column.attributes = column.attributes || {};
-                        column.attributes.class = "center";
-                        if (field.timeOnly) {
-                            column.format = column.format || "{0:HH:mm}";
-                            column.width = column.width || 90;
-                        } else {
-                            column.format = column.format || (field.timestamp ? "{0:yyyy-MM-dd HH:mm}" : "{0:yyyy-MM-dd}");
-                            column.width = column.width || (field.timestamp ? 130 : 110);
-                        }
-                    }
-
-                    if ((field && field.type == "boolean") || column.fieldType == "boolean") {
-                        column.template = column.template || "<input type='checkbox' #=" + column.field + " ? 'checked ' : '' # disabled>";
-                        column.attributes = column.attributes || {};
-                        column.attributes.class = "center";
-                        if (column.filterable !== false) {
-                            column.filterable = column.filterable || {};
-                            column.filterable.messages = {
-                                isTrue: expresso.Common.getLabel("yn_yes"),
-                                isFalse: expresso.Common.getLabel("yn_no")
-                            };
-                        }
-                        column.width = column.width || 110;
-                    }
-
-                    if (field && field.type == "number" && !column.field.endsWith("Id")) {
-                        column.attributes = column.attributes || {};
-                        column.attributes.class = "number";
-                        column.format = column.format || "{0:n" + (field.decimals || 0) + "}";
-                    }
-
-                    // assign the title of the column
-                    if (column.field && !column.title) {
-                        column.title = _this.getLabel(column.field, null, false, true);
-                    }
-
-                    // handle mobile tag
-                    if (column.phoneOnly && screenMode != expresso.Common.SCREEN_MODES.PHONE) {
-                        column.hidden = true;
-                    } else if (column.tabletOnly && screenMode != expresso.Common.SCREEN_MODES.TABLET) {
-                        column.hidden = true;
-                    } else if (column.desktopOnly && screenMode != expresso.Common.SCREEN_MODES.DESKTOP) {
-                        column.hidden = true;
-                    } else if (column.mobileOnly && screenMode == expresso.Common.SCREEN_MODES.DESKTOP) {
-                        column.hidden = true;
-                    } else if (column.hidePhone && screenMode == expresso.Common.SCREEN_MODES.PHONE) {
-                        column.hidden = true;
-                    }
-
-                    // if the column end with No, verify if there is the same resource with Id
-                    if (!column.reference && column.reference !== false) {
-                        if (field && field.reference && field.reference.resourceManagerDef) {
-                            column.reference = {
-                                fieldName: field.reference.fieldName,
-                                resourceManagerDef: field.reference.resourceManagerDef
-                            };
-                            //console.log("Adding FIELD reference to the grid", column.reference);
-                        } else if (column.field.endsWith("No")) {
-                            // try to find the mapping (directly or from a derived)
-                            var idFieldName = column.field.substring(
-                                (column.field.indexOf(".") != -1 ? column.field.lastIndexOf(".") + 1 : 0),
-                                column.field.length - 2) + "Id";
-                            var idField = model.fields[idFieldName];
-
-                            // try to remove the last part and add Id
-                            if (!idField && column.field.indexOf(".") != -1) {
-                                idFieldName = column.field.substring(0, column.field.lastIndexOf(".")) + "Id";
-                                idField = model.fields[idFieldName];
-                            }
-
-                            //console.log(column.field + " [" + idFieldName + "]", idField);
-
-                            // add a reference to the column (but not if it is a user)
-                            if (idField && idField.reference && idField.reference.resourceName != "user") {
-                                column.reference = {
-                                    fieldName: idField.reference.fieldName,
-                                    resourceManagerDef: idField.reference.resourceManagerDef
-                                };
-                                //console.log("Adding AUTO reference to the grid", column.reference);
-                            } else {
-                                // console.warn("CANNOT add reference to the grid for column [" + column.field + "]");
-                            }
-                        }
-                    }
-
-                    if (column.reference) {
-                        if (typeof column.reference === "string") {
-                            column.reference = {
-                                fieldName: column.reference,
-                                resourceManagerDef: column.reference.capitalize().substring(0, column.reference.length - 2) + "Manager"
-                            };
-                            //console.log("Adding column reference to the grid", column.reference);
-                        }
-
-                        // add a title to get a tooltip
-                        var title = column.reference.label;
-                        if (title === undefined) {
-                            if (column.field.endsWith("No")) {
-                                // this does not always exist and it makes KendoUI crashes
-                                // title = "#=" + column.field.substring(0, column.field.length - 2) + "Label#";
-                            }
-                        }
-
-                        // add TTTLE
-                        //console.log("*************" + JSON.stringify(column));
-                        if (column.reference.resourceManagerDef) {
-                            column.template = column.template || "<a class='reference'  href='_'" +
-                                " data-reference-id='#=" + column.reference.fieldName + "#'" +
-                                " data-reference-manager='" + column.reference.resourceManagerDef + "'" +
-                                (title ? " title='" + title + "'" : "") +
-                                ">#=(" + column.field + "?" + column.field + ":'')#</a>";
-                        }
-                    }
-
-                    // add values to the column if defined in the app_class
-                    if (field && field.values && field.values.data && !column.values) {
-                        column.values = $.extend([], field.values.data);
-
-                        // if field is nullable, add a new values
-                        if (field.nullable) {
-                            column.values.unshift({
-                                id: -2, // special id for backend predicate
-                                value: -2,
-                                label: _this.getLabel("selectFilterNone"),
-                                text: _this.getLabel("selectFilterNone")
-                            });
-                        }
-
-                        // allow multi selection
-                        if (column.filterable !== false) {
-                            column.filterable = {multi: true, extra: false}
-                        }
-                    }
-
-                    // add an anchor if needed
-                    if (field && field.anchor) {
-                        column.template = column.template || "<a class='document' target='_blank' href='#=absolutePath?absolutePath:\"_\"#'>#=(" + column.field + "?" + column.field + ":'')#</a>";
-                    }
-
-                    if ((field && field.phoneNumber) || column.field.indexOf("phoneNumber") != -1 ||
-                        column.field.indexOf("PhoneNumber") != -1) {
-                        column.template = column.template || "<a href='tel:#=" + column.field + "#'>#=(" + column.field + "?" + column.field + ":'')#</a>";
-                    }
-
-                    // fix object references
-                    if (column.field.indexOf(".") != -1 && (!column.template || column.template.indexOf(column.field) != -1)) {
-                        _this.fixObjectReferences(column.field);
-                    }
-                }
-
-                // adjust column width according to the font-size
-                if (screenMode != expresso.Common.SCREEN_MODES.DESKTOP) {
-                    if (column.width) {
-                        column.width = column.width * 1.1;
-                        // column.width = column.width * expresso.Common.getFontRatio();
-                    }
-                }
-            }
+            this.initDesktopColumns();
         } else {
             this.initMobileColumn();
         }
-
 
         // Get the toolbar
         var toolbar = this.getToolbarButtons();
@@ -558,7 +269,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         if (this.hierarchical) {
             // because the treelist does not support the same toolbar array as the Grid, we need to convert it
             var temp = "";
-            for (i = 0; i < toolbar.length; i++) {
+            for (var i = 0; i < toolbar.length; i++) {
                 temp += toolbar[i].template;
             }
             toolbar = temp;
@@ -620,69 +331,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // translate grid header
         expresso.Common.localizePage(this.$domElement.find(".k-grid-toolbar"), this.resourceManager.labels);
 
-        // this does not work
-        // validate if the column size is enough large for the title
-        // for (i = 0; i < this.columns.length; i++) {
-        //     column = this.columns[i];
-        //     if (column.title) {
-        //         var minimumSize = (column.title.length * 12) + 10;
-        //         if (column.width < minimumSize) {
-        //             console.warn("Column [" + column.field + "] is too narrow [" + column.width + "] for title [" + column.title + "]. Suggested size [" +
-        //                 minimumSize + "]");
-        //         }
-        //     }
-        // }
-
-        // this does not work
-        // validate if the column size is enough large for the title
-        // this.kendoGrid.thead.find("tr:first-child th a.k-link").each(function () {
-        //     var $this = $(this);
-        //     this.style.textOverflow = 'initial';
-        //     var textWidth = $this.outerWidth(true) + 10;
-        //     this.style.textOverflow = 'ellipsis';
-        //     var cellWidth = $this.parent().width();
-        //
-        //     console.log("Column [" + $this.text() + "] textWidth [" + textWidth + "] cellWidth [" + cellWidth + "]");
-        //
-        //     if (cellWidth < textWidth) {
-        //         console.warn("Column [" + $this.text() + "] is too narrow [" + cellWidth + "]. Suggested minimum size [" +
-        //             textWidth + "]");
-        //     }
-        // });
-
-        // patch for Chrome
-        // remove autofill on column filter
+        // patch for Chrome: remove autofill on column filter
         this.$domElement.find(".k-grid-header input").each(function () {
             $(this).attr("autocomplete", "off");
-        });
-
-        $.each(this.kendoGrid.columns, function () {
-            var column = this;
-            if (column && column.field && model && model.fields[column.field]) {
-                var field = model.fields[column.field];
-                _this.$domElement.find(".k-grid-header .k-filter-row [data-field='" + column.field + "'] input[data-role=datepicker]").each(function () {
-                    var kendoDatePicker = $(this).data("kendoDatePicker");
-
-                    // Override kendo's on change event to force "eq" filter
-                    kendoDatePicker.dateView.options.change = function () {
-                        //Remove all filter for the column
-                        var filter = _this.kendoGrid.dataSource.filter();
-                        expresso.Common.removeKendoFilter(filter, field.name);
-
-                        filter.filters.push({
-                            field: field.name,
-                            operator: "eq",
-                            value: this.value()
-                        });
-
-                        // Refresh the datasource with the new filter
-                        _this.kendoGrid.dataSource.filter(filter);
-
-                        //Close the datepicker
-                        kendoDatePicker.close();
-                    };
-                });
-            }
         });
 
         // once the grid is built, register the event handlers
@@ -842,6 +493,332 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     },
 
     /**
+     *
+     */
+    initDesktopColumns: function () {
+        var _this = this;
+
+        var model = this.resourceManager.model;
+        var screenMode = expresso.Common.getScreenMode();
+
+        // get the columns
+        this.columns = this.getColumns();
+
+        // for standard grid, add standard columns
+        if (this.addStandardColumns !== false) {
+            // if there is no column for Id, put one hidden
+            if (this.columns.length == 0 || this.columns[0].field != "id") {
+                this.columns.splice(0, 0, {
+                    field: "id",
+                    width: 70,
+                    format: "{0:#######}",
+                    hidden: true
+                });
+            }
+
+            // add columns for creationUser, creationDate, lastModifiedUser and lastModifiedDate
+            $.each(["creationUserFullName", "creationDate", "lastModifiedUserFullName", "lastModifiedDate"], function () {
+                // try to find the column
+                var field = this;
+                var found = false;
+                for (var i = 0, l = _this.columns.length; i < l; i++) {
+                    if (_this.columns[i].field == field) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    _this.columns.push({
+                        field: field,
+                        width: field.endsWith("Date") ? undefined : 120,
+                        hidden: true
+                    });
+                }
+            });
+
+            // always add an empty column to fill the void
+            //this.columns.push({});
+        }
+
+        // add the selection checkbox columns
+        if (this.multipleSelectionEnabled) {
+            this.columns.splice(0, 0, {selectable: true, width: 24, reorderable: false});
+        }
+
+        // if the deactivation field exists in the model, add a column at the end
+        //console.log(this.deactivateFieldName + ":" + this.resourceManager.model.fields[this.deactivateFieldName]);
+        if (this.resourceManager.model.fields[this.deactivateFieldName] /*&& this.isUserAllowed("delete")*/) {
+            //console.log("Adding deactivated column");
+            this.columns.push({
+                field: this.deactivateFieldName,
+                headerTemplate: "",
+                template: "#: (" + _this.deactivateFieldName + "?'*':'')#",
+                width: "20px",
+                attributes: {"class": "center"},
+                filterable: false
+            });
+        }
+
+        // update columns
+        // do it reverse to be able to remove some columns
+        var removeRestrictedColumn = true;
+        for (var i = this.columns.length - 1; i >= 0; i--) {
+            var column = this.columns[i];
+
+            if (!column.field) {
+                // empty column (usually to span the available space)
+                column.filterable = false;
+                column.sortable = false;
+            } else {
+                var field = model.fields[column.field];
+
+                var restrictedField = model.fields[column.field];
+                if (column.field.indexOf('.') != -1) {
+                    // sub resource. get the first resource only
+                    var fieldName = column.field.substring(0, column.field.indexOf('.')) + "Id";
+                    restrictedField = model.fields[fieldName];
+                }
+
+                // if field is restricted, hide/remove it
+                if (restrictedField && restrictedField.restrictedRole) {
+                    if (!expresso.Common.isUserInRole(restrictedField.restrictedRole)) {
+                        //console.log("Restricted field[" + column.field + "] role[" + field.restrictedRole + "]");
+                        if (removeRestrictedColumn) {
+                            this.columns.splice(i, 1);
+                            continue;
+                        } else {
+                            column.hidden = true;
+                        }
+                    }
+                }
+
+                // if a field is not filterable, cannot filter nor sort
+                if (field && field.filterable === false) {
+                    column.sortable = false;
+                    column.filterable = false;
+                }
+
+                // label are generated by Java: it cannot be sorted
+                if (column.field.endsWith("label")) {
+                    column.sortable = false;
+                    column.filterable = false;
+                }
+
+                // if hierarchical, do not show hierarchicalParent
+                if (this.hierarchical) {
+                    if (field && field.hierarchicalParent || column.hideHierarchical) {
+                        column.hidden = true;
+                    }
+                }
+
+                // Ids column: show Labels (usually values)
+                if (field && column.field.endsWith("Ids")) {
+                    // display the labels, but filter on id
+                    var labelColumn = column.field.substring(0, column.field.length - 3) + "Labels";
+                    column.template = column.template ||
+                        "<div class='exp-grid-multiple-lines' title='#=(" + labelColumn
+                        + "||'').replace(/,/g, \"\\r\\n\")#'>#=(" + labelColumn + "||'').replace(/,/g, \"<br>\")#</div>";
+                }
+
+                // Labels column (usually references as persons, etc)
+                if (field && column.field.endsWith("Labels")) {
+                    column.template = column.template ||
+                        "<div class='exp-grid-multiple-lines' title='#=(" + column.field
+                        + "||'').replace(/,/g, \"\\r\\n\")#'>#=(" + column.field + "||'').replace(/,/g, \"<br>\")#</div>";
+                }
+
+                // remove the filter if it is set to false
+                if (column.filterable !== false) {
+                    //  remove the filter
+                    column.filterable = column.filterable || {};
+                    column.filterable.cell = column.filterable.cell || {};
+                    column.filterable.cell.showOperators = column.filterable.cell.showOperators || false;
+                    // turn off autocomplete
+                    column.filterable.cell.minLength = 9999;
+                }
+
+                // for each string column, change the filter operator to "contains" instead of equals
+                if (column.filterable !== false && (!field || !field.type || field.type == "string")) {
+                    column.filterable = column.filterable || {};
+                    column.filterable.cell = column.filterable.cell || {};
+                    if (field && field.keyField) {
+                        // keep equals by default
+                        column.filterable.cell.operator = column.filterable.cell.operator || "eq";
+                    } else {
+                        column.filterable.cell.operator = column.filterable.cell.operator || "contains";
+                    }
+                }
+
+                // date column
+                if (field && (field.type == "date" || column.field == "date" || column.field.endsWith("Date") ||
+                    column.field.endsWith("DateTime") || column.field.endsWith("Timestamp"))) {
+                    field.type = "date";
+                    if (column.filterable !== false) {
+                        column.filterable = column.filterable || {};
+                        column.filterable.cell = column.filterable.cell || {};
+                        column.filterable.cell.operator = column.filterable.cell.operator || "eq";
+                    }
+                    column.attributes = column.attributes || {};
+                    column.attributes.class = "center";
+                    if (field.timeOnly) {
+                        column.format = column.format || "{0:HH:mm}";
+                        column.width = column.width || 90;
+                    } else {
+                        column.format = column.format || (field.timestamp ? "{0:yyyy-MM-dd HH:mm}" : "{0:yyyy-MM-dd}");
+                        column.width = column.width || (field.timestamp ? 130 : 110);
+                    }
+                }
+
+                if ((field && field.type == "boolean") || column.fieldType == "boolean") {
+                    column.template = column.template || "<input type='checkbox' #=" + column.field + " ? 'checked ' : '' # disabled>";
+                    column.attributes = column.attributes || {};
+                    column.attributes.class = "center";
+                    if (column.filterable !== false) {
+                        column.filterable = column.filterable || {};
+                        column.filterable.messages = {
+                            isTrue: expresso.Common.getLabel("yn_yes"),
+                            isFalse: expresso.Common.getLabel("yn_no")
+                        };
+                    }
+                    column.width = column.width || 110;
+                }
+
+                if (field && field.type == "number" && !column.field.endsWith("Id")) {
+                    column.attributes = column.attributes || {};
+                    column.attributes.class = "number";
+                    column.format = column.format || "{0:n" + (field.decimals || 0) + "}";
+                }
+
+                // assign the title of the column
+                if (column.field && !column.title) {
+                    column.title = _this.getLabel(column.field, null, false, true);
+                }
+
+                // handle mobile tag
+                if (column.phoneOnly && screenMode != expresso.Common.SCREEN_MODES.PHONE) {
+                    column.hidden = true;
+                } else if (column.tabletOnly && screenMode != expresso.Common.SCREEN_MODES.TABLET) {
+                    column.hidden = true;
+                } else if (column.desktopOnly && screenMode != expresso.Common.SCREEN_MODES.DESKTOP) {
+                    column.hidden = true;
+                } else if (column.mobileOnly && screenMode == expresso.Common.SCREEN_MODES.DESKTOP) {
+                    column.hidden = true;
+                } else if (column.hidePhone && screenMode == expresso.Common.SCREEN_MODES.PHONE) {
+                    column.hidden = true;
+                }
+
+                // if the column end with No, verify if there is the same resource with Id
+                if (!column.reference && column.reference !== false) {
+                    if (field && field.reference && field.reference.resourceManagerDef) {
+                        column.reference = {
+                            fieldName: field.reference.fieldName,
+                            resourceManagerDef: field.reference.resourceManagerDef
+                        };
+                        //console.log("Adding FIELD reference to the grid", column.reference);
+                    } else if (column.field.endsWith("No")) {
+                        // try to find the mapping (directly or from a derived)
+                        var idFieldName = column.field.substring(
+                            (column.field.indexOf(".") != -1 ? column.field.lastIndexOf(".") + 1 : 0),
+                            column.field.length - 2) + "Id";
+                        var idField = model.fields[idFieldName];
+
+                        // try to remove the last part and add Id
+                        if (!idField && column.field.indexOf(".") != -1) {
+                            idFieldName = column.field.substring(0, column.field.lastIndexOf(".")) + "Id";
+                            idField = model.fields[idFieldName];
+                        }
+
+                        //console.log(column.field + " [" + idFieldName + "]", idField);
+
+                        // add a reference to the column (but not if it is a user)
+                        if (idField && idField.reference && idField.reference.resourceName != "user") {
+                            column.reference = {
+                                fieldName: idField.reference.fieldName,
+                                resourceManagerDef: idField.reference.resourceManagerDef
+                            };
+                            //console.log("Adding AUTO reference to the grid", column.reference);
+                        } else {
+                            // console.warn("CANNOT add reference to the grid for column [" + column.field + "]");
+                        }
+                    }
+                }
+
+                if (column.reference) {
+                    if (typeof column.reference === "string") {
+                        column.reference = {
+                            fieldName: column.reference,
+                            resourceManagerDef: column.reference.capitalize().substring(0, column.reference.length - 2) + "Manager"
+                        };
+                        //console.log("Adding column reference to the grid", column.reference);
+                    }
+
+                    // add a title to get a tooltip
+                    var title = column.reference.label;
+                    if (title === undefined) {
+                        if (column.field.endsWith("No")) {
+                            // this does not always exist and it makes KendoUI crashes
+                            // title = "#=" + column.field.substring(0, column.field.length - 2) + "Label#";
+                        }
+                    }
+
+                    // add TTTLE
+                    //console.log("*************" + JSON.stringify(column));
+                    if (column.reference.resourceManagerDef) {
+                        column.template = column.template || "<a class='reference'  href='_'" +
+                            " data-reference-id='#=" + column.reference.fieldName + "#'" +
+                            " data-reference-manager='" + column.reference.resourceManagerDef + "'" +
+                            (title ? " title='" + title + "'" : "") +
+                            ">#=(" + column.field + "?" + column.field + ":'')#</a>";
+                    }
+                }
+
+                // add values to the column if defined in the app_class
+                if (field && field.values && field.values.data && !column.values) {
+                    column.values = $.extend([], field.values.data);
+
+                    // if field is nullable, add a new values
+                    if (field.nullable) {
+                        column.values.unshift({
+                            id: -2, // special id for backend predicate
+                            value: -2,
+                            label: _this.getLabel("selectFilterNone"),
+                            text: _this.getLabel("selectFilterNone")
+                        });
+                    }
+
+                    // allow multi selection
+                    if (column.filterable !== false) {
+                        column.filterable = {multi: true, extra: false}
+                    }
+                }
+
+                // add an anchor if needed
+                if (field && field.anchor) {
+                    column.template = column.template || "<a class='document' target='_blank' href='#=absolutePath?absolutePath:\"_\"#'>#=(" + column.field + "?" + column.field + ":'')#</a>";
+                }
+
+                if ((field && field.phoneNumber) || column.field.indexOf("phoneNumber") != -1 ||
+                    column.field.indexOf("PhoneNumber") != -1) {
+                    column.template = column.template || "<a href='tel:#=" + column.field + "#'>#=(" + column.field + "?" + column.field + ":'')#</a>";
+                }
+
+                // fix object references
+                if (column.field.indexOf(".") != -1 && (!column.template || column.template.indexOf(column.field) != -1)) {
+                    _this.fixObjectReferences(column.field);
+                }
+            }
+
+            // adjust column width according to the font-size
+            if (screenMode != expresso.Common.SCREEN_MODES.DESKTOP) {
+                if (column.width) {
+                    column.width = column.width * 1.1;
+                    // column.width = column.width * expresso.Common.getFontRatio();
+                }
+            }
+        }
+    },
+
+    /**
      * Init the mobile column (always a single column)
      */
     initMobileColumn: function () {
@@ -849,7 +826,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // this.activeOnly = undefined;
 
         // get the columns
-        // var oriColumns = this.getColumns();
         this.columns = [];
 
         // only 1 column (full size)
@@ -918,146 +894,107 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         var kendoGrid = this.kendoGrid;
         var _this = this;
 
-        if (this.multipleSelectionEnabled) {
-            // bind the selection event
-            $grid.on("click", ".selection", function () {
-                var $row = $(this).closest("tr");
-                var dataItem = _this.kendoGrid.dataItem($row);
-
-                if (this.checked) {
-                    $row.addClass("k-state-selected");
-                    _this.selectedRows.push(dataItem);
-                } else {
-                    $row.removeClass("k-state-selected");
-                    _this.selectedRows = _this.selectedRows.filter(function (el) {
-                        return el.id !== dataItem.id;
-                    });
-                }
-
-                _this.onRowSelected();
-            });
-
-            // bind the select all checkbox event {
-            $grid.find(".select-all").on("click", function () {
-                if (kendoGrid.dataSource.total() > 500) {
-                    expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("tooManyRecordsForSelection"));
-                } else if (kendoGrid.dataSource.total() > 0) {
-                    var checked = this.checked;
-                    kendoGrid.dataSource._query({
-                        // must request more rows that the total
-                        pageSize: kendoGrid.dataSource.total() + 1,
-                        page: 1
-                    }).done(function () {
-                        // reset the selection
-                        _this.selectedRows = [];
-
-                        // change properties on checkbox
-                        $grid.find(".selection").prop("checked", checked);
-
-                        if (checked) {
-                            $grid.find(".selection").each(function () {
-                                var $row = $(this).closest("tr");
-                                $row.addClass("k-state-selected");
-                                var dataItem = _this.kendoGrid.dataItem($row);
-                                _this.selectedRows.push(dataItem);
-                            });
-                        } else {
-                            // remove selected class
-                            kendoGrid.tbody.find("tr").removeClass("k-state-selected");
-                        }
-
-                        _this.onRowSelected();
-                    });
-                }
-            });
-        }
-
         if (this.gridConfig.editable) {
             // add the double click event only if we can update
-            $grid.on("dblclick", "tbody>tr", function () {
+            $grid.on("dblclick.grid", "tbody>tr", function () {
                 if (!$(this).hasClass('k-grid-edit-row')) {
                     _this.performEdit();
                 }
             });
         }
 
-        $grid.find(".exp-excel-button").on('click', function (e) {
-            e.preventDefault();
+        // PATCH: because of the bug in Kendo virtual scrolling
+        // when selecting a single row, it keeps the rows from the previous page
+        if (this.virtualScroll) {
+            $grid.on("click.grid", ".k-grid-content tbody > tr", function (e) {
+                if (e && e.target && !$(e.target).hasClass("k-checkbox")) {
+                    // force single row selection
+                    if (_this.selectedRows.length != 1) {
+                        console.warn("Fix single selection bug in Kendo for virtual grid");
+                        _this.clearSelection();
+                        _this.kendoGrid.select(this);
+                    }
+                }
+            });
+        }
 
-            // There is a problem with Google Chrome and Kerberos: when the download is too big,
-            // it just stop, no warning
-            // var count = _this.kendoGrid.dataSource.total();
-            // if (expresso.util.Util.getBrowser() == "Chrome" && /*expresso.Common.getAuthenticationPath() == "sso" &&*/
-            //     count > 5000) {
-            //     expresso.util.UIUtil.buildMessageWindow(_this.getLabel("kerberosChromeExcelIssue"));
-            // } else {
+        $grid.find(".exp-excel-button").on("click.grid", function (e) {
+            e.preventDefault();
             expresso.util.UIUtil.showNotification(_this.getLabel("excelDownloadInProgress"));
             kendoGrid.saveAsExcel();
-            // }
         });
 
-        $grid.find(".exp-process-button").on("click", function (e) {
+        $grid.find(".exp-hierarchical-toogle-button").on("click.grid", function (e) {
+            e.preventDefault();
+            _this.toggleHierarchical();
+        });
+        $grid.find(".exp-hierarchical-expand-button").on("click.grid", function (e) {
+            e.preventDefault();
+            _this.expandHierarchical();
+        });
+
+        $grid.find(".exp-process-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performProcess();
         });
 
-        $grid.find(".exp-sync-button").on("click", function (e) {
+        $grid.find(".exp-sync-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performSync();
         });
 
-        $grid.find(".exp-refresh-button").on("click", function (e) {
+        $grid.find(".exp-refresh-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performRefresh();
         });
 
-        $grid.find(".exp-clearfilters-button").on("click", function (e) {
+        $grid.find(".exp-clearfilters-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performClearFilters();
         });
 
-        $grid.find(".exp-saveconfiguration-button").on("click", function (e) {
+        $grid.find(".exp-saveconfiguration-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performOpenFilters();
         });
 
-        $grid.find(".exp-create-button").on('click', function (e) {
+        $grid.find(".exp-create-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performCreate();
         });
 
-        $grid.find(".exp-duplicate-button").on('click', function (e) {
+        $grid.find(".exp-duplicate-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performDuplicate();
         });
 
-        $grid.find(".exp-update-button,.exp-view-button").on('click', function (e) {
+        $grid.find(".exp-update-button,.exp-view-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performEdit();
         });
 
-        $grid.find(".exp-delete-button").on('click', function (e) {
+        $grid.find(".exp-delete-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performDelete();
         });
 
-        $grid.find(".exp-deactivate-button").on('click', function (e) {
+        $grid.find(".exp-deactivate-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performCustomAction("deactivate");
         });
 
-        $grid.find(".exp-print-button").on('click', function (e) {
+        $grid.find(".exp-print-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performPrint();
         });
 
-        $grid.find(".exp-email-button").on('click', function (e) {
+        $grid.find(".exp-email-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performOpenEmail();
         });
 
         // add listener to toolbar Link button
-        $grid.find(".exp-link-button").on('click', function (e) {
+        $grid.find(".exp-link-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performGetLink();
         });
@@ -1088,7 +1025,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         $.each(this.resourceManager.parseAvailableActions(), function () {
             var action = this;
             if (action.showButtonInGridToolbar && !action.systemAction) {
-                $grid.find(".exp-" + action.name + "-button").on('click', function (e) {
+                $grid.find(".exp-" + action.name + "-button").on("click.grid", function (e) {
                     e.preventDefault();
 
                     // perform the action on every selected resource
@@ -1163,7 +1100,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         });
 
         // add listener for anchor
-        $grid.on("click", "td a.document", function (e) {
+        $grid.on("click.grid", "td a.document", function (e) {
             // need to build the URL
             var $a = $(this);
             var href = $a.attr("href");
@@ -1184,7 +1121,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // toggle button to display active only resources
         if (_this.activeOnly !== undefined) {
             $grid.find(".exp-active-only-button input").prop("checked", _this.activeOnly);
-            $grid.find(".exp-active-only-button").on('click', function (e) {
+            $grid.find(".exp-active-only-button").on("click.grid", function (e) {
                 e.preventDefault();
                 _this.activeOnly = !_this.activeOnly;
                 $grid.find(".exp-active-only-button input").prop("checked", _this.activeOnly);
@@ -1213,14 +1150,46 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         expresso.util.UIUtil.buildReportSelector(reports, $grid.find(".exp-report-selector"), this.resourceManager.labels, null, function (report) {
             _this.executeReport(report);
         });
+
+        // path kendoDatePicker
+        var model = this.resourceManager.model;
+        $.each(this.kendoGrid.columns, function () {
+            var column = this;
+            if (column && column.field && model && model.fields[column.field]) {
+                var field = model.fields[column.field];
+                _this.$domElement.find(".k-grid-header .k-filter-row [data-field='" + column.field + "'] input[data-role=datepicker]").each(function () {
+                    var kendoDatePicker = $(this).data("kendoDatePicker");
+
+                    // Override kendo's on change event to force "eq" filter
+                    kendoDatePicker.dateView.options.change = function () {
+                        //Remove all filter for the column
+                        var filter = _this.kendoGrid.dataSource.filter();
+                        expresso.Common.removeKendoFilter(filter, field.name);
+
+                        filter.filters.push({
+                            field: field.name,
+                            operator: "eq",
+                            value: this.value()
+                        });
+
+                        // Refresh the datasource with the new filter
+                        _this.kendoGrid.dataSource.filter(filter);
+
+                        //Close the datepicker
+                        kendoDatePicker.close();
+                    };
+                });
+            }
+        });
     },
 
     /**
      * This method is called when a row is selected
      */
     onRowSelected: function () {
-        //console.log(this.resourceManager.getResourceSecurityPath() + " - onRowSelected: " + this.selectedRows.length);
-
+        console.log(this.resourceManager.getResourceSecurityPath() + " - onRowSelected: " + "[" +
+            this.selectedRows.map(e => e.id).join(",") + "]");
+        this.writeNbrRecords();
         this.verifySelection();
     },
 
@@ -1228,13 +1197,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * Method used to enable the buttons depending on the selected resource
      */
     enableButtons: function () {
-        //console.log(this.resourceManager.getResourceSecurityPath() + " - enableButtons");
-
+        // console.log(this.resourceManager.getResourceSecurityPath() + " - enableButtons: " + this.selectedRows.length);
         var _this = this;
         var $toolbar = this.$domElement.find(".k-grid-toolbar");
         var resource = this.resourceManager.currentResource;
 
-        if ((!resource || !resource.id) && this.selectedRows.length < 2) {
+        if ((!resource || !resource.id) && this.selectedRows.length == 1) {
             // new resource
             // disabled all buttons
             $toolbar.find(".exp-button:not(.exp-always-active-button)").prop("disabled", true);
@@ -1319,6 +1287,48 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
     },
 
+    toggleHierarchical: function () {
+        // toggle
+        this.hierarchical = !this.hierarchical;
+
+        // reset some flags
+        this.virtualScroll = undefined;
+
+        // get the query
+        var filters = this.getGridFilter();
+
+        // initialize the new grid
+        this.initGrid();
+
+        // we need to reload the grid with the previous filters
+        this.loadResources({filter: {filters: filters}});
+    },
+
+    expandHierarchical: function () {
+        var _this = this;
+
+        var $toolbar = this.$domElement.find(".k-grid-toolbar");
+        var $icon = $toolbar.find(".exp-hierarchical-expand-button .fa");
+        var expand = $icon.hasClass("fa-expand");
+
+        expresso.util.UIUtil.showLoadingMask(_this.$domElement, true);
+        window.setTimeout(function () {
+            $.each($("tr.k-treelist-group", _this.kendoGrid.tbody), function () {
+                if (expand) {
+                    _this.kendoGrid.expand(this);
+                } else {
+                    _this.kendoGrid.collapse(this);
+                }
+            });
+            if (expand) {
+                $icon.addClass("fa-compress").removeClass("fa-expand");
+            } else {
+                $icon.addClass("fa-expand").removeClass("fa-compress");
+            }
+            expresso.util.UIUtil.showLoadingMask(_this.$domElement, false);
+        }, 10);
+    },
+
     performProcess: function () {
         var _this = this;
         _this.sendRequest(_this.resourceManager.getRelativeWebServicePath(), "process", null, null, {showProgress: true}).done(function (/*results*/) {
@@ -1347,14 +1357,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         if (this.resourceManager.sections.filter) {
             this.resourceManager.sections.filter.setFilterParams(null);
         }
-
-        // show all columns
-        // var _this = this;
-        // $.each(this.kendoGrid.columns, function () {
-        //     if (this.hidden) {
-        //         _this.kendoGrid.showColumn(this);
-        //     }
-        // });
 
         this.loadResources(null, null, true);
     },
@@ -1854,11 +1856,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     _this.kendoGrid.dataSource.pushInsert(0, duplicatedResource);
 
                     // we need to select the newly inserted resource
-                    if (_this.getParentId()) {
+                    if (_this.hierarchical) {
                         // in hierarchical grid, we need to search for the new resource as
                         // it is not the first one
                         _this.selectRowById(duplicatedResource.id);
-
                     } else {
                         // it is always the first row
                         _this.selectFirstRow();
@@ -2210,7 +2211,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     onDataBound: function () {
         var _this = this;
-        //console.log("EVENT dataBound [" + this.resourceManager.resourceName + "] - selectedRows:" + this.selectedRows.length);
+        // console.log("EVENT dataBound [" + this.resourceManager.resourceName + "]: " + this.selectedRows.length);
 
         // record that the grid has been updated
         this.lastUpdateDate = new Date();
@@ -2227,44 +2228,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             }
         }
 
-        // inline method to reselect rows
-        var reselectRows = function () {
-            // re-highlight the selected rows
-            if (_this.selectedRows.length) {
-                $.each(_this.selectedRows, function (index, dataItem) {
-                    //console.log("Reselecting " + dataItem.id);
-                    var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
-                    if ($row.length) {
-                        $row.addClass("k-state-selected");
-                        $row.find(".selection").prop("checked", true);
-                    }
-                });
-            } else {
-                // we must do it here because dataBound is called upon sort and filter event
-                // and the UID are not the same after a reload
-                _this.selectFirstRow();
-            }
-        };
-
-        // because TreeList modifies the DOM, we need to wait before we reselect the current resource
-        if (this.hierarchical) {
-            setTimeout(reselectRows, 10);
-        } else {
-            reselectRows();
-        }
-
-        // display the number of items in the grid header
-        if (this.countRecords) {
-            var count = this.kendoGrid.dataSource.total();
-            var $nbrItemsDiv = this.$domElement.find(".k-grid-toolbar .exp-grid-nbr-items");
-            if (!$nbrItemsDiv.length) {
-                $nbrItemsDiv = $("<span class='exp-grid-nbr-items'></span>").appendTo(this.$domElement.find(".k-grid-toolbar"));
-            }
-            $nbrItemsDiv.html(count ? (count > 1 ? count + " enregistrements" : "1 enregistrement") : "Aucun enregistrement");
-        }
-
-        // only count the first time because in TreeList, using LazyLoading, we get only the new request count
-        this.countRecords = !this.hierarchical;
+        // set the number of records
+        this.writeNbrRecords();
 
         // display a tooltips for all text fields
         $.each(this.columns, function () {
@@ -2314,6 +2279,52 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.$domElement.find(".k-grid-content").height(this.$domElement.find(".k-grid-content").height() + diff);
             this.resizeContent();
         }
+
+        if (this.virtualScroll) {
+            // when using grid and virtual scrolling
+            if (!this.selectedRows.length) {
+                this.selectFirstRow();
+            }
+        } else {
+            // because TreeList does not trigger sort and filter events, we need to always clear
+            this.clearSelection();
+
+            //  because TreeList modifies the DOM, we need to wait before we reselect the current resource
+            setTimeout(function () {
+                _this.selectFirstRow();
+            }, 10);
+        }
+    },
+
+    /**
+     *
+     */
+    writeNbrRecords: function () {
+        var MAX_HIERARCHICAL_RESULTS = 500;
+        var count = this.kendoGrid.dataSource.total();
+        var html;
+        if (this.hierarchical && count >= MAX_HIERARCHICAL_RESULTS) {
+            html = "<span class='exp-grid-max-limit'>" +
+                expresso.Common.getLabel("maximumLimit", null, {
+                    max: MAX_HIERARCHICAL_RESULTS,
+                    count: count
+                }) + "</span>";
+        } else {
+            // display the number of items in the grid header
+            html = count ? (count > 1 ? count + " " +
+                    expresso.Common.getLabel("record") + "s" : "1 " + expresso.Common.getLabel("record")) :
+                expresso.Common.getLabel("noRecord");
+        }
+
+        if (this.selectedRows.length > 1) {
+            html += expresso.Common.getLabel("nbrSelectedRecord", null, {count: this.selectedRows.length});
+        }
+
+        var $nbrItemsDiv = this.$domElement.find(".k-grid-toolbar .exp-grid-nbr-items");
+        if (!$nbrItemsDiv.length) {
+            $nbrItemsDiv = $("<span class='exp-grid-nbr-items'></span>").appendTo(this.$domElement.find(".k-grid-toolbar"));
+        }
+        $nbrItemsDiv.html(html);
     },
 
     /**
@@ -2322,37 +2333,99 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      *     - On user selection
      *     - On KendoGrid.select() method
      */
-    onChange: function () {
-        // record that the grid has been updated
+    onChange: function (e) {
+        // when selecting all, this method will be called within the call...
+        if (this.selectingAll) {
+            return;
+        }
+
+        var _this = this;
+
+        // record that the grid has been updated (for auto refresh feature)
         this.lastUpdateDate = new Date();
 
-        // handle the select event and publish it
-        var dataItem = this.kendoGrid.dataItem(this.kendoGrid.select());
-        //console.log("EVENT change  [" + this.resourceManager.resourceName + "] - id[" + dataItem.id + "] uid[" + dataItem.uid + "]");
+        // there is a bug in kendoGrid persistSelection feature and virtual scrolling: the selection is persistent
+        // per page -> when you scroll, you lose the selection in the previous page...
+        if (this.virtualScroll && this.multipleSelectionEnabled && e && e.sender && e.sender._selectedIds) {
+            // var result = Object.keys(obj).map((key) => [Number(key), obj[key]]);
+            var selectedIds = Object.entries(e.sender._selectedIds);
 
-        if (dataItem) {
-            if (dataItem != this.resourceManager.currentResource) {
-                //console.log("EVENT change - Selecting new item id[" + dataItem.id + "] uid[" + dataItem.uid + "]");
+            console.log("EVENT change [" + this.resourceManager.resourceName + "]: [" +
+                selectedIds.map(e => e[0]).join(",") + "]", e.sender._selectedIds);
 
-                this.selectedRows = [dataItem];
-                if (this.multipleSelectionEnabled) {
-                    // unselect all
-                    this.kendoGrid.tbody.find('.selection').prop('checked', false);
-                    this.kendoGrid.tbody.find("tr").removeClass("k-state-selected");
+            // there is no direct way to know if the user performed "selectAll",
+            // because Kendo will select only the current page
+            if (this.kendoGrid.dataSource.total() > selectedIds.length &&
+                selectedIds.length >= this.MAX_PAGE_SIZE && selectedIds.length > this.selectedRows.length) {
+
+                if (this.kendoGrid.dataSource.total() > 1000) {
+                    expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("tooManyRecordsForSelection"));
+                    this.selectFirstRow();
+                } else {
+                    // load all rows and then select all of them
+                    _this.selectingAll = true;
+                    this.kendoGrid.dataSource._query({
+                        // must request more rows that the total
+                        pageSize: _this.kendoGrid.dataSource.total() + 1,
+                        page: 1
+                    }).done(function () {
+                        // update the selectedRows
+                        _this.selectedRows = [];
+                        _this.kendoGrid.tbody.children("tr").each(function () {
+                            var dataItem = _this.kendoGrid.dataItem(this);
+                            _this.selectedRows.push(dataItem);
+                        });
+                        _this.kendoGrid.select(_this.kendoGrid.tbody.children("tr"));
+
+                        // then call the event
+                        _this.onRowSelected();
+                    }).always(function () {
+                        _this.selectingAll = false;
+                    });
+                }
+            } else {
+                // add new selected
+                for (var i = 0; i < selectedIds.length; i++) {
+                    var id = selectedIds[i][0];
+                    var selectedRow = $.grep(this.selectedRows, function (r) {
+                        return r.id == id;
+                    });
+                    if (!selectedRow.length) {
+                        // it has to be in the current datasource
+                        var newSelectedDataItem = this.kendoGrid.dataSource.get(id);
+                        if (newSelectedDataItem) {
+                            this.selectedRows.push(newSelectedDataItem);
+                        } else {
+                            // console.warn("Cannot get the newSelectedDataItem [" + id + "]");
+                            // ok this happen on refresh because selectedIds has not been refresh
+                        }
+                    }
                 }
 
-                this.onRowSelected();
+                // remove unselected
+                if (this.selectedRows.length) {
+                    for (var j = this.selectedRows.length - 1; j >= 0; j--) {
+                        if (!e.sender._selectedIds[this.selectedRows[j].id]) {
+                            this.selectedRows.splice(j, 1);
+                        }
+                    }
+                }
+                _this.onRowSelected();
             }
-
-            // then select the row (editing a row unselect it)
-            var $row = this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
-            $row.addClass("k-state-selected");
-            $row.find('.selection').prop('checked', true);
-
-            // let the user to update the grid UI (must recustomize the item here)
-            this.customizeRow(dataItem, $row);
         } else {
-            this.clearSelection();
+            // update the selected rows
+            var selectedRows = this.kendoGrid.select();
+
+            // console.log("EVENT change [" + this.resourceManager.resourceName + "]: " +
+            //     this.selectedRows.length + " -> " + selectedRows.length);
+
+            // utility method to update the selectedRows with dataItems
+            this.selectedRows = [];
+            $.each(selectedRows, function () {
+                var dataItem = _this.kendoGrid.dataItem(this);
+                _this.selectedRows.push(dataItem);
+            });
+            this.onRowSelected();
         }
     },
 
@@ -2362,7 +2435,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      *     - On user filtering the DataSource via the filter UI
      */
     onFilter: function () {
-        this.selectedRows = [];
+        // console.log("EVENT filter [" + this.resourceManager.resourceName + "]");
+        this.clearSelection();
     },
 
     /**
@@ -2371,8 +2445,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      *     - On user filtering the DataSource via the sort UI
      */
     onSort: function () {
-        // console.log("onSort");
-        this.selectedRows = [];
+        // console.log("EVENT sort [" + this.resourceManager.resourceName + "]");
+        this.clearSelection();
     },
 
     /**
@@ -2424,25 +2498,22 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
         // ***************************************** END patch for _pristineData
 
-
-        if (this.customForm) {
-            var $window = $(e.container);
-            if (dataItem.isNew() && !dataItem.id) {
-                _this.initializeNewResource(dataItem);
-            }
-
-            // when the window is closed, verify if there is one row selected
-            $window.data("kendoWindow").bind("close", function () {
-                // console.log("Kendo Window has been closed");
-                // this event is call twice when the window is closed by the Escape key or X button
-                var dataItem = _this.kendoGrid.dataItem(_this.kendoGrid.select());
-                if (_this.selectedRows.length == 1 && !dataItem) {
-                    _this.clearSelection();
-                }
-            });
-
-            _this.customForm.initForm($window, dataItem);
+        var $window = $(e.container);
+        if (dataItem.isNew() && !dataItem.id) {
+            _this.initializeNewResource(dataItem);
         }
+
+        // when the window is closed, verify if there is one row selected
+        $window.data("kendoWindow").bind("close", function () {
+            // console.log("Kendo Window has been closed");
+            // this event is call twice when the window is closed by the Escape key or X button
+            var dataItem = _this.kendoGrid.dataItem(_this.kendoGrid.select());
+            if (_this.selectedRows.length == 1 && !dataItem) {
+                _this.clearSelection();
+            }
+        });
+
+        _this.customForm.initForm($window, dataItem);
     },
 
     /**
@@ -2452,7 +2523,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @param event
      */
     onSaved: function (dataItem, originalDataItem, event) {
-        if (this.synchingResource && this.customForm) {
+        if (this.synchingResource) {
             this.synchingResource = false;
             this.customForm.onSaved(dataItem, originalDataItem);
             if (event) {
@@ -2472,74 +2543,72 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         var _this = this;
         // e.model : the data item to which the table row is bound. If e.model.id is null, then a newly created row is being saved.
         // e.preventDefault(); to cancel the save
-        if (this.customForm) {
-            _this.synchingResource = true;
+        _this.synchingResource = true;
 
-            var $window = $(e.container);
-            var dataItem = e.model;
-            var valid = this.customForm.validateResource($window, dataItem);
-            if (valid === false) {
-                //console.log("fail to save");
-                e.preventDefault();
-                _this.onSaved(null);
+        var $window = $(e.container);
+        var dataItem = e.model;
+        var valid = this.customForm.validateResource($window, dataItem);
+        if (valid === false) {
+            //console.log("fail to save");
+            e.preventDefault();
+            _this.onSaved(null);
+        } else {
+            var $deferred;
+            var manualSync;
+            if (valid === true || valid === undefined) {
+                $deferred = $.Deferred().resolve();
+                manualSync = false;
             } else {
-                var $deferred;
-                var manualSync;
-                if (valid === true || valid === undefined) {
-                    $deferred = $.Deferred().resolve();
-                    manualSync = false;
+                // do not allow Kendo to sync automatically
+                // we will call it manually
+                $deferred = valid;
+                e.preventDefault();
+                manualSync = true;
+                //console.log("Waiting onSave");
+            }
+
+            // when validation has been done, continue
+            $deferred.done(function () {
+                //console.log("GRID - " + _this.resourceManager.resourceName + " - All promises done for saving");
+
+                // keep a copy of the original resource (before sync)
+                var originalDataItem = dataItem ? JSON.parse(JSON.stringify(dataItem)) : null;
+
+                if (dataItem.id) {
+                    _this.kendoGrid.dataSource.one("sync", function () {
+                        _this.onSaved(dataItem, originalDataItem, _this.RM_EVENTS.RESOURCE_UPDATED);
+                        originalDataItem = null;
+                    });
                 } else {
-                    // do not allow Kendo to sync automatically
-                    // we will call it manually
-                    $deferred = valid;
-                    e.preventDefault();
-                    manualSync = true;
-                    //console.log("Waiting onSave");
+                    _this.resourceManager.currentResource = null;
+                    _this.kendoGrid.dataSource.one("sync", function () {
+                        _this.onSaved(dataItem, originalDataItem, _this.RM_EVENTS.RESOURCE_CREATED);
+                        originalDataItem = null;
+
+                        // needed? select method will trigger the change event
+                        var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
+                        _this.kendoGrid.select($row);
+                    });
                 }
 
-                // when validation has been done, continue
-                $deferred.done(function () {
-                    //console.log("GRID - " + _this.resourceManager.resourceName + " - All promises done for saving");
+                if (manualSync) {
+                    _this.kendoGrid.dataSource.sync();
+                }
 
-                    // keep a copy of the original resource (before sync)
-                    var originalDataItem = dataItem ? JSON.parse(JSON.stringify(dataItem)) : null;
-
-                    if (dataItem.id) {
-                        _this.kendoGrid.dataSource.one("sync", function () {
-                            _this.onSaved(dataItem, originalDataItem, _this.RM_EVENTS.RESOURCE_UPDATED);
-                            originalDataItem = null;
-                        });
-                    } else {
-                        _this.resourceManager.currentResource = null;
-                        _this.kendoGrid.dataSource.one("sync", function () {
-                            _this.onSaved(dataItem, originalDataItem, _this.RM_EVENTS.RESOURCE_CREATED);
-                            originalDataItem = null;
-
-                            // needed? select method will trigger the change event
-                            var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
-                            _this.kendoGrid.select($row);
-                        });
-                    }
-
-                    if (manualSync) {
-                        _this.kendoGrid.dataSource.sync();
-                    }
-
-                    // update Google Analytics
-                    var p = _this.resourceManager.getResourceSecurityPath();
-                    var action = dataItem.id ? "update" : "create";
-                    var gaFields = {
-                        hitType: 'event',
-                        eventCategory: p,
-                        eventAction: action,
-                        eventLabel: action + " " + p
-                    };
-                    expresso.Common.sendAnalytics(gaFields);
-                }).fail(function () {
-                    //console.log("Cannot save because of validation issue");
-                    _this.onSaved(null);
-                });
-            }
+                // update Google Analytics
+                var p = _this.resourceManager.getResourceSecurityPath();
+                var action = dataItem.id ? "update" : "create";
+                var gaFields = {
+                    hitType: 'event',
+                    eventCategory: p,
+                    eventAction: action,
+                    eventLabel: action + " " + p
+                };
+                expresso.Common.sendAnalytics(gaFields);
+            }).fail(function () {
+                //console.log("Cannot save because of validation issue");
+                _this.onSaved(null);
+            });
         }
     },
 
@@ -2602,15 +2671,18 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         var $row = null;
         if (this.kendoGrid) {
-            //console.log("selectFirstRow");
             var total = this.kendoGrid.dataSource.total();
             if (total) {
                 // select the first row
                 $row = this.kendoGrid.tbody.find(">tr:not(.k-grouping-row)").first();
             }
             if ($row && $row.length) {
-                //console.log("selecting row", $row);
                 this.kendoGrid.select($row);
+
+                if (this.hierarchical) {
+                    // TreeList does not trigger the event
+                    this.onChange();
+                }
             } else {
                 this.clearSelection();
             }
@@ -2624,13 +2696,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     clearSelection: function () {
         // console.log(this.resourceManager.getResourceSecurityPath() + " - clearSelection");
+        this.selectedRows = [];
         if (this.kendoGrid) {
-            if (this.multipleSelectionEnabled) {
-                // unselect all
-                this.kendoGrid.tbody.find('.selection').prop('checked', false);
-                this.kendoGrid.tbody.find("tr").removeClass("k-state-selected");
-            }
-            this.selectedRows = [];
+            this.kendoGrid.clearSelection();
             this.onRowSelected();
         }
     },
@@ -2719,10 +2787,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // if virtual scroll, use the query method.
         // but when using local data, we need to force the request, then we need to use "read"
         var $queryDeferred;
-        if (this.virtualScroll || this.getParentId()) {
+        if (this.virtualScroll || this.hierarchical) {
             $queryDeferred = this.kendoGrid.dataSource.query(dataSourceOptions);
         } else {
             $queryDeferred = this.kendoGrid.dataSource.read(dataSourceOptions);
+        }
+        if (this.hierarchical) {
+            expresso.util.UIUtil.showLoadingMask(this.$domElement, true, {id: "grid"});
         }
 
         return $queryDeferred.done(function () {
@@ -2774,6 +2845,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // console.log("loadResources is done");
             // _this.selectFirstRow();
             _this.loadingResources = false;
+
+            if (_this.hierarchical) {
+                expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: "grid"});
+            }
         });
     },
 
@@ -2788,12 +2863,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         var model = this.resourceManager.model;
         if (this.hierarchical) {
             $.extend(true, model, {
-                parentId: this.getParentId(),
+                parentId: model.hierarchicalParent,
                 expanded: true
             });
 
             // make sure that parent id is nullable
-            model.fields[this.getParentId()].nullable = true;
+            model.fields[model.hierarchicalParent].nullable = true;
         }
 
         return {
@@ -2804,6 +2879,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         // handle the activeOnly
                         if (data && data.activeOnly === undefined) {
                             data.activeOnly = !(_this.activeOnly === false);
+                        }
+
+                        // handle hierarchical
+                        if (data && data.hierarchical === undefined) {
+                            if (_this.hierarchical) {
+                                data.hierarchical = _this.hierarchical;
+                            }
                         }
 
                         return {query: kendo.stringify(data)};
@@ -2881,7 +2963,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             group: _this.getGroup(),
             aggregate: _this.getAggregate(),
             serverPaging: _this.virtualScroll,
-            serverFiltering: _this.virtualScroll || !!_this.getParentId(),
+            serverFiltering: _this.virtualScroll || _this.hierarchical,
             serverSorting: _this.virtualScroll,
             filter: _this.isFilterable() ? _this.getInitialGridFilter() : undefined
         };
@@ -2994,19 +3076,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             filterable: {
                 mode: powerUser && expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP ? "row, menu" : "row"
             },
-            selectable: "row",
+            selectable: (_this.multipleSelectionEnabled ? "multiple," : "") + "row",
+            persistSelection: true, // persist selection across paging
             editable: {
                 mode: "popup",
                 window: {
-                    //title: _this.getTitle()
-
-                    // we need to setup the animation here (it has no effect with setOptions)
-                    //animation: $("html").hasClass("k-ie") ? false : undefined, // not for IE
-
                     // we need to define the width here otherwise the content of the window is not resize
                     // correctly with window.setOptions
-                    width: _this.customForm ? expresso.util.UIUtil.getFormWidth(_this.customForm.$domElement) : 500,
-
+                    width: expresso.util.UIUtil.getFormWidth(_this.customForm.$domElement),
                     actions: [
                         "Maximize", "Close"
                     ]
@@ -3034,10 +3111,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // }
         };
 
-        // if it is a custom form, configure it
-        if (this.customForm) {
-            options.editable.template = kendo.template(_this.customForm.$domElement.parent().html())
-        }
+        // configure the form
+        options.editable.template = kendo.template(_this.customForm.$domElement.parent().html())
 
         // for Grid in Preview, do not show by default the filter row
         if (!this.isFilterable()) {
@@ -3049,7 +3124,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             options.scrollable = true;
         }
 
-        if (this.hierarchical) {
+        if (this.hierarchical && this.isUserAllowed("update")) {
 
             $.extend(true, options, {
                 // allow drag & drop
@@ -3157,6 +3232,23 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // add a separator
         if (needSeparator) {
+            this.addSeparatorToToolbar(toolbar);
+            needSeparator = false;
+        }
+
+        if (this.hierarchical !== undefined) {
+            // toggle hierarchical
+            toolbar.push({
+                template: '<button type="button" class="k-button exp-button exp-always-active-button exp-hierarchical-toogle-button" title="toggleHierarchical">' +
+                    '<span class="fa ' + (this.hierarchical ? 'fa-table' : 'fa-sitemap') + '"><span data-text-key="toggleHierarchicalButton"></span></span></button>'
+            });
+
+            // expand/collapse all
+            toolbar.push({
+                template: '<button type="button" class="k-button exp-button exp-always-active-button exp-hierarchical-expand-button ' + (this.hierarchical ? '' : 'hidden') + '" title="expandHierarchical">' +
+                    '<span class="fa fa-compress"><span data-text-key="expandHierarchicalButton"></span></span></button>'
+            });
+
             this.addSeparatorToToolbar(toolbar);
             needSeparator = false;
         }
@@ -3274,7 +3366,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             needSeparator = true;
         }
 
-        if (this.isFilterable() && this.virtualScroll) {
+        if (this.isFilterable() && (this.virtualScroll || this.hierarchical)) {
             // add the clear filter button
             toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-clearfilters-button exp-stack-button" title="clearFilters"><span class="fa-stack"><i class="fa fa-filter fa-stack-1x"></i><i class="fa fa-times fa-stack-1x"></i></span><span class="exp-button-label" data-text-key="clearFiltersButton"></span></button>'});
 
@@ -3456,7 +3548,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * Get the number of records per page
      */
     getPageSize: function () {
-        return 50;
+        return this.MAX_PAGE_SIZE;
     },
 
     /**
@@ -3519,17 +3611,18 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     },
 
     /**
-     * Initialiaze the new resource if needed
+     * Initialize the new resource if needed
      * @param newResource
      */
     initializeNewResource: function (newResource) {
-        // initialize the parent to the current resource if it is a hierachical data source
-        if (this.getParentId()) {
+        // initialize the parent to the current resource if it is a hierarchical data source
+        if (this.hierarchical) {
             if (this.previousSelectedResource) {
-                newResource.set(this.getParentId(), this.previousSelectedResource.id);
+                var hierarchicalParent = this.resourceManager.model.hierarchicalParent;
+                newResource.set(hierarchicalParent, this.previousSelectedResource.id);
 
-                if (this.getParentId().endsWith("Id")) {
-                    var parentAttributeName = this.getParentId().substring(0, this.getParentId().length - 2);
+                if (hierarchicalParent.endsWith("Id")) {
+                    var parentAttributeName = hierarchicalParent.substring(0, hierarchicalParent.length - 2);
                     newResource.set(parentAttributeName, this.previousSelectedResource);
                 }
             }
@@ -3642,15 +3735,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         return undefined;
     },
 
-
-    /**
-     * Return the name of the property that defined the parent id
-     * @returns {*}
-     */
-    getParentId: function () {
-        return undefined;
-    },
-
     // @override
     resizeContent: function () {
         expresso.layout.resourcemanager.SectionBase.fn.resizeContent.call(this);
@@ -3724,7 +3808,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 label.prepend(checkbox);
                 checkbox.data("column", column);
                 div.append(label);
-                checkbox.on('change', function (e) {
+                checkbox.on("change", function (e) {
                     var column = $(this).data("column");
                     if (e.target.checked) {
                         _this.kendoGrid.showColumn(column);
@@ -3775,7 +3859,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
 
         // add the listener on the header (create the menu only on demand)
-        this.kendoGrid.element.find('th').on('contextmenu', function (e) {
+        this.kendoGrid.element.find("th").on("contextmenu", function (e) {
             e.preventDefault();
             if (!_this.$columnMenu) {
                 _this.createColumnMenu();

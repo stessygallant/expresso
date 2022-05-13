@@ -821,16 +821,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             this.close();
         } else {
             if (!this.forceClose) {
-                if (this.resourceManager.sections.grid.kendoGrid.dataSource.online()) {
-                    e.preventDefault();
-                } else {
-                    // if the grid is offline, we need to close the form
-                    if (!e.isDefaultPrevented()) {
-                        this.close();
-                    } else {
-                        e.preventDefault();
-                    }
-                }
+                e.preventDefault();
             }
         }
     },

@@ -204,7 +204,7 @@ expresso.util.Model = (function () {
                             field.editable !== false && field.type != "boolean") {
                             field.validation = field.validation || {};
                             if (field.validation.required === undefined) {
-                                // console.log("Adding required to [" + f + "]");
+                                //console.log("Adding required to [" + f + "]");
                                 field.validation.required = true;
                             }
                         }
@@ -342,6 +342,11 @@ expresso.util.Model = (function () {
                         if (field.values) {
                             // by default, autoLoad values
                             field.values.autoLoad = (field.values.autoLoad !== false);
+                        }
+
+                        // Hierarchical reference
+                        if (field.hierarchicalParent) {
+                            model.hierarchicalParent = field.name;
                         }
                     }
                 }

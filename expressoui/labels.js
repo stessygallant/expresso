@@ -221,6 +221,8 @@ $.extend(expresso.Labels, {
     showActiveRecords: "Afficher seulement les enregistrements actifs",
     search: "Rechercher",
     enterReason: "Entrer une raison",
+    toggleHierarchical: "Changer de grille à vue hiérarchique et vice-versa",
+    expandHierarchical: "Ouvrir/fermer tous les niveaux",
 
     confirmTitle: "Confirmation",
     confirmAction: "Êtes-vous sûr de vouloir exécuter l'action suivante: ",
@@ -249,6 +251,9 @@ $.extend(expresso.Labels, {
     uploadDocumentButton: "",
     showActiveRecordsButton: "Actifs seulement",
     searchButton: "",
+    toggleHierarchicalButton: "",
+    expandHierarchicalButton: "",
+    collapseHierarchicalButton: "",
 
     // standard actions
     approveButtonLabel: "Approuver",
@@ -316,6 +321,11 @@ $.extend(expresso.Labels, {
     requiredField: "Le champ [{field}] est obligatoire",
     kerberosChromeExcelIssue: "Google Chrome a un problème avec le téléchargement de fichier volumineux dans certaines conditions. Vous pouvez utiliser Firefox pour cette opération",
     excelDownloadInProgress: "Le téléchargement du fichier Excel débutera bientôt. IMPORTANT: l'exportation est limitée à 10 000 lignes.",
+    tooManyResultsForHierarchical: "Trop d'enregistrements pour la vue hiérarchique. Sélectionner la vue 'grille' ou ajouter des filtres",
+    maximumLimit: "Limite atteinte (max {max} sur {count})",
+    noRecord: "Aucun enregistrement",
+    record: "enregistrement",
+    nbrSelectedRecord: " ({count} sélectionnés)",
 
     january: "Janvier",
     february: "Février",

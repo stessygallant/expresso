@@ -216,6 +216,8 @@ $.extend(expresso.Labels, {
     showActiveRecords: "Show only active records",
     search: "Search",
     enterReason: "Please enter the reason",
+    toggleHierarchical: "Toggle between list and tree view",
+    expandHierarchical: "Expand/Collapse all",
 
     confirmTitle: "Confirmation",
     confirmAction: "Are you sure you want to execute this action: ",
@@ -243,6 +245,9 @@ $.extend(expresso.Labels, {
     uploadDocumentButton: "",
     showActiveRecordsButton: "Actives only",
     searchButton: "",
+    toggleHierarchicalButton: "",
+    expandHierarchicalButton: "",
+    collapseHierarchicalButton: "",
 
     // standard actions
     approveButtonLabel: "Approve",
@@ -311,6 +316,11 @@ $.extend(expresso.Labels, {
     requiredField: "Field [{field}] is required",
     kerberosChromeExcelIssue: "Google Chrome has an issue with huge download file under certain circumstances. Please use Firefox for this operation.",
     excelDownloadInProgress: "Excel file download will begin shortly. IMPORTANT: Export is limited to 10,000 lines.",
+    tooManyResultsForHierarchical: "Too many results for a hierarchical view. Please change the selected view or add filters",
+    maximumLimit: "Limit reached (max {max} on {count})",
+    noRecord: "No records",
+    record: "record",
+    nbrSelectedRecord: " ({count} selected)",
 
     january: "January",
     february: "February",

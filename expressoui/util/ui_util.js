@@ -105,9 +105,6 @@ expresso.util.UIUtil = (function () {
                     case "expressomaskedtimepicker":
                         widget = $element.data("kendoExpressoMaskedTimePicker");
                         break;
-                    case "expressomaskedtimeunitpicker":
-                        widget = $element.data("kendoExpressoMaskedTimeUnitPicker");
-                        break;
                     case "expressoform":
                         widget = null;
                         break;
@@ -1329,7 +1326,7 @@ expresso.util.UIUtil = (function () {
                 // tagMode: "single",
                 dataSource: [],
 
-                change: function (e) {
+                change: function () {
                     // PATCH: Kendo does not trigger the change event
                     $input.trigger("change");
                 },
