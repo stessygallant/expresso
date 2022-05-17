@@ -35,7 +35,65 @@ expresso.applications.security.rolemanager.RoleManager = expresso.layout.resourc
             deactivationDate: {
                 type: "date",
                 nullable: true
-            }
+            },
+
+            /**
+             * ManyToMany
+             */
+            departmentIds: {
+                multipleSelection: true,
+                reference: "department",
+                nullable: true
+            },
+            userIds: {
+                multipleSelection: true,
+                reference: "user",
+                nullable: true
+            },
+            jobTitleIds: {
+                multipleSelection: true,
+                reference: "jobTitle",
+                nullable: true
+            },
+            jobTypeIds: {
+                multipleSelection: true,
+                reference: "jobType",
+                nullable: true
+            },
+            applicationIds: {
+                multipleSelection: true,
+                reference: "application",
+                nullable: true
+            },
+            privilegeIds: {
+                multipleSelection: true,
+                reference: "privileges",
+                nullable: true
+            },
+
+            /**
+             * Labels
+             */
+            departmentLabels: {
+                type: "string",
+                transient: true
+            },
+            userLabels: {
+                type: "string",
+                transient: true
+            },
+            jobTitleLabels: {
+                type: "string",
+                transient: true
+            },
+            jobTypeLabels: {
+                type: "string",
+                transient: true
+            },
+            applicationLabels: {
+                type: "string",
+                transient: true
+            },
         };
 
         expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "role", fields);

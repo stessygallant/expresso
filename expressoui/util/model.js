@@ -274,56 +274,61 @@ expresso.util.Model = (function () {
                                 }
                             }
 
-                            if (!reference.resourceName) {
-                                //console.log("Adding reference to [" + reference.fieldName + "]");
+                            if (reference.data) {
+                                // make sure that the list contains all needed attributes
+                                expresso.Common.updateDataValues(reference.data, resourceManager.labels);
+                            } else {
+                                if (!reference.resourceName) {
+                                    //console.log("Adding reference to [" + reference.fieldName + "]");
 
-                                // by default, assume the field name is the resourceName + Id (or + No)
-                                // ex: workOrderId/workOrderNo would mean resourceName=workOrder
+                                    // by default, assume the field name is the resourceName + Id (or + No)
+                                    // ex: workOrderId/workOrderNo would mean resourceName=workOrder
 
-                                var referenceResourceName = reference.fieldName;
-                                if (referenceResourceName.indexOf(".") != -1) {
-                                    // ex: derived.projectStatus will be projectStatus
-                                    referenceResourceName = referenceResourceName.substring(referenceResourceName.indexOf(".") + 1);
-                                }
-
-                                if (referenceResourceName.endsWith("Id") || referenceResourceName.endsWith("No")) {
-                                    referenceResourceName = referenceResourceName.substring(0, referenceResourceName.length - 2);
-                                } else if (referenceResourceName.endsWith("Ids")) {
-                                    referenceResourceName = referenceResourceName.substring(0, referenceResourceName.length - 3);
-                                } else {
-                                    console.warn("Invalid reference for [" + f + "]");
-                                    referenceResourceName = null;
-                                }
-                                reference.resourceName = referenceResourceName;
-                            }
-
-                            if (!reference.wsPath) {
-                                reference.wsPath = reference.resourceName;
-                            }
-
-                            // resource manager
-                            if (reference.resourceName) {
-                                // by default, reference allow search button. values does not.
-                                if (field.values) {
-                                    if (!reference.searchButtonEnabled) {
-                                        reference.resourceManagerDef = null;
-                                    } else {
-                                        //reference.allowCreate = true;
-                                        reference.allowView = false;
+                                    var referenceResourceName = reference.fieldName;
+                                    if (referenceResourceName.indexOf(".") != -1) {
+                                        // ex: derived.projectStatus will be projectStatus
+                                        referenceResourceName = referenceResourceName.substring(referenceResourceName.indexOf(".") + 1);
                                     }
+
+                                    if (referenceResourceName.endsWith("Id") || referenceResourceName.endsWith("No")) {
+                                        referenceResourceName = referenceResourceName.substring(0, referenceResourceName.length - 2);
+                                    } else if (referenceResourceName.endsWith("Ids")) {
+                                        referenceResourceName = referenceResourceName.substring(0, referenceResourceName.length - 3);
+                                    } else {
+                                        console.warn("Invalid reference for [" + f + "]");
+                                        referenceResourceName = null;
+                                    }
+                                    reference.resourceName = referenceResourceName;
                                 }
 
-                                // if we do not want to display the search button, make sure the manager is null
-                                if (reference.searchButtonEnabled === false) {
+                                if (!reference.wsPath) {
+                                    reference.wsPath = reference.resourceName;
+                                }
+
+                                // resource manager
+                                if (reference.resourceName) {
+                                    // by default, reference allow search button. values does not.
+                                    if (field.values) {
+                                        if (!reference.searchButtonEnabled) {
+                                            reference.resourceManagerDef = null;
+                                        } else {
+                                            //reference.allowCreate = true;
+                                            reference.allowView = false;
+                                        }
+                                    }
+
+                                    // if we do not want to display the search button, make sure the manager is null
+                                    if (reference.searchButtonEnabled === false) {
+                                        reference.resourceManagerDef = null;
+                                    }
+
+                                    // define the manager if not defined
+                                    if (reference.resourceManagerDef === undefined) {
+                                        reference.resourceManagerDef = reference.resourceName.capitalize() + "Manager";
+                                    }
+                                } else {
                                     reference.resourceManagerDef = null;
                                 }
-
-                                // define the manager if not defined
-                                if (reference.resourceManagerDef === undefined) {
-                                    reference.resourceManagerDef = reference.resourceName.capitalize() + "Manager";
-                                }
-                            } else {
-                                reference.resourceManagerDef = null;
                             }
 
                             // put back the reference
@@ -425,9 +430,7 @@ expresso.util.Model = (function () {
 
                     promises.push(expresso.Common.sendRequest(values.wsPath, null, null, filter,
                         {waitOnElement: null}).done(function (result) {
-                        values.data = [];
-
-                        expresso.Common.updateValues(values.data, result, undefined, undefined, labels);
+                        values.data = expresso.Common.updateDataValues(result, labels);
 
                         // if there is a defaultValue, and the defaultValue is a string, and the field type is number.
                         // It means that we are using a pgmKey and that we need to replace it with the id

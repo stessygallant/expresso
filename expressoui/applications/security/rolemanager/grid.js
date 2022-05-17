@@ -3,10 +3,26 @@
     getColumns: function () {
         return [{
             field: "pgmKey",
-            width: 350
-        },{
+            width: 200
+        }, {
             field: "systemRole",
-            width: 100
+            width: 100,
+            hidden: true
+        }, {
+            field: "userLabels",
+            width: 140
+        }, {
+            field: "departmentLabels",
+            width: 120
+        }, {
+            field: "jobTitleLabels",
+            width: 250
+        }, {
+            field: "jobTypeLabels",
+            width: 120
+        }, {
+            field: "applicationLabels",
+            width: 200
         }, {}
         ];
     },
@@ -16,7 +32,7 @@
         return [{
             field: "systemRole",
             dir: "desc"
-        },{
+        }, {
             field: "pgmKey",
             dir: "asc"
         }];

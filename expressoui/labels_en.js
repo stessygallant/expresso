@@ -143,7 +143,7 @@ $.extend(expresso.Labels, {
     wrongEntityVersion: "This entity has been modified by another user/process. Your changes have not been saved. Please retry",
     cannotCreateUser: "You cannot create this user account",
     userIsNotCreator: "You cannot modify this record",
-    tooManyRecordsForSelection: "Too many records for selection. You could the Excel button to get a report of all records.",
+    tooManyRecordsForSelection: "Too many records for selection.",
     userNotAllowedToModify: "You cannot modify this record",
     unableToLocatePrinter: "Printer [{printerName}] is not properly configured on the server",
     unableToResolveIP: "Server cannot determine your computer's name from your IP [{ip}]",
@@ -320,7 +320,7 @@ $.extend(expresso.Labels, {
     maximumLimit: "Limit reached (max {max} on {count})",
     noRecord: "No records",
     record: "record",
-    nbrSelectedRecord: " ({count} selected)",
+    nbrSelectedRecord: "{count} selected",
 
     january: "January",
     february: "February",

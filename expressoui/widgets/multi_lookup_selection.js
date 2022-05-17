@@ -196,9 +196,8 @@
                         }).length == 0;
                     });
 
-                    dataItems = expresso.Common.updateValues(null, dataItems, null, undefined, _this.options.labels);
                     _this.sourceListBox.setDataSource(new kendo.data.DataSource({
-                        data: dataItems
+                        data: expresso.Common.updateDataValues(dataItems, _this.options.labels)
                     }));
                 });
             } else {
@@ -264,9 +263,8 @@
                         // get the list of objects
                         expresso.Common.sendRequest(this.url, null, null,
                             expresso.Common.buildKendoFilter({"id": Array.from(values)})).done(function (result) {
-                            var dataItems = expresso.Common.updateValues(null, result.data, null, undefined, _this.options.labels);
                             _this.targetListBox.setDataSource(new kendo.data.DataSource({
-                                data: dataItems
+                                data: expresso.Common.updateDataValues(result.data, _this.options.labels)
                             }));
                         });
                     }

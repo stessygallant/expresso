@@ -1743,7 +1743,7 @@ expresso.Common = (function () {
 
         return expresso.Common.sendRequest(wsPath, null, null, filter,
             {waitOnElement: null}).then(function (result) {
-            return expresso.Common.updateValues(null, result, undefined, undefined, labels);
+            return expresso.Common.updateDataValues(result, labels);
         });
     };
 
@@ -1755,26 +1755,70 @@ expresso.Common = (function () {
      * @param [allValuesLabel] if not null, defined the description for the all values
      * @param [labels] if not null, used for list translation
      */
+        // @Deprecated use updateDataValues instead
     var updateValues = function (va, data, field, allValuesLabel, labels) {
-        if (!va) {
-            va = [];
-        }
+            if (!va) {
+                va = [];
+            }
 
-        if (va.length) {
-            // already initialized
-            return;
-        }
+            if (va.length) {
+                // already initialized
+                return;
+            }
 
+            if (data.data) {
+                data = data.data;
+            }
+
+            // if there is a label for "ALL", put it at first
+            if (allValuesLabel !== undefined) {
+                data.unshift({
+                    id: null,
+                    label: allValuesLabel
+                });
+            }
+
+            // try to get the type labels (if defined)
+            var typeLabels;
+            if (data.length && data[0].type) {
+                // a type is defined by an object
+                typeLabels = expresso.Common.getLabel(data[0].type + "Labels", labels, true);
+            }
+
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+                if (field) {
+                    if (typeof field === "string") {
+                        d.label = d[field];
+                    } else {
+                        d.label = field(d);
+                    }
+                }
+
+                // NOTE
+                // value,text: is mandatory for Grid filtering using combobox
+                // id,label: used by combobox and dropdownlist in form.
+                d.value = d.id;
+
+                // try to get the label (if not, keep the current text for backward compatibility)
+                if (typeLabels && d.pgmKey && typeof d.pgmKey === "string" && isNaN(parseInt(d.pgmKey))) {
+                    d.label = typeLabels[d.pgmKey] || d.label;
+                }
+                d.text = d.label;
+
+                va.push(d);
+            }
+            return va;
+        };
+
+    /**
+     * Helper method to update the values array
+     * @param data array of data
+     * @param [labels] if not null, used for list translation
+     */
+    var updateDataValues = function (data, labels) {
         if (data.data) {
             data = data.data;
-        }
-
-        // if there is a label for "ALL", put it at first
-        if (allValuesLabel !== undefined) {
-            data.unshift({
-                id: null,
-                label: allValuesLabel
-            });
         }
 
         // try to get the type labels (if defined)
@@ -1786,13 +1830,6 @@ expresso.Common = (function () {
 
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
-            if (field) {
-                if (typeof field === "string") {
-                    d.label = d[field];
-                } else {
-                    d.label = field(d);
-                }
-            }
 
             // NOTE
             // value,text: is mandatory for Grid filtering using combobox
@@ -1804,10 +1841,8 @@ expresso.Common = (function () {
                 d.label = typeLabels[d.pgmKey] || d.label;
             }
             d.text = d.label;
-
-            va.push(d);
         }
-        return va;
+        return data;
     };
 
     /**
@@ -2074,7 +2109,8 @@ expresso.Common = (function () {
         loadLabels: loadLabels,
         localizePage: localizePage,
         getLabel: getLabel,
-        updateValues: updateValues,
+        updateValues: updateValues, // @Deprecated
+        updateDataValues: updateDataValues,
         getValues: getValues,
         setLanguage: setLanguage,
         getLanguage: getLanguage,

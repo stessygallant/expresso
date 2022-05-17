@@ -25,9 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -104,7 +101,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 	// for performance optimization
 	private Boolean parentUpdatable = null;
-	private static final Map<Query, Future<?>> creationQueryFutureMap = Collections.synchronizedMap(new HashMap<>());
+	private static final Map<Query, Object> creationQueryMap = Collections.synchronizedMap(new HashMap<>());
 
 	private Class<E> typeOfE;
 
@@ -825,92 +822,67 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 * @throws Exception
 	 */
-	@SuppressWarnings("unchecked")
 	private E createEntityFromUniqueConstraints(Query query) throws Exception {
 		UniqueFieldConstraints constraintsAnnotation = getTypeOfE().getAnnotation(UniqueFieldConstraints.class);
 		if (constraintsAnnotation != null) {
 
-			// we need to make sure that we do not try to add the same entity twice
-			// because when a persist failed, the session is rollback only,
-			// which means that all operations will be lost
-
-			// the first will create the entity and the other threads will get it
-			Future<E> future = null;
-			Callable<E> callable = null;
-			Object lock = this.getClass();
-			synchronized (lock) {
-				future = (Future<E>) creationQueryFutureMap.get(query);
-				if (future == null) {
-					callable = new Callable<E>() {
-
-						@Override
-						public E call() throws Exception {
-							E e = null;
-
-							// first try to get it
-							try {
-								e = get(query.setCreateIfNotFound(false));
-							} catch (NoResultException ex) {
-								// still not found, create it
-								e = getTypeOfE().getDeclaredConstructor().newInstance();
-
-								// get the needed values from the filter for each unique constraint
-								for (String fieldName : constraintsAnnotation.fieldNames()) {
-									Field field = Util.getField(e, fieldName);
-									if (field == null) {
-										throw new Exception("Cannot create entity. Field missing [" + fieldName + "]");
-									}
-
-									if (field != null) {
-										Object value = null;
-										Filter filter = query.getFilter(fieldName);
-										if (filter != null) {
-											value = filter.getValue();
-										}
-										if (value == null) {
-											throw new Exception("Cannot create entity. Field value missing [" + fieldName + "]");
-										}
-
-										// System.out.println("Setting " + fieldName + " to [" + value + "]");
-										field.set(e, Util.convertValue(value, field.getType().getSimpleName()));
-									}
-								}
-
-								// start transaction (if needed)
-								PersistenceManager.getInstance().startTransaction(getEntityManager());
-
-								e = create(e);
-								// logger.debug("created");
-							}
-							return e;
-						}
-					};
-					future = new FutureTask<E>(callable);
-					creationQueryFutureMap.put(query, future);
+			Object lock;
+			synchronized (this.getClass()) {
+				if (creationQueryMap.containsKey(query)) {
+					lock = creationQueryMap.get(query);
+				} else {
+					lock = query;
+					creationQueryMap.put(query, lock);
 				}
 			}
 
-			if (callable != null) {
-				// actually create the entity
-				((FutureTask<E>) future).run();
+			E e = null;
+			synchronized (lock) {
+				// we need to start a new transaction
+				commit();
 
-				// then clean from the map in a few seconds
-				new Thread(new Runnable() {
+				// first try to get it
+				try {
+					e = get(query.setCreateIfNotFound(false));
+					logger.debug("Got it after waiting [" + query + "]");
+				} catch (NoResultException ex) {
+					// still not found, create it
+					e = getTypeOfE().getDeclaredConstructor().newInstance();
 
-					@Override
-					public void run() {
-						try {
-							Thread.sleep(10 * 1000);
-						} catch (InterruptedException e) {
-							// ignore
+					// get the needed values from the filter for each unique constraint
+					for (String fieldName : constraintsAnnotation.fieldNames()) {
+						Field field = Util.getField(e, fieldName);
+						if (field == null) {
+							throw new Exception("Cannot create entity. Field missing [" + fieldName + "]");
 						}
-						creationQueryFutureMap.remove(query);
-					}
-				}).start();
-			}
 
-			// wait for the creation of it (this is done outside the lock for this class)
-			E e = future.get();
+						if (field != null) {
+							Object value = null;
+							Filter filter = query.getFilter(fieldName);
+							if (filter != null) {
+								value = filter.getValue();
+							}
+							if (value == null) {
+								throw new Exception("Cannot create entity. Field value missing [" + fieldName + "]");
+							}
+
+							// System.out.println("Setting " + fieldName + " to [" + value + "]");
+							field.set(e, Util.convertValue(value, field.getType().getSimpleName()));
+						}
+					}
+
+					// start transaction (if needed)
+					PersistenceManager.getInstance().startTransaction(getEntityManager());
+
+					// create and commit for other process to see it
+					logger.debug("Creating on demand [" + query + "]");
+					e = create(e);
+					commit();
+
+					// clean the map
+					creationQueryMap.remove(query);
+				}
+			}
 
 			// return the new entity
 			return e;
@@ -1783,10 +1755,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					integerValues = (List<Integer>) filter.getValue();
 				} else {
 					String v = (String) filter.getValue();
-					if (v.indexOf('.') == -1) {
-						integerValue = Integer.parseInt(v);
-					} else {
-						integerValue = (int) Float.parseFloat(v);
+					try {
+						if (v.indexOf('.') == -1) {
+							integerValue = Integer.parseInt(v);
+						} else {
+							integerValue = (int) Float.parseFloat(v);
+						}
+					} catch (NumberFormatException ex) {
+						// invalid number, use null (predicate will always be false)
 					}
 				}
 				switch (op) {
@@ -2348,8 +2324,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		sb.append("        var fields = " + getAppClassFields(false) + ";\n");
 		sb.append("\n");
 		sb.append("       expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, \"" + resourcePath + "\", fields, {\n");
-		sb.append("            form: true,\n");
-		sb.append("            grid: true,\n");
 		sb.append("            preview: false\n");
 		sb.append("        });\n");
 		sb.append("    }\n");
@@ -2740,8 +2714,13 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 						appClassField.setReference(ref);
 						appClassField.setMultipleSelection(true);
-						// remove the "s" and add "Ids"
-						fieldName = fieldName.substring(0, fieldName.length() - 1) + "Ids";
+						if (fieldName.endsWith("ies")) {
+							// remove the "ies" and add "yIds"
+							fieldName = fieldName.substring(0, fieldName.length() - 3) + "yIds";
+						} else {
+							// remove the "s" and add "Ids"
+							fieldName = fieldName.substring(0, fieldName.length() - 1) + "Ids";
+						}
 					} else {
 						// logger.warn(String.format("Type [%s] not supported",
 						// type.getCanonicalName()));

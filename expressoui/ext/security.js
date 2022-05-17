@@ -664,6 +664,9 @@ expresso.Security = function () {
             $div.find(".login-form").on("submit", function (e) {
                 e.preventDefault();
 
+                // focus out to avoid multiple submit
+                document.activeElement?.blur();
+
                 var auth = $div.find("[name=authentication]:checked").val();
                 if (auth == "kerberos") {
                     expresso.Common.setAuthenticationPath("sso");

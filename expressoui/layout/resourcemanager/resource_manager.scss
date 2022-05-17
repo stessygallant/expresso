@@ -263,6 +263,11 @@
             .exp-grid-max-limit {
                 color: $red;
             }
+
+            .exp-grid-nbr-selected {
+                color: $red;
+                font-weight: bold;
+            }
         }
     }
 
@@ -420,6 +425,15 @@
                     -webkit-box-orient: vertical;
                     overflow: hidden;
                 }
+
+                .reference {
+                    text-decoration: underline;
+
+                    &:hover {
+                        color: $themeColorDark;
+                        cursor: pointer;
+                    }
+                }
             }
 
             color: $themeTextColor;
@@ -505,6 +519,8 @@
     border: 0.1em solid #aaaaaa;
 
     .exp-grid {
+        width: calc(100% - 0.2em) !important;
+
         .k-grid-toolbar {
             .exp-grid-nbr-items, .exp-always-active-button, .exp-toolbar-separator {
                 display: none;

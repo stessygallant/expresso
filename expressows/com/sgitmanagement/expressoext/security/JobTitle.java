@@ -16,12 +16,13 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import jakarta.xml.bind.annotation.XmlElement;
 
 import org.hibernate.annotations.Formula;
 
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.base.BaseExternalOption;
+
+import jakarta.xml.bind.annotation.XmlElement;
 
 @Entity
 @Table(name = "job_title")
@@ -39,9 +40,9 @@ public class JobTitle extends BaseExternalOption {
 
 	@ManyToMany
 	@JoinTable(name = "job_title_role",
-			// Vendor
+			// Title
 			joinColumns = @JoinColumn(name = "job_title_id", referencedColumnName = "id"),
-			// Craft
+			// Role
 			inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
 	private Set<Role> roles;
 
@@ -58,8 +59,8 @@ public class JobTitle extends BaseExternalOption {
 
 	@ManyToMany
 	@JoinTable(name = "job_title_manage", //
-			joinColumns = @JoinColumn(name = "job_title_id", referencedColumnName = "id"), //
-			inverseJoinColumns = @JoinColumn(name = "managed_job_title_id", referencedColumnName = "id")) //
+			joinColumns = @JoinColumn(name = "job_title_id", referencedColumnName = "id"), // Title
+			inverseJoinColumns = @JoinColumn(name = "managed_job_title_id", referencedColumnName = "id")) // managed Title
 	private Set<JobTitle> managedJobTitles;
 
 	public Set<Role> getRoles() {

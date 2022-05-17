@@ -1,7 +1,6 @@
 package com.sgitmanagement.expressoext.base;
 
 import java.util.Date;
-import java.util.List;
 
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
@@ -39,18 +38,10 @@ public class BaseOptionService<E extends BaseOption> extends BaseDeactivableEnti
 	 *
 	 * @param pgmKey
 	 * @return
+	 * @throws Exception
 	 */
-	public E get(String pgmKey) {
-		return getEntityManager().createQuery("SELECT e FROM " + getTypeOfE().getSimpleName() + " e WHERE e.pgmKey = :pgmKey", getTypeOfE()).setParameter("pgmKey", pgmKey).getSingleResult();
-	}
-
-	@Override
-	public List<E> search(Query query, String term) throws Exception {
-		List<E> list = getEntityManager()
-				.createQuery("SELECT e FROM " + getTypeOfE().getSimpleName()
-						+ " e WHERE (e.description LIKE :term OR e.pgmKey LIKE :term) AND (e.deactivationDate IS NULL OR e.deactivationDate > CURRENT_DATE)", getTypeOfE())
-				.setParameter("term", (term != null ? "%" + term + "%" : "%")).setMaxResults(MAX_SEARCH_RESULTS).getResultList();
-		return list;
+	public E get(String pgmKey) throws Exception {
+		return get(new Filter("pgmKey", pgmKey));
 	}
 
 	@Override

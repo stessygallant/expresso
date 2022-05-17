@@ -143,7 +143,7 @@ $.extend(expresso.Labels, {
     wrongEntityVersion: "Cet enregistrement a été modifié par un autre utilisateur (ou processus). Vos changements n'ont pas été enregistrés. SVP recommencer",
     cannotCreateUser: "Vous ne pouvez pas créer ce compte utilisateur",
     userIsNotCreator: "Vous ne pouvez pas modifier cet enregistrement",
-    tooManyRecordsForSelection: "La grille contient trop d'enregistrements pour la sélection. Vous pouvez utiliser le bouton Excel pour sortir une liste complète des enregistrements",
+    tooManyRecordsForSelection: "La grille contient trop d'enregistrements pour la sélection.",
     userNotAllowedToModify: "Vous ne pouvez pas modifier cet enregistrement",
     unableToLocatePrinter: "L'imprimante [{printerName}] n'est pas configurée correctement sur le serveur",
     unableToResolveIP: "Le serveur n'est pas capable de trouver le nom de votre ordinateur à partir de votre IP [{ip}]",
@@ -325,7 +325,7 @@ $.extend(expresso.Labels, {
     maximumLimit: "Limite atteinte (max {max} sur {count})",
     noRecord: "Aucun enregistrement",
     record: "enregistrement",
-    nbrSelectedRecord: " ({count} sélectionnés)",
+    nbrSelectedRecord: "{count} sélectionnés",
 
     january: "Janvier",
     february: "Février",

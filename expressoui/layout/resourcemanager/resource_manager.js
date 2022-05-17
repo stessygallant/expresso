@@ -232,7 +232,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
                 //     // do not load preview if not visible
                 // } else {
                 promises.push(this.loadSection(this.$domElement.find(".exp-container-" + section), section));
-//                }
+                // }
             }
         }
 
@@ -358,7 +358,6 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         }
 
         // subscribe to the selected (and updated) event to always know which one is current
-        //console.log("******** RM subscribe [" + _this.resourceName + "]");
         _this.eventCentral.subscribeEvent([_this.RM_EVENTS.RESOURCE_UPDATED], function (/*e, resource*/) {
             //console.log(_this.getResourceSecurityPath() + " - RM RESOURCE_UPDATED");
             // get the actions restrictions for this resource
@@ -368,7 +367,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
             if ((_this.currentResource == null && resource != null) ||
                 (_this.currentResource != null && resource == null) ||
                 ((_this.currentResource != null && resource != null) && (_this.currentResource.id != resource.id))) {
-                // console.log(_this.getResourceSecurityPath() + " - RM RESOURCE_SELECTED: " + (resource ? resource.id : null));
+                // console.log(_this.getResourceSecurityPath() + " - selected: " + (resource ? resource.id : null));
                 _this.currentResource = resource;
 
                 // get the actions restrictions for this resource

@@ -45,8 +45,8 @@ public class AuditTrailInterceptor extends EmptyInterceptor {
 	}
 
 	static public void clear() {
-		userIdThreadLocal.set(null);
-		sqlParamMapThreadLocal.set(null);
+		userIdThreadLocal.remove();
+		sqlParamMapThreadLocal.remove();
 	}
 
 	@Override

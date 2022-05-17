@@ -1,8 +1,8 @@
 package com.sgitmanagement.expressoext.security;
 
-import java.util.List;
-
+import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
+import com.sgitmanagement.expresso.dto.Query.Sort;
 import com.sgitmanagement.expressoext.base.BaseOptionService;
 
 public class RoleService extends BaseOptionService<Role> {
@@ -15,6 +15,25 @@ public class RoleService extends BaseOptionService<Role> {
 		} else {
 			super.delete(id);
 		}
+	}
+
+	@Override
+	protected Filter getRestrictionsFilter() {
+		if (isUserInRole("admin")) {
+			// admin can see all roles
+			return null;
+		} else {
+			// otherwise they cannot see reserved role
+			Filter filter = new Filter();
+			filter.addFilter(new Filter("systemRole", false));
+			return filter;
+		}
+	}
+
+	@Override
+	protected Sort[] getDefaultQuerySort() {
+		return new Query.Sort[] { new Query.Sort("systemRole", Query.Sort.Direction.asc), new Query.Sort("pgmKey", Query.Sort.Direction.asc) };
+
 	}
 
 	public void addPrivilege(int id, int privilegeId) {
@@ -31,43 +50,9 @@ public class RoleService extends BaseOptionService<Role> {
 		role.getPrivileges().remove(privilege);
 	}
 
-	public void addApplication(int id, int applicationId) throws Exception {
-		ApplicationService applicationService = newService(ApplicationService.class, Application.class);
-		Application application = applicationService.get(applicationId);
-		Role role = get(id);
-		role.getApplications().add(application);
-
-		// when a role get access to an application, it gets access to all READ action for all resources
-		// that are linked to the application
-		PrivilegeService privilegeService = newService(PrivilegeService.class, Privilege.class);
-
-		@SuppressWarnings("unchecked")
-		List<Resource> resources = newService(BaseOptionService.class, Resource.class).list(new Filter("applicationId", applicationId));
-		for (Resource res : resources) {
-			Privilege p = privilegeService.get(Action.R.READ.getId(), res.getId());
-			if (p != null) {
-				logger.debug("Adding READ to " + role.getPgmKey() + " on " + res.getLabel());
-				role.getPrivileges().add(p);
-			}
-		}
-	}
-
-	public void removeApplication(int id, int applicationId) {
-		Role role = get(id);
-		Application application = getEntityManager().getReference(Application.class, applicationId);
-		role.getApplications().remove(application);
-	}
-
-	@Override
-	protected Filter getRestrictionsFilter() {
-		if (isUserInRole("admin")) {
-			// admin can see all roles
-			return null;
-		} else {
-			// otherwise they cannot see reserved role
-			Filter filter = new Filter();
-			filter.addFilter(new Filter("systemRole", false));
-			return filter;
-		}
+	public static void main(String[] args) throws Exception {
+		RoleService service = newServiceStatic(RoleService.class, Role.class);
+		service.list().forEach(r -> System.out.println(r.getPgmKey()));
+		System.out.println("Done");
 	}
 }

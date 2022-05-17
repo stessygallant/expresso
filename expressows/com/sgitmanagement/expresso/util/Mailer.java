@@ -10,10 +10,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
@@ -23,10 +19,15 @@ import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public enum Mailer {
 	INSTANCE;
@@ -195,8 +196,12 @@ public enum Mailer {
 						for (String address : addresses) {
 							if (address != null && address.length() > 5 && address.indexOf("@") != -1) {
 								// System.out.println("TO [" + address +"]");
-								atLeastOneTO = true;
-								message.addRecipient(Message.RecipientType.TO, new InternetAddress(address));
+								try {
+									message.addRecipient(Message.RecipientType.TO, new InternetAddress(address));
+									atLeastOneTO = true;
+								} catch (AddressException ex) {
+									logger.error("Error adding email recepient [" + address + "]");
+								}
 							}
 						}
 					}

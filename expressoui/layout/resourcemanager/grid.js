@@ -118,8 +118,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // register a  listener to display a manager for reference
         var _this = this;
         this.referenceResourceManagers = {};
-        $domElement.on("click", "a.reference", function (e) {
-            e.preventDefault();
+        $domElement.on("click", ".reference", function (e) {
+            // e.preventDefault();
             _this.openReference($(this));
         });
 
@@ -194,11 +194,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // defined if the manager defined a custom form
         this.customForm = this.resourceManager.sections["form"];
-
-        // TODO backward compatible - TO BE REMOVED
-        if (this.getParentId && this.getParentId() && !this.resourceManager.model.hierarchicalParent) {
-            this.resourceManager.model.hierarchicalParent = this.getParentId();
-        }
 
         // if hierarchical is not defined but there is a hierarchicalParent, then it is hierarchical
         if (this.hierarchical === undefined && this.resourceManager.model.hierarchicalParent) {
@@ -335,6 +330,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         this.$domElement.find(".k-grid-header input").each(function () {
             $(this).attr("autocomplete", "off");
         });
+
+        // add row selection support
+        this.addRowSelectionEventHandler($grid);
 
         // once the grid is built, register the event handlers
         this.registerButtonEventHandler($grid);
@@ -542,7 +540,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // add the selection checkbox columns
         if (this.multipleSelectionEnabled) {
-            this.columns.splice(0, 0, {selectable: true, width: 24, reorderable: false});
+            this.columns.splice(0, 0, {
+                selectable: true,
+                reorderable: false,
+                filterable: false,
+                sortable: false,
+                width: 24,
+                attributes: {"class": "selection"}
+            });
         }
 
         // if the deactivation field exists in the model, add a column at the end
@@ -641,9 +646,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (column.filterable !== false && (!field || !field.type || field.type == "string")) {
                     column.filterable = column.filterable || {};
                     column.filterable.cell = column.filterable.cell || {};
-                    if (field && field.keyField) {
+                    if (field && field.keyField && !column.filterable.cell.operator) {
                         // keep equals by default
-                        column.filterable.cell.operator = column.filterable.cell.operator || "eq";
+                        column.filterable.cell.operator = field.keyField?.operator ? field.keyField.operator : "eq";
                     } else {
                         column.filterable.cell.operator = column.filterable.cell.operator || "contains";
                     }
@@ -762,13 +767,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     }
 
                     // add TTTLE
-                    //console.log("*************" + JSON.stringify(column));
                     if (column.reference.resourceManagerDef) {
-                        column.template = column.template || "<a class='reference'  href='_'" +
+                        column.template = column.template || "<span class='reference' " +
                             " data-reference-id='#=" + column.reference.fieldName + "#'" +
                             " data-reference-manager='" + column.reference.resourceManagerDef + "'" +
                             (title ? " title='" + title + "'" : "") +
-                            ">#=(" + column.field + "?" + column.field + ":'')#</a>";
+                            ">#=(" + column.field + "?" + column.field + ":'')#</span>";
                     }
                 }
 
@@ -888,6 +892,96 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
     /**
      *
+     * @param $row
+     * @param [select] default is true
+     */
+    highlightSelectedRow: function ($row, select) {
+        if (select !== false) {
+            $row.addClass("k-state-selected");
+            $row.find(".selection input").prop("checked", true);
+        } else {
+            $row.removeClass("k-state-selected");
+            $row.find(".selection input").prop("checked", false);
+        }
+    },
+
+    /**
+     *
+     * @param $grid
+     */
+    addRowSelectionEventHandler: function ($grid) {
+        var _this = this;
+
+        // handle single click on a row
+        this.kendoGrid.tbody.on("click.grid", "tr", function (e) {
+            var $tr = $(this);
+            // if the selected td is not the checkbox
+            if (!$(e.target).parent().hasClass("selection")) {
+                // select this row only
+                _this.selectedRows = [_this.kendoGrid.dataItem($tr)];
+            }
+        });
+
+        if (this.multipleSelectionEnabled) {
+
+            // because of the problem with virtual scrolling and selection, we need to do it manually
+            this.kendoGrid.tbody.on("click.grid", "td.selection input", function (e) {
+                e.stopPropagation();
+                // console.log("Checkbox selection: " + this.checked);
+                var $row = $(this).closest("tr");
+                var dataItem = _this.kendoGrid.dataItem($row);
+                if (this.checked) {
+                    _this.selectedRows.push(dataItem);
+                } else {
+                    _this.selectedRows = _this.selectedRows.filter(function (el) {
+                        return el.id !== dataItem.id;
+                    });
+                }
+                _this.highlightSelectedRow($row, this.checked);
+                _this.onChange();
+            });
+
+            // handle click all
+            $grid.on("click.grid", ".k-grid-header thead > tr > th > input[type=checkbox]", function () {
+                var $checkboxAll = $(this);
+                if (_this.kendoGrid.dataSource.total() > 500) {
+                    expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("tooManyRecordsForSelection"));
+                    _this.selectFirstRow();
+                } else {
+                    if (this.checked) {
+                        // load all rows and then select all of them
+                        _this.kendoGrid.dataSource._query({
+                            // must request more rows that the total
+                            pageSize: _this.kendoGrid.dataSource.total() + 1,
+                            page: 1
+                        }).done(function () {
+                            // update the selectedRows
+                            _this.selectedRows = [];
+                            _this.kendoGrid.tbody.find("tr .selection input").each(function () {
+                                var $checkbox = $(this);
+                                $checkbox.prop("checked", true);
+                                var $row = $checkbox.closest("tr");
+                                $row.addClass("k-state-selected");
+                                var dataItem = _this.kendoGrid.dataItem($row);
+                                _this.selectedRows.push(dataItem);
+                            });
+
+                            // must put back the check (it has been overwritten by the load)
+                            $checkboxAll.prop("checked", true);
+
+                            // then call the event
+                            _this.onChange();
+                        });
+                    } else {
+                        _this.selectFirstRow();
+                    }
+                }
+            });
+        }
+    },
+
+    /**
+     *
      * @param $grid
      */
     registerButtonEventHandler: function ($grid) {
@@ -899,22 +993,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             $grid.on("dblclick.grid", "tbody>tr", function () {
                 if (!$(this).hasClass('k-grid-edit-row')) {
                     _this.performEdit();
-                }
-            });
-        }
-
-        // PATCH: because of the bug in Kendo virtual scrolling
-        // when selecting a single row, it keeps the rows from the previous page
-        if (this.virtualScroll) {
-            $grid.on("click.grid", ".k-grid-content tbody > tr", function (e) {
-                if (e && e.target && !$(e.target).hasClass("k-checkbox")) {
-                    // force single row selection
-                    if (_this.selectedRows.length != 1) {
-                        console.warn("Fix single selection bug in Kendo for virtual grid");
-                        _this.kendoGrid._selectedIds = {};
-                        _this.clearSelection();
-                        _this.kendoGrid.select(this);
-                    }
                 }
             });
         }
@@ -1188,8 +1266,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * This method is called when a row is selected
      */
     onRowSelected: function () {
-        console.log(this.resourceManager.getResourceSecurityPath() + " - onRowSelected: " + "[" +
-            this.selectedRows.map(e => e.id).join(",") + "]");
+        // console.log(this.resourceManager.getResourceSecurityPath() + " - onRowSelected: " + "[" +
+        //     this.selectedRows.map(e => e.id).join(",") + "]");
         this.writeNbrRecords();
         this.verifySelection();
     },
@@ -1782,8 +1860,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         this.previousSelectedResource = this.resourceManager.currentResource;
 
         // send an event to clear the preview
-        this.selectedRows = [];
-        this.publishEvent(this.RM_EVENTS.RESOURCE_SELECTED, null);
+        this.clearSelection();
 
         if (this.kendoGrid.dataSource.page() != 1) {
             // always go to the page 1
@@ -2019,7 +2096,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 var mailTo = "mailto:" + to + "?" + (bcc ? "bcc=" + bcc + "&" : "") +
                     "subject=" + (subject ? encodeURIComponent(subject) : " ") +
                     (body ? "&body=" + encodeURIComponent(body) : "");
-                console.log(mailTo);
+                // console.log(mailTo);
 
                 if ($("html").hasClass("k-ie")) {
                     // IE does not support the trick below
@@ -2060,7 +2137,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // select the row
         var $row = $href.closest("tr");
-        this.kendoGrid.select($row);
 
         var referenceId = $href.data("reference-id");
         var referenceManager = $href.data("reference-manager");
@@ -2214,7 +2290,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         var _this = this;
         // console.log("EVENT dataBound [" + this.resourceManager.resourceName + "]: " + this.selectedRows.length);
 
-        // record that the grid has been updated
+        // record that the grid has been updated (autorefresh feature)
         this.lastUpdateDate = new Date();
 
         // customize the row (highlight, etc)
@@ -2281,19 +2357,15 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.resizeContent();
         }
 
-        if (this.virtualScroll) {
-            // when using grid and virtual scrolling
-            if (!this.selectedRows.length) {
-                this.selectFirstRow();
-            }
+        if (this.selectedRows.length) {
+            // reselect rows
+            $.each(this.selectedRows, function () {
+                var dataItem = this;
+                var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
+                _this.highlightSelectedRow($row);
+            });
         } else {
-            // because TreeList does not trigger sort and filter events, we need to always clear
-            this.clearSelection();
-
-            //  because TreeList modifies the DOM, we need to wait before we reselect the current resource
-            setTimeout(function () {
-                _this.selectFirstRow();
-            }, 10);
+            this.selectFirstRow();
         }
     },
 
@@ -2318,7 +2390,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
 
         if (this.selectedRows.length > 1) {
-            html += expresso.Common.getLabel("nbrSelectedRecord", null, {count: this.selectedRows.length});
+            html += "<span class='exp-grid-nbr-selected'> [" + expresso.Common.getLabel("nbrSelectedRecord", null, {count: this.selectedRows.length}) + "]</span>";
         }
 
         var $nbrItemsDiv = this.$domElement.find(".k-grid-toolbar .exp-grid-nbr-items");
@@ -2334,100 +2406,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      *     - On user selection
      *     - On KendoGrid.select() method
      */
-    onChange: function (e) {
-        // when selecting all, this method will be called within the call...
-        if (this.selectingAll) {
-            return;
-        }
-
-        var _this = this;
+    onChange: function () {
+        // console.log(this.resourceManager.getResourceSecurityPath() + " - EVENT change " + this.selectedRows.length);
 
         // record that the grid has been updated (for auto refresh feature)
         this.lastUpdateDate = new Date();
 
-        // there is a bug in kendoGrid persistSelection feature and virtual scrolling: the selection is persistent
-        // per page -> when you scroll, you lose the selection in the previous page...
-        if (this.virtualScroll && this.multipleSelectionEnabled && e && e.sender && e.sender._selectedIds) {
-            // var result = Object.keys(obj).map((key) => [Number(key), obj[key]]);
-            var selectedIds = Object.entries(e.sender._selectedIds);
-
-            console.log("EVENT change [" + this.resourceManager.resourceName + "]: [" +
-                selectedIds.map(e => e[0]).join(",") + "]", e.sender._selectedIds);
-
-            // there is no direct way to know if the user performed "selectAll",
-            // because Kendo will select only the current page
-            if (this.kendoGrid.dataSource.total() > selectedIds.length &&
-                selectedIds.length >= this.MAX_PAGE_SIZE && selectedIds.length > this.selectedRows.length) {
-
-                if (this.kendoGrid.dataSource.total() > 1000) {
-                    expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("tooManyRecordsForSelection"));
-                    this.selectFirstRow();
-                } else {
-                    // load all rows and then select all of them
-                    _this.selectingAll = true;
-                    this.kendoGrid.dataSource._query({
-                        // must request more rows that the total
-                        pageSize: _this.kendoGrid.dataSource.total() + 1,
-                        page: 1
-                    }).done(function () {
-                        // update the selectedRows
-                        _this.selectedRows = [];
-                        _this.kendoGrid.tbody.children("tr").each(function () {
-                            var dataItem = _this.kendoGrid.dataItem(this);
-                            _this.selectedRows.push(dataItem);
-                        });
-                        _this.kendoGrid.select(_this.kendoGrid.tbody.children("tr"));
-
-                        // then call the event
-                        _this.onRowSelected();
-                    }).always(function () {
-                        _this.selectingAll = false;
-                    });
-                }
-            } else {
-                // add new selected
-                for (var i = 0; i < selectedIds.length; i++) {
-                    var id = selectedIds[i][0];
-                    var selectedRow = $.grep(this.selectedRows, function (r) {
-                        return r.id == id;
-                    });
-                    if (!selectedRow.length) {
-                        // it has to be in the current datasource
-                        var newSelectedDataItem = this.kendoGrid.dataSource.get(id);
-                        if (newSelectedDataItem) {
-                            this.selectedRows.push(newSelectedDataItem);
-                        } else {
-                            // console.warn("Cannot get the newSelectedDataItem [" + id + "]");
-                            // ok this happen on refresh because selectedIds has not been refresh
-                        }
-                    }
-                }
-
-                // remove unselected
-                if (this.selectedRows.length) {
-                    for (var j = this.selectedRows.length - 1; j >= 0; j--) {
-                        if (!e.sender._selectedIds[this.selectedRows[j].id]) {
-                            this.selectedRows.splice(j, 1);
-                        }
-                    }
-                }
-                _this.onRowSelected();
-            }
-        } else {
-            // update the selected rows
-            var selectedRows = this.kendoGrid.select();
-
-            // console.log("EVENT change [" + this.resourceManager.resourceName + "]: " +
-            //     this.selectedRows.length + " -> " + selectedRows.length);
-
-            // utility method to update the selectedRows with dataItems
-            this.selectedRows = [];
-            $.each(selectedRows, function () {
-                var dataItem = _this.kendoGrid.dataItem(this);
-                _this.selectedRows.push(dataItem);
-            });
-            this.onRowSelected();
-        }
+        this.onRowSelected();
     },
 
     /**
@@ -2588,7 +2573,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                         // needed? select method will trigger the change event
                         var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
-                        _this.kendoGrid.select($row);
+                        _this.selectRow($row);
                     });
                 }
 
@@ -2615,7 +2600,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
     /**
      * Activate buttons based on the current selections in the grid.
-     * Based on the selected rows, it will defined the currentResource and trigger events as needed
+     * Based on the selected rows, it will define the currentResource and trigger events as needed
      */
     verifySelection: function () {
         // console.log(this.resourceManager.getResourceSecurityPath() + " - verifySelection");
@@ -2640,12 +2625,32 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     },
 
     /**
+     *
+     * @param $row
+     */
+    selectRow: function ($row) {
+        if ($row && $row.length) {
+            this.clearSelection(false);
+            this.selectedRows = [this.kendoGrid.dataItem($row)];
+
+            // Kendo will highlight the row and this will trigger the change event for KendoGrid
+            this.kendoGrid.select($row);
+
+            if (this.hierarchical) {
+                // TreeList does not trigger the change event
+                this.onChange();
+            }
+        } else {
+            this.clearSelection();
+        }
+    },
+
+    /**
      * Select the row of the grid for the ID (event will be triggered on select)
      * @return {*} the row selected
      */
     selectRowById: function (id) {
         // console.log(this.resourceManager.getResourceSecurityPath() + " - selectRowById");
-
         var $row = null;
         if (this.kendoGrid) {
             //get the dataItem by its ID
@@ -2653,12 +2658,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
             //use the dataItem's uid to find its corresponding row
             $row = $("[data-uid='" + item.uid + "']", this.kendoGrid.tbody);
-        }
-        if ($row && $row.length) {
-            //console.log("selecting row", $row);
-            this.kendoGrid.select($row);
-        } else {
-            this.clearSelection();
+            this.selectRow($row);
         }
         return $row;
     },
@@ -2669,23 +2669,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     selectFirstRow: function () {
         // console.log(this.resourceManager.getResourceSecurityPath() + " - selectFirstRow");
-
         var $row = null;
         if (this.kendoGrid) {
             var total = this.kendoGrid.dataSource.total();
             if (total) {
-                // select the first row
                 $row = this.kendoGrid.tbody.find(">tr:not(.k-grouping-row)").first();
-            }
-            if ($row && $row.length) {
-                this.kendoGrid.select($row);
-
-                if (this.hierarchical) {
-                    // TreeList does not trigger the event
-                    this.onChange();
-                }
-            } else {
-                this.clearSelection();
+                this.selectRow($row);
             }
         }
         return $row;
@@ -2694,13 +2683,23 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     /**
      * We cannot do "this.kendoGrid.select(null);"
      * Then we need to clear the selection manually
+     * @param [fireEvent] default is true
      */
-    clearSelection: function () {
+    clearSelection: function (fireEvent) {
         // console.log(this.resourceManager.getResourceSecurityPath() + " - clearSelection");
         this.selectedRows = [];
+
         if (this.kendoGrid) {
-            this.kendoGrid.clearSelection();
-            this.onRowSelected();
+            this.kendoGrid.tbody.find("tr").removeClass("k-state-selected");
+            // this.kendoGrid.clearSelection(); //this will trigger on change
+
+            if (this.multipleSelectionEnabled) {
+                // unselect all
+                this.kendoGrid.tbody.find(".selection input").prop("checked", false);
+            }
+            if (fireEvent !== false) {
+                this.onRowSelected();
+            }
         }
     },
 
@@ -3077,8 +3076,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             filterable: {
                 mode: powerUser && expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP ? "row, menu" : "row"
             },
-            selectable: (_this.multipleSelectionEnabled ? "multiple," : "") + "row",
-            persistSelection: true, // persist selection across paging
+            // DO NOT use (_this.multipleSelectionEnabled ? "multiple," : "")
+            // because 1) you cannot select text anymore 2) grid not scrollable on mobile
+            selectable: "row",
+            // persistSelection does not work well with virtual scrolling
+            // persistSelection: true, // persist selection across paging
             editable: {
                 mode: "popup",
                 window: {

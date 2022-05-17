@@ -255,6 +255,10 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		int increment = 1;
 		while (true) {
 			try {
+				if (suffix != null) {
+					availableUsername += "-" + suffix;
+				}
+
 				get(new Filter("userName", Operator.eq, availableUsername));
 
 				// we got one, try the next
@@ -264,9 +268,6 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 			}
 		}
 
-		if (suffix != null) {
-			availableUsername += "-" + suffix;
-		}
 		return availableUsername;
 	}
 
