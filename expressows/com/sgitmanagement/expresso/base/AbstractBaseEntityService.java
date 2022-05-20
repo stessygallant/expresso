@@ -56,6 +56,7 @@ import javax.persistence.criteria.Root;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -1647,6 +1648,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		boolean caseSensitive = (boolean) getEntityManager().getProperties().get("expresso.case_sensitive");
 		String truncFunction = (String) getEntityManager().getProperties().get("expresso.trunc_date_function");
 		boolean emptyStringIsNull = (boolean) getEntityManager().getProperties().get("expresso.empty_string_is_null");
+		Integer inMaxValues = (Integer) getEntityManager().getProperties().get("expresso.in_max_values");
 
 		// handle all is [not] null cases here
 		if (filter.getValue() == null ||
@@ -1803,7 +1805,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							integerValues.add(integerValue);
 						}
 					}
-					predicate = path.in(integerValues);
+
+					predicate = cb.or(getInPredicate(inMaxValues, integerValues, path, cb, false).toArray(new Predicate[0]));
 					break;
 
 				default:
@@ -2093,7 +2096,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							stringValues.add(stringValue);
 						}
 					}
-					predicate = path.in(stringValues);
+					predicate = cb.or(getInPredicate(inMaxValues, stringValues, path, cb, false).toArray(new Predicate[0]));
 					break;
 				case trimIn:
 					distinctNeeded = true;
@@ -2104,7 +2107,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						}
 					}
 					stringValues.replaceAll(String::trim);
-					predicate = cb.trim(stringPath).in(stringValues);
+					predicate = cb.or(getInPredicate(inMaxValues, stringValues, path, cb, true).toArray(new Predicate[0]));
 					break;
 				default:
 					throw new Exception("Operator [" + filter.getOperator() + "] not supported for type [" + type + "]");
@@ -2193,6 +2196,21 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 
 		return predicate;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private List<Predicate> getInPredicate(Integer inMaxValues, List<? extends Object> values, Path path, CriteriaBuilder cb, boolean trim) {
+		List<Predicate> partitionPredicates = new ArrayList<>();
+		if (inMaxValues != null) {
+			List<?> partition = ListUtils.partition(values, inMaxValues);
+			for (Object object : partition) {
+				List<Object> objects = (List<Object>) object;
+				partitionPredicates.add(trim ? cb.trim(path).in(objects) : path.in(objects));
+			}
+		} else {
+			partitionPredicates.add(trim ? cb.trim(path).in(values) : path.in(values));
+		}
+		return partitionPredicates;
 	}
 
 	/**

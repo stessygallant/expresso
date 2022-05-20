@@ -19,5 +19,6 @@ public @interface KeyField {
 	// x: letter lowercase
 	// X: letter uppercase
 	// -: mandatory dash
+	// {}: enclosed format char are optional
 	public String format() default "";
 }

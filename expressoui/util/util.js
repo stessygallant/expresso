@@ -288,22 +288,27 @@ expresso.util.Util = (function () {
     /**
      * Function to make a tree from a flat list with a parentId
      * @param data The flat list to convert
-     * @param parentIdField The id of the parent
-     * @param idField The id of the object
-     * @param rootLevel The level at which we should start
-     * @param [expanded] if true, the tree will be expanded (default is false)
+     * @param [options]
      * @returns []
      */
-    var makeTreeFromFlatList = function (data, parentIdField, idField, rootLevel, expanded) {
+    var makeTreeFromFlatList = function (data, options) {
+        // [parentIdFieldName] The id of the parent (default is "parentId")
+        // [idField] The id of the object (default is "id")
+        // [rootLevel] The level at which we should start (default is null)
+        // [expanded] if true, the tree will be expanded (default is false)
+        // [maxDepth] default none
+        options = options || {};
+        var idField = options.idField || "id";
+        var parentIdFieldName = options.parentIdFieldName || "parentId";
+        var parentRootId = options.parentRootId || null;
+        var expanded = options.expanded || false;
+        var maxDepth = options.maxDepth || null;
+        console.log("parentIdFieldName: " + parentIdFieldName);
         var hash = {};
-        idField = idField || "id";
-        parentIdField = parentIdField || "id";
-        rootLevel = rootLevel || null;
-
         for (var i = 0; i < data.length; i++) {
             var item = data[i];
             var id = item[idField];
-            var parentId = item[parentIdField] || null;
+            var parentId = item[parentIdFieldName] || null;
 
             hash[id] = hash[id] || [];
             hash[parentId] = hash[parentId] || [];
@@ -313,7 +318,36 @@ expresso.util.Util = (function () {
 
             item.expanded = expanded;
         }
-        return hash[rootLevel];
+
+        var treeData = hash[parentRootId];
+        if (maxDepth) {
+            // Parcourir tous les items et vérifier si le field "items" contient quelque chose
+            // Si oui, aller dans items et vérifier si on a des "items".
+            // Arrêter après maxDepth et remove tous les child en bas de maxDepth
+            var purge = function (items, depth, maxDepth) {
+                if (items) {
+                    if (!$.isArray(items)) {
+                        items = items.items;
+                    }
+                    for (var i = 0; i < items.length; i++) {
+                        if (depth >= maxDepth) {
+                            // remove the sub level
+                            if (items[i].items) {
+                                //console.log("Purging items for [" + items[i] + "]");
+                                items[i].items = null;
+                            }
+                        } else {
+                            purge(items[i].items, depth + 1, maxDepth);
+                        }
+                    }
+                }
+            };
+
+            //console.log("Purging with max depth: " + maxDepth);
+            purge(treeData, 1, maxDepth);
+        }
+
+        return treeData;
     };
 
     var trunc = function (numToTruncate, intDecimalPlaces) {

@@ -301,6 +301,7 @@ public class Util {
 		// x: letter lowercase
 		// X: letter uppercase
 		// -: mandatory dash
+		// {}: enclosed format char are optional
 
 		if (format == null || key == null || format.length() == 0) {
 			return key;
@@ -309,78 +310,91 @@ public class Util {
 		// between dash, if digits, pad them as necessary
 		StringBuilder sbKey = new StringBuilder(format.length());
 		int keyIndex = 0;
+		boolean optional = false;
 		for (int i = 0; i < format.length(); i++) {
 			char cFormat = format.charAt(i);
 
-			if (keyIndex >= key.length()) {
-				// no more key char
-				break;
-			}
-			char cKey = key.charAt(keyIndex);
+			if (cFormat == '{' || cFormat == '}') {
+				optional = cFormat == '{';
+			} else {
 
-			// if we find a dash and it is not in the format, remove it
-			if (cKey == '-' && cFormat != '-') {
-				cKey = key.charAt(++keyIndex);
-			}
-
-			switch (cFormat) {
-			case '0':
-				// count the number of digit needed
-				int digitCount = 0;
-				while (cFormat == '0') {
-					digitCount++;
-					if ((i + 1) == format.length()) {
-						i++;
-						break;
-					}
-					cFormat = format.charAt(++i);
+				if (keyIndex >= key.length()) {
+					// no more key char
+					break;
 				}
-				// go back to the previous char in the format
-				i--;
+				char cKey = key.charAt(keyIndex);
 
-				// get all digits from the key
-				// keep the digits in a buffer to pad them if needed
-				StringBuilder sbDigit = new StringBuilder();
-				while (Character.isDigit(cKey)) {
-					sbDigit.append(cKey);
-					if ((keyIndex + 1) == key.length()) {
+				// if we find a dash and it is not in the format, remove it
+				if (cKey == '-' && cFormat != '-') {
+					if (keyIndex + 1 >= key.length()) {
+						// no more key char
 						break;
 					}
 					cKey = key.charAt(++keyIndex);
 				}
 
-				if (sbDigit.length() != digitCount) {
-					// pad with 0
-					sbKey.append(StringUtils.leftPad(sbDigit.toString(), digitCount, '0'));
-				} else {
-					sbKey.append(sbDigit.toString());
-				}
-				break;
-			case 'x':
-				sbKey.append(Character.toLowerCase(cKey));
-				keyIndex++;
-				break;
-			case 'X':
-				sbKey.append(Character.toUpperCase(cKey));
-				keyIndex++;
-				break;
-			case '-':
-				// add - if needed
-				if (cKey != '-') {
-					sbKey.append('-');
-				} else {
-					sbKey.append(cKey);
-					keyIndex++;
-				}
-				break;
+				switch (cFormat) {
+				case '0':
+					// count the number of digit needed
+					int digitCount = 0;
+					while (cFormat == '0') {
+						digitCount++;
+						if ((i + 1) == format.length()) {
+							i++;
+							break;
+						}
+						cFormat = format.charAt(++i);
+					}
+					// go back to the previous char in the format
+					i--;
 
-			default:
-				// invalid character
-				break;
+					// get all digits from the key
+					// keep the digits in a buffer to pad them if needed
+					StringBuilder sbDigit = new StringBuilder();
+					while (Character.isDigit(cKey)) {
+						sbDigit.append(cKey);
+						if ((keyIndex + 1) == key.length()) {
+							break;
+						}
+						cKey = key.charAt(++keyIndex);
+					}
+
+					if (sbDigit.length() != digitCount) {
+						// pad with 0
+						sbKey.append(StringUtils.leftPad(sbDigit.toString(), digitCount, '0'));
+					} else {
+						sbKey.append(sbDigit.toString());
+					}
+					break;
+				case 'x':
+					sbKey.append(Character.toLowerCase(cKey));
+					keyIndex++;
+					break;
+				case 'X':
+					sbKey.append(Character.toUpperCase(cKey));
+					keyIndex++;
+					break;
+				case '-':
+					// add "-" if needed
+					if (cKey != '-') {
+						sbKey.append('-');
+					} else {
+						if (!optional || keyIndex < key.length() - 1) {
+							sbKey.append(cKey);
+						}
+						keyIndex++;
+					}
+					break;
+
+				default:
+					// invalid character
+					break;
+				}
 			}
 		}
 
 		return sbKey.toString();
+
 	}
 
 	/**
@@ -1113,6 +1127,11 @@ public class Util {
 
 		format = "";
 		for (String key : new String[] { "", "999999999999" }) {
+			System.out.println(key + ":\t" + Util.formatKey(format, key));
+		}
+
+		format = "XX-XXX{-X}";
+		for (String key : new String[] { "PL100", "pl100", "pl-100", "pl-100-a", "pl100a", "pl100-", "pl-100-" }) {
 			System.out.println(key + ":\t" + Util.formatKey(format, key));
 		}
 

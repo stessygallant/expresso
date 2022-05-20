@@ -780,8 +780,13 @@ expresso.util.UIUtil = (function () {
 
                 // Triggered when a Window is opened (first called)
                 open: function () {
-                    //console.log("buildWindow - open");
+                    // console.log("buildWindow - open");
 
+                    // try to display the window at the top at first,
+                    // then on activate, we will review the size and position.
+                    // otherwise if we wait on activate, the window will appear at the
+                    // bottom and push up the main content, and then move to the center
+                    setWindowDimension($windowDiv, $.extend({}, options, {top: 0}));
                 },
                 // Triggered when the content of a Window has finished loading via AJAX (called af open)
                 refresh: function () {
@@ -794,7 +799,7 @@ expresso.util.UIUtil = (function () {
 
                 // Triggered when a Window has finished its opening animation. (called after open and refresh)
                 activate: function () {
-                    //console.log("buildWindow - activate");
+                    // console.log("buildWindow - activate");
 
                     if (!initialized) {
                         initialized = true;
@@ -1296,6 +1301,11 @@ expresso.util.UIUtil = (function () {
                 return $deferred.reject();
             }
 
+            // make sure it is an input
+            if ($input[0].nodeName != "INPUT") {
+                console.warn("You should use <input> for a kendoDropDownTree for [" + $input[0].name + "]. Otherwise $input.val() will return null");
+            }
+
             //console.log("buildDropDownTree: " + wsListPathOrData, customOptions);
 
             var $dataDeferred;
@@ -1368,8 +1378,11 @@ expresso.util.UIUtil = (function () {
                 if (typeof parentRootId === "function") {
                     parentRootId = parentRootId();
                 }
-                var dataSource = expresso.util.Util.makeTreeFromFlatList(data, customOptions.parentId, undefined,
-                    parentRootId, true);
+                var dataSource = expresso.util.Util.makeTreeFromFlatList(data, {
+                    parentIdFieldName: customOptions.parentId,
+                    parentRootId: parentRootId,
+                    expanded: true
+                });
 
                 //console.log("dataSource: " + JSON.stringify(dataSource));
                 kendoDropDownTree.setDataSource(new kendo.data.HierarchicalDataSource({data: dataSource}));
@@ -1642,105 +1655,51 @@ expresso.util.UIUtil = (function () {
 
         /**
          *
-         * @param $el DOM element to build the tree view
+         * @param $div DOM element to build the tree view
          * @param wsListPathOrData  URL for the resource OR the data itself
          * @param [customOptions]  custom options for the tree view
          * @returns {*}
          */
-        var buildTreeView = function ($el, wsListPathOrData, customOptions) {
+        var buildTreeView = function ($div, wsListPathOrData, customOptions) {
             var $deferred = $.Deferred();
-            var $getDataPromise;
 
             customOptions = customOptions || {};
 
+            var $dataDeferred;
             if (typeof wsListPathOrData === "string") {
-                //On va chercher les données à afficher en premier
-                $getDataPromise = expresso.Common.sendRequest(wsListPathOrData);
+                // get the data from the server
+                $dataDeferred = expresso.Common.sendRequest(wsListPathOrData).then(function (result) {
+                    return result.data;
+                });
             } else {
                 // we got the data in parameter
-                $getDataPromise = $.Deferred().resolve(wsListPathOrData).promise();
+                $dataDeferred = $.Deferred().resolve(wsListPathOrData);
             }
 
             // when the data are ready, process them
-            $.when($getDataPromise).done(function (data) {
+            $.when($dataDeferred).done(function (data) {
+                // convert data structure
+                data = expresso.util.Util.makeTreeFromFlatList(data, $.extend({}, {
+                    parentIdFieldName: "parentId",
+                    expanded: true
+                }, customOptions));
 
-                if (customOptions.itemsField) {
-                    // link the items field to the field
-                    var linkItems = function (items) {
-                        if (items) {
-                            for (var i = 0; i < items.length; i++) {
-                                if (items[i][customOptions.itemsField]) {
-                                    items[i]["items"] = items[i][customOptions.itemsField];
-                                    linkItems(items[i].items);
-                                }
-                            }
-                        }
-                    };
-                    linkItems(data);
-                }
-
-                if (customOptions.maxDepth && $.isNumeric(customOptions.maxDepth)) {
-                    /*Parcourir tous les items et vérifier si le field "items" contient quelque chose
-                     Si oui, aller dans items et vérifier si on a des "items".
-                     Arrêter après maxDepth et remove tous les child en bas de maxDepth*/
-                    var purge = function (items, depth, maxDepth) {
-                        if (items) {
-                            if (!$.isArray(items)) {
-                                items = items.items;
-                            }
-                            for (var i = 0; i < items.length; i++) {
-                                if (depth >= maxDepth) {
-                                    // remove the sub level
-                                    if (items[i].items) {
-                                        //console.log("Purging items for [" + items[i] + "]");
-                                        items[i].items = null;
-                                    }
-                                } else {
-                                    purge(items[i].items, depth + 1, maxDepth);
-                                }
-                            }
-                        }
-                    };
-                    //console.log("Purging with max depth: " + maxDepth);
-                    purge(data, 1, customOptions.maxDepth);
-                }
-
-                // if dataTextField is a function, execute the function for each element
-                if (customOptions.dataTextField && typeof customOptions.dataTextField !== "string") {
-                    // a method to return a label
-                    var getLabelMethod = customOptions.dataTextField;
-                    customOptions.dataTextField = "_label";
-
-                    var processLabel = function (items) {
-                        if (items) {
-                            if (!$.isArray(items)) {
-                                items = items.items;
-                            }
-                            for (var i = 0; i < items.length; i++) {
-                                var elem = items[i];
-                                elem[customOptions.dataTextField] = getLabelMethod(elem);
-                                processLabel(elem.items);
-                            }
-                        }
-                    };
-                    processLabel(data);
-                }
+                // build the datasource
+                var dataSource = new kendo.data.HierarchicalDataSource({
+                    data: data,
+                    sort: {
+                        field: customOptions.sortField || "label",
+                        dir: "asc"
+                    }
+                });
 
                 var defaultOptions = {
-                    dataValueField: "id",
-                    dataTextField: "description",
+                    dataValueField: customOptions.dataValueField || "id",
+                    dataTextField: customOptions.dataTextField || "label",
                     checkboxes: {
                         checkChildren: true
                     },
-                    loadOnDemand: false,
-
-                    dataSource: {
-                        data: data,
-                        sort: {
-                            field: "description",
-                            dir: "asc"
-                        }
-                    },
+                    dataSource: dataSource,
 
                     check: function (/*e*/) {
                         // var dataItem = this.dataItem(e.item);
@@ -1756,22 +1715,23 @@ expresso.util.UIUtil = (function () {
                 };
 
                 var options = $.extend(true, {}, defaultOptions, customOptions);
-                var kendoTreeView = $el.kendoTreeView(options).data("kendoTreeView");
+                var kendoTreeView = $div.kendoTreeView(options).data("kendoTreeView");
 
                 if (options.checkboxes) {
-                    // Patch to fix the absence of value for the checkbox in KendoUI
-                    // we need to assign a value to each checkbox at the lowest level
-                    var assignValue = function (nodes) {
-                        for (var i = 0; i < nodes.length; i++) {
-                            //console.log("Setting value [" + nodes[i].id + "] on [" + nodes[i].uid + "]");
-                            if (nodes[i].hasChildren) {
-                                assignValue(nodes[i].children.view());
-                            } else {
-                                $el.find("#_" + nodes[i].uid).setval(nodes[i].id);
-                            }
-                        }
-                    };
-                    assignValue(kendoTreeView.dataSource.view());
+                    // TODO ?
+                    // // Patch to fix the absence of value for the checkbox in KendoUI
+                    // // we need to assign a value to each checkbox at the lowest level
+                    // var assignValue = function (nodes) {
+                    //     for (var i = 0; i < nodes.length; i++) {
+                    //         //console.log("Setting value [" + nodes[i].id + "] on [" + nodes[i].uid + "]");
+                    //         if (nodes[i].hasChildren) {
+                    //             assignValue(nodes[i].children.view());
+                    //         } else {
+                    //             $el.find("#_" + nodes[i].uid).setval(nodes[i].id);
+                    //         }
+                    //     }
+                    // };
+                    // assignValue(kendoTreeView.dataSource.view());
                 }
 
                 $deferred.resolve(kendoTreeView);

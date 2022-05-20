@@ -1072,42 +1072,21 @@ k-widget k-window
     @include default-div;
     overflow-y: auto;
     padding: 0 10px;
+    background: linear-gradient(180deg, rgba(216, 216, 216, 0.1) 0%, rgba(216, 216, 216, 0.02) 100%);
 
-    .filter-title {
+    .exp-filter-title {
         font-weight: bold;
-        margin: 10px auto;
+        margin: 1em auto 1em auto;
         text-align: center;
         color: $themeColorDark;
+        font-size: 130%;
     }
 
-    // force single column
-    div.input-wrap {
-        width: calc(100% - 2px);
-    }
+    .exp-filter-content {
+        // runtime height
 
-    .exp-footer {
-        position: absolute;
-        bottom: 10px;
-        left: 0;
-        margin: 0;
-        width: 100%;
-
-        .exp-buttons-div {
-            border-top: 1px solid gray;
-            padding: 10px;
-            margin: 10px auto;
-
-            button {
-                width: 100px;
-
-                &[type=reset] {
-                    float: right;
-                }
-
-                &[type=submit] {
-                    float: left;
-                }
-            }
+        .exp-filter-tree-view {
+            height: 100%;
         }
     }
 }

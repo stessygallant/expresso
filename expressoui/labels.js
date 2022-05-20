@@ -322,7 +322,7 @@ $.extend(expresso.Labels, {
     kerberosChromeExcelIssue: "Google Chrome a un problème avec le téléchargement de fichier volumineux dans certaines conditions. Vous pouvez utiliser Firefox pour cette opération",
     excelDownloadInProgress: "Le téléchargement du fichier Excel débutera bientôt. IMPORTANT: l'exportation est limitée à 10 000 lignes.",
     tooManyResultsForHierarchical: "Trop d'enregistrements pour la vue hiérarchique. Sélectionner la vue 'grille' ou ajouter des filtres",
-    maximumLimit: "Limite atteinte (max {max} sur {count})",
+    maximumLimit: "Limite atteinte (max {max})",
     noRecord: "Aucun enregistrement",
     record: "enregistrement",
     nbrSelectedRecord: "{count} sélectionnés",

@@ -442,11 +442,13 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         // once everything is added to the form, set the dimension
         if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.PHONE) {
-            // for phone mode, alway max size
+            // for phone mode, always max size
             this.windowOptions.height = "max";
             this.windowOptions.width = "max";
             this.windowOptions.top = 0;
         }
+
+        // make sure to resize and position the window correctly
         expresso.util.UIUtil.setWindowDimension(this.$window, this.windowOptions);
 
         // now show the form

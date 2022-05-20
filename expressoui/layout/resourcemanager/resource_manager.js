@@ -307,22 +307,6 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         expresso.layout.applicationbase.ApplicationBase.fn.initDOMElement.call(this, $domElement);
         var _this = this;
 
-        if (expresso.Common.getSiteNamespace().config.Configurations.supportFilter) {
-            this.$domElement.find(".exp-splitter-filter").kendoSplitter({
-                panes: [{
-                    collapsible: true,
-                    resizable: false,
-                    size: "15%",
-                    collapsed: true
-                }, {
-                    collapsible: false
-                }],
-                resize: function () {
-                    _this.resizeContent();
-                }
-            });
-        }
-
         if (this.sections && this.sections["preview"]) {
 
             // the DOM element containing the splitter must define a height (100% is not correct)
@@ -351,6 +335,21 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
                 expand: function () {
                     _this.autoCollapsedPreview = false; // this is called when the user do it
                 },
+                resize: function () {
+                    _this.resizeContent();
+                }
+            });
+        }
+
+        if (this.sections && this.sections["filter"]) {
+            this.$domElement.find(".exp-splitter-filter").kendoSplitter({
+                panes: [{
+                    collapsible: true,
+                    resizable: true,
+                    size: 270
+                }, {
+                    collapsible: false
+                }],
                 resize: function () {
                     _this.resizeContent();
                 }
@@ -424,24 +423,14 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         var $containerDiv = this.$containerDiv || $("<div data-resource-manager-id='" + this.resourceManagerId + "' class='hidden'></div>")
             .appendTo("body");
 
-        // add the splitter to the grid element if there is a preview
-        var gridElement;
-        if (this.sections["preview"]) {
-            gridElement = "<div class='exp-splitter-preview'><div class='exp-container-grid'></div><div class='exp-container-preview'></div></div>"
-        } else {
-            gridElement = "<div class='exp-container-grid'></div>";
-        }
-
-        // add a splitter to the app element if there is a filter
-        var appElement;
-        if (this.sections["filter"]) {
-            appElement = "<div class='exp-splitter-filter'><div class='exp-container-filter'></div>" + gridElement + "</div>";
-        } else {
-            appElement = gridElement;
-        }
-
-        // build the DOM element
-        var $domElement = $("<div class='exp-resource-manager " + this.resourceName + "Manager'>" + appElement + "<div class='exp-container-form'></div></div>");
+        var $domElement = $("<div class='exp-resource-manager " + this.resourceName + "Manager'><div class='exp-container-form'></div></div>");
+        $domElement.prepend(
+            (this.sections["preview"] ? "<div class='exp-splitter-preview'>" : "") +
+            (this.sections["filter"] ? "<div class='exp-splitter-filter'><div class='exp-container-filter'></div>" : "") +
+            "<div class='exp-container-grid'></div>" +
+            (this.sections["filter"] ? "</div>" : "") +
+            (this.sections["preview"] ? "<div class='exp-container-preview'></div></div>" : "")
+        );
 
         // append the layout (must be attached to the browser DOM before enhancement the layout)
         $domElement.appendTo($containerDiv);

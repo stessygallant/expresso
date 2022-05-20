@@ -23,7 +23,13 @@
                 if ($kendoEl) {
                     // setter invoked on a DOM element enhanced by KendoUI
                     if (typeof $kendoEl.value === "function") {
-                        $kendoEl.value(value === undefined ? null : value);
+
+                        // dropdowntree does not support null
+                        if (role == "dropdowntree" && value === null) {
+                            value = "";
+                        }
+                        $kendoEl.value(value);
+
                         if (triggerChangeEvent !== false &&
                             (triggerChangeEvent || role == "combobox" || role == "dropdownlist" || role == "dropdowntree")) {
                             //console.log("triggerChangeEvent");

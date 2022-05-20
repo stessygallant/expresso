@@ -11,7 +11,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         EXCEL: {template: '<button type="button" class="k-button exp-button exp-always-active-button exp-excel-button" title="exportToExcel"><span class="fa fa-file-excel-o"><span data-text-key="exportToExcelButton"></span></span></button>'}
     },
 
-    MAX_PAGE_SIZE: 50,
+    MAX_PAGE_SIZE: 50, // will be recalculated based on the height of table
+    MAX_HIERARCHICAL_RESULTS: 500,
 
     // reference to the grid object
     kendoGrid: undefined,
@@ -2290,7 +2291,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         var _this = this;
         // console.log("EVENT dataBound [" + this.resourceManager.resourceName + "]: " + this.selectedRows.length);
 
-        // record that the grid has been updated (autorefresh feature)
+        // record that the grid has been updated (auto refresh feature)
         this.lastUpdateDate = new Date();
 
         // customize the row (highlight, etc)
@@ -2357,15 +2358,48 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.resizeContent();
         }
 
+        if (this.virtualScroll) {
+            // between pages, we need to reselect the rows
+            if (this.selectedRows.length) {
+                // reselect rows
+                $.each(_this.selectedRows, function () {
+                    var dataItem = this;
+                    var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
+                    _this.highlightSelectedRow($row);
+                });
+            } else {
+                this.selectFirstRow();
+            }
+        } else {
+
+            if (this.selectedRows.length) {
+
+            }
+        }
+
+        // now reselect the row if needed (or the first one)
         if (this.selectedRows.length) {
-            // reselect rows
-            $.each(this.selectedRows, function () {
-                var dataItem = this;
-                var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
-                _this.highlightSelectedRow($row);
-            });
+            if (this.hierarchical) {
+                // this happens because the TreeList does not fire event on filter
+                // clear the list and select the first one
+                this.clearSelection();
+                this.selectFirstRow();
+            } else {
+                // reselect rows
+                $.each(this.selectedRows, function () {
+                    var dataItem = this;
+                    var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
+                    _this.highlightSelectedRow($row);
+                });
+            }
         } else {
             this.selectFirstRow();
+        }
+
+        if (this.hierarchical) {
+            // TreeList does not display a loading mask on sort and filter
+            // we had to display it. Remove it now
+            expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: "readDataSourceTreeList"});
         }
     },
 
@@ -2373,13 +2407,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      *
      */
     writeNbrRecords: function () {
-        var MAX_HIERARCHICAL_RESULTS = 500;
         var count = this.kendoGrid.dataSource.total();
         var html;
-        if (this.hierarchical && count >= MAX_HIERARCHICAL_RESULTS) {
+        if (this.hierarchical && count >= this.MAX_HIERARCHICAL_RESULTS) {
             html = "<span class='exp-grid-max-limit'>" +
                 expresso.Common.getLabel("maximumLimit", null, {
-                    max: MAX_HIERARCHICAL_RESULTS,
+                    max: this.MAX_HIERARCHICAL_RESULTS,
                     count: count
                 }) + "</span>";
         } else {
@@ -2900,6 +2933,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     dataType: "json",
                     type: "GET",
                     url: function () {
+                        if (_this.hierarchical) {
+                            // TreeList does not display a loading mask on sort and filter
+                            expresso.util.UIUtil.showLoadingMask(_this.$domElement, true, {id: "readDataSourceTreeList"});
+                        }
                         return _this.resourceManager.getWebServicePath();
                     }
                 },
@@ -3551,7 +3588,20 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * Get the number of records per page
      */
     getPageSize: function () {
-        return this.MAX_PAGE_SIZE;
+        // calculate based on the size of the body
+        var pageSize = this.MAX_PAGE_SIZE;
+        if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
+            if (this.$domElement && this.$domElement.height() > 0) {
+                var rowHeight = 25; // assume 25 px per line
+                var maxHeight = $(window).height();
+                pageSize = Math.round(maxHeight / rowHeight * 1.2); // 20% more
+                console.log("Height:" + maxHeight + " pageSize:" + pageSize);
+                if (pageSize < this.MAX_PAGE_SIZE) {
+                    pageSize = this.MAX_PAGE_SIZE;
+                }
+            }
+        }
+        return pageSize;
     },
 
     /**
@@ -3698,9 +3748,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
             // get the filters from the filter section if available
             if (this.resourceManager.sections.filter) {
-                var filterParams = this.resourceManager.sections.filter.getKendoFilters();
+                var filterParams = this.resourceManager.sections.filter.getFilters();
                 //console.log("filterParams", filterParams);
-                gridFilter.push.apply(gridFilter, filterParams);
+                expresso.Common.addKendoFilter(gridFilter, filterParams);
             }
 
             // get the filter from the overall filter if available

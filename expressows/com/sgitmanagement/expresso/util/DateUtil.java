@@ -101,6 +101,12 @@ public class DateUtil {
 			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
 		}
 	};
+	public static final ThreadLocal<DateFormat> DATETIME2_FORMAT_TS = new ThreadLocal<DateFormat>() {
+		@Override
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSS");
+		}
+	};
 	public static final ThreadLocal<DateFormat> DATETIMEZ2_FORMAT_TL = new ThreadLocal<DateFormat>() {
 		@Override
 		protected DateFormat initialValue() {
@@ -206,6 +212,9 @@ public class DateUtil {
 					date = DATETIME_MMM_NOSEC_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.length() >= 22 && dateString.length() <= 24 && (dateString.contains("AM") || dateString.contains("PM"))) {
 					date = DATETIME_USA_FORMAT_TL.get().parse(dateString);
+				} else if (dateString.length() >= 21 && dateString.length() <= 24 && dateString.contains("T") && dateString.contains(".") && dateString.lastIndexOf("-") < 12
+						&& !dateString.contains("+") && !Character.isLetter(dateString.charAt(dateString.length() - 1))) {
+					date = DATETIME2_FORMAT_TS.get().parse(dateString);
 				} else if (dateString.length() == 23) {
 					date = DATETIMEZ2_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.length() > 22) {

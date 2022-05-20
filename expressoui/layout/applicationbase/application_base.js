@@ -124,6 +124,7 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
 
             // refresh the view every n seconds
             //console.log("Full screen mode");
+            this.clearIntervals();
             this.addInterval(function () {
                 //console.log("Refresh view");
                 _this.refreshView();

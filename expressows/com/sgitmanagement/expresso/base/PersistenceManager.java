@@ -118,6 +118,7 @@ public class PersistenceManager {
 			entityManager.setProperty("expresso.case_sensitive", true);
 			entityManager.setProperty("expresso.flush_mode", null);
 			entityManager.setProperty("expresso.empty_string_is_null", true);
+			entityManager.setProperty("expresso.in_max_values", 1000);
 		} else if (databaseDialect.contains("MySQL")) {
 			entityManager.setProperty("expresso.trunc_date_function", "date");
 			entityManager.setProperty("expresso.case_sensitive", false);
