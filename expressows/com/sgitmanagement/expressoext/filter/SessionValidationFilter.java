@@ -79,7 +79,11 @@ public class SessionValidationFilter implements Filter {
 					user = storeUserInfoInSession(session, request, response);
 
 					if (user == null) {
-						session.invalidate();
+						try {
+							session.invalidate();
+						} catch (Exception ex) {
+							// ignore
+						}
 						response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 					} else {
 						// store the user in the request

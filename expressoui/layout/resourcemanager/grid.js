@@ -649,7 +649,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     column.filterable.cell = column.filterable.cell || {};
                     if (field && field.keyField && !column.filterable.cell.operator) {
                         // keep equals by default
-                        column.filterable.cell.operator = field.keyField?.operator ? field.keyField.operator : "eq";
+                        column.filterable.cell.operator = field.keyField.operator ? field.keyField.operator : "eq";
                     } else {
                         column.filterable.cell.operator = column.filterable.cell.operator || "contains";
                     }
@@ -2136,9 +2136,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     openReference: function ($href) {
         var _this = this;
 
-        // select the row
-        var $row = $href.closest("tr");
-
         var referenceId = $href.data("reference-id");
         var referenceManager = $href.data("reference-manager");
 
@@ -3595,7 +3592,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 var rowHeight = 25; // assume 25 px per line
                 var maxHeight = $(window).height();
                 pageSize = Math.round(maxHeight / rowHeight * 1.2); // 20% more
-                console.log("Height:" + maxHeight + " pageSize:" + pageSize);
+                // console.log("Height:" + maxHeight + " pageSize:" + pageSize);
                 if (pageSize < this.MAX_PAGE_SIZE) {
                     pageSize = this.MAX_PAGE_SIZE;
                 }
@@ -3793,6 +3790,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         expresso.layout.resourcemanager.SectionBase.fn.resizeContent.call(this);
         if (this.kendoGrid) {
             try {
+                this.kendoGrid.refresh();
                 this.kendoGrid.resize();
             } catch (e) {
                 // ignore

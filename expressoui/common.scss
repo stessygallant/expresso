@@ -738,7 +738,19 @@ label input + span {
     // label
     label {
         font-weight: bold;
-        margin-right: 0.3em;
+        margin-right: 0.5em;
+
+        &:after {
+            content: ":";
+        }
+    }
+
+    .input-wrap {
+        margin-right: 2em;
+
+        .k-datepicker {
+            width: 8.5em;
+        }
     }
 }
 

@@ -665,7 +665,13 @@ expresso.Security = function () {
                 e.preventDefault();
 
                 // focus out to avoid multiple submit
-                document.activeElement?.blur();
+                if (document.activeElement) {
+                    try {
+                        document.activeElement.blur();
+                    } catch (ex) {
+                        // ignore
+                    }
+                }
 
                 var auth = $div.find("[name=authentication]:checked").val();
                 if (auth == "kerberos") {
@@ -960,16 +966,15 @@ expresso.Security = function () {
                 // When an error occurs in a script, loaded from a different origin,
                 // the details of the error are not reported to prevent leaking information
             } else {
-                var message = [
-                    "Application: " + expresso.Main.getCurrentAppName(),
-                    "User: " + (userProfile ? userProfile.label + " (" + userProfile.userName + ") - " + userProfile.email : ""),
-                    "Message: " + msg,
-                    "URL: " + url,
-                    "Line: " + lineNo,
-                    "Column: " + columnNo,
-                    "Error object: " + JSON.stringify(error)
-                ].join("\n<br>");
-
+                // var message = [
+                //     "Application: " + expresso.Main.getCurrentAppName(),
+                //     "User: " + (userProfile ? userProfile.label + " (" + userProfile.userName + ") - " + userProfile.email : ""),
+                //     "Message: " + msg,
+                //     "URL: " + url,
+                //     "Line: " + lineNo,
+                //     "Column: " + columnNo,
+                //     "Error object: " + JSON.stringify(error)
+                // ].join("\n<br>");
                 // console.error(message);
                 // expresso.Common.sendRequest("support/mail", "execute",
                 //     "title=" + "Javascript error" + " &message=" + encodeURIComponent(message),

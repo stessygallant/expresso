@@ -222,9 +222,9 @@ expresso.util.Util = (function () {
         // convert to decimal and change luminosity
         var rgb = "#", c, i;
         for (i = 0; i < 3; i++) {
-            c = parseInt(hex.substr(i * 2, 2), 16);
+            c = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
             c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
-            rgb += ("00" + c).substr(c.length);
+            rgb += ("00" + c).substring(c.length);
         }
 
         return rgb;
@@ -248,9 +248,9 @@ expresso.util.Util = (function () {
      * @returns {string}
      */
     var getContrast = function (hexcolor) {
-        var r = parseInt(hexcolor.substr(1, 2), 16);
-        var g = parseInt(hexcolor.substr(2, 2), 16);
-        var b = parseInt(hexcolor.substr(4, 2), 16);
+        var r = parseInt(hexcolor.substring(1, 3), 16);
+        var g = parseInt(hexcolor.substring(2, 4), 16);
+        var b = parseInt(hexcolor.substring(4, 6), 16);
         var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
         return (yiq >= 35) ? 'black' : 'white';
     };

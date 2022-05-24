@@ -64,6 +64,17 @@
         }
     };
 
+    $.fn.getDataItem = function () {
+        var $this = this;
+        if ($this.data("role")) {
+            var widget = expresso.util.UIUtil.getKendoWidget($this);
+            if (widget && widget.dataItem) {
+                return widget.dataItem();
+            }
+        }
+        return null;
+    };
+
     /**
      * Utility method to verify is a scroll bar is visible
      * @returns {{vertical: boolean, horizontal: boolean}}

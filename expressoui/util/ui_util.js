@@ -786,7 +786,7 @@ expresso.util.UIUtil = (function () {
                     // then on activate, we will review the size and position.
                     // otherwise if we wait on activate, the window will appear at the
                     // bottom and push up the main content, and then move to the center
-                    setWindowDimension($windowDiv, $.extend({}, options, {top: 0}));
+                    setWindowDimension($windowDiv, $.extend({}, options, {top: options.top || 0}));
                 },
                 // Triggered when the content of a Window has finished loading via AJAX (called af open)
                 refresh: function () {

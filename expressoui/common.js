@@ -1,7 +1,7 @@
 var expresso = expresso || {};
 
 /**
- * This is an utility module. It contains some utility methods.
+ * This is a utility module. It contains some utility methods.
  * It uses the Javascript Module encapsulation pattern to provide public and private properties.
  */
 expresso.Common = (function () {
@@ -25,10 +25,10 @@ expresso.Common = (function () {
         EMAIL_TOKEN_REQUIRED: 424, // Failed Dependency
         UPGRADE_REQUIRED: 426, // Web service versions has been updated
         PASSWORD_EXPIRED: 460, // Password is expired
-        CUSTOM_UNAUTHORIZED: 451, // Expresso Custom (to avoid browser to popup the basic auth window)
+        CUSTOM_UNAUTHORIZED: 451, // Expresso Custom (to avoid browser to pop up the basic auth window)
         SERVER_ERROR: 500, // When an exception is thrown while processing the request
         BAD_GATEWAY: 502, // this happens when uploading a document when the session is expired
-        SERVICE_UNAVAILABLE: 503, // Service is unavailable
+        SERVICE_UNAVAILABLE: 503 // Service is unavailable
     };
 
     var SCREEN_MODES = {
@@ -246,7 +246,7 @@ expresso.Common = (function () {
             }
         }
 
-        // for each column, if there is an reference to an object, make sure the object exists to avoid null issue
+        // for each column, if there is a reference to an object, make sure the object exists to avoid null issue
         if (objectsNeededForColumns) {
             $.extend(true, item, objectsNeededForColumns);
         }
@@ -345,7 +345,7 @@ expresso.Common = (function () {
                         if (jqxhr.status == HTTP_CODES.UPGRADE_REQUIRED ||
                             jqxhr.status == HTTP_CODES.UNAUTHORIZED ||
                             jqxhr.status == HTTP_CODES.CUSTOM_UNAUTHORIZED) {
-                            window.location.reload(true);
+                            window.location.reload();
                         }
                     } else {
                         if (expresso.Common.getSiteNamespace().config.Configurations.customErrorMessage && expresso.Common.getSiteNamespace().config.Configurations.customErrorMessage.includes(jqxhr.status)) {
@@ -389,7 +389,7 @@ expresso.Common = (function () {
                             if (!reloading) {
                                 reloading = true;
                                 expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("newApplicationVersion")).done(function () {
-                                    window.location.reload(true);
+                                    window.location.reload();
                                 });
                             }
                         } else if (jqxhr.status >= 400 && jqxhr.status < 500 || jqxhr.status == HTTP_CODES.UNPROCESSABLE_ENTITY) {
@@ -493,7 +493,7 @@ expresso.Common = (function () {
             };
 
             // Use $.ajax() since it is more flexible than $.getScript
-            // Return the jqXHR object so we can chain callbacks
+            // Return the jqXHR object, so we can chain callbacks
             return $.ajax(options)
                 .done(function () {
                     if (cache === true) {
@@ -502,7 +502,7 @@ expresso.Common = (function () {
                 })
                 .fail(function (jqxhr) {
                     if (path.indexOf("labels") != -1) {
-                        // if a labels file does not exists, it is not a problem: we will load the default one
+                        // if a labels file does not exist, it is not a problem: we will load the default one
                         jqxhr.alreadyProcessed = true;
                     } else {
                         // this is usually a development issue
@@ -746,7 +746,7 @@ expresso.Common = (function () {
             if (typeof appNameOrPath == "string" && appNameOrPath.indexOf('/') != -1) {
                 // if there is the filename, remove it
                 if (appNameOrPath.indexOf('.') != -1) {
-                    appNameOrPath = appNameOrPath.substr(0, appNameOrPath.lastIndexOf('/'));
+                    appNameOrPath = appNameOrPath.substring(0, appNameOrPath.lastIndexOf('/'));
                 }
                 // app is the path
                 appNamespace = appNameOrPath.replace(/\//g, '.');
@@ -775,7 +775,7 @@ expresso.Common = (function () {
         if (appNamespace) {
             var subNamespaces = appNamespace.split("\.");
             var namespace = window;
-            subNamespaces.forEach((ns) => {
+            subNamespaces.forEach(function (ns) {
                 // console.log("Creating [" + ns + "]");
                 namespace[ns] = namespace[ns] || {};
                 namespace = namespace[ns];
@@ -834,7 +834,7 @@ expresso.Common = (function () {
             if (stopIfFail) {
                 $deferred.reject();
             } else {
-                // if cannot find the language file, get the default one
+                // if it cannot find the language file, get the default one
                 loadLabels(path, filename, null, true).done(function (labels) {
                     $deferred.resolve(labels);
                 }).fail(function (jqxhr) {
@@ -1109,8 +1109,8 @@ expresso.Common = (function () {
                             try {
                                 var s = xhr.responseText;
 
-                                // if multiple responses has been send, take only the last one
-                                s = s.substr(s.lastIndexOf('{')).trim();
+                                // if multiple responses has been sent, take only the last one
+                                s = s.substring(s.lastIndexOf('{')).trim();
                                 s = JSON.parse(s);
 
                                 // then set the value and the text
@@ -1139,7 +1139,7 @@ expresso.Common = (function () {
                     return xhr;
                 }
             }).fail(function (jqXHR) {
-                // do not processed the error and do not display the alert box
+                // do not process the error and do not display the alert box
                 if (options.ignoreErrors /*&& jqXHR.status != HTTP_CODES.UNAUTHORIZED  we cannot do it */) {
                     jqXHR.alreadyProcessed = true;
                 } else {
@@ -1171,7 +1171,7 @@ expresso.Common = (function () {
                 .always(function () {
 
                     // DO NOT hide the loading mask here otherwise the if the application
-                    // call a sendRequest in the .done(), the second loading mask will not appears
+                    // call a sendRequest in the .done(), the second loading mask will not appear
 
                     if (options.showProgress) {
                         // make sure to trigger the change event
@@ -1608,8 +1608,7 @@ expresso.Common = (function () {
      * @param resourceManagerDef name of the application (or the application definition).
      * @param [options] options for the resource manager
      * @param [$containerDiv] div where to put the $domElement
-     * @param [masterResourceManager] the master resource manager
-     * so it means that we do not need to load the ancestor
+     * @param [masterResourceManager] the master resource manager, so it means that we do not need to load the ancestor
      * @returns {*} a promise when the resource manager is loaded
      */
     var loadResourceManager = function (resourceManagerDef, options, $containerDiv, masterResourceManager) {
@@ -1906,7 +1905,7 @@ expresso.Common = (function () {
     };
 
     /**
-     * Returns true if the user is a super user
+     * Returns true if the user is a superuser
      */
     var isAdmin = function () {
         // redirect this method to the Main application
@@ -2056,8 +2055,7 @@ expresso.Common = (function () {
     var init = function (name) {
 
         // if IE, do not allow
-        if (navigator.userAgent.indexOf('MSIE') !== -1
-            || navigator.appVersion.indexOf('Trident/') > -1) {
+        if (navigator.userAgent.indexOf('MSIE') !== -1) {
             /* Microsoft Internet Explorer detected in. */
             //expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("msieNotSupported"));
             alert(expresso.Common.getLabel("msieNotSupported"));
