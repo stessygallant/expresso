@@ -94,6 +94,9 @@ expresso.util.UIUtil = (function () {
                     case "switch":
                         widget = $element.data("kendoMobileSwitch");
                         break;
+                    case "checkbox":
+                        widget = null;
+                        break;
 
                     // Expresso Custom
                     case "expressolanguageselector":
@@ -1716,23 +1719,6 @@ expresso.util.UIUtil = (function () {
 
                 var options = $.extend(true, {}, defaultOptions, customOptions);
                 var kendoTreeView = $div.kendoTreeView(options).data("kendoTreeView");
-
-                if (options.checkboxes) {
-                    // TODO ?
-                    // // Patch to fix the absence of value for the checkbox in KendoUI
-                    // // we need to assign a value to each checkbox at the lowest level
-                    // var assignValue = function (nodes) {
-                    //     for (var i = 0; i < nodes.length; i++) {
-                    //         //console.log("Setting value [" + nodes[i].id + "] on [" + nodes[i].uid + "]");
-                    //         if (nodes[i].hasChildren) {
-                    //             assignValue(nodes[i].children.view());
-                    //         } else {
-                    //             $el.find("#_" + nodes[i].uid).setval(nodes[i].id);
-                    //         }
-                    //     }
-                    // };
-                    // assignValue(kendoTreeView.dataSource.view());
-                }
 
                 $deferred.resolve(kendoTreeView);
             });

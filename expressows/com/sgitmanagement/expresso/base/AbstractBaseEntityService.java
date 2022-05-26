@@ -557,7 +557,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			// logger.debug("Search query: " + new Gson().toJson(query));
 			return list(query);
 		} else {
-			logger.error("getSearchFilter method not implemented for the resource [" + getTypeOfE().getSimpleName() + "]");
+			logger.error("getSearchFilter method not implemented for the resource [" + getResourcePath() + "]");
 			return new ArrayList<>();
 		}
 	}
@@ -590,7 +590,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			query.addFilter(filter);
 			return list(query);
 		} else {
-			logger.error("getSearchFilter method not implemented for the resource [" + getTypeOfE().getSimpleName() + "]");
+			logger.error("getSearchFilter method not implemented for the resource [" + getResourcePath() + "]");
 			return new ArrayList<>();
 		}
 	}
@@ -747,7 +747,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				return data;
 			}
 		} catch (Exception ex) {
-			logger.error("Error executing query: " + ex + " - " + new Gson().toJson(query), ex);
+			logger.error("Error executing query [" + getResourcePath() + "]: " + ex + " - " + new Gson().toJson(query), ex);
 			throw ex;
 		}
 	}
@@ -942,6 +942,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// restrict the list to the permitted entities
 				Filter restrictionsFilter = getRestrictionsFilter();
 				if (restrictionsFilter != null) {
+					if (!restrictionsFilter.isSecure()) {
+						logger.error("RestrictionsFilter is not secure [" + getResourcePath() + "]: " + new Gson().toJson(restrictionsFilter));
+						// throw new ValidationException("restrictionsFilterNoSecure");
+					}
+
 					query.addFilter(restrictionsFilter);
 				}
 
@@ -952,6 +957,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				if (!query.countOnly()) {
 					Filter restrictionsFilter = getRestrictionsFilter();
 					if (restrictionsFilter != null) {
+						if (!restrictionsFilter.isSecure()) {
+							logger.error("RestrictionsFilter is not secure [" + getResourcePath() + "]: " + new Gson().toJson(restrictionsFilter));
+							// throw new ValidationException("restrictionsFilterNoSecure");
+						}
+
 						query.addFilter(restrictionsFilter);
 					}
 				}
@@ -1009,7 +1019,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			// count the total number of records
 			return getEntityManager().createQuery(q).getSingleResult();
 		} catch (Exception ex) {
-			logger.error("Error executing count query: " + ex + " - " + new Gson().toJson(query));
+			logger.error("Error executing count query[" + getResourcePath() + "]: " + ex + " - " + new Gson().toJson(query));
 			throw ex;
 		}
 
@@ -1025,10 +1035,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			logger.warn("Probably @ParentEntity annotation missing on the parent object in class [" + getTypeOfE().getSimpleName() + "]");
 		}
 		if (filter != null) {
-			// do not proccess the same filter twice
+			// do not process the same filter twice
 			if (processedFilters == null) {
 				// do not use HashSet because the hashing is done at insertion
-				// and we change de field later
+				// and we change the field later
 				processedFilters = new ArrayList<>();
 			}
 			if (!processedFilters.contains(filter)) {

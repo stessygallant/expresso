@@ -1362,6 +1362,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                                 $button.prop("disabled", !action.allowed);
                             }
                         });
+
+                        // resize the grid in case of buttons wrapping
+                        _this.resizeContent();
                     });
             });
         }
@@ -1435,7 +1438,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // clear the filters from the filter section is available
         if (this.resourceManager.sections.filter) {
-            this.resourceManager.sections.filter.setFilterParams(null);
+            this.resourceManager.sections.filter.setFilters(null);
         }
 
         this.loadResources(null, null, true);
@@ -1526,19 +1529,25 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                                 });
                             });
                     } else if (action == "reset") {
-                        _this.applyApplicationPreference();
+                        // because this operation can be long, we display the loading mask
+                        window.setTimeout(function () {
+                            _this.applyApplicationPreference();
 
-                        // reload the grid
-                        _this.loadResources({}, null, true);
+                            // reload the grid
+                            _this.loadResources({}, null, true);
+                        }, 10);
                     } else {
 
                         // A filter has been selected, filter it
                         var selectedGridPreference = $menuItem.data("gridPreference");
                         if (selectedGridPreference) {
-                            _this.applyApplicationPreference(selectedGridPreference);
+                            // because this operation can be long, we display the loading mask
+                            window.setTimeout(function () {
+                                _this.applyApplicationPreference(selectedGridPreference);
 
-                            // reload the grid
-                            _this.loadResources(selectedGridPreference.query, null, true);
+                                // reload the grid
+                                _this.loadResources(selectedGridPreference.query, null, true);
+                            }, 10);
                         }
                     }
                 }
@@ -1697,6 +1706,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 // this column does not exist anymore
             }
         });
+
+        // need to set the filter to the filter
+        if (this.resourceManager.sections.filter) {
+            this.resourceManager.sections.filter.setFilters(selectedGridPreference && selectedGridPreference.query &&
+            selectedGridPreference.query.filter ? selectedGridPreference.query.filter : null);
+        }
     },
 
     /**
@@ -3115,7 +3130,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             selectable: "row",
             // persistSelection does not work well with virtual scrolling
             // persistSelection: true, // persist selection across paging
-            editable: {
+            editable: _this.customForm ? {
                 mode: "popup",
                 window: {
                     // we need to define the width here otherwise the content of the window is not resize
@@ -3125,7 +3140,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         "Maximize", "Close"
                     ]
                 }
-            },
+            } : false,
             beforeEdit: function (e) {
                 _this.onBeforeEdit(e);
             },
@@ -3149,7 +3164,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         };
 
         // configure the form
-        options.editable.template = kendo.template(_this.customForm.$domElement.parent().html())
+        if (this.customForm) {
+            options.editable.template = kendo.template(_this.customForm.$domElement.parent().html());
+        }
 
         // for Grid in Preview, do not show by default the filter row
         if (!this.isFilterable()) {
@@ -3790,7 +3807,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         expresso.layout.resourcemanager.SectionBase.fn.resizeContent.call(this);
         if (this.kendoGrid) {
             try {
-                this.kendoGrid.refresh();
+                // this.kendoGrid.refresh();
                 this.kendoGrid.resize();
             } catch (e) {
                 // ignore

@@ -12,7 +12,7 @@ expresso.layout.resourcemanager.Filter = expresso.layout.resourcemanager.Section
         expresso.layout.resourcemanager.SectionBase.fn.initDOMElement.call(this, $domElement);
 
         this.$domElement.append("<div class='exp-filter-title'></div><div class='exp-filter-content'></div>");
-        this.$domElement.find(".exp-filter-title").text(options && options.title ? options.title : "");
+        this.$domElement.find(".exp-filter-title").text(this.getLabel(this.titleLabel));
     },
 
     /**

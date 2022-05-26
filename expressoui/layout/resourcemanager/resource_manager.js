@@ -105,7 +105,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
             grid: true,
             form: true,
             preview: sections === undefined,
-            filter: false // expresso.Common.getSiteNamespace().config.Configurations.supportFilter
+            filter: false
         }, sections);
 
         console.log("ResourceManager [" + this.resourceName + "] initialized");

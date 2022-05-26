@@ -103,14 +103,6 @@ public class Query {
 		return this;
 	}
 
-	public boolean hasFilters() {
-		return filter != null && ((filter.filters != null && filter.filters.size() > 0) || filter.field != null);
-	}
-
-	public boolean hasSort() {
-		return sort != null && !sort.isEmpty();
-	}
-
 	public Boolean getKeySearch() {
 		return keySearch;
 	}
@@ -290,6 +282,27 @@ public class Query {
 
 	public void setSearchFilterTerm(String searchFilterTerm) {
 		this.searchFilterTerm = searchFilterTerm;
+	}
+
+	public boolean hasFilters() {
+		return filter != null && filter.hasFilters();
+	}
+
+	public boolean hasSort() {
+		return sort != null && !sort.isEmpty();
+	}
+
+	/**
+	 * A query to be secure must have all its filters secure
+	 * 
+	 * @return
+	 */
+	public boolean isSecure() {
+		if (this.filter != null) {
+			return this.filter.isSecure();
+		} else {
+			return true;
+		}
 	}
 
 	@Override
@@ -631,6 +644,55 @@ public class Query {
 			}
 		}
 
+		/**
+		 * Verify if at least one filter
+		 * 
+		 * @return
+		 */
+		public boolean hasFilters() {
+			if (this.field != null) {
+				return true;
+			} else if (this.filters != null && this.filters.size() > 0) {
+				// if at least on filter is defined, true
+				for (Filter p : this.filters) {
+					if (p != null) {
+						if (p.hasFilters()) {
+							return true;
+						}
+					}
+				}
+			}
+
+			// if not field has been found, this filter has no filter
+			return false;
+		}
+
+		/**
+		 * A filter must not contain an empty "OR" filter to be secured
+		 * 
+		 * @return
+		 */
+		public boolean isSecure() {
+			if (this.logic != null && this.logic.equals(Logic.or)) {
+				// make sure there is at least one filter
+				if (!hasFilters()) {
+					return false;
+				}
+			}
+
+			// then verify all dependencies
+			if (this.filters != null) {
+				for (Filter p : this.filters) {
+					if (p != null) {
+						if (!p.isSecure()) {
+							return false;
+						}
+					}
+				}
+			}
+			return true;
+		}
+
 		@Override
 		public String toString() {
 			String s = "Filter [";
@@ -681,13 +743,19 @@ public class Query {
 	}
 
 	static public void main(String[] args) throws Exception {
-		Query q = new Query();
+		Query q = new Query(new Filter(Logic.or));
+		System.out.println(q.isSecure());
 
 		Filter f1 = new Filter("aaa", 1);
 		q.addFilter(f1);
+		System.out.println(q.isSecure());
 
-		Filter f2 = new Filter("bbb", 2);
+		Filter f2 = new Filter(Logic.or);
 		q.addFilter(f2);
+		System.out.println(q.isSecure());
+
+		// f2.addFilter(new Filter("ccc", 2));
+		System.out.println(q.isSecure());
 
 		System.out.println(new Gson().toJson(q));
 	}
