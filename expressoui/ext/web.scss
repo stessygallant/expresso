@@ -424,6 +424,15 @@ div.main {
             line-height: 1;
         }
 
+        .version {
+            position: absolute;
+            right: 0;
+            top: 0;
+            font-size: 80%;
+            color: $themeTextColor;
+            display: none;
+        }
+
         background: linear-gradient(180deg, rgba(238, 238, 238, 0.1) 0%, rgba(216, 216, 216, 0.2) 100%);
     }
 
@@ -552,6 +561,11 @@ div.main {
 
         .main-footer {
             display: none;
+
+            .time-to-load-profile {
+                position: absolute;
+                right: 0;
+            }
         }
 
         $mainTitleHeight: 2.5em;
@@ -572,6 +586,10 @@ div.main {
                 .title {
                     margin-left: 2.5em;
                     padding-top: 0.4em;
+                }
+
+                .version {
+                    display: block;
                 }
             }
 

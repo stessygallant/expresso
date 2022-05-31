@@ -314,7 +314,7 @@
 
             var reference = (this.options.field ? this.options.field.values || this.options.field.reference : null) || {};
             this.data = (this.options.dataSource ? this.options.dataSource.data : null) || reference.data;
-            this.url = (this.options.dataSource ? this.options.dataSource.url : null) || reference.wsPath;
+            this.url = (this.options.dataSource ? this.options.dataSource.url : null) || reference.resourcePath;
             this.filter = (this.options.dataSource ? this.options.dataSource.filter : null) || reference.filter;
             this.autoLoad = (reference.autoLoad !== undefined ? reference.autoLoad : this.options.autoLoad);
         },

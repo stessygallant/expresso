@@ -14,6 +14,8 @@ expresso.Security = function () {
     var ipAddress;
     var internalIpAddress;
 
+    var timeToLoadProfile;
+
     /**
      * Return true if the user has the role assigned
      * @param role role pgmKey
@@ -98,6 +100,10 @@ expresso.Security = function () {
         return ipAddress;
     };
 
+    var getTimeToLoadProfile = function () {
+        return timeToLoadProfile;
+    };
+
     /**
      *
      * @returns {*}
@@ -147,6 +153,7 @@ expresso.Security = function () {
                 // we have the preferred language of the user, use it
                 expresso.Common.setLanguage(profile.language)
 
+                var startTime = new Date();
                 $.when(
                     //  load the privileges
                     expresso.Common.sendRequest("user/" + profile.id + "/privilege", null, null, null, {
@@ -248,6 +255,10 @@ expresso.Security = function () {
                         internalIpAddress = result.internalIpAddress;
                     })
                 ).done(function () {
+                    var endTime = new Date();
+                    timeToLoadProfile = endTime.getTime() - startTime.getTime();
+                    console.log("Time to load profile (ms): " + timeToLoadProfile);
+
                     // review the applications to check if they are allowed
                     if (userProfile.genericAccount) {
                         var appNameMap = expresso.Common.getApplicationNameMap();
@@ -1004,6 +1015,7 @@ expresso.Security = function () {
         getSessionToken: getSessionToken,
 
         getIpAddress: getIpAddress,
-        isInternalIpAddress: isInternalIpAddress
+        isInternalIpAddress: isInternalIpAddress,
+        getTimeToLoadProfile: getTimeToLoadProfile
     };
 }();

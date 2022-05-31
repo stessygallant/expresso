@@ -1,9 +1,4 @@
-﻿var expresso = expresso || {};
-expresso.applications = expresso.applications || {};
-expresso.applications.general = expresso.applications.general || {};
-expresso.applications.general.documentmanager = expresso.applications.general.documentmanager || {};
-
-expresso.applications.general.documentmanager.DocumentManager = expresso.layout.resourcemanager.ResourceManager.extend({
+﻿expresso.applications.general.documentmanager.DocumentManager = expresso.layout.resourcemanager.ResourceManager.extend({
 
     // @override
     init: function (applicationPath) {
@@ -38,7 +33,7 @@ expresso.applications.general.documentmanager.DocumentManager = expresso.layout.
                 type: "number",
                 nullable: true,
                 values: {
-                    wsPath: "documentType",
+                    resourcePath: "documentType",
                     filter: function () {
                         return {
                             field: "resourceName",
@@ -59,8 +54,7 @@ expresso.applications.general.documentmanager.DocumentManager = expresso.layout.
         };
 
         expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "document", fields, {
-            grid: true,
-            form: true
+            preview: false
         });
     }
 });

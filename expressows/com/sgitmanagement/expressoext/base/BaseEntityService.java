@@ -42,6 +42,15 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 		return AuthorizationHelper.isUserAllowed(getUser(), action, resources);
 	}
 
+	final public boolean isUserAllowed(String action, String resourceName) {
+		try {
+			Resource resource = newService(ResourceService.class, Resource.class).get(resourceName);
+			return AuthorizationHelper.isUserAllowed(getUser(), action, Arrays.asList(resource.getSecurityPath().split("/")));
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+
 	final public List<User> getUsersInRole(String rolePgmKey) {
 		return AuthorizationHelper.getUsersInRole(rolePgmKey);
 	}

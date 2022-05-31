@@ -82,6 +82,9 @@ import com.sgitmanagement.expresso.util.ProgressSender;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expresso.util.ZipUtil;
+import com.sgitmanagement.expressoext.base.BaseEntity;
+import com.sgitmanagement.expressoext.modif.RequiredApproval;
+import com.sgitmanagement.expressoext.modif.RequiredApprovalService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -370,6 +373,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			Field[] allFields = c.getDeclaredFields();
 			for (Field field : allFields) {
 				field.setAccessible(true);
+				Object oldValue = field.get(dest);
+				Object newValue = field.get(source);
 
 				// if the entity has FieldRestriction, make sure that the user has to role
 				if (restrictedFields != null) {
@@ -381,7 +386,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				}
 
-				Object oldValue = field.get(dest);
+				// if the entity has some UpdateApprobationRequired field, create an UpdateApprobationRequired entry and do not change the value
+				if (field.getAnnotation(RequireApproval.class) != null) {
+					if (!Util.equals(newValue, oldValue)) {
+						createUpdateApprobationRequired(dest, field, oldValue, newValue);
+					}
+					continue;
+				}
+
 				if (oldValue != null && (IEntity.class.isInstance(oldValue) || EntityDerived.class.isInstance(oldValue))) {
 					// do not assign them
 				} else if (oldValue != null && Set.class.isInstance(oldValue) && field.getAnnotation(CollectionTable.class) != null) {
@@ -390,7 +402,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					// + "]");
 
 					// this is a collection of ID (Integer).
-					Set newIdSet = (Set) field.get(source);
+					Set newIdSet = (Set) newValue;
 					Set previousIdSet = (Set) oldValue;
 
 					if (newIdSet == null) {
@@ -417,14 +429,12 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				} else if (oldValue != null && Collection.class.isInstance(oldValue)) {
 					// do not assign them (OneToMany)
-					Object newValue = field.get(source);
 					if (newValue != null) {
 						// ignore
 						// logger.debug("Got a Collection [" + field.getName() + "] for the Entity ["
 						// + typeOf.getSimpleName() + "]");
 					}
 				} else {
-					Object newValue = field.get(source);
 
 					if (!Util.equals(newValue, oldValue)) {
 						// System.out.println("Setting [" + field.getName() + "]: [" + oldValue + " -> "
@@ -454,6 +464,86 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 		// set the new value using the setter
 		// BeanUtils.setProperty(e, fieldName, fieldValue);
+	}
+
+	/**
+	 * 
+	 * @param source
+	 * @param dest
+	 * @param field
+	 * @throws Exception
+	 */
+	final private void createUpdateApprobationRequired(E e, Field field, Object currentValue, Object newValue) throws Exception {
+		logger.debug("Creating UpdateApprobationRequired entry");
+		try {
+			String currentStringValue = null;
+			String newStringValue = null;
+			Integer newValueReferenceId = null;
+
+			// if the field is a reference, get the reference
+			if (field.getName().endsWith("Id")) {
+				String referenceName = field.getName().substring(0, field.getName().length() - 2);
+				newValueReferenceId = (Integer) newValue;
+
+				// get the field associated with it
+				Field referenceField = Util.getField(e, referenceName);
+				if (referenceField != null) {
+					BaseEntity currentValueEntity = null;
+					if (currentValue != null) {
+						currentValueEntity = (BaseEntity) getEntityManager().find(referenceField.getType(), (Integer) currentValue);
+						currentStringValue = currentValueEntity.getLabel();
+					}
+
+					BaseEntity newValueEntity = null;
+					if (newValue != null) {
+						newValueEntity = (BaseEntity) getEntityManager().find(referenceField.getType(), (Integer) newValue);
+						if (newValueEntity != null) {
+							newStringValue = newValueEntity.getLabel();
+						} else {
+							logger.warn("Cannot find [" + referenceField.getType() + " with id [" + newValue + "]");
+						}
+					}
+				}
+			} else {
+				if (currentValue instanceof Date || newValue instanceof Date) {
+					// format date or date time
+					if (field.isAnnotationPresent(Temporal.class)) {
+						Temporal temporalAnnotation = field.getAnnotation(Temporal.class);
+
+						if (temporalAnnotation.value().equals(TemporalType.TIMESTAMP)) {
+							// date time
+							currentStringValue = DateUtil.formatDate((Date) currentValue, DateUtil.DATETIME_NOSEC_FORMAT_TL.get());
+
+							newStringValue = DateUtil.formatDate((Date) newValue, DateUtil.DATETIME_NOSEC_FORMAT_TL.get());
+						} else {
+							// date only
+							currentStringValue = DateUtil.formatDate((Date) currentValue, DateUtil.DATE_FORMAT_TL.get());
+
+							newStringValue = DateUtil.formatDate((Date) newValue, DateUtil.DATE_FORMAT_TL.get());
+						}
+					} else {
+						logger.error("Date with no annotation? [" + field.getName() + "]");
+					}
+				} else {
+					currentStringValue = currentValue != null ? "" + currentValue : null;
+					newStringValue = newValue != null ? "" + newValue : null;
+				}
+			}
+
+			// entity name
+			String entityClassName = e.getClass().getSimpleName();
+
+			// if this is a proxy object, the entityClassName will contains a underscore (remove it)
+			if (entityClassName.indexOf('_') != -1) {
+				entityClassName = entityClassName.substring(0, entityClassName.indexOf('_'));
+			}
+
+			// create the modification
+			newService(RequiredApprovalService.class, RequiredApproval.class)
+					.create(new RequiredApproval(getResourceName(), (Integer) e.getId(), getResourceNo(e), field.getName(), currentStringValue, newStringValue, newValueReferenceId));
+		} catch (Exception ex) {
+			logger.error("Cannot createUpdateApprobationRequired", ex);
+		}
 	}
 
 	/**
@@ -1422,6 +1512,17 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 	public String getResourceName() {
 		return StringUtils.uncapitalize(getTypeOfE().getSimpleName());
+	}
+
+	/**
+	 * This method will work only if the resource has a @KeyField and the type is string
+	 * 
+	 * @param e
+	 * @return
+	 * @throws Exception
+	 */
+	public String getResourceNo(E e) throws Exception {
+		return BeanUtils.getProperty(e, getKeyFields()[0]);
 	}
 
 	/**
@@ -2859,6 +2960,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				if (field.isAnnotationPresent(HierarchicalParentEntity.class)) {
 					appClassField.setHierarchicalParent(true);
+				}
+
+				if (field.isAnnotationPresent(RequireApproval.class)) {
+					appClassField.setRequireApprovalRole(field.getAnnotation(RequireApproval.class).role());
 				}
 
 				if (exported) {

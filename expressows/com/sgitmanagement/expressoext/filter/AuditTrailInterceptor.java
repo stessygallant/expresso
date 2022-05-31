@@ -26,7 +26,7 @@ import com.sgitmanagement.expresso.base.Updatable;
 import com.sgitmanagement.expresso.util.DateUtil;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.base.BaseEntity;
-import com.sgitmanagement.expressoext.security.AuditTrail;
+import com.sgitmanagement.expressoext.modif.AuditTrail;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
 

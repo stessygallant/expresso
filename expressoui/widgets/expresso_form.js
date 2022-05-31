@@ -154,7 +154,7 @@
             } else if (field && field.reference) {
                 if (field.multipleSelection) {
                     if (field.lookupSelection) {
-                        this.readyPromises.push(expresso.util.UIUtil.buildLookupSelection($el, field.reference.wsPath, {
+                        this.readyPromises.push(expresso.util.UIUtil.buildLookupSelection($el, field.reference.resourcePath, {
                             resource: resource,
                             model: model,
                             field: field,
@@ -164,7 +164,7 @@
                         }));
                     } else {
                         this.readyPromises.push(
-                            expresso.util.UIUtil.buildMultiSelect($el, field.reference.wsPath, {
+                            expresso.util.UIUtil.buildMultiSelect($el, field.reference.resourcePath, {
                                 resource: resource,
                                 model: model,
                                 field: field,
@@ -175,7 +175,7 @@
                     }
                 } else {
                     if (field.reference.parentId) {
-                        this.readyPromises.push(expresso.util.UIUtil.buildDropDownTree($el, field.reference.wsPath, {
+                        this.readyPromises.push(expresso.util.UIUtil.buildDropDownTree($el, field.reference.resourcePath, {
                             resource: resource,
                             model: model,
                             field: field,
@@ -187,7 +187,7 @@
                         }));
                     } else {
                         this.readyPromises.push(
-                            expresso.util.UIUtil.buildComboBox($el, field.reference.wsPath, {
+                            expresso.util.UIUtil.buildComboBox($el, field.reference.resourcePath, {
                                 resource: resource,
                                 model: model,
                                 field: field,
@@ -205,7 +205,7 @@
                     // }
                     // else {
                     this.readyPromises.push(expresso.util.UIUtil.buildMultiSelect($el,
-                        field.values.wsPath ? field.values.wsPath : field.values.data, {
+                        field.values.resourcePath ? field.values.resourcePath : field.values.data, {
                             resource: resource,
                             model: model,
                             field: field,
@@ -214,8 +214,8 @@
                     // }
                 } else {
                     if (field.values.parentId) {
-                        if (field.values.wsPath) {
-                            this.readyPromises.push(expresso.util.UIUtil.buildDropDownTree($el, field.values.wsPath, {
+                        if (field.values.resourcePath) {
+                            this.readyPromises.push(expresso.util.UIUtil.buildDropDownTree($el, field.values.resourcePath, {
                                 resource: resource,
                                 model: model,
                                 field: field,
@@ -235,8 +235,8 @@
                             }));
                         }
                     } else {
-                        if (field.values.wsPath) {
-                            this.readyPromises.push(expresso.util.UIUtil.buildDropDownList($el, field.values.wsPath, {
+                        if (field.values.resourcePath) {
+                            this.readyPromises.push(expresso.util.UIUtil.buildDropDownList($el, field.values.resourcePath, {
                                 resource: resource,
                                 model: model,
                                 field: field,

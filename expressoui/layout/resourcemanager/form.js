@@ -340,6 +340,12 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     if (field.restrictedRole && !expresso.Common.isUserInRole(field.restrictedRole)) {
                         expresso.util.UIUtil.hideField($this);
                     }
+
+                    // highlight the field if the modification will need approval
+                    if (field.requireApprovalRole /* TODO && !expresso.Common.isUserInRole(field.requireApprovalRole)*/) {
+                        console.log(field.name + " require approval role [" + field.requireApprovalRole + "]");
+                        $this.closest(".input-wrap").addClass("exp-require-approval");
+                    }
                 }
             }
         });
@@ -878,7 +884,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             if (value === undefined || value === null || value === "" || (value && value.length == 0)) {
                 //$f.attr("validationMessage", field.validation.required.message);
                 console.log("Required field is null [" + fieldName + "]");
-                expresso.util.UIUtil.highlightMissingRequiredField($window, fieldName);
+                expresso.util.UIUtil.highlightField($window, fieldName);
                 return false;
             } else {
                 return true;

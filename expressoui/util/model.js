@@ -260,7 +260,7 @@ expresso.util.Model = (function () {
                                 reference = {};
                             } else if (typeof reference === "string") {
                                 reference = {
-                                    wsPath: reference,
+                                    resourcePath: reference,
                                     resourceName: reference
                                 };
                             }
@@ -301,8 +301,15 @@ expresso.util.Model = (function () {
                                     reference.resourceName = referenceResourceName;
                                 }
 
-                                if (!reference.wsPath) {
-                                    reference.wsPath = reference.resourceName;
+                                // backward compatibility
+                                if (!reference.resourcePath && reference.wsPath) {
+                                    reference.resourcePath = reference.wsPath;
+                                }
+
+                                if (!reference.resourcePath) {
+                                    reference.resourcePath = reference.resourceName;
+                                    // backward compatibility
+                                    reference.wsPath = reference.resourcePath;
                                 }
 
                                 // resource manager
@@ -380,6 +387,9 @@ expresso.util.Model = (function () {
                                 } else {
                                     // override the restrictedRole
                                     modelField.restrictedRole = field.restrictedRole;
+
+                                    // set if require approval
+                                    modelField.requireApprovalRole = field.requireApprovalRole;
                                 }
                             }
                         })
@@ -411,7 +421,7 @@ expresso.util.Model = (function () {
                 if (field) {
                     field.values = field.values || field.treeValues;
                 }
-                if (field && field.values && field.values.wsPath && field.values.autoLoad !== false) {
+                if (field && field.values && field.values.resourcePath && field.values.autoLoad !== false) {
                     // get the list of values from the reference
                     var filter;
                     var values = field.values;
@@ -428,7 +438,7 @@ expresso.util.Model = (function () {
                     // the form will download the list itself (only active items)
                     filter = expresso.Common.buildKendoFilter(filter, {activeOnly: false});
 
-                    promises.push(expresso.Common.sendRequest(values.wsPath, null, null, filter,
+                    promises.push(expresso.Common.sendRequest(values.resourcePath, null, null, filter,
                         {waitOnElement: null}).done(function (result) {
                         values.data = expresso.Common.updateDataValues(result, labels);
 
@@ -452,7 +462,7 @@ expresso.util.Model = (function () {
                     // if there is a defaultValue, and the defaultValue is a string, and the field type is number.
                     // It means that we are using a pgmKey and that we need to replace it with the id
                     if (field.defaultValue !== undefined && typeof field.defaultValue === "string" && field.type == "number") {
-                        promises.push(expresso.Common.sendRequest(field.reference.wsPath, null, null,
+                        promises.push(expresso.Common.sendRequest(field.reference.resourcePath, null, null,
                             expresso.Common.buildKendoFilter({pgmKey: field.defaultValue}),
                             {waitOnElement: null}).done(function (result) {
                             if (result.total == 0) {

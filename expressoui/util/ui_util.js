@@ -1839,8 +1839,8 @@ expresso.util.UIUtil = (function () {
                     // verify if the user can create the resource
                     if (id && id !== "0") {
                         // console.log("ID[" + id + "]", id);
-                        if (expresso.Common.isUserAllowed(expresso.Common.getResourceSecurityPathFromPath(reference.wsPath), "update")) {
-                            expresso.Common.sendRequest(reference.wsPath + "/verifyActionsRestrictions", null, null, {
+                        if (expresso.Common.isUserAllowed(expresso.Common.getResourceSecurityPathFromPath(reference.resourcePath), "update")) {
+                            expresso.Common.sendRequest(reference.resourcePath + "/verifyActionsRestrictions", null, null, {
                                 id: id,
                                 actions: "update"
                             }).done(function (result) {
@@ -1851,8 +1851,8 @@ expresso.util.UIUtil = (function () {
                             });
                         }
                     } else {
-                        if (reference.allowCreate === true && expresso.Common.isUserAllowed(expresso.Common.getResourceSecurityPathFromPath(reference.wsPath), "create")) {
-                            expresso.Common.sendRequest(reference.wsPath + "/verifyCreationRestrictions").done(function (result) {
+                        if (reference.allowCreate === true && expresso.Common.isUserAllowed(expresso.Common.getResourceSecurityPathFromPath(reference.resourcePath), "create")) {
+                            expresso.Common.sendRequest(reference.resourcePath + "/verifyCreationRestrictions").done(function (result) {
                                 if (result && result.allowed) {
                                     $icon.removeClass("fa-eye").addClass("fa-plus");
                                 }
@@ -2134,16 +2134,21 @@ expresso.util.UIUtil = (function () {
             $input.closest(".input-wrap").find("label").text(label);
         };
 
+        // @Deprecated
+        var highlightMissingRequiredField = function ($window, fieldName, clazz, removeHighlight) {
+            highlightField($window, fieldName, clazz, removeHighlight);
+        };
+
         /**
          *
-         * @param $window
+         * @param $form
          * @param fieldName
          * @param [clazz]
          * @param [removeHighlight] Removes the highlight when true
          */
-        var highlightMissingRequiredField = function ($window, fieldName, clazz, removeHighlight) {
+        var highlightField = function ($form, fieldName, clazz, removeHighlight) {
             //Check if KendoUI widget because it creates an extra span
-            var $f = $window.find("[name='" + fieldName + "']");
+            var $f = $form.find("[name='" + fieldName + "']");
             if ($f.is("[data-role]")) {
                 $f = $f.closest('.k-widget');
             }
@@ -2493,7 +2498,8 @@ expresso.util.UIUtil = (function () {
             setFieldReadOnly: setFieldReadOnly,
             hideField: hideField,
             updateLabel: updateLabel,
-            highlightMissingRequiredField: highlightMissingRequiredField,
+            highlightMissingRequiredField: highlightMissingRequiredField, // @deprecated
+            highlightField: highlightField,
             displayMissingRequiredFieldNotification: displayMissingRequiredFieldNotification,
 
             buildDropDownList: buildDropDownList,   // local (array or url) and single select

@@ -798,7 +798,8 @@ expresso.Main = function () {
      */
     var initUI = function () {
         // the content must fit the window (set the height of the window)
-        $mainDiv = $("body").find(".main");
+        var $body = $("body");
+        $mainDiv = $body.find(".main");
         $titleDiv = $mainDiv.find(".main-title .title");
         $contentDiv = $mainDiv.find(".main-content");
 
@@ -813,9 +814,12 @@ expresso.Main = function () {
         // initialize the footer
         $footerDiv.html(expresso.Common.getLabel("footerDisclaimer"));
 
+        // $footerDiv.append("<span class='time-to-load-profile'>" + expresso.Security.getTimeToLoadProfile() + "</span>");
+
         // initialize the version section
-        var $versionDiv = $mainDiv.find(".version");
-        $versionDiv.html("v" + expresso.Common.getSiteNamespace().config.Configurations.version);
+        var $versionDiv = $body.find(".version");  // 2 versions: in the title (tablet) and the footer (desktop)
+        $versionDiv.html("v" + expresso.Common.getSiteNamespace().config.Configurations.version +
+            " [" + expresso.Security.getTimeToLoadProfile() + "]");
 
         // initialize the user profile section
         $userDiv.find(".username").text(expresso.Security.getUserInfo().firstName + " " + expresso.Security.getUserInfo().lastName);

@@ -804,21 +804,35 @@ $formPreviewHeight: 12em;
 
 
     label.help {
+        text-decoration: underline;
+
         &:hover {
             cursor: help;
         }
 
-        &:after {
-            content: "i";
-            position: relative;
-            top: -5px;
-            left: 3px;
-            font-size: 75%;
-            font-weight: bold;
-            background-color: $themeColorDark;
-            color: white;
-            border-radius: 50%;
-            padding: 0 4px;
+        //&:after {
+        //    content: "i";
+        //    position: relative;
+        //    top: -5px;
+        //    left: 3px;
+        //    font-size: 75%;
+        //    font-weight: bold;
+        //    background-color: $themeColorDark;
+        //    color: white;
+        //    border-radius: 50%;
+        //    padding: 0 4px;
+        //}
+    }
+
+    .exp-require-approval {
+        label {
+            &:after {
+                font-family: "FontAwesome";
+                content: "\f0e3";
+                font-size: 90%;
+                color: $red;
+                padding-left: 4px;
+            }
         }
     }
 

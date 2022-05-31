@@ -31,6 +31,7 @@ public class AppClassField {
 	private Boolean hidden;
 	private String restrictedRole;
 	private Boolean hierarchicalParent;
+	private String requireApprovalRole;
 
 	public Boolean getHierarchicalParent() {
 		return hierarchicalParent;
@@ -422,4 +423,13 @@ public class AppClassField {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public String getRequireApprovalRole() {
+		return requireApprovalRole;
+	}
+
+	public void setRequireApprovalRole(String requireApprovalRole) {
+		this.requireApprovalRole = requireApprovalRole;
+	}
+
 }

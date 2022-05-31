@@ -3807,7 +3807,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         expresso.layout.resourcemanager.SectionBase.fn.resizeContent.call(this);
         if (this.kendoGrid) {
             try {
-                // this.kendoGrid.refresh();
+                // this.kendoGrid.refresh(); DO NOT DO IT: it freezes Chrome on Android
                 this.kendoGrid.resize();
             } catch (e) {
                 // ignore

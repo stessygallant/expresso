@@ -1,8 +1,3 @@
-var expresso = expresso || {}
-expresso.applications = expresso.applications || {}
-expresso.applications.general = expresso.applications.general || {}
-expresso.applications.general.systemmessagemanager = expresso.applications.general.systemmessagemanager || {}
-
 expresso.applications.general.systemmessagemanager.SystemMessageManager = expresso.layout.resourcemanager.ResourceManager.extend({
 
     // @override
@@ -35,8 +30,6 @@ expresso.applications.general.systemmessagemanager.SystemMessageManager = expres
         };
 
         expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "systemMessage", fields, {
-            form: true,
-            grid: true,
             preview: false
         });
     }

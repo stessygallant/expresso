@@ -409,15 +409,21 @@ public class Util {
 		switch (typeClassName) {
 		case "int":
 		case "Integer":
+			typeClassName = "Integer";
+			break;
 		case "long":
 		case "Long":
+			typeClassName = "Long";
+			break;
 		case "short":
 		case "Short":
-			typeClassName = "Integer";
+			typeClassName = "Short";
 			break;
 
 		case "float":
 		case "Float":
+			typeClassName = "Float";
+			break;
 		case "double":
 		case "Double":
 			typeClassName = "Double";
@@ -449,9 +455,45 @@ public class Util {
 			// System.out.println("Convert [" + value + "] from [" + valueType + "] to [" + expectedTypeClassName + "]");
 
 			switch (expectedTypeClassName) {
+			case "Short":
+				if (valueType.equals("Short")) {
+					result = value;
+				} else if (valueType.equals("Long")) {
+					result = ((Long) value).shortValue();
+				} else if (valueType.equals("Integer")) {
+					result = ((Integer) value).shortValue();
+				} else if (valueType.equals("Float")) {
+					result = ((Float) value).shortValue();
+				} else if (valueType.equals("Double")) {
+					result = ((Double) value).shortValue();
+				} else {
+					result = Short.parseShort((String) value);
+				}
+				break;
+			case "Long":
+				if (valueType.equals("Long")) {
+					result = value;
+				} else if (valueType.equals("Short")) {
+					result = ((Short) value).longValue();
+				} else if (valueType.equals("Integer")) {
+					result = ((Integer) value).longValue();
+				} else if (valueType.equals("Float")) {
+					result = ((Float) value).longValue();
+				} else if (valueType.equals("Double")) {
+					result = ((Double) value).longValue();
+				} else {
+					result = Long.parseLong((String) value);
+				}
+				break;
 			case "Integer":
 				if (valueType.equals("Integer")) {
 					result = value;
+				} else if (valueType.equals("Short")) {
+					result = ((Short) value).intValue();
+				} else if (valueType.equals("Long")) {
+					result = ((Long) value).intValue();
+				} else if (valueType.equals("Float")) {
+					result = ((Float) value).intValue();
 				} else if (valueType.equals("Double")) {
 					result = ((Double) value).intValue();
 				} else {
@@ -459,11 +501,32 @@ public class Util {
 				}
 				break;
 
+			case "Float":
+				if (valueType.equals("Float")) {
+					result = value;
+				} else if (valueType.equals("Short")) {
+					result = ((Short) value).floatValue();
+				} else if (valueType.equals("Long")) {
+					result = ((Long) value).floatValue();
+				} else if (valueType.equals("Integer")) {
+					result = ((Integer) value).floatValue();
+				} else if (valueType.equals("Double")) {
+					result = ((Double) value).floatValue();
+				} else {
+					result = Float.parseFloat((String) value);
+				}
+				break;
 			case "Double":
 				if (valueType.equals("Double")) {
 					result = value;
+				} else if (valueType.equals("Short")) {
+					result = ((Short) value).doubleValue();
+				} else if (valueType.equals("Long")) {
+					result = ((Long) value).doubleValue();
 				} else if (valueType.equals("Integer")) {
 					result = ((Integer) value).doubleValue();
+				} else if (valueType.equals("Float")) {
+					result = ((Float) value).doubleValue();
 				} else {
 					result = Double.parseDouble((String) value);
 				}

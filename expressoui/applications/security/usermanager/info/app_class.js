@@ -16,9 +16,9 @@ expresso.applications.security.usermanager.info.InfoManager = expresso.layout.re
             },
             roleInfoId: {
                 type: "number",
-                reference:  {
+                reference: {
                     resourceName: "roleInfo",
-                    wsPath: "role/0/info"
+                    resourcePath: "role/0/info"
                 }
             },
             numberValue: {
