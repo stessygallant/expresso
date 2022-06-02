@@ -52,6 +52,7 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public RequiredApproval approve(RequiredApproval requiredApproval) throws Exception {
+		// we need to have an exclusive
 		lock(requiredApproval);
 
 		requiredApproval.setApprobationDate(new Date());

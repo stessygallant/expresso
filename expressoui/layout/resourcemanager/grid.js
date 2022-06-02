@@ -2823,20 +2823,15 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             expresso.Common.addKendoFilter(dataSourceOptions.filter, f);
         }
 
-        //console.log("2-this.masterFilter: " + JSON.stringify(this.masterFilter));
+        // console.log("2-this.masterFilter: " + JSON.stringify(this.masterFilter));
 
         // because Kendo will modify the filter and sort, we need to clone it first
         dataSourceOptions = $.extend(true, {}, dataSourceOptions);
         // console.log("********** " + this.resourceManager.resourceName + " v:" + this.virtualScroll + ": " + JSON.stringify(dataSourceOptions));
 
-        // if virtual scroll, use the query method.
-        // but when using local data, we need to force the request, then we need to use "read"
-        var $queryDeferred;
-        if (this.virtualScroll || this.hierarchical) {
-            $queryDeferred = this.kendoGrid.dataSource.query(dataSourceOptions);
-        } else {
-            $queryDeferred = this.kendoGrid.dataSource.read(dataSourceOptions);
-        }
+        // if virtual scroll, use the query method (Do NOT use the read method: filter will not be sent
+        var $queryDeferred = this.kendoGrid.dataSource.query(dataSourceOptions);
+
         if (this.hierarchical) {
             expresso.util.UIUtil.showLoadingMask(this.$domElement, true, {id: "grid"});
         }
@@ -3011,10 +3006,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             pageSize: _this.virtualScroll ? _this.getPageSize() : undefined,
             group: _this.getGroup(),
             aggregate: _this.getAggregate(),
-            serverPaging: _this.virtualScroll,
-            serverFiltering: _this.virtualScroll || _this.hierarchical,
-            serverSorting: _this.virtualScroll,
-            filter: _this.isFilterable() ? _this.getInitialGridFilter() : undefined
+            serverPaging: _this.autoSyncGridDataSource,
+            serverFiltering: _this.autoSyncGridDataSource,
+            serverSorting: _this.autoSyncGridDataSource,
+            filter: _this.autoSyncGridDataSource && _this.isFilterable() ? _this.getInitialGridFilter() : undefined
         };
     },
 
