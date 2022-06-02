@@ -303,7 +303,8 @@ expresso.util.Util = (function () {
         var parentRootId = options.parentRootId || null;
         var expanded = options.expanded || false;
         var maxDepth = options.maxDepth || null;
-        console.log("parentIdFieldName: " + parentIdFieldName);
+        // console.log("parentIdFieldName: " + parentIdFieldName);
+
         var hash = {};
         for (var i = 0; i < data.length; i++) {
             var item = data[i];

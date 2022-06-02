@@ -342,8 +342,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     }
 
                     // highlight the field if the modification will need approval
-                    if (field.requireApprovalRole /* TODO && !expresso.Common.isUserInRole(field.requireApprovalRole)*/) {
-                        console.log(field.name + " require approval role [" + field.requireApprovalRole + "]");
+                    if (field.requireApprovalRole && !expresso.Common.isUserInRole(field.requireApprovalRole)) {
+                        // console.log(field.name + " require approval role [" + field.requireApprovalRole + "]");
                         $this.closest(".input-wrap").addClass("exp-require-approval");
                     }
                 }

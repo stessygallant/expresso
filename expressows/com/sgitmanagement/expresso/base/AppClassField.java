@@ -344,7 +344,7 @@ public class AppClassField {
 	}
 
 	public static class Reference {
-		private String wsPath;
+		private String resourcePath;
 		private Query.Filter filter;
 
 		private String fieldName;
@@ -355,16 +355,16 @@ public class AppClassField {
 
 		}
 
-		public Reference(String wsPath) {
-			this.wsPath = wsPath;
+		public Reference(String resourcePath) {
+			this.resourcePath = resourcePath;
 		}
 
-		public String getWsPath() {
-			return wsPath;
+		public String getResourcePath() {
+			return resourcePath;
 		}
 
-		public void setWsPath(String wsPath) {
-			this.wsPath = wsPath;
+		public void setResourcePath(String resourcePath) {
+			this.resourcePath = resourcePath;
 		}
 
 		public Query.Filter getFilter() {
