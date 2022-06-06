@@ -12,6 +12,7 @@ expresso.applications.general.requiredapprovalmanager.Labels = {
     approbationUser: "Approbateur",
     approbationDate: "Date d'approbation",
     approbationSection: "Approbation",
+    notes: "Notes",
 
     _: ""
 };

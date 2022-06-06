@@ -745,6 +745,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         // var actions = [];
         // var action = {
         //     name: "myaction",
+        //     securityActionPgmKey: "action"      // default is the name
         //     icon: "myicon",
         //     primary: false,                      // default is false
         //     showButtonInGridToolbar: true,       // default is in configuration
@@ -799,6 +800,10 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
                             name: action,
                             pgmKey: action
                         };
+                    }
+
+                    if (action.securityActionPgmKey) {
+                        action.pgmKey = action.securityActionPgmKey;
                     }
 
                     if (!action.pgmKey) {

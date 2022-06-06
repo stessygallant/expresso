@@ -29,8 +29,9 @@ public class AuthenticationService extends BaseService {
 	 * 
 	 * @throws Exception
 	 */
-	public void validateUser(User user) throws Exception {
+	public void login(User user) throws Exception {
 		UserService userService = newService(UserService.class, User.class);
+		userService.lock(user);
 
 		// validate the password expiration date
 		if (user.getPasswordExpirationDate() != null && user.getPasswordExpirationDate().before(new Date())) {

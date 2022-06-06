@@ -81,7 +81,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     // maximum length for the name of a grid preference
     maxGridFilterNameLength: 15,
 
-    // this filter is always applied
+    // getInitialGridFilter -> initial only (should only be grid filters as the user may remove them)
+    // masterFilter -> permanent (cannot be erased) this filter is always applied
+    // masterFilter may come from this.resourceManager.options.filter or this.resourceManager.options.queryParameters.filter
     masterFilter: undefined,
 
     // reference to the context menu for preferences
@@ -2554,9 +2556,63 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @param event
      */
     onSaved: function (dataItem, originalDataItem, event) {
+        var _this = this;
         if (this.synchingResource) {
             this.synchingResource = false;
             this.customForm.onSaved(dataItem, originalDataItem);
+
+            // if save is successful and some fields need to be approved
+            if (dataItem && originalDataItem && this.resourceManager.model.requireApprovalRole) {
+                for (var fieldName in this.resourceManager.model.fields) {
+                    var modelField = this.resourceManager.model.fields[fieldName];
+                    if (modelField.requireApprovalRole && dataItem[fieldName] !== originalDataItem[fieldName]) {
+                        if (!expresso.Security.isUserInRole(modelField.requireApprovalRole)) {
+                            console.log("requireApprovalRole [" + modelField.requireApprovalRole + "] field[" + fieldName +
+                                "] old[" + dataItem[fieldName] + "] new[" + originalDataItem[fieldName] + "]");
+                            expresso.util.UIUtil.buildCommentWindow(this.getLabel("requireApprovalNote", {
+                                field: _this.getLabel(fieldName)
+                            }), {fieldName: fieldName}).done(function (comment) {
+                                var fieldName = comment.fieldName;
+
+                                // get the latest requiredApproval for this and add a note
+                                _this.sendRequest("requiredApproval", null, null,
+                                    expresso.Common.buildKendoFilter({
+                                        resourceName: _this.resourceManager.resourceName,
+                                        resourceId: dataItem.id,
+                                        resourceFieldName: fieldName
+                                    }, {
+                                        pageSize: 1,
+                                        sort: [{
+                                            field: "creationDate",
+                                            dir: "desc"
+                                        }]
+                                    })).done(function (requiredApprovals) {
+                                    if (requiredApprovals.data.length == 1) {
+                                        var requiredApproval = requiredApprovals.data[0];
+                                        _this.sendRequest("requiredApproval/" + requiredApproval.id, "update",
+                                            $.param({notes: comment[comment.fieldName]}));
+                                    } else {
+                                        console.log("requiredApproval not found!!!");
+                                    }
+                                });
+                                // var requiredApproval = {
+                                //     type: "requiredApproval",
+                                //     resourceName: _this.resourceManager.resourceName,
+                                //     resourceId: dataItem.id,
+                                //     resourceNo: _this.resourceManager.resourceFieldNo,
+                                //     resourceFieldName: fieldName,
+                                //     oldValue: dataItem[fieldName],
+                                //     newValue: originalDataItem[fieldName],
+                                //     newValueReferenceId: fieldName.endsWith("Id") ? originalDataItem[fieldName] : null,
+                                //     notes: comment[comment.fieldName]
+                                // };
+                                // _this.sendRequest("requiredApproval", "create", requiredApproval);
+                            });
+                        }
+                    }
+                }
+            }
+
             if (event) {
                 this.publishEvent(event, dataItem);
             }
@@ -2770,7 +2826,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     loadResources: function (query, autoEdit, clearFilters) {
         var _this = this;
-        // console.log("CALLING loadResources - " + this.resourceManager.resourceName + ": " + JSON.stringify(query));
+        // console.log("CALLING loadResources - " + this.resourceManager.resourceName + " clearFilters:" + clearFilters + ": " + JSON.stringify(query));
 
         // avoid null issue
         query = query || {};
@@ -3723,6 +3779,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // add only for master resource manager
         // for sub resource and sibling resource, do not add them: it can cause issue with
         // multiplication of the filter
+        // TODO remove this condition
         if (this.resourceManager.displayAsMaster) {
             var dataSourceFilter = this.dataSource.filter();
             //console.log("dataSourceFilter 1: " + JSON.stringify(dataSourceFilter));

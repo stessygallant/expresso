@@ -197,8 +197,6 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 	 */
 	@Override
 	protected void createUpdateApprobationRequired(E e, Field field, Object currentValue, Object newValue) throws Exception {
-		// to be implemented by the subclass
-		logger.debug("Creating UpdateApprobationRequired entry");
 		try {
 			String currentStringValue = null;
 			String newStringValue = null;

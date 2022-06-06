@@ -443,7 +443,7 @@ public class Query {
 			eq, neq, isNotNull, isNull,
 
 			// number and string only
-			in,
+			in, notIn,
 
 			// reserved to framework
 			@Deprecated

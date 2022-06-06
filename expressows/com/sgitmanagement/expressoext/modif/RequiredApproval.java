@@ -50,6 +50,9 @@ public class RequiredApproval extends BaseCreatableEntity {
 	@JoinColumn(name = "required_approval_status_id", insertable = false, updatable = false)
 	private RequiredApprovalStatus requiredApprovalStatus;
 
+	@Column(name = "notes")
+	private String notes;
+
 	@Column(name = "approbation_comment")
 	private String approbationComment;
 
@@ -176,5 +179,13 @@ public class RequiredApproval extends BaseCreatableEntity {
 
 	public void setResourceNo(String resourceNo) {
 		this.resourceNo = resourceNo;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 }

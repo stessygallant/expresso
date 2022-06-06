@@ -130,6 +130,7 @@ public class AuthorizationFilter implements Filter {
 					} else if (securityPath.equals("websocket")) {
 						allowed = AuthorizationHelper.isUserAllowed(user, action, resources);
 					} else {
+						// rest or sso
 
 						// verify that the user has the permission to execute the action on the resource
 						if (user == null) {

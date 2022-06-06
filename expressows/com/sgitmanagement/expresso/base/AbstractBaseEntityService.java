@@ -58,6 +58,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.Hibernate;
@@ -384,11 +385,16 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				// if the entity has some UpdateApprobationRequired field, create an UpdateApprobationRequired entry and do not change the value
-				if (field.getAnnotation(RequireApproval.class) != null) {
-					if (!Util.equals(newValue, oldValue)) {
-						createUpdateApprobationRequired(dest, field, oldValue, newValue);
+				if (field.getAnnotation(RequireApproval.class) != null && !Util.equals(newValue, oldValue)) {
+					String requireApprovalRole = field.getAnnotation(RequireApproval.class).role();
+					if (requireApprovalRole == null || requireApprovalRole.length() == 0) {
+						// get it from the resource
+						requireApprovalRole = typeOf.getAnnotation(RequireApproval.class).role();
 					}
-					continue;
+					if (!isUserInRole(requireApprovalRole)) {
+						createUpdateApprobationRequired(dest, field, oldValue, newValue);
+						continue;
+					}
 				}
 
 				if (oldValue != null && (IEntity.class.isInstance(oldValue) || EntityDerived.class.isInstance(oldValue))) {
@@ -472,6 +478,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	protected void createUpdateApprobationRequired(E e, Field field, Object currentValue, Object newValue) throws Exception {
 		// to be implemented by the subclass
+		throw new NotImplementedException();
 	}
 
 	/**
@@ -1794,6 +1801,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					integerValue = ((Double) filter.getValue()).intValue();
 				} else if (valueType.equals("ArrayList")) {
 					integerValues = (List<Integer>) filter.getValue();
+				} else if (valueType.equals("Integer[]")) {
+					integerValues = Arrays.asList((Integer[]) filter.getValue());
 				} else {
 					String v = (String) filter.getValue();
 					try {
@@ -1846,6 +1855,18 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 
 					predicate = cb.or(getInPredicate(inMaxValues, integerValues, path, cb, false).toArray(new Predicate[0]));
+					break;
+
+				case notIn:
+					distinctNeeded = true;
+					if (integerValues == null) {
+						integerValues = new ArrayList<Integer>();
+						if (integerValue != null) {
+							integerValues.add(integerValue);
+						}
+					}
+
+					predicate = cb.not(cb.or(getInPredicate(inMaxValues, integerValues, path, cb, false).toArray(new Predicate[0])));
 					break;
 
 				default:
@@ -2069,15 +2090,15 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			case "String":
 				String stringValue = null;
 				List<String> stringValues = null;
-				Expression stringPath;
+				Expression stringPath = path;
 
-				if (filter.getOperator().equals(Operator.eq) || filter.getOperator().equals(Operator.neq) || !caseSensitive) {
+				if (valueType.equals("String") && (filter.getOperator().equals(Operator.eq) || filter.getOperator().equals(Operator.neq) || !caseSensitive)) {
 					stringValue = (String) filter.getValue();
-					stringPath = path;
 				} else if (valueType.equals("ArrayList")) {
 					stringValues = (List<String>) filter.getValue();
-					stringPath = path;
-				} else {
+				} else if (valueType.equals("String[]")) {
+					stringValues = Arrays.asList((String[]) filter.getValue());
+				} else { // valueType.equals("String")
 					// compare lowercase only
 					stringValue = ((String) filter.getValue()).toLowerCase();
 					stringPath = cb.lower(path);
@@ -2136,6 +2157,16 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						}
 					}
 					predicate = cb.or(getInPredicate(inMaxValues, stringValues, path, cb, false).toArray(new Predicate[0]));
+					break;
+				case notIn:
+					distinctNeeded = true;
+					if (stringValues == null) {
+						stringValues = new ArrayList<String>();
+						if (stringValue != null) {
+							stringValues.add(stringValue);
+						}
+					}
+					predicate = cb.not(cb.or(getInPredicate(inMaxValues, stringValues, path, cb, false).toArray(new Predicate[0])));
 					break;
 				case trimIn:
 					distinctNeeded = true;
@@ -2839,9 +2870,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				}
 
-				// verify if the field is protected by a restricted role
-				appClassField.setRestrictedRole(FieldRestrictionUtil.INSTANCE.getFieldRestrictionRole(getResourceName(), fieldName));
-
 				// if it is a formula, it cannot be saved, set it transient
 				if (field.isAnnotationPresent(Formula.class)) {
 					appClassField.setTransient(true);
@@ -2890,8 +2918,19 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					appClassField.setHierarchicalParent(true);
 				}
 
+				// verify if the field is protected by a restricted role
+				if (field.isAnnotationPresent(FieldRestriction.class)) {
+					appClassField.setRestrictedRole(FieldRestrictionUtil.INSTANCE.getFieldRestrictionRole(getResourceName(), fieldName));
+				}
+
+				// verify if the field is protected by approbation for modification
 				if (field.isAnnotationPresent(RequireApproval.class)) {
-					appClassField.setRequireApprovalRole(field.getAnnotation(RequireApproval.class).role());
+					String requireApprovalRole = field.getAnnotation(RequireApproval.class).role();
+					if (requireApprovalRole == null || requireApprovalRole.length() == 0) {
+						// get it from the resource
+						requireApprovalRole = getTypeOfE().getAnnotation(RequireApproval.class).role();
+					}
+					appClassField.setRequireApprovalRole(requireApprovalRole);
 				}
 
 				if (exported) {

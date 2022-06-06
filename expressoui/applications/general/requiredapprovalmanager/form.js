@@ -7,9 +7,5 @@ expresso.applications.general.requiredapprovalmanager.Form = expresso.layout.res
         if (!resource.approbationDate) {
             expresso.util.UIUtil.hideField($window.find(".approbation"));
         }
-
-        //if (!expresso.Security.isAdmin()) {
-        expresso.util.UIUtil.setFormReadOnly($window.find(".exp-form"));
-        //}
     }
 });

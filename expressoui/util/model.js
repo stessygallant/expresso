@@ -390,6 +390,10 @@ expresso.util.Model = (function () {
 
                                     // set if require approval
                                     modelField.requireApprovalRole = field.requireApprovalRole;
+                                    if (field.requireApprovalRole) {
+                                        // set a flag on the model
+                                        resourceManager.model.requireApprovalRole = true;
+                                    }
                                 }
                             }
                         })

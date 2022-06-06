@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
 
 @Target({ ElementType.TYPE, ElementType.FIELD })
 public @interface FieldRestriction {
-	public String role() default "";
+	public String role() default "";// only mandatory for Type
 }

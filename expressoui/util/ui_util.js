@@ -490,7 +490,16 @@ expresso.util.UIUtil = (function () {
                 },
                 save: function () {
                     var comment = this.find("textarea").val();
-                    $deferred.resolve(comment);
+
+                    if (customOptions.fieldName) {
+                        var r = {
+                            fieldName: customOptions.fieldName
+                        };
+                        r[customOptions.fieldName] = comment;
+                        $deferred.resolve(r);
+                    } else {
+                        $deferred.resolve(comment);
+                    }
                 }
             });
 
@@ -2299,8 +2308,8 @@ expresso.util.UIUtil = (function () {
             customOptions = customOptions || {};
             if ($element && $element.length == 1) {
                 if (show || show === undefined) {
-                    if (!$element.children(".exp-loading-mask").length || customOptions.id) {
-                        return $("<div class='exp-loading-mask'" +
+                    if (!$element.children(".k-loading-mask").length || customOptions.id) {
+                        return $("<div class='k-loading-mask exp-loading-mask'" +
                             (customOptions.id ? " data-mask-id='" + customOptions.id + "'" : "") + ">" +
                             "<div class='k-loading-image'></div><div class='k-loading-color'></div>" +
                             (customOptions.text ? "<span class='exp-loading-text'>" + customOptions.text + "</span>" : "") +

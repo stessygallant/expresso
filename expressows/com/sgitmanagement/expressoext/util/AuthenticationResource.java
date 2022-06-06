@@ -16,7 +16,7 @@ public class AuthenticationResource extends BaseResource<AuthenticationService> 
 	}
 
 	public void login(MultivaluedMap<String, String> formParams) throws Exception {
-		getService().validateUser(getUser());
+		getService().login(getUser());
 	}
 
 	public void logout(MultivaluedMap<String, String> formParams) throws Exception {

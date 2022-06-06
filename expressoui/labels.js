@@ -326,6 +326,7 @@ $.extend(expresso.Labels, {
     noRecord: "Aucun enregistrement",
     record: "enregistrement",
     nbrSelectedRecord: "{count} sélectionnés",
+    requireApprovalNote: "Note pour le champ '{field}'",
 
     january: "Janvier",
     february: "Février",

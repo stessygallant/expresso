@@ -7,7 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 
-@Target({ ElementType.FIELD })
+@Target({ ElementType.TYPE, ElementType.FIELD })
 public @interface RequireApproval {
-	public String role();
+	public String role() default ""; // only mandatory for Type
+
 }

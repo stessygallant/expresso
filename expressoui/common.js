@@ -940,14 +940,7 @@ expresso.Common = (function () {
         }
 
         if ($domElement) {
-            // if there is already a k-loading-mask, do not add one
-            if ($domElement.children(".k-loading-mask").length) {
-                $domElement = null;
-            } else {
-                // console.log("1-START progress path[" + path + "] action[" + action + "] div[" +
-                //      $domElement[0].nodeName + "] class[" + $domElement[0].className + "]");
-                expresso.util.UIUtil.showLoadingMask($domElement, true);
-            }
+            expresso.util.UIUtil.showLoadingMask($domElement, true);
         }
 
         if (!action) {

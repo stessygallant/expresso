@@ -29,13 +29,21 @@ expresso.applications.general.requiredapprovalmanager.Grid = expresso.layout.res
             }
         }, {
             field: "fmtResourceFieldName",
-            width: 160
+            width: 150
         }, {
             field: "oldValue",
-            width: 250
+            width: 200
         }, {
             field: "newValue",
-            width: 250
+            width: 200
+        }, {
+            field: "creationDate"
+        }, {
+            field: "creationUserFullName",
+            width: 150
+        }, {
+            field: "notes",
+            width: 300
         }, {
             field: "approbationUser.fullName",
             width: 160,
