@@ -693,6 +693,46 @@ public class Query {
 			return true;
 		}
 
+		/**
+		 * Get the first filter that matches the field
+		 *
+		 * @param field
+		 * @return
+		 */
+		public Filter getFilter(String field) {
+			List<Filter> list = getFilters(field);
+			if (list == null || list.isEmpty()) {
+				return null;
+			} else {
+				return list.get(0);
+			}
+		}
+
+		/**
+		 * Get all filters that match the field
+		 *
+		 * @param field
+		 * @return
+		 */
+		public List<Filter> getFilters(String field) {
+			return getFilters(field, false);
+		}
+
+		/**
+		 *
+		 * @param field
+		 * @param startsWith
+		 * @return
+		 */
+		public List<Filter> getFilters(String field, boolean startsWith) {
+			List<Filter> list = null;
+			if (this.filters != null || this.field != null) {
+				list = new ArrayList<>();
+				getFilters(list, field, startsWith);
+			}
+			return list;
+		}
+
 		@Override
 		public String toString() {
 			String s = "Filter [";

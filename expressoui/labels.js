@@ -188,6 +188,7 @@ $.extend(expresso.Labels, {
     filterRangeLast365Days: "Derniers 365 jours",
     filterStaticDateRangeType: "Plage de dates",
     filterDynamicDateRangeType: "Dynamique",
+    filterNoDateType: "Aucune date",
 
     reports: "Rapports",
     executeReport: "Exécuter",

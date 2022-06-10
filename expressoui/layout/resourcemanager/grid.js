@@ -60,6 +60,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     // define if the grid must use virtual scrolling
     virtualScroll: undefined,
 
+    // by default, sort and filter from the server
+    localData: false,
+
     // by default, duplicate is done server side
     serverSideDuplicate: undefined,
 
@@ -205,6 +208,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // when using local data, do not sync datasource (default is auto sync)
         this.autoSyncGridDataSource = (this.resourceManager.options.autoSyncGridDataSource !== false);
+
+        // when using local data, we cannot use virtualScroll
+        if (this.localData) {
+            this.virtualScroll = false;
+        }
 
         // we cannot support virtual scrolling if there is a group or aggregate
         if (this.virtualScroll === undefined) {
@@ -1747,6 +1755,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     $filterMenu.find("select.date-range-selector").setval(f.value);
                     $filterMenu.find("input.start-date").setval(null);
                     $filterMenu.find("input.end-date").setval(null);
+                } else if (!f.value) {
+                    $filterMenu.find("input[name=dateRangeType][value=none]").prop("checked", true);
                 } else {
                     // set it to static
                     $filterMenu.find("input[name=dateRangeType][value=static]").prop("checked", true);
@@ -1802,6 +1812,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             "      <option value='LAST365DAYS'>" + _this.getLabel("filterRangeLast365Days") + "</option>" +
             "   </select>" +
             "  </div>" +
+            "<div class='static-range'><label>" +
+            " <input type='radio' name='dateRangeType' value='none'>" +
+            _this.getLabel("filterNoDateType") + "</label>" +
+            "</div>" +
             "</div>" +
             "<div class='k-action-buttons'>" +
             "  <button type='submit' class='k-button k-primary'>" + _this.getLabel("filter") + "</button>" +
@@ -1857,9 +1871,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     });
                 }
                 //console.log("3-dataSource.filter() : " + JSON.stringify(filter));
-            } else { // dynamic
+            } else if (dateRangeType == "dynamic") {
                 var rangeSelector = $filterMenu.find("select.date-range-selector").val();
                 filter.filters.push({field: fieldName, operator: "eq", value: rangeSelector});
+            } else { // none
+                filter.filters.push({field: fieldName, operator: "eq", value: null});
             }
 
             // apply the filter (perform a request to the backend)
@@ -3062,9 +3078,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             pageSize: _this.virtualScroll ? _this.getPageSize() : undefined,
             group: _this.getGroup(),
             aggregate: _this.getAggregate(),
-            serverPaging: _this.autoSyncGridDataSource,
-            serverFiltering: _this.autoSyncGridDataSource,
-            serverSorting: _this.autoSyncGridDataSource,
+            serverPaging: _this.autoSyncGridDataSource && !_this.localData,
+            serverFiltering: _this.autoSyncGridDataSource && !_this.localData,
+            serverSorting: _this.autoSyncGridDataSource && !_this.localData,
             filter: _this.autoSyncGridDataSource && _this.isFilterable() ? _this.getInitialGridFilter() : undefined
         };
     },
@@ -3370,7 +3386,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             needSeparator = true;
         }
 
-        if (this.isFilterable()) {
+        if (this.isFilterable() && !this.localData) {
             // add the refresh button
             toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-refresh-button" title="refresh"><span class="fa fa-refresh"><span class="exp-button-label" data-text-key="refreshButton"></span></span></button>'});
             needSeparator = true;
