@@ -60,7 +60,7 @@ expresso.layout.resourcemanager.TreeFilter = expresso.layout.resourcemanager.Fil
         var filters = [];
         var $treeView = this.$domElement.find(".exp-filter-tree-view");
         var treeView = $treeView.data("kendoTreeView");
-        var $selectedNodes = $treeView.find("[type=checkbox]:checked,[type=checkbox]:indeterminate");
+        var $selectedNodes = $treeView.find("[type=checkbox]:checked"); //,[type=checkbox]:indeterminate
         if ($selectedNodes.length) {
             $selectedNodes.each(function () {
                 var dataItem = treeView.dataItem($(this).closest("li"));

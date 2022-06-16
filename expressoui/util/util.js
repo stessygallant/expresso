@@ -357,6 +357,82 @@ expresso.util.Util = (function () {
         return ~~(numToTruncate * numPower) / numPower;
     };
 
+    /**
+     * Get chart options based on the frequency and the date range
+     * @param frequencyInSeconds
+     * @param fromDate
+     * @param toDate
+     * @param maxNbrPoints
+     */
+    var getChartOptions = function (frequencyInSeconds, fromDate, toDate, maxNbrPoints) {
+        // console.log("fromDate: " + fromDate);
+        // console.log("toDate: " + toDate);
+
+        // default 25
+        maxNbrPoints = maxNbrPoints || 25;
+
+        // calculate the number of points and label to display depending on the range
+        var frequencyInHours = frequencyInSeconds / 60 / 60;
+        // console.log("frequencyInHours: " + frequencyInHours);
+
+        var rangeInHours = (toDate.getTime() - fromDate.getTime()) / 1000 / 60 / 60;
+        // console.log("rangeInHours: " + rangeInHours);
+
+        var nbrPoints = Math.floor(rangeInHours / frequencyInHours);
+        // console.log("nbrPoints: " + nbrPoints);
+
+        var step = nbrPoints < maxNbrPoints ? 1 : (Math.floor(nbrPoints / maxNbrPoints) + 1);// maximum nbr labels
+        // console.log("step: " + step);
+
+        var baseUnit;
+        var frequency;
+        if (frequencyInHours < 24) {
+            baseUnit = "hours";
+            frequency = Math.floor(frequencyInHours);
+        } else if (frequencyInHours < (24 * 7)) {
+            baseUnit = "days";
+            frequency = Math.floor(frequencyInHours / 24);
+        } else if (frequencyInHours < (24 * 7 * 4)) {
+            baseUnit = "weeks";
+            frequency = Math.floor(frequencyInHours / (24 * 7));
+        } else if (frequencyInHours < (24 * 7 * 4 * 12)) {
+            baseUnit = "months";
+            frequency = Math.floor(frequencyInHours / (24 * 7 * 4));
+        } else {
+            baseUnit = "years";
+            frequency = 1;
+        }
+        // console.log("baseUnit: " + baseUnit);
+        // console.log("frequency: " + frequency);
+
+        var dateFormat;
+        if (rangeInHours <= 24) { // 1 day
+            dateFormat = "d MMM HH:mm";
+        } else if (rangeInHours <= (24 * 7)) { // 1 week
+            dateFormat = (baseUnit == "hours" ? "d MMM HH:mm" : "d MMM");
+        } else if (rangeInHours <= (24 * 31)) { // 1 month
+            dateFormat = (baseUnit == "hours" ? "d MMM HH:mm" : "d MMM");
+        } else {
+            dateFormat = "d MMM yyyy";
+        }
+        // console.log("dateFormat: " + dateFormat);
+
+        var dateFormats = {};
+        dateFormats[baseUnit] = dateFormat;
+
+        return {
+            categoryAxis: {
+                baseUnitStep: frequency,
+                baseUnit: baseUnit,
+                maxDateGroups: nbrPoints,
+                labels: {
+                    step: step, // but put labels only on a few
+                    dateFormats: dateFormats
+                }
+            }
+        };
+    };
+
     // return public properties and methods
     return {
         // public methods
@@ -375,6 +451,7 @@ expresso.util.Util = (function () {
         getFirstBrowserLanguage: getFirstBrowserLanguage,
         copyToClipboard: copyToClipboard,
         makeTreeFromFlatList: makeTreeFromFlatList,
-        trunc: trunc
+        trunc: trunc,
+        getChartOptions: getChartOptions
     }
 }());
