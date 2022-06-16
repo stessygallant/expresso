@@ -2388,45 +2388,51 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.resizeContent();
         }
 
-        if (this.virtualScroll) {
-            // between pages, we need to reselect the rows
-            if (this.selectedRows.length) {
-                // reselect rows
-                $.each(_this.selectedRows, function () {
-                    var dataItem = this;
-                    var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
-                    _this.highlightSelectedRow($row);
-                });
-            } else {
-                this.selectFirstRow();
-            }
-        } else {
-
-            if (this.selectedRows.length) {
-
-            }
-        }
-
         // now reselect the row if needed (or the first one)
         if (this.selectedRows.length) {
-            if (this.hierarchical) {
-                // this happens because the TreeList does not fire event on filter
-                // clear the list and select the first one
-                this.clearSelection();
-                this.selectFirstRow();
-            } else {
-                // reselect rows
+            if (this.virtualScroll) {
+                // between pages, we need to reselect the rows
                 $.each(this.selectedRows, function () {
                     var dataItem = this;
                     var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
                     _this.highlightSelectedRow($row);
                 });
+            } else if (this.hierarchical) {
+                // this happens because the TreeList does not fire event on filter
+                // clear the list and select the first one
+                // but then we update a subresource, the databound is also called.
+                var clearSelection = true;
+                if (this.selectedRows.length == 1) {
+                    $.each(this.selectedRows, function () {
+                        var dataItem = this;
+                        var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
+                        if ($row.length) {
+                            _this.highlightSelectedRow($row);
+                            clearSelection = false;
+                        }
+                    });
+                }
+
+                if (clearSelection) {
+                    this.clearSelection();
+                    this.selectFirstRow();
+                }
             }
         } else {
             this.selectFirstRow();
         }
 
         if (this.hierarchical) {
+            // by default, the tree is expanded. Collapse if needed
+            var $toolbar = this.$domElement.find(".k-grid-toolbar");
+            var $icon = $toolbar.find(".exp-hierarchical-expand-button .fa");
+            var expand = $icon.hasClass("fa-expand");
+            if (expand) {
+                $.each($("tr.k-treelist-group", _this.kendoGrid.tbody), function () {
+                    _this.kendoGrid.collapse(this);
+                });
+            }
+
             // TreeList does not display a loading mask on sort and filter
             // we had to display it. Remove it now
             expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: "readDataSourceTreeList"});

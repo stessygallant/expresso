@@ -18,7 +18,7 @@
                 "isEmpty", "isNotEmpty", "trimCompare", "neqTrimCompare", "equalsIgnoreCase"],
             dateOnly: ["timestampEquals", "sameDayEquals", "truncGt", "truncLt", "truncLte", "truncGte"],
             dateAndNumber: ["gt", "lt", "lte", "gte"],
-            stringAndNumber: ["in"]
+            stringAndNumber: ["in", "notIn"]
         },
 
         // options
@@ -336,7 +336,7 @@
                             }
 
                             // empty value are null
-                            if (!value && value !== 0) {
+                            if (!value && value !== 0 && value !== false) {
                                 value = null;
                             }
                             filter.filters.push({field: field, operator: operator, value: value});
