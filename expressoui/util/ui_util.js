@@ -97,6 +97,12 @@ expresso.util.UIUtil = (function () {
                     case "checkbox":
                         widget = null;
                         break;
+                    case "radiogroup":
+                        widget = $element.data("kendoRadioGroup");
+                        break;
+                    case "radiobutton":
+                        widget = $element.data("kendoRadioButton");
+                        break;
 
                     // Expresso Custom
                     case "expressolanguageselector":

@@ -127,7 +127,9 @@ $.extend(expresso.Labels, {
     message_error: "Error",
 
     // error
-    invalidCaptcha: "Captcha not valid",
+    invalidCaptcha: "Cannot validate Captcha",
+    invalidCaptchaNotSuccess: "Captcha not valid",
+    invalidCaptchaScoreTooLow: "You are a robot",
     invalidUsername: "Invalid userName",
     invalidPassword: "Incorrect password",
     invalidNewStrongPassword: "Invalid password.<br>Rules:<ul><li>At least 8 chars</li></ul>",
@@ -143,7 +145,7 @@ $.extend(expresso.Labels, {
     wrongEntityVersion: "This entity has been modified by another user/process. Your changes have not been saved. Please retry",
     cannotCreateUser: "You cannot create this user account",
     userIsNotCreator: "You cannot modify this record",
-    tooManyRecordsForSelection: "Too many records for selection.",
+    tooManyRecordsForSelection: "Too many records for selection. You could the Excel button to get a report of all records.",
     userNotAllowedToModify: "You cannot modify this record",
     unableToLocatePrinter: "Printer [{printerName}] is not properly configured on the server",
     unableToResolveIP: "Server cannot determine your computer's name from your IP [{ip}]",
