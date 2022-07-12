@@ -1171,6 +1171,54 @@ public class Util {
 		return Response.status(code).entity(new Gson().toJson(map)).type(MediaType.APPLICATION_JSON).build();
 	}
 
+	static public void verifyRecaptchaResponse(String recaptchaResponse, String secretKey) throws Exception {
+		String url = "https://www.google.com";
+		String path = "/recaptcha/api/siteverify";
+
+		ClientConfig clientConfig = new ClientConfig();
+		Client client = ClientBuilder.newClient(clientConfig);
+
+		try {
+			WebTarget target = client.target(url).path(path);
+
+			// build request
+			Invocation.Builder requestBuilder = target.request().accept(MediaType.APPLICATION_JSON);
+
+			MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
+			formData.add("secret", secretKey);
+			formData.add("response", recaptchaResponse);
+
+			// POST the request
+			Response response = requestBuilder.post(Entity.entity(formData, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+			try {
+				String responseJSON = response.readEntity(String.class);
+				if (response.getStatus() == 200) {
+					JsonObject responseObject = new Gson().fromJson(responseJSON, JsonObject.class);
+					boolean success = responseObject.get("success").getAsBoolean();
+					if (!success) {
+						System.err.println(response.getStatus() + " " + responseJSON);
+						throw new ValidationException("invalidCaptchaNotSuccess");
+					}
+
+					// reCAPTCHA v3
+					if (responseObject.get("score") != null) {
+						float score = responseObject.get("score").getAsFloat();
+						if (score < 0.5) {
+							throw new ValidationException("invalidCaptchaScoreTooLow");
+						}
+					}
+
+				} else {
+					throw new ValidationException("invalidCaptcha");
+				}
+			} finally {
+				response.close();
+			}
+
+		} finally {
+			client.close();
+		}
+	}
 	static public void main(String[] args) {
 		// System.out.println(purgeInvalidCharacters("éàçïôèÉ"));
 
