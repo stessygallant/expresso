@@ -706,7 +706,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 }
 
                 // assign the title of the column
-                if (column.field && !column.title) {
+                if (column.field && !column.title && column.title !== "") {
                     column.title = _this.getLabel(column.field, null, false, true);
                 }
 
@@ -2424,14 +2424,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
 
         if (this.hierarchical) {
-            // by default, the tree is expanded. Collapse if needed
+            // by default, the tree is expanded.
+            // make sure that the button is correct
             var $toolbar = this.$domElement.find(".k-grid-toolbar");
             var $icon = $toolbar.find(".exp-hierarchical-expand-button .fa");
             var expand = $icon.hasClass("fa-expand");
             if (expand) {
-                $.each($("tr.k-treelist-group", _this.kendoGrid.tbody), function () {
-                    _this.kendoGrid.collapse(this);
-                });
+                // change the button to collapse
+                $icon.addClass("fa-compress").removeClass("fa-expand");
             }
 
             // TreeList does not display a loading mask on sort and filter
