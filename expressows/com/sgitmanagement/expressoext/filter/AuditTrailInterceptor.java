@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.base.Auditable;
 import com.sgitmanagement.expresso.base.Creatable;
+import com.sgitmanagement.expresso.base.FieldRestriction;
 import com.sgitmanagement.expresso.base.ForbidAudit;
 import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.base.Updatable;
@@ -149,7 +150,8 @@ public class AuditTrailInterceptor extends EmptyInterceptor {
 			// do not log
 		} else if ((currentValue == null && (newValue != null && newValue.equals(""))) || (newValue == null && (currentValue != null && currentValue.equals("")))) {
 			// ignore difference between null and empty
-		} else if (field != null && (field.isAnnotationPresent(ForbidAudit.class) || field.isAnnotationPresent(Formula.class) || field.isAnnotationPresent(Transient.class))) {
+		} else if (field != null && (field.isAnnotationPresent(ForbidAudit.class) || field.isAnnotationPresent(FieldRestriction.class) || field.isAnnotationPresent(Formula.class)
+				|| field.isAnnotationPresent(Transient.class))) {
 			// do not audit
 		} else if (fieldName.endsWith("Ids")) {
 			// do not audit

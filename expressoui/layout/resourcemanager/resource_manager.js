@@ -749,6 +749,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         //     icon: "myicon",
         //     primary: false,                      // default is false
         //     showButtonInGridToolbar: true,       // default is in configuration
+        //     showButtonInSiblingGridToolbar: true, // default is true
         //     showButtonInForm: true,              // default is true
         //     showButtonOnMobile: true,            // default is true
         //     supportMultipleSelections: true,     // default is true

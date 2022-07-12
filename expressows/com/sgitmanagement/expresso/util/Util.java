@@ -930,6 +930,7 @@ public class Util {
 		final char WHITESPACE_CHAR = ' ';
 		final char QUOTE_CHAR = '"';
 		final char ESCAPE_CHAR = '\\';
+		final int BOM_CHAR = 65279; // 0xEF, 0xBB, 0xBF
 
 		List<String[]> lines = new ArrayList<>();
 
@@ -946,8 +947,12 @@ public class Util {
 			List<String> resultList = new ArrayList<>();
 			while (s != null) {
 				char cArray[] = s.toCharArray();
+
 				for (int i = 0; i < cArray.length; i++) {
-					if (cArray[i] == WHITESPACE_CHAR) {
+					if (cArray[i] == BOM_CHAR) {
+						// skip the BOM char
+						continue;
+					} else if (cArray[i] == WHITESPACE_CHAR) {
 						if (isIgnoreWhiteSpace) {
 							// do nothing
 						} else {

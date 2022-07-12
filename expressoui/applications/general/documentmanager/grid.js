@@ -37,10 +37,30 @@
     },
 
     // @override
+    // getMobileColumns: function () {
+    //     return {
+    //         mobileNumberFieldName: "fileName",
+    //         mobileDescriptionFieldName: "description",
+    //         mobileTopRightFieldName: "creationDate",
+    //         mobileMiddleLeftFieldName: "creationUserFullName",
+    //         mobileMiddleRightFieldName: null
+    //     };
+    // },
+
+    // @override
+    getMobileColumnTemplate: function () {
+        var fields = this.resourceManager.model.fields;
+        var mobileTemplate = [];
+        mobileTemplate.push("<div class='mobile-grid-column'>");
+        mobileTemplate.push("<a class='document' target='_blank' href='#=absolutePath?absolutePath:\"_\"#'>#=fileName#</a>");
+        mobileTemplate.push("</div>");
+        return mobileTemplate.join("");
+    },
+
+    // @override
     getGridFilter: function () {
         var gridFilter = []; // expresso.layout.resourcemanager.Grid.fn.getGridFilter.call(this);
         var resource = this.resourceManager.siblingResourceManager.currentResource;
-        //console.log("resourceId: " + (resource ? resource.id : null));
         gridFilter.push.apply(gridFilter, [{
             field: "resourceId",
             operator: "eq",
@@ -57,13 +77,11 @@
     // @override
     initGrid: function () {
         expresso.layout.resourcemanager.Grid.fn.initGrid.call(this);
-        var _this = this;
-        var $grid = this.$domElement;
 
         // register the drag&drop listener
-        $grid.find(".exp-upload-button").each(function () {
-            _this.createKendoUpload();
-        });
+        if (this.$domElement.find(".exp-upload-button").length) {
+            this.createKendoUpload();
+        }
     },
 
     // @override
@@ -71,7 +89,7 @@
         var toolbar = expresso.layout.resourcemanager.Grid.fn.getToolbarButtons.call(this);
 
         // add the default create
-        if (this.isUserAllowed("create")) {
+        if (this.isUserAllowed("create") && expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
             var guid = expresso.util.Util.guid();
             this.addButtonToToolbar(toolbar,
                 {template: "<button id='" + guid + "' type='button' class='k-button exp-button exp-creation-button exp-upload-button' title='uploadDocument'><span class='fa fa-download'><span data-text-key='uploadDocumentButton'></span></span></button><input name='file' type='file'>"},

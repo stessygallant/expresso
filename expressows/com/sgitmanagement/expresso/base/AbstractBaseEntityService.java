@@ -377,6 +377,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// if the entity has FieldRestriction, make sure that the user has to role
 				if (restrictedFields != null) {
 					String restrictedRole = restrictedFields.get(field.getName());
+					// logger.debug("RestrictedField[" + field.getName() + "] Role[" + restrictedRole + "]");
 					if (restrictedRole != null && !isUserInRole(restrictedRole)) {
 						// do not assign them. Keep the current value
 						logger.debug("Skipping assigning [" + field.getName() + "] keeping oldValue[" + field.get(dest) + "]");
@@ -385,7 +386,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				// if the entity has some UpdateApprobationRequired field, create an UpdateApprobationRequired entry and do not change the value
-				if (field.getAnnotation(RequireApproval.class) != null && !Util.equals(newValue, oldValue)) {
+				if (typeOf.getAnnotation(RequireApproval.class) != null && field.getAnnotation(RequireApproval.class) != null && !Util.equals(newValue, oldValue)) {
 					String requireApprovalRole = field.getAnnotation(RequireApproval.class).role();
 					if (requireApprovalRole == null || requireApprovalRole.length() == 0) {
 						// get it from the resource
@@ -400,9 +401,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				if (oldValue != null && (IEntity.class.isInstance(oldValue) || EntityDerived.class.isInstance(oldValue))) {
 					// do not assign them
 				} else if (oldValue != null && Set.class.isInstance(oldValue) && field.getAnnotation(CollectionTable.class) != null) {
-					// logger.debug("Got a ManyToMany [" + field.getName() + "] for the Entity [" +
-					// typeOf.getSimpleName()
-					// + "]");
+					// logger.debug("Got a ManyToMany [" + field.getName() + "] for the Entity [" + typeOf.getSimpleName() + "]");
 
 					// this is a collection of ID (Integer).
 					Set newIdSet = (Set) newValue;
@@ -635,6 +634,25 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 	final public E get(Filter filter) throws Exception {
 		return get(new Query(filter));
+	}
+
+	public E getLatest(Filter filter, boolean activeOnly) throws Exception {
+		String sortFieldName;
+		if (Creatable.class.isAssignableFrom(getTypeOfE())) {
+			sortFieldName = "creationDate";
+		} else {
+			sortFieldName = "id";
+		}
+
+		Query query = new Query().setActiveOnly(activeOnly);
+		query.setPageSize(1);
+		query.addSort(new Sort(sortFieldName, Sort.Direction.desc));
+		query.addFilter(filter);
+		try {
+			return get(query);
+		} catch (NoResultException ex) {
+			return null;
+		}
 	}
 
 	public E get(Query query) throws Exception {
@@ -2775,8 +2793,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 						// we do not export the Object for the app_class
 						// Only the Id
+
+						// verify if the ID exist
 						fieldName += "Id";
 						appClassField.setType("number");
+						if (Util.getField(getTypeOfE(), fieldName) == null) {
+							// this could happen when using a Formula or JoinFormula to an transient object
+							continue;
+						}
 
 						if (joinColumn != null) {
 							columnMetaData = columnMap.get(joinColumn.name().toLowerCase());
@@ -2924,7 +2948,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				// verify if the field is protected by approbation for modification
-				if (field.isAnnotationPresent(RequireApproval.class)) {
+				if (getTypeOfE().getAnnotation(RequireApproval.class) != null && field.isAnnotationPresent(RequireApproval.class)) {
 					String requireApprovalRole = field.getAnnotation(RequireApproval.class).role();
 					if (requireApprovalRole == null || requireApprovalRole.length() == 0) {
 						// get it from the resource

@@ -9,7 +9,10 @@ import java.util.Map;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.apache.commons.beanutils.BeanUtils;
+
 import com.sgitmanagement.expresso.base.AbstractBaseEntityService;
+import com.sgitmanagement.expresso.base.RequireApproval;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.util.DateUtil;
@@ -261,8 +264,9 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 			}
 
 			// create the modification
+			String resourceDescription = BeanUtils.getProperty(e, e.getClass().getAnnotation(RequireApproval.class).descriptionFieldName());
 			newService(RequiredApprovalService.class, RequiredApproval.class)
-					.create(new RequiredApproval(getResourceName(), e.getId(), getResourceNo(e), field.getName(), currentStringValue, newStringValue, newValueReferenceId));
+					.create(new RequiredApproval(getResourceName(), e.getId(), getResourceNo(e), resourceDescription, field.getName(), currentStringValue, newStringValue, newValueReferenceId));
 		} catch (Exception ex) {
 			logger.error("Cannot createUpdateApprobationRequired", ex);
 		}

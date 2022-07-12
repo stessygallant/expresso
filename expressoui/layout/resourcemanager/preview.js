@@ -65,6 +65,12 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                 if (resourceSecurityPath && !expresso.Common.isUserAllowed(resourceSecurityPath)) {
                     userAllowed = false;
                 }
+
+                // if a role is defined, verify if the user is in the role
+                if (content.role && !expresso.Common.isUserInRole(content.role)) {
+                    userAllowed = false;
+                }
+
                 // console.log("Preview on [" + resourceSecurityPath + "]: " + userAllowed);
 
                 // if there is a title in the object, use it and insert it to the $domElement

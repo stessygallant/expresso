@@ -59,8 +59,9 @@ public enum FieldRestrictionUtil {
 	 */
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain, Set<String> userRoles) throws IOException, ServletException {
 		HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-		if (fieldRestrictionEntityMap.isEmpty() || (httpServletRequest.getHeader("Accept") != null
+		if (fieldRestrictionEntityMap.isEmpty() || !httpServletRequest.getMethod().equals("GET") || (httpServletRequest.getHeader("Accept") != null
 				&& !(httpServletRequest.getHeader("Accept").indexOf("application/json") != -1 || httpServletRequest.getHeader("Accept").indexOf("*/*") != -1))) {
+			// do not apply for report
 			chain.doFilter(request, response);
 		} else {
 			// pass the request along the filter chain

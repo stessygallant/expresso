@@ -31,6 +31,9 @@ public class RequiredApproval extends BaseCreatableEntity {
 	@Column(name = "resource_no")
 	private String resourceNo;
 
+	@Column(name = "resource_description")
+	private String resourceDescription;
+
 	@Column(name = "resource_field_name")
 	private String resourceFieldName;
 
@@ -71,11 +74,13 @@ public class RequiredApproval extends BaseCreatableEntity {
 
 	}
 
-	public RequiredApproval(String resourceName, Integer resourceId, String resourceNo, String resourceFieldName, String oldValue, String newValue, Integer newValueReferenceId) {
+	public RequiredApproval(String resourceName, Integer resourceId, String resourceNo, String resourceDescription, String resourceFieldName, String oldValue, String newValue,
+			Integer newValueReferenceId) {
 		super();
 		this.resourceName = resourceName;
 		this.resourceId = resourceId;
 		this.resourceNo = resourceNo;
+		this.resourceDescription = resourceDescription;
 		this.resourceFieldName = resourceFieldName;
 		this.oldValue = oldValue;
 		this.newValue = newValue;
@@ -187,5 +192,13 @@ public class RequiredApproval extends BaseCreatableEntity {
 
 	public void setNotes(String notes) {
 		this.notes = notes;
+	}
+
+	public String getResourceDescription() {
+		return resourceDescription;
+	}
+
+	public void setResourceDescription(String resourceDescription) {
+		this.resourceDescription = resourceDescription;
 	}
 }

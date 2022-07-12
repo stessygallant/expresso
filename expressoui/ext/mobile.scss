@@ -188,6 +188,7 @@ body {
 
     .main-menu {
         @include default-div;
+        overflow: auto;
         background: $themeBackground;
 
         .menu-item {

@@ -11,4 +11,5 @@ import java.lang.annotation.Target;
 public @interface RequireApproval {
 	public String role() default ""; // only mandatory for Type
 
+	public String descriptionFieldName() default "description"; // only mandatory for Type
 }

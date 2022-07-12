@@ -818,8 +818,8 @@ expresso.Main = function () {
 
         // initialize the version section
         var $versionDiv = $body.find(".version");  // 2 versions: in the title (tablet) and the footer (desktop)
-        $versionDiv.html("v" + expresso.Common.getSiteNamespace().config.Configurations.version +
-            " [" + expresso.Security.getTimeToLoadProfile() + "]");
+        $versionDiv.html("v" + expresso.Common.getSiteNamespace().config.Configurations.version);
+        // " [" + expresso.Security.getTimeToLoadProfile() + "]");
 
         // initialize the user profile section
         $userDiv.find(".username").text(expresso.Security.getUserInfo().firstName + " " + expresso.Security.getUserInfo().lastName);

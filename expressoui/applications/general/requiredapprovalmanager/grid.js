@@ -11,7 +11,7 @@ expresso.applications.general.requiredapprovalmanager.Grid = expresso.layout.res
         }
         var columns = [{
             field: "requiredApprovalStatusId",
-            width: 110
+            width: 100
         }, {
             field: "resourceName",
             width: 120,
@@ -28,14 +28,19 @@ expresso.applications.general.requiredapprovalmanager.Grid = expresso.layout.res
                 resourceManagerDef: resourceManagerDef
             }
         }, {
-            field: "fmtResourceFieldName",
-            width: 150
+            field: "resourceDescription",
+            width: 250
+        }, {
+            field: "resourceFieldName",
+            width: 200,
+            template: "#= fmtResourceFieldName #"
+            //filterable: false
         }, {
             field: "oldValue",
-            width: 200
+            width: 150
         }, {
             field: "newValue",
-            width: 200
+            width: 150
         }, {
             field: "creationDate"
         }, {
@@ -46,15 +51,12 @@ expresso.applications.general.requiredapprovalmanager.Grid = expresso.layout.res
             width: 300
         }, {
             field: "approbationUser.fullName",
-            width: 160,
-            hidden: true
+            width: 160
         }, {
-            field: "approbationDate",
-            hidden: true
+            field: "approbationDate"
         }, {
             field: "approbationComment",
-            width: 300,
-            hidden: true
+            width: 300
         }, {}];
         return columns;
     },
@@ -73,7 +75,46 @@ expresso.applications.general.requiredapprovalmanager.Grid = expresso.layout.res
     // @override
     parseResponseItem: function (item) {
         item = expresso.layout.resourcemanager.Grid.fn.parseResponseItem.call(this, item);
-        item.fmtResourceFieldName = (item.resourceFieldName ? this.resourceManager.getLabel(item.resourceFieldName) : "");
+        item.fmtResourceFieldName = this.resourceManager.getLabel(item.resourceFieldName); // + " (" + item.resourceFieldName + ")";
         return item;
+    },
+
+    // @override
+    initGrid: function () {
+        expresso.layout.resourcemanager.Grid.fn.initGrid.call(this);
+
+        // approbation button group
+        var _this = this;
+        var $approbationButtonGroup = this.$domElement.find(".approbation-group");
+        if ($approbationButtonGroup.length) {
+            $approbationButtonGroup.kendoButtonGroup({
+                select: function () {
+                    _this.loadResources();
+                }
+            }).data("kendoButtonGroup").select(0);
+        }
+    },
+
+    // @override
+    getToolbarButtons: function () {
+        var toolbar = expresso.layout.resourcemanager.Grid.fn.getToolbarButtons.call(this);
+        if (this.isUserAllowed("approve")) {
+            this.addSeparatorToToolbar(toolbar);
+            toolbar.push({template: "<ul class='approbation-group'><li>" + this.getLabel('allModifications') + "</li><li>" + this.getLabel('mineOnlyModifications') + "</li></ul>"});
+        }
+        return toolbar;
+    },
+
+    // @override
+    getGridFilter: function () {
+        var gridFilter = expresso.layout.resourcemanager.Grid.fn.getGridFilter.call(this);
+
+        var $approbationButtonGroup = this.$domElement.find(".approbation-group");
+        if ($approbationButtonGroup.length) {
+            if ($approbationButtonGroup.data("kendoButtonGroup").current().index() == 1) { // mine only
+                expresso.Common.addKendoFilter(gridFilter, {mine: true});
+            }
+        }
+        return gridFilter;
     }
 });

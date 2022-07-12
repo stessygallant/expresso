@@ -798,7 +798,7 @@ expresso.util.UIUtil = (function () {
                     // then on activate, we will review the size and position.
                     // otherwise if we wait on activate, the window will appear at the
                     // bottom and push up the main content, and then move to the center
-                    setWindowDimension($windowDiv, $.extend({}, options, {top: options.top || 0}));
+                    setWindowDimension($windowDiv, $.extend({}, options, {top: options.top || ($("body").height() / 2 - 250)}));
                 },
                 // Triggered when the content of a Window has finished loading via AJAX (called af open)
                 refresh: function () {
@@ -1186,6 +1186,25 @@ expresso.util.UIUtil = (function () {
                 customOptions.sortField = customOptions.sortField || customOptions.field.values.sortField;
             }
 
+            // utility method to convert a list of string to a datasource
+            var convertList = function (list) {
+                // if the list is only string, build a complete data source
+                if (list && list.length) {
+                    var d = list[0];
+                    if (typeof d === "string") {
+                        var data = [];
+                        $.each(list, function () {
+                            var i = {};
+                            i[dataValueField] = this;
+                            i[dataTextField] = this;
+                            data.push(i);
+                        });
+                        list = data;
+                    }
+                }
+                return list;
+            };
+
             var dataSource;
             if (typeof wsListPathOrData === "string") {
                 // static URL
@@ -1224,6 +1243,9 @@ expresso.util.UIUtil = (function () {
                                 response = response.data;
                             }
 
+                            // if the list is only string, build a complete data source
+                            response = convertList(response);
+
                             if (customOptions.sortField) {
                                 // always sort on the label
                                 response.sort(function (r1, r2) {
@@ -1240,6 +1262,9 @@ expresso.util.UIUtil = (function () {
                     } : undefined)
                 };
             } else {
+                // if the list is only string, build a complete data source
+                wsListPathOrData = convertList(wsListPathOrData);
+
                 dataSource = {
                     data: wsListPathOrData,
                     group: (customOptions.grouping ? {
@@ -2308,7 +2333,16 @@ expresso.util.UIUtil = (function () {
             customOptions = customOptions || {};
             if ($element && $element.length == 1) {
                 if (show || show === undefined) {
-                    if (!$element.children(".k-loading-mask").length || customOptions.id) {
+
+                    // remove any other loading mask
+                    var $loadingMasks = $element.find(".k-loading-mask");
+                    if ($loadingMasks.length) {
+                        $loadingMasks.each(function () {
+                            showLoadingMask($(this).parent(), false);
+                        });
+                    }
+
+                    if (!$element.find(".k-loading-mask").length || customOptions.id) {
                         return $("<div class='k-loading-mask exp-loading-mask'" +
                             (customOptions.id ? " data-mask-id='" + customOptions.id + "'" : "") + ">" +
                             "<div class='k-loading-image'></div><div class='k-loading-color'></div>" +

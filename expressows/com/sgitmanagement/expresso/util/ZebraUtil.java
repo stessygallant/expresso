@@ -9,7 +9,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,8 +25,9 @@ import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Chromaticity;
 import javax.print.attribute.standard.Copies;
 import javax.print.attribute.standard.MediaPrintableArea;
+import javax.print.attribute.standard.OrientationRequested;
+import javax.print.attribute.standard.PrintQuality;
 import javax.print.attribute.standard.PrinterResolution;
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
@@ -55,43 +55,20 @@ public enum ZebraUtil {
 	}
 
 	public enum Type {
-		// Printer must be configured:
-		// Options: mm, portrait, w=58, H=18, rotate 180
-		// Advanced:Left position: -23, Top:2
-		small(58, 18, 180, false, -23, 2),
-
-		// Printer must be configured:
-		medium(70, 30, 0, false, 0, 0),
-
-		// Printer must be configured:
-		// Options: mm, Landscape, w=100, H=150
-		large(100, 150, 0, true, 0, 0),
-
-		// user defined
-		custom();
+		// small(55, 19), // 2.25" X 0.75"
+		small(76, 25), // 3"X1"
+		large(102, 152); // 4"X6"
 
 		private int width;
 		private int height;
-		private int rotate;
-		private boolean landscape;
-		private int offsetLeft;
-		private int offsetTop;
-
-		private Type(int width, int height, int rotate, boolean landscape, int offsetLeft, int offsetTop) {
-			this.width = width;
-			this.height = height;
-			this.rotate = rotate;
-			this.landscape = landscape;
-			this.offsetLeft = offsetLeft;
-			this.offsetTop = offsetTop;
-		}
-
-		private Type(int width, int height, int rotate, boolean landscape) {
-			this(width, height, rotate, landscape, 0, 0);
-		}
 
 		private Type() {
 
+		}
+
+		private Type(int width, int height) {
+			this.width = width;
+			this.height = height;
 		}
 
 		public int getWidth() {
@@ -102,22 +79,6 @@ public enum ZebraUtil {
 			return height;
 		}
 
-		public int getRotate() {
-			return rotate;
-		}
-
-		public boolean isLandscape() {
-			return landscape;
-		}
-
-		public int getOffsetLeft() {
-			return offsetLeft;
-		}
-
-		public int getOffsetTop() {
-			return offsetTop;
-		}
-
 		public void setWidth(int width) {
 			this.width = width;
 		}
@@ -126,71 +87,35 @@ public enum ZebraUtil {
 			this.height = height;
 		}
 
-		public void setRotate(int rotate) {
-			this.rotate = rotate;
+		public boolean isRotated(int width, int height) {
+			return (this.width > this.height) ? height > width : width > height;
 		}
-
-		public void setLandscape(boolean landscape) {
-			this.landscape = landscape;
-		}
-
-		public void setOffsetLeft(int offsetLeft) {
-			this.offsetLeft = offsetLeft;
-		}
-
-		public void setOffsetTop(int offsetTop) {
-			this.offsetTop = offsetTop;
-		}
-
 	};
 
 	/**
-	 * Return the print service for the Zebra. It takes the IP address of the request and find the computer name
-	 *
-	 * @param request
-	 * @param type
+	 * 
+	 * @param printerName
 	 * @return
 	 * @throws Exception
 	 */
-	private PrintService getPrintService(HttpServletRequest request, Type type) throws Exception {
-		if (request != null) {
-			String ip = Util.getIpAddress(request);
-			InetAddress addr = InetAddress.getByName(ip);
-			String hostName = addr.getHostName();
-			if (hostName != null && !hostName.equals(ip)) {
-				if (hostName.contains(".")) {
-					hostName = hostName.substring(0, hostName.indexOf('.'));
-				}
-				logger.debug("Request from [" + ip + "]:[" + hostName + "]");
+	private PrintService getPrintService(String printerName) throws Exception {
+		if (printerName == null) {
+			printerName = SystemEnv.INSTANCE.getDefaultProperties().getProperty("default_printer");
+		}
 
-				String printerName = "zebra-" + hostName + "-" + type.name();
-				printerName = printerName.toLowerCase();
-				logger.debug("Looking for [" + printerName + "]");
-				for (PrintService printService : PrinterJob.lookupPrintServices()) {
-					if (printService.getName().equals(printerName)) {
-						return printService;
-					}
-				}
-				logger.warn("Cannot find printer [" + printerName + "]");
-				Map<String, Object> params = new HashMap<>();
-				params.put("printerName", printerName);
-				throw new ValidationException("unableToLocatePrinter", params);
-			} else {
-				logger.warn("Cannot find hostname for IP [" + ip + "]");
-				Map<String, Object> params = new HashMap<>();
-				params.put("ip", ip);
-				throw new ValidationException("unableToResolveIP", params);
-			}
-		} else {
-			// for testing purpose
-			String printerName = SystemEnv.INSTANCE.getDefaultProperties().getProperty("default_printer");
+		if (printerName != null) {
+			// printerName = printerName.toLowerCase();
+			logger.debug("Looking for [" + printerName + "]");
 			for (PrintService printService : PrinterJob.lookupPrintServices()) {
 				if (printService.getName().equals(printerName)) {
 					return printService;
 				}
 			}
-			return null;
 		}
+		logger.warn("Cannot find printer [" + printerName + "]");
+		Map<String, Object> params = new HashMap<>();
+		params.put("printerName", printerName);
+		throw new ValidationException("unableToLocatePrinter", params);
 	}
 
 	public File createQRCode(String content) throws Exception {
@@ -213,59 +138,70 @@ public enum ZebraUtil {
 	 * @param type
 	 * @throws Exception
 	 */
-	public void printSticker(String resourceName, String zebraTemplateContent, Type type, Map<String, String> params, HttpServletRequest request) throws Exception {
+	public void printSticker(String resourceName, String zebraTemplateContent, String printerName, Type type, int quantity, Map<String, String> params) throws Exception {
 		File pdfFile = null;
-		File pngfFile = null;
+		File pngFile = null;
 
 		try {
 			pdfFile = createPDFSticker(resourceName, zebraTemplateContent, type, params);
+			boolean rotated = false;
 
 			// Convert PDF to PNG
 			int dpi = 203;// Zebra ZD420 DPI
-			pngfFile = File.createTempFile(resourceName, ".png");
+			pngFile = File.createTempFile(resourceName, ".png");
 			try (PDDocument document = PDDocument.load(pdfFile)) {
 				PDFRenderer pdfRenderer = new PDFRenderer(document);
 				// only first page
 				int page = 0;
 				// pixels (1px = 1/96th of 1in)
 				// inches (1in = 96px = 2.54cm)
-				// RGD is nicer for text but BINARY is better for QR code
+				// RGB is nicer for text but BINARY is better for QR code
 				// GRAY is a compromise
 				BufferedImage bim = pdfRenderer.renderImageWithDPI(page, dpi, ImageType.GRAY);
-				ImageIOUtil.writeImage(bim, pngfFile.getAbsolutePath(), dpi);
-				document.close();
+				rotated = type.isRotated(bim.getWidth(), bim.getHeight());
+				ImageIOUtil.writeImage(bim, pngFile.getAbsolutePath(), dpi);
 			}
 
-			// print a label on the zebra printer
-			PrintService printService = getPrintService(request, type);
-			if (printService != null) {
-
+			boolean usePrintService = false;
+			if (usePrintService) {
+				// print a label on the zebra printer
+				PrintService printService = getPrintService(printerName);
 				DocPrintJob job = printService.createPrintJob();
 
-				DocAttributeSet das = new HashDocAttributeSet();
-				das.add(new PrinterResolution(dpi, dpi, PrinterResolution.DPI));
-				FileInputStream fileInputStream = new FileInputStream(pngfFile);
-				Doc doc = new SimpleDoc(fileInputStream, DocFlavor.INPUT_STREAM.PNG, das);
+				try (FileInputStream fileInputStream = new FileInputStream(pngFile)) {
+					DocAttributeSet das = new HashDocAttributeSet();
+					das.add(new PrinterResolution(dpi, dpi, PrinterResolution.DPI));
+					das.add(new MediaPrintableArea(0, 0, type.getWidth(), type.getHeight(), MediaPrintableArea.MM));
+					Doc doc = new SimpleDoc(fileInputStream, DocFlavor.INPUT_STREAM.PNG, das);
 
-				PrintRequestAttributeSet pras = new HashPrintRequestAttributeSet();
-				pras.add(new Copies(1));
-				pras.add(new PrinterResolution(dpi, dpi, PrinterResolution.DPI));
-				pras.add(Chromaticity.MONOCHROME);
-				pras.add(new MediaPrintableArea(0, 0, type.getWidth(), type.getHeight(), MediaPrintableArea.MM));
+					PrintRequestAttributeSet pras = new HashPrintRequestAttributeSet();
+					pras.add(new Copies(quantity));
+					pras.add(Chromaticity.MONOCHROME);
+					pras.add(PrintQuality.HIGH);
 
-				job.print(doc, pras);
-				fileInputStream.close();
+					if (rotated) {
+						pras.add(OrientationRequested.LANDSCAPE);
+					}
+					job.print(doc, pras);
+				}
+			} else {
+				// use LP directly
+				// -c Exit only after further access to any of the input files is no longer required. The application can then safely delete or modify the files without affecting the output operation.
+				// -n quantity
+				Process p = Runtime.getRuntime().exec("lp -c -n " + quantity + " -d " + printerName + " " + pngFile.getAbsolutePath());
+				p.waitFor();
+				pngFile.delete();
 			}
 		} finally {
 
 			// then delete the files
-			if (SystemEnv.INSTANCE.isInProduction()) {
-				if (pdfFile != null) {
-					pdfFile.delete();
-				}
-				if (pngfFile != null) {
-					// pngfFile.delete();
-				}
+			if (pdfFile != null) {
+				pdfFile.delete();
+			}
+			if (pngFile != null) {
+				// wait before
+				// Thread.sleep(2000);
+				// pngFile.delete();
 			}
 		}
 	}
@@ -298,8 +234,8 @@ public enum ZebraUtil {
 				PdfRendererBuilder builder = new PdfRendererBuilder();
 				builder.useFastMode();
 				builder.useSVGDrawer(new BatikSVGDrawer());
-				// Use the size define in the HTML
-				// builder.useDefaultPageSize(150, 100, PageSizeUnits.MM);
+				// Use the size define in the HTML but this one if none is set
+				// builder.useDefaultPageSize(type.getWidth(), type.getHeight(), PageSizeUnits.MM);
 				builder.withFile(htmlfFile);
 				builder.toStream(os);
 				builder.run();

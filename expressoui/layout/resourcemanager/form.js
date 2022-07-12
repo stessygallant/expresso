@@ -211,11 +211,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         if (!resource.id) {
             // hide field for new resource
-            expresso.util.UIUtil.hideField($form.find(".hide-new"));
+            expresso.util.UIUtil.hideField($form.find(".hide-new,.exp-hide-new"));
             expresso.util.UIUtil.hideField($form.find("[name='deactivationDate']"));
         } else {
             // hide fields for existing resource
-            expresso.util.UIUtil.hideField($form.find(".show-new-only"));
+            expresso.util.UIUtil.hideField($form.find(".show-new-only,.exp-show-new-only"));
 
             // by default, hide the deactivationDate if not deactivated
             if (!resource.deactivationDate && this.isUserAllowed("deactivate")) {
@@ -301,7 +301,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         $window.find(".k-grid-update").html("<span class='k-icon k-i-check'></span>" + saveButtonLabel);
 
         // on each button, display a loading mask
-        $window.on("click", ".k-edit-buttons .k-button", function () {
+        $window.on("click", ".k-edit-buttons .k-button:not(.k-split-button-arrow)", function () {
             if (_this.$window) {
                 expresso.util.UIUtil.showLoadingMask(_this.$window, true);
             }

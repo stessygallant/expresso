@@ -3,7 +3,9 @@ package com.sgitmanagement.expressoext.modif;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.base.RequireApproval;
@@ -11,6 +13,8 @@ import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
+import com.sgitmanagement.expresso.util.DateUtil;
+import com.sgitmanagement.expresso.util.Mailer;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.base.BaseEntity;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
@@ -41,7 +45,25 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 			return requiredApprovals;
 		} else if (query.getFilter("resourceName") != null) {
 			// Ok. only for a specific resource
-			return super.list(query);
+
+			if (query.getFilter("mine") != null) {
+				query.removeFilter("mine");
+				List<RequiredApproval> requiredApprovals = super.list(query);
+
+				if (query.activeOnly()) {
+					// do not allow on inactive because it is too long
+					for (RequiredApproval requiredApproval : new ArrayList<>(requiredApprovals)) {
+						if (!isUserAllowedToApprove(requiredApproval)) {
+							// remove from the list
+							requiredApprovals.remove(requiredApproval);
+						}
+					}
+				}
+
+				return requiredApprovals;
+			} else {
+				return super.list(query);
+			}
 		} else {
 			if (isUserAdmin()) {
 				return super.list(query);
@@ -60,6 +82,8 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		// set the new value on the resource
 		BaseEntityService service = getService(requiredApproval);
 		BaseEntity entity = getEntity(requiredApproval);
+		service.lock(entity);
+
 		Field field = getField(entity, requiredApproval);
 		if (requiredApproval.getNewValueReferenceId() != null) {
 			field.set(entity, requiredApproval.getNewValueReferenceId());
@@ -68,7 +92,9 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		}
 		service.update(entity);
 
-		return super.update(requiredApproval);
+		requiredApproval = super.update(requiredApproval);
+		sendEmail(requiredApproval, "ra-approved");
+		return requiredApproval;
 	}
 
 	public RequiredApproval reject(RequiredApproval requiredApproval, String comment) throws Exception {
@@ -76,7 +102,30 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		requiredApproval.setApprobationUserId(getUser().getId());
 		requiredApproval.setApprobationComment(comment);
 		requiredApproval.setRequiredApprovalStatusId(newService(RequiredApprovalStatusService.class, RequiredApprovalStatus.class).get("REJECTED").getId());
-		return super.update(requiredApproval);
+
+		requiredApproval = super.update(requiredApproval);
+		sendEmail(requiredApproval, "ra-rejected");
+		return requiredApproval;
+	}
+
+	/**
+	 * 
+	 * @param modem
+	 * @throws Exception
+	 */
+	private void sendEmail(RequiredApproval requiredApproval, String template) throws Exception {
+		Map<String, String> params = new HashMap<>();
+		params.put("resourceName", requiredApproval.getResourceName());
+		params.put("resourceNo", requiredApproval.getResourceNo());
+		params.put("approver", (requiredApproval.getApprobationUser() != null ? requiredApproval.getApprobationUser().getFullName() : ""));
+		params.put("reason", requiredApproval.getApprobationComment());
+		params.put("date", DateUtil.formatDate(requiredApproval.getCreationDate()));
+
+		params.put("url", getEntityURL(requiredApproval.getId()));
+
+		String to = requiredApproval.getCreationUser().getEmail();
+
+		Mailer.INSTANCE.sendMail(to, "requiredapproval/" + template, params);
 	}
 
 	@Override
@@ -87,7 +136,8 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 			case "update":
 			case "delete":
 				// only the creator can modify it and only if NEW
-				allowed = requiredApproval.getRequiredApprovalStatus().getPgmKey().equals("NEW") && (requiredApproval.getCreationUserId().equals(getUser().getId()) || isUserAdmin());
+				allowed = requiredApproval.getRequiredApprovalStatus().getPgmKey().equals("NEW")
+						&& (requiredApproval.getCreationUserId().equals(getUser().getId()) || isUserAllowedToApprove(requiredApproval) || isUserAdmin());
 				break;
 
 			case "approve":

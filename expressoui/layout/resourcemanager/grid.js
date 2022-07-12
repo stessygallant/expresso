@@ -1114,7 +1114,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // add listener to toolbar actions
         $.each(this.resourceManager.parseAvailableActions(), function () {
             var action = this;
-            if (action.showButtonInGridToolbar && !action.systemAction) {
+            if (action.showButtonInGridToolbar && !action.systemAction &&
+                (action.showButtonInSiblingGridToolbar !== false || _this.resourceManager.displayAsMaster)) {
                 $grid.find(".exp-" + action.name + "-button").on("click.grid", function (e) {
                     e.preventDefault();
 
@@ -2656,6 +2657,15 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         var $window = $(e.container);
         var dataItem = e.model;
+
+        if (!dataItem) {
+            console.error("DataItem is null. This is not possible.");
+            expresso.util.UIUtil.buildMessageWindow(_this.getLabel("unknownProblem")).done(function () {
+                window.location.reload();
+            });
+            return;
+        }
+
         var valid = this.customForm.validateResource($window, dataItem);
         if (valid === false) {
             //console.log("fail to save");
@@ -3340,6 +3350,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @returns [] a table with default buttons
      */
     getToolbarButtons: function () {
+        var _this = this;
         var powerUser = expresso.Common.isPowerUser();
         var needSeparator = false;
 
@@ -3392,7 +3403,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             needSeparator = true;
         }
 
-        if (this.isFilterable() && !this.localData) {
+        if (!this.localData) {
             // add the refresh button
             toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-refresh-button" title="refresh"><span class="fa fa-refresh"><span class="exp-button-label" data-text-key="refreshButton"></span></span></button>'});
             needSeparator = true;
@@ -3463,7 +3474,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // then add the action buttons (if any)
         $.each(this.resourceManager.parseAvailableActions(), function (i, action) {
-            if (action.showButtonInGridToolbar && !action.systemAction) {
+            if (action.showButtonInGridToolbar && !action.systemAction &&
+                (action.showButtonInSiblingGridToolbar !== false || _this.resourceManager.displayAsMaster)) {
                 // show on mobile only if ok
                 if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP || action.showButtonOnMobile) {
                     needSeparator = true;
@@ -3976,7 +3988,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             }
         });
 
-
         // add a listener on the button to close it
         this.$columnMenu.find(".close-button span").on("click", function (e) {
             e.preventDefault();
@@ -4001,7 +4012,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
 
         // add the listener on the header (create the menu only on demand)
-        this.kendoGrid.element.find("th").on("contextmenu", function (e) {
+        this.kendoGrid.element.find("th[role=columnheader]").on("contextmenu", function (e) {
             e.preventDefault();
             if (!_this.$columnMenu) {
                 _this.createColumnMenu();

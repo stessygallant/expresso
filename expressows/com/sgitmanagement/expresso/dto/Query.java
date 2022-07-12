@@ -445,10 +445,9 @@ public class Query {
 			// number and string only
 			in, notIn,
 
-			// reserved to framework
-			@Deprecated
-			equalsNoKey, @Deprecated
-			containsNoKey,
+			// If you want to perform a search with a keyField, but you do not want to
+			// use the functionality of the framework that bypass all other filters, use:
+			equalsNoKey,
 
 			// for backward compatibility only (lower case)
 			@Deprecated
@@ -462,7 +461,8 @@ public class Query {
 			isnotnull, @Deprecated
 			isnull, @Deprecated
 			equalsnokey, @Deprecated
-			containsnokey
+			containsnokey, @Deprecated
+			containsNoKey,
 		}
 
 		private Operator operator;

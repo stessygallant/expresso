@@ -309,6 +309,7 @@ $.extend(expresso.Labels, {
     resourceUnavailable: "Requested resource is unavailable.",
     newApplicationVersion: "A new version is available for the application. Updating now.",
     applicationProblem: "There is a problem with the application. Please contact technical support.",
+    unknownProblem: "An error occurred. Please try again.",
     missingPrivileges: "Missing privileges to view/update this information",
     requestSuccess: "Request success",
     requestFailure: "Request failed",
@@ -356,6 +357,7 @@ $.extend(expresso.Labels, {
     small: "Small",
     medium: "Medium",
     large: "Large",
+    printerName: "Printer",
 
     // standard errors
     infectedFile: "The file is infected. It cannot be uploaded",
