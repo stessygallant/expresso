@@ -101,7 +101,9 @@
                 "  </div>" +
                 "</div>");
 
-            this.$rootFilterDiv = this.$element.parent();
+            this.$rootFilterDiv = this.$element.closest(".exp-widget-filter");
+            //this.$rootFilterDiv = this.$element.parent();
+
             this.$element.hide();
             this.$visualDiv = this.$rootFilterDiv.find(".exp-widget-filter-visual");
             this.$sourceDiv = this.$rootFilterDiv.find(".exp-widget-filter-source");
@@ -174,10 +176,12 @@
          */
         _addRule: function ($div) {
             var _this = this;
+
+            var valueTemplate = "  <input name='exp-widget-filter-value' class='exp-widget-filter-value k-textbox'>";
             var $rule = $("<div class='exp-widget-filter-rule'>" +
                 "  <select class='exp-widget-filter-field'></select>" +
                 "  <select class='exp-widget-filter-operator'></select>" +
-                "  <input class='exp-widget-filter-value k-textbox'>" +
+                valueTemplate +
                 "  <span class='fa fa-trash exp-widget-filter-remove-button'></span>" +
                 "</div>");
             expresso.Common.localizePage($rule, expresso.Labels);
@@ -187,7 +191,7 @@
             $rule.find(".exp-widget-filter-operator").kendoDropDownList({
                 change: function () {
                     var $currentRule = this.element.closest(".exp-widget-filter-rule");
-                    var $value = $currentRule.find("input.exp-widget-filter-value");
+                    var $value = $currentRule.find("input[name='exp-widget-filter-value']");
 
                     var value = this.value();
                     if (value) {
@@ -196,10 +200,11 @@
                             case "isNotNull":
                             case "isTrue":
                             case "isFalse":
-                                $value.hide();
+                                $value.setval(null);
+                                expresso.util.UIUtil.hideField($value, true, false);
                                 break;
                             default:
-                                $value.show();
+                                expresso.util.UIUtil.hideField($value, false, false);
                                 break;
                         }
                         expresso.util.UIUtil.setFieldReadOnly($value, false, false);
@@ -224,10 +229,22 @@
 
                     var $currentRule = this.element.closest(".exp-widget-filter-rule");
                     var kendoOperator = $currentRule.find("select.exp-widget-filter-operator").data("kendoDropDownList");
-                    var $value = $currentRule.find("input.exp-widget-filter-value");
+                    var $value = $currentRule.find("input[name='exp-widget-filter-value']");
+
+                    // remove special value widget
+                    var $dateValue = $currentRule.find("input[name='exp-widget-filter-value'].exp-widget-filter-date-value");
+                    if ($dateValue.length) {
+                        // reinsert the value
+                        var $dateWidget = $dateValue.closest(".k-widget");
+                        $(valueTemplate).insertAfter($dateWidget);
+
+                        // delete the widget
+                        $dateWidget.remove();
+                    }
 
                     // set default state for value input
-                    $value.show();
+                    expresso.util.UIUtil.hideField($value, false, false);
+                    $value.val(null);
                     $value.attr("type", "text");
 
                     var value = this.value();
@@ -261,13 +278,48 @@
                                 case "date":
                                     operatorDataSource.push.apply(operatorDataSource, _this.operators.dateOnly);
                                     operatorDataSource.push.apply(operatorDataSource, _this.operators.dateAndNumber);
-                                    $value.attr("type", "date");
+
+                                    $value.setval(null);
+                                    $value.addClass("exp-widget-filter-date-value").removeClass("k-textbox");
+
+                                    // allow text (not only date). Ex: TODAY, FIRST_DAY_OF_MONTH, etc
+                                    var options = [{id: "TODAY", label: expresso.Common.getLabel("today")},
+                                        {id: "YESTERDAY", label: expresso.Common.getLabel("yesterday")},
+                                        {id: "TOMORROW", label: expresso.Common.getLabel("tomorrow")},
+                                        {id: "LASTWEEK", label: expresso.Common.getLabel("lastWeek")},
+                                        {id: "THISWEEK", label: expresso.Common.getLabel("thisWeek")},
+                                        {id: "NEXTWEEK", label: expresso.Common.getLabel("nextWeek")},
+                                        {id: "LASTMONTH", label: expresso.Common.getLabel("lastMonth")},
+                                        {id: "THISMONTH", label: expresso.Common.getLabel("thisMonth")},
+                                        {
+                                            id: "FIRST_DAY_OF_MONTH",
+                                            label: expresso.Common.getLabel("firstDayOfMonth")
+                                        },
+                                        {
+                                            id: "LAST_DAY_OF_MONTH",
+                                            label: expresso.Common.getLabel("lastDayOfMonth")
+                                        },
+                                        {
+                                            id: "FIRST_DAY_OF_YEAR",
+                                            label: expresso.Common.getLabel("firstDayOfYear")
+                                        },
+                                        {id: "LAST_DAY_OF_YEAR", label: expresso.Common.getLabel("lastDayOfYear")},
+                                        {id: "LAST_SUNDAY", label: expresso.Common.getLabel("lastSunday")},
+                                        {id: "LAST_MONDAY", label: expresso.Common.getLabel("lastMonday")}];
+                                    $value.kendoComboBox({
+                                        dataSource: new kendo.data.DataSource({data: options}),
+                                        dataValueField: "id",
+                                        dataTextField: "label",
+                                        valuePrimitive: true,
+                                        filter: "contains",
+                                        syncValueAndText: true
+                                    });
                                     break;
 
                                 case "boolean":
                                     operatorDataSource = ["isTrue", "isFalse"]; // only possible value
                                     $value.setval(null);
-                                    $value.hide();
+                                    expresso.util.UIUtil.hideField($value, true, false);
                                     break;
 
                                 default:
@@ -290,13 +342,13 @@
 
                         // operator and value are writable
                         // expresso.util.UIUtil.setFieldReadOnly($currentRule.find("select.exp-widget-filter-operator"), false, false);
-                        expresso.util.UIUtil.setFieldReadOnly($currentRule.find("input.exp-widget-filter-value"), false, false);
+                        expresso.util.UIUtil.setFieldReadOnly($value, false, false);
                     } else {
                         // operator and value are readonly
                         kendoOperator.value(null);
                         kendoOperator.setDataSource(new kendo.data.DataSource({data: []}));
                         //expresso.util.UIUtil.setFieldReadOnly($currentRule.find("select.exp-widget-filter-operator"), true, false);
-                        expresso.util.UIUtil.setFieldReadOnly($currentRule.find("input.exp-widget-filter-value"), true, false);
+                        expresso.util.UIUtil.setFieldReadOnly($value, true, false);
                     }
                 }
             });
@@ -324,7 +376,7 @@
                         var $rule = $(this);
                         var field = $rule.find("select.exp-widget-filter-field").getval();
                         var operator = $rule.find("select.exp-widget-filter-operator").getval();
-                        var value = $rule.find("input.exp-widget-filter-value").val();
+                        var value = $rule.find("input[name='exp-widget-filter-value']").getval();
                         if (field) {
                             // special case for boolean
                             if (operator == "isTrue") {
@@ -381,7 +433,7 @@
                         operator = "isFalse";
                     }
                     $rule.find("select.exp-widget-filter-operator").setval(operator);
-                    $rule.find("input.exp-widget-filter-value").setval(filter.value);
+                    $rule.find("input[name='exp-widget-filter-value']").setval(filter.value);
                 }
             }
         },

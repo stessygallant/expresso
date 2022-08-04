@@ -353,6 +353,21 @@ $.extend(expresso.Labels, {
     saturday: "Samedi",
     sunday: "Dimanche",
 
+    today: "Aujourd'hui",
+    yesterday: "Hier",
+    tomorrow: "Demain",
+    lastWeek: "Semaine dernière",
+    thisWeek: "Cette semaine",
+    nextWeek: "Semaine prochaine",
+    lastMonth: "Dernier mois",
+    thisMonth: "Mois actuel",
+    firstDayOfMonth: "Premier jour du mois",
+    lastDayOfMonth: "Dernier jour du mois",
+    firstDayOfYear: "Premier jour de l'année",
+    lastDayOfYear: "Dernier jour de l'année",
+    lastSunday: "Dernier dimanche",
+    lastMonday: "Dernier lundi",
+
     // Save filters
     newConfigurationWindowTitle: "Nouvelle configuration",
     newConfigurationWindowText: "Indiquer le nom pour la nouvelle configuration",

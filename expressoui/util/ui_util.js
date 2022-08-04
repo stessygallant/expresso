@@ -2151,16 +2151,22 @@ expresso.util.UIUtil = (function () {
          * @param $field jQuery object for the DOM element
          * @param $field
          * @param [hide] default is true
+         * @param [supportInputWrap] default is true
          */
-        var hideField = function ($field, hide) {
+        var hideField = function ($field, hide, supportInputWrap) {
             hide = (hide !== false);
+            supportInputWrap = (supportInputWrap !== false);
             $field.each(function () {
                 var el = this;
                 var $el = $(this);
                 if (el.nodeName == "DIV" || el.nodeName == "FIELDSET") {
                     hide ? $el.hide() : $el.show();
-                } else {
+                } else if (supportInputWrap && $el.closest(".input-wrap").length) {
                     hide ? $el.closest(".input-wrap").hide() : $el.closest(".input-wrap").show();
+                } else if ($el.attr("data-role")) {
+                    hide ? $el.closest(".k-widget").hide() : $el.closest(".k-widget").show();
+                } else {
+                    hide ? $el.hide() : $el.show();
                 }
             });
         };
@@ -2477,7 +2483,7 @@ expresso.util.UIUtil = (function () {
                             // CEZinc only
                             data["resourceId"] = options.resourceManager.siblingResourceManager.currentResource.id;
                             data["resourceName"] = options.resourceManager.siblingResourceManager.resourceName;
-                            data["resourcePgmKey"] = options.resourceManager.siblingResourceManager.getResourceSecurityPath();
+                            data["resourceSecurityPath"] = options.resourceManager.siblingResourceManager.getResourceSecurityPath();
 
                             var documentFolderPath;
                             if (options.resourceManager.siblingResourceManager.currentResource[_this.resourceManager.siblingResourceManager.resourceFieldNo]) {

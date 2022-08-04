@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -35,6 +37,7 @@ import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
 
 import com.google.gson.Gson;
+import com.sgitmanagement.expresso.base.KeyField;
 import com.sgitmanagement.expresso.base.Sortable;
 import com.sgitmanagement.expresso.exception.BaseException;
 
@@ -272,22 +275,94 @@ public class Util {
 	 * @throws Exception
 	 */
 	public static Field getField(Object e, String fieldName) throws Exception {
-		Class<?> clazz;
-		if (e instanceof Class) {
-			clazz = (Class<?>) e;
+		// handle sub field. Ex: equipment.equipmentNo
+		if (fieldName.indexOf('.') != -1) {
+			String topLevelFieldName = fieldName.substring(0, fieldName.indexOf('.'));
+			Field topLevelField = getField(e, topLevelFieldName);
+
+			Class<?> fieldTypeClass = topLevelField.getType();
+			if (Collection.class.isAssignableFrom(fieldTypeClass)) {
+				// we need to get the generic type
+				ParameterizedType geneticType = (ParameterizedType) topLevelField.getGenericType();
+				fieldTypeClass = (Class<?>) geneticType.getActualTypeArguments()[0];
+			}
+
+			String subFieldName = fieldName.substring(fieldName.indexOf('.') + 1);
+			return getField(fieldTypeClass, subFieldName);
 		} else {
-			clazz = e.getClass();
-		}
-		while (clazz != null) {
-			try {
-				Field field = clazz.getDeclaredField(fieldName);
-				field.setAccessible(true);
-				return field;
-			} catch (NoSuchFieldException ex) {
-				clazz = clazz.getSuperclass();
+			Class<?> clazz;
+			if (e instanceof Class) {
+				clazz = (Class<?>) e;
+			} else {
+				clazz = e.getClass();
+			}
+			while (clazz != null) {
+				try {
+					Field field = clazz.getDeclaredField(fieldName);
+					field.setAccessible(true);
+					return field;
+				} catch (NoSuchFieldException ex) {
+					clazz = clazz.getSuperclass();
+				}
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * If the keyField needs a padding, do it before the search
+	 *
+	 * @param keyField
+	 * @param keyValue
+	 * @return
+	 * @throws Exception
+	 */
+	public static String formatKeyField(Field field, Object keyValue) {
+		// always trim
+		if (keyValue == null) {
+			return null;
+		} else {
+			String key = ("" + keyValue).trim();
+			try {
+				KeyField keyFieldAnnotation = field.getAnnotation(KeyField.class);
+
+				// format if needed
+				if (keyFieldAnnotation.format().length() > 0) {
+					key = Util.formatKey(keyFieldAnnotation.format(), key);
+				}
+
+				// add padding
+				if (keyFieldAnnotation.padding() > 0) {
+					// key = String.format("%1$" + keyFieldAnnotation.padding() + "s",
+					// key).replace(' ', '0');
+					key = StringUtils.leftPad(key, keyFieldAnnotation.padding(), '0');
+				}
+
+				// add prefix
+				if (keyFieldAnnotation.prefix().length() > 0) {
+					if (!key.startsWith(keyFieldAnnotation.prefix())) {
+
+						// add the prefix only if the key is complete
+						if (keyFieldAnnotation.length() != 0 && (key.length() + keyFieldAnnotation.prefix().length()) != keyFieldAnnotation.length()) {
+							// this means the key is not complete, do not add the prefix
+						} else {
+							key = keyFieldAnnotation.prefix() + key;
+						}
+					}
+				}
+
+				// verify the key total length
+				if (keyFieldAnnotation.length() != 0) {
+					if (key.length() != keyFieldAnnotation.length()) {
+						// this means the key is not complete, we cannot search by EQUALS
+						// should we search by CONTAINS?
+					}
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+			return key;
+		}
 	}
 
 	/**
@@ -296,8 +371,8 @@ public class Util {
 	 * @param key
 	 * @return
 	 */
-	public static String formatKey(String format, String key) {
-		// 0: means digits
+	private static String formatKey(String format, String key) {
+		// 0: means digits (it will automatically left pad with 0)
 		// x: letter lowercase
 		// X: letter uppercase
 		// -: mandatory dash
@@ -1171,55 +1246,28 @@ public class Util {
 		return Response.status(code).entity(new Gson().toJson(map)).type(MediaType.APPLICATION_JSON).build();
 	}
 
-	static public void verifyRecaptchaResponse(String recaptchaResponse, String secretKey) throws Exception {
-		String url = "https://www.google.com";
-		String path = "/recaptcha/api/siteverify";
-
-		ClientConfig clientConfig = new ClientConfig();
-		Client client = ClientBuilder.newClient(clientConfig);
-
-		try {
-			WebTarget target = client.target(url).path(path);
-
-			// build request
-			Invocation.Builder requestBuilder = target.request().accept(MediaType.APPLICATION_JSON);
-
-			MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
-			formData.add("secret", secretKey);
-			formData.add("response", recaptchaResponse);
-
-			// POST the request
-			Response response = requestBuilder.post(Entity.entity(formData, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
-			try {
-				String responseJSON = response.readEntity(String.class);
-				if (response.getStatus() == 200) {
-					JsonObject responseObject = new Gson().fromJson(responseJSON, JsonObject.class);
-					boolean success = responseObject.get("success").getAsBoolean();
-					if (!success) {
-						System.err.println(response.getStatus() + " " + responseJSON);
-						throw new ValidationException("invalidCaptchaNotSuccess");
-					}
-
-					// reCAPTCHA v3
-					if (responseObject.get("score") != null) {
-						float score = responseObject.get("score").getAsFloat();
-						if (score < 0.5) {
-							throw new ValidationException("invalidCaptchaScoreTooLow");
-						}
-					}
-
-				} else {
-					throw new ValidationException("invalidCaptcha");
+	/**
+	 * Search a class inside the base package
+	 *
+	 * @param name
+	 * @param entityBasePackage
+	 * @return
+	 */
+	public static Class<?> findEntityClassByName(String name) {
+		String entityBasePackage = SystemEnv.INSTANCE.getDefaultProperties().getProperty("entity_base_package");
+		for (Package p : Package.getPackages()) {
+			if (p.getName().startsWith(entityBasePackage)) {
+				try {
+					return Class.forName(p.getName() + "." + name);
+				} catch (ClassNotFoundException e) {
+					// not in this package, try another
 				}
-			} finally {
-				response.close();
 			}
-
-		} finally {
-			client.close();
 		}
+		return null;
 	}
-	static public void main(String[] args) {
+
+	static public void main(String[] args) throws Exception {
 		// System.out.println(purgeInvalidCharacters("éàçïôèÉ"));
 
 		// String s = "a,b,\"c,d\"";
@@ -1250,6 +1298,5 @@ public class Util {
 		for (String key : new String[] { "PL100", "pl100", "pl-100", "pl-100-a", "pl100a", "pl100-", "pl-100-" }) {
 			System.out.println(key + ":\t" + Util.formatKey(format, key));
 		}
-
 	}
 }

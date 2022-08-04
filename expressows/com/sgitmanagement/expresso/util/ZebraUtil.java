@@ -57,7 +57,8 @@ public enum ZebraUtil {
 	public enum Type {
 		// small(55, 19), // 2.25" X 0.75"
 		small(76, 25), // 3"X1"
-		large(102, 152); // 4"X6"
+		large(102, 152), // 4"X6"
+		custom();
 
 		private int width;
 		private int height;

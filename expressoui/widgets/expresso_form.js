@@ -4,9 +4,10 @@
 (function ($, kendo) {
     var ui = kendo.ui,
         Widget = ui.Widget;
-    var readyPromises;
 
     var ExpressoForm = Widget.extend({
+        readyPromises: undefined,
+
         /**
          *
          * @param element

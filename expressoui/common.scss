@@ -471,8 +471,9 @@
                     width: 12em;
                 }
 
-                .exp-widget-filter-value.k-textbox {
-                    width: 12em !important;
+                .exp-widget-filter-value.k-textbox,
+                span.exp-widget-filter-date-value {
+                    width: 14em !important;
                 }
 
                 .exp-widget-filter-remove-button {

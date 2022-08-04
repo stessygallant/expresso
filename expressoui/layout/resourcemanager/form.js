@@ -1256,7 +1256,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         // CEZinc only
                         data["resourceId"] = _this.resourceManager.siblingResourceManager.currentResource.id;
                         data["resourceName"] = _this.resourceManager.siblingResourceManager.resourceName;
-                        data["resourcePgmKey"] = _this.resourceManager.siblingResourceManager.getResourceSecurityPath();
+                        data["resourceSecurityPath"] = _this.resourceManager.siblingResourceManager.getResourceSecurityPath();
 
                         var documentFolderPath;
                         if (_this.resourceManager.siblingResourceManager.currentResource[_this.resourceManager.siblingResourceManager.resourceFieldNo]) {

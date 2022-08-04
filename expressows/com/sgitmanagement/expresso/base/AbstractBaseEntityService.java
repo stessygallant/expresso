@@ -96,6 +96,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 	private boolean refreshAfterMerge = true;
 
+	private boolean updateLastModified = true;
+
 	private Set<String> activeOnlyFields = null;
 
 	private boolean parentEntityLookup = false;
@@ -288,8 +290,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		if (getEntityManager().contains(e)) {
 			// ok, already in the session
 			if (Updatable.class.isAssignableFrom(getTypeOfE())) {
-				((Updatable) e).setLastModifiedDate(new Date());
-				((Updatable) e).setLastModifiedUserId(getUser().getId());
+				if (updateLastModified) {
+					((Updatable) e).setLastModifiedDate(new Date());
+					((Updatable) e).setLastModifiedUserId(getUser().getId());
+				}
 			}
 		} else {
 			// get the previous version of the entity
@@ -304,17 +308,19 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				Updatable updatable = (Updatable) p;
 				Updatable updatableNew = (Updatable) e;
 
-				if (!NotVersionable.class.isAssignableFrom(getTypeOfE())) {
-					if (!Util.equals(updatable.getLastModifiedDate(), updatableNew.getLastModifiedDate())) {
-						logger.info("WrongVersionException: " + getTypeOfE().getSimpleName() + ":" + e.getId() + ":" + updatable.getLastModifiedDate() + ":" + updatableNew.getLastModifiedDate() + ":"
-								+ updatable.getLastModifiedUserId());
-						throw new WrongVersionException();
-					}
-				}
-
 				// update last modified date
-				updatableNew.setLastModifiedDate(new Date());
-				updatableNew.setLastModifiedUserId(getUser().getId());
+				if (updateLastModified) {
+					if (!NotVersionable.class.isAssignableFrom(getTypeOfE())) {
+						if (!Util.equals(updatable.getLastModifiedDate(), updatableNew.getLastModifiedDate())) {
+							logger.info("WrongVersionException: " + getTypeOfE().getSimpleName() + ":" + e.getId() + ":" + updatable.getLastModifiedDate() + ":" + updatableNew.getLastModifiedDate()
+									+ ":" + updatable.getLastModifiedUserId());
+							throw new WrongVersionException();
+						}
+					}
+
+					updatableNew.setLastModifiedDate(new Date());
+					updatableNew.setLastModifiedUserId(getUser().getId());
+				}
 			}
 
 			// for backward compatibility, if the creation is null, put it back to the
@@ -992,7 +998,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 					query.addFilter(restrictionsFilter);
 				}
-
 			} else {
 				// restrict the list to the permitted entities
 				// Note: do not add restrictions filter if we only need to verify if the key is
@@ -1022,6 +1027,79 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 
 		return query;
+	}
+
+	/**
+	 * Verify if the field is a reference
+	 * 
+	 * @param filter
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	void verifyKeyFieldReference(Filter filter) throws Exception {
+		if (filter != null) {
+			if (filter.getField() != null) {
+				// verify if the field is a reference
+				if (filter.getOperator().equals(Filter.Operator.eq)) {
+					// get the path to the field
+					Field field = Util.getField(getTypeOfE(), filter.getField());
+
+					// at least the name must be ??No
+					if (field.getName().length() > 3) {
+
+						@SuppressWarnings("rawtypes")
+						AbstractBaseEntityService service = null;
+						Field keyField = null;
+
+						String keyFieldName = field.getName();
+						String resourceName = field.getName().substring(0, field.getName().length() - "No".length());
+
+						if (field.isAnnotationPresent(KeyField.class)) {
+							// 1) Field: equipmentNo
+							// 2) Sub: equipment.equipmentNo
+							keyField = field;
+							if (filter.getField().indexOf('.') == -1) {
+								// keyfield in this class
+								service = this;
+							}
+						} else if (field.isAnnotationPresent(KeyFieldReference.class) || filter.getField().endsWith("No")) {
+							// 3) Formula: equipmentNo
+							KeyFieldReference keyFieldReference = field.getAnnotation(KeyFieldReference.class);
+							if (keyFieldReference != null) {
+								if (!keyFieldReference.resourceName().equals("")) {
+									resourceName = keyFieldReference.resourceName();
+								}
+								if (!keyFieldReference.keyFieldName().equals("")) {
+									keyFieldName = keyFieldReference.keyFieldName();
+								}
+							}
+
+							// get the keyField from the other resource class
+							Class<?> entityClass = Util.findEntityClassByName(StringUtils.capitalize(resourceName));
+							keyField = Util.getField(entityClass, keyFieldName);
+						}
+
+						if (keyField != null) {
+							if (service == null) {
+								service = newService(resourceName);
+							}
+
+							// Get the service for the field
+							String previousKey = (String) filter.getValue();
+							service.formatKeyField(filter, keyField);
+							logger.debug("Field [" + filter.getField() + "] KeyField[" + resourceName + ":" + keyFieldName + "]: Value[" + previousKey + "] -> [" + filter.getValue() + "]"
+									+ (filter.getOperator().equals(Operator.eq) ? "" : " (Using " + filter.getOperator().toString() + ")"));
+						}
+					}
+				}
+			} else {
+				if (filter.getFilters() != null) {
+					for (Filter f : filter.getFilters()) {
+						verifyKeyFieldReference(f);
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -1396,59 +1474,39 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	/**
-	 * If the keyField needs a padding, do it before the search
+	 * Replace the value in the filter with the formatted key value
+	 * 
+	 * @param filter
+	 * @param keyField
+	 */
+	public void formatKeyField(Filter filter, Field keyField) {
+		String formattedKey = formatKeyField(keyField, (String) filter.getValue());
+		filter.setValue(formattedKey);
+	}
+
+	final public String formatKeyField(String keyFieldName, Object keyValue) {
+		try {
+			return formatKeyField(Util.getField(getTypeOfE(), keyFieldName), (String) keyValue);
+		} catch (Exception e) {
+			// ignore
+			return (String) keyValue;
+		}
+	}
+
+	/**
+	 * Format the key value based on the pattern on the key field
 	 *
 	 * @param keyField
 	 * @param keyValue
-	 * @return
-	 * @throws Exception
+	 * @return formattedKey
 	 */
-	public String formatKeyField(String keyField, Object keyValue) {
-		// always trim
-		String key = ("" + keyValue).trim();
-
+	public String formatKeyField(Field keyField, String keyValue) {
 		try {
-			Field field = Util.getField(getTypeOfE(), keyField);
-			if (field.isAnnotationPresent(KeyField.class)) {
-				KeyField keyFieldAnnotation = field.getAnnotation(KeyField.class);
-
-				// format if needed
-				if (keyFieldAnnotation.format().length() > 0) {
-					key = Util.formatKey(keyFieldAnnotation.format(), key);
-				}
-
-				// add padding
-				if (keyFieldAnnotation.padding() > 0) {
-					// key = String.format("%1$" + keyFieldAnnotation.padding() + "s",
-					// key).replace(' ', '0');
-					key = StringUtils.leftPad(key, keyFieldAnnotation.padding(), '0');
-				}
-
-				// add prefix
-				if (keyFieldAnnotation.prefix().length() > 0) {
-					if (!key.startsWith(keyFieldAnnotation.prefix())) {
-
-						// add the prefix only if the key is complete
-						if (keyFieldAnnotation.length() != 0 && (key.length() + keyFieldAnnotation.prefix().length()) != keyFieldAnnotation.length()) {
-							// this means the key is not complete, do not add the prefix
-						} else {
-							key = keyFieldAnnotation.prefix() + key;
-						}
-					}
-				}
-
-				// verify the key total length
-				if (keyFieldAnnotation.length() != 0) {
-					if (key.length() != keyFieldAnnotation.length()) {
-						// this means the key is not complete, we cannot search by EQUALS
-						// should we search by CONTAINS?
-					}
-				}
-			}
+			return Util.formatKeyField(keyField, keyValue);
 		} catch (Exception e) {
 			// ignore
+			return keyValue;
 		}
-		return key;
 	}
 
 	/**
@@ -1947,6 +2005,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					// verify if dateString is a key
 					Calendar calendar = DateUtils.truncate(Calendar.getInstance(), Calendar.DATE);
 					switch (dateString) {
+
+					// the following option are available from the menu in KendoGrid
 					case "TODAY":
 						fromDate = calendar.getTime();
 						calendar.add(Calendar.DAY_OF_YEAR, 1);
@@ -2013,9 +2073,45 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						fromDate = calendar.getTime();
 						break;
 
+					// the following options are available for any filter
+					case "TOMORROW":
+						calendar.add(Calendar.DAY_OF_YEAR, 1);
+						dateValue = calendar.getTime();
+						break;
+					case "FIRST_DAY_OF_MONTH":
+						calendar.set(Calendar.DAY_OF_MONTH, 1);
+						dateValue = calendar.getTime();
+						break;
+					case "LAST_DAY_OF_MONTH":
+						calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+						dateValue = calendar.getTime();
+						break;
+					case "FIRST_DAY_OF_YEAR":
+						calendar.set(Calendar.DAY_OF_YEAR, 1);
+						dateValue = calendar.getTime();
+						break;
+					case "LAST_DAY_OF_YEAR":
+						calendar.set(Calendar.DAY_OF_YEAR, calendar.getActualMaximum(Calendar.DAY_OF_YEAR));
+						dateValue = calendar.getTime();
+						break;
+					case "LAST_SUNDAY":
+						calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+						dateValue = calendar.getTime();
+						break;
+					case "LAST_MONDAY":
+						calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+						dateValue = calendar.getTime();
+						break;
+
 					default:
 						dateValue = DateUtil.parseDate(filter.getValue());
 						break;
+					}
+
+					// if dateValue is not set, by default, use the fromDate
+					// it may not represent the best value in all cases
+					if (dateValue == null) {
+						dateValue = fromDate;
 					}
 				}
 
@@ -2051,7 +2147,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					break;
 
 				case eq:
-					if (dateValue != null) {
+					if (fromDate == null) {
 						// THIS IS THE DEFAULT FROM THE KENDO UI GRID.
 						// if the database is a datetime and not a date, it will not work
 
@@ -2356,6 +2452,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 	public final void setRefreshAfterMerge(boolean refreshAfterMerge) {
 		this.refreshAfterMerge = refreshAfterMerge;
+	}
+
+	public void setUpdateLastModified(boolean updateLastModified) {
+		this.updateLastModified = updateLastModified;
 	}
 
 	public String getLink(E e) throws Exception {
@@ -3073,7 +3173,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	final public <S extends AbstractBaseEntityService<T, U, I>, T extends IEntity<I>> S newService(String resourceName) {
 
 		try {
-			Class<T> entityClass = (Class<T>) findEntityClassByName(StringUtils.capitalize(resourceName));
+			Class<T> entityClass = (Class<T>) Util.findEntityClassByName(StringUtils.capitalize(resourceName));
 			Class<S> serviceClass = (Class<S>) Class.forName(entityClass.getCanonicalName() + "Service");
 
 			S service = serviceClass.getDeclaredConstructor().newInstance();
@@ -3091,27 +3191,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			logger.error("Problem creating the service for resource [" + resourceName + "]", ex);
 			return null;
 		}
-	}
-
-	/**
-	 * Search a class inside the base package
-	 *
-	 * @param name
-	 * @param entityBasePackage
-	 * @return
-	 */
-	private Class<?> findEntityClassByName(String name) {
-		String entityBasePackage = SystemEnv.INSTANCE.getDefaultProperties().getProperty("entity_base_package");
-		for (Package p : Package.getPackages()) {
-			if (p.getName().startsWith(entityBasePackage)) {
-				try {
-					return Class.forName(p.getName() + "." + name);
-				} catch (ClassNotFoundException e) {
-					// not in this package, try another
-				}
-			}
-		}
-		return null;
 	}
 
 	static public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newServiceStatic(Class<S> serviceClass, Class<T> entityClass) {

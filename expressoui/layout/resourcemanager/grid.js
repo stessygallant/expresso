@@ -363,18 +363,21 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         });
 
         // find key fields and highlight them
-        $.each(this.kendoGrid.columns, function () {
-            var column = this;
-            if (column && column.field && model && model.fields[column.field]) {
-                var field = model.fields[column.field];
-                // if the field is a key field, highlight it
-                if (field && field.keyField) {
-                    // console.log("Found keyField column [" + column.field + "]");
-                    _this.$domElement.find(".k-grid-header .k-filter-row [data-field='" + column.field + "'] input")
-                        .addClass("exp-key-field");
+        if (model && model.fields) {
+            $.each(this.kendoGrid.columns, function () {
+                var column = this;
+                if (column && column.field) {
+                    var field = model.fields[column.field];
+                    // if the field is a key field, highlight it
+                    // if (column.field.endsWith("No") || (field && (field.keyField || field.reference || field.keyFieldReference))) {
+                    if (field && field.keyField) {
+                        // console.log("Found keyField column [" + column.field + "]");
+                        _this.$domElement.find(".k-grid-header .k-filter-row [data-field='" + column.field + "'] input")
+                            .addClass("exp-key-field");
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // build a map of the columns by name
         this.columnMap = {};
@@ -657,9 +660,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (column.filterable !== false && (!field || !field.type || field.type == "string")) {
                     column.filterable = column.filterable || {};
                     column.filterable.cell = column.filterable.cell || {};
-                    if (field && field.keyField && !column.filterable.cell.operator) {
-                        // keep equals by default
-                        column.filterable.cell.operator = field.keyField.operator ? field.keyField.operator : "eq";
+                    if (!column.filterable.cell.operator &&
+                        (column.field.endsWith("No") ||
+                            (field && (field.keyField || field.reference || field.keyFieldReference)))) {
+                        // use equals by default
+                        column.filterable.cell.operator = field && field.keyField && field.keyField.operator ? field.keyField.operator : "eq";
                     } else {
                         column.filterable.cell.operator = column.filterable.cell.operator || "contains";
                     }
@@ -2890,6 +2895,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             } // it will be defined below
         };
 
+        // TODO if we have mandatory filter in the grid header, we need to call it
         // now take care of filters
         if (!clearFilters) {
             expresso.Common.addKendoFilter(dataSourceOptions.filter, this.getGridFilter());

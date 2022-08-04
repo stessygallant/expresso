@@ -136,6 +136,9 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 				query.setActiveOnly(true);
 			}
 
+			// for each field, verify if the field is a reference
+			getService().verifyKeyFieldReference(query.getFilter());
+
 			// if the request is for an id or a key, do not add any other filter
 			Set<String> keyFields = new HashSet<>(Arrays.asList(getService().getKeyFields()));
 			keyFields.add("id"); // id is always a key field

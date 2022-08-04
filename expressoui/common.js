@@ -2077,8 +2077,10 @@ expresso.Common = (function () {
         return $.when(
             // set the default language
             setLanguage().done(function () {
-                // parse the application list and build maps for faster access
-                processApplicationList();
+                if (siteNamespace.config.Applications) {
+                    // parse the application list and build maps for faster access
+                    processApplicationList();
+                }
             })
         );
     };
