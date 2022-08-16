@@ -1,4 +1,4 @@
-package com.sgitmanagement.expresso.util;
+package com.sgitmanagement.expresso.util.mail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,14 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.mail.Authenticator;
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
-import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.MimeBodyPart;
@@ -29,6 +27,9 @@ import javax.mail.internet.MimeUtility;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sgitmanagement.expresso.util.MsGraphClient;
+import com.sgitmanagement.expresso.util.SystemEnv;
 
 /**
  * This class is a utilities to read mailbox and return messages
@@ -45,32 +46,50 @@ public class POP3MailboxUtil {
 		mailProps = SystemEnv.INSTANCE.getProperties("mail");
 	}
 
-	public POP3MailboxUtil(String username, String password) throws Exception {
+	public POP3MailboxUtil() throws Exception {
+		connectStore();
+	}
 
+	private void connectStore() throws Exception {
 		String protocol = mailProps.getProperty("mail.pop3.protocol");
+		String host = mailProps.getProperty("mail.pop3.host");
+		String port = mailProps.getProperty("mail.pop3.port");
+		String username = mailProps.getProperty("mail.pop3.username");
+		String password = mailProps.getProperty("mail.pop3.password");
+		String auth = mailProps.getProperty("mail.pop3.auth.mechanisms");
 
+		// add all mail.pop3 properties
 		Properties properties = new Properties();
-		properties.put("mail." + protocol + ".host", mailProps.getProperty("mail.pop3.host"));
-		properties.put("mail." + protocol + ".port", mailProps.getProperty("mail.pop3.port"));
-		properties.put("mail." + protocol + ".auth", mailProps.getProperty("mail.pop3.auth", "true"));
-		properties.put("mail." + protocol + ".ssl.trust", "*");
-		properties.put("mail." + protocol + ".ssl.enable", mailProps.getProperty("mail.pop3.ssl.enable", "false"));
-		properties.put("mail." + protocol + ".starttls.enable", mailProps.getProperty("mail.pop3.starttls.enable", "false"));
-		properties.put("mail." + protocol + ".starttls.required", mailProps.getProperty("mail.pop3.starttls.required", "false"));
+		mailProps.forEach((p, v) -> {
+			if (((String) p).startsWith("mail.pop3."))
+				properties.put(p, v);
+		});
+
+		// set timeouts
+		properties.put("mail.pop3.connectiontimeout", 5000);
+		properties.put("mail.pop3.timeout", 60000);
+
+		// properties.put("mail.debug", "true");
+		// properties.put("mail.debug.auth", "true");
 
 		try {
-			Session emailSession = Session.getInstance(properties, new MailAuthenticator(username, password));
-			// emailSession.setDebug(true);
+			Session emailSession;
+			if (auth != null) {
+				MsGraphClient msGraphClient = new MsGraphClient();
+				String scope = "https://outlook.office365.com/.default";
+				String oauth2AccessToken = msGraphClient.connect(scope);
+				// System.out.println(oauth2AccessToken);
+				password = oauth2AccessToken;
+			}
+			emailSession = Session.getInstance(properties);
 
 			// create the POP3 store object and connect with the pop server
 			store = emailSession.getStore(protocol);
 			if (!store.isConnected()) {
-				store.connect();
+				store.connect(host, Integer.parseInt(port), username, password);
 			}
 
-			// store.connect(mailProps.getProperty("mail.pop3.host"), username, password);
-			// logger.info("Connected to the mailbox [" + username + "]");
-
+			logger.info("Connected to the mailbox [" + username + "]");
 		} catch (Exception e) {
 			// logger.error("Cannot open the mail session Host:[" + mailProps.getProperty("mail.pop3.host") + "] Port:["
 			// + mailProps.getProperty("mail.pop3.port") + "] Username:[" + username + "]", e);
@@ -82,16 +101,6 @@ public class POP3MailboxUtil {
 			throw new Exception("Inbox not found");
 		}
 		inbox.open(Folder.READ_WRITE);
-	}
-
-	/**
-	 *
-	 * @param username
-	 * @param password
-	 * @throws Exception
-	 */
-	public POP3MailboxUtil() throws Exception {
-		this(mailProps.getProperty("mail.pop3.username"), mailProps.getProperty("mail.pop3.password"));
 	}
 
 	/**
@@ -308,9 +317,13 @@ public class POP3MailboxUtil {
 				// valid emails
 			}
 
-			if (deleteEmail && SystemEnv.INSTANCE.isInProduction()) {
+			if (deleteEmail) {
 				logger.info("Deleting invalid email based on subject [" + subject + "]");
-				message.setFlag(Flags.Flag.DELETED, true);
+				if (SystemEnv.INSTANCE.isInProduction()) {
+					message.setFlag(Flags.Flag.DELETED, true);
+				}
+			} else {
+				logger.debug("Valid email based on subject [" + subject + "]");
 			}
 		}
 	}
@@ -333,20 +346,5 @@ public class POP3MailboxUtil {
 
 		mu.close();
 		System.out.println("Done");
-	}
-
-	static class MailAuthenticator extends Authenticator {
-		private String username;
-		private String password;
-
-		public MailAuthenticator(String username, String password) {
-			this.username = username;
-			this.password = password;
-		}
-
-		@Override
-		public PasswordAuthentication getPasswordAuthentication() {
-			return new PasswordAuthentication(username, password);
-		}
 	}
 }

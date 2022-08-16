@@ -45,7 +45,7 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 		if (action == null) {
 			action = "performPost";
 		}
-		logger.info("PerformING action [" + action + "] on [" + this.getClass().getSimpleName() + "]"); // + Util.getMemoryStats());
+		logger.debug("PerformING action [" + action + "] on [" + this.getClass().getSimpleName() + "]"); // + Util.getMemoryStats());
 		// with " + formParams);
 		try {
 			getService().getPersistenceManager().startTransaction(getEntityManager());

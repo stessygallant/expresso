@@ -88,6 +88,7 @@ $.extend(expresso.Labels, {
     newUser: "Nouvel utilisateur? Faites une demande d'accès ici",
     newUserRequest: "Demande d'accès",
     newUserRequestNotes: "Indiquez la raison de votre demande",
+    noRecaptcha: "SVP cochez reCaptcha",
     newUserRequestSaved: "Votre demande d'accès a été envoyée. Un courriel vous sera envoyé avec vos informations lorsque votre demande sera approuvée.",
     newUserRequestNotComplete: "Votre demande d'accès n'est pas complète. Veuillez compléter tous les champs du formulaire",
     emailNotValid: "L'adresse courriel n'est pas valide",

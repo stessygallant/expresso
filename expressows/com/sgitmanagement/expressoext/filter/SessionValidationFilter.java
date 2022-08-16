@@ -167,7 +167,7 @@ public class SessionValidationFilter implements Filter {
 			}
 
 			if (user != null) {
-				logger.info("Storing user [" + user.getUserName() + "] in session [" + session.getId() + "] IP[" + Util.getIpAddress(request) + "]");
+				logger.debug("Storing user [" + user.getUserName() + "] in session [" + session.getId() + "] IP[" + Util.getIpAddress(request) + "]");
 
 				session.setAttribute("userId", user.getId());
 				session.setAttribute("userName", user.getUserName());

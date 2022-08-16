@@ -3,8 +3,8 @@ package com.sgitmanagement.expressoext.filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sgitmanagement.expresso.util.Mailer;
 import com.sgitmanagement.expresso.util.SystemEnv;
+import com.sgitmanagement.expresso.util.mail.Mailer;
 
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;

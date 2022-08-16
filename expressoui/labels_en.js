@@ -87,6 +87,7 @@ $.extend(expresso.Labels, {
     newUser: "New user? Request your access credentials here",
     newUserRequest: "Access request",
     newUserRequestNotes: "Please justify your request",
+    noRecaptcha: "Please check reCaptcha",
     newUserRequestSaved: "Your request has been sent. You will receive an email with your credentials when your request will be approved",
     newUserRequestNotComplete: "Your request is not complete. Please fill in the form",
     emailNotValid: "Email is not a valid email address",

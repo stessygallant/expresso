@@ -137,7 +137,11 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 			}
 
 			// for each field, verify if the field is a reference
-			getService().verifyKeyFieldReference(query.getFilter());
+			try {
+				getService().verifyKeyFieldReference(query.getFilter());
+			} catch (Exception ex) {
+				logger.error("verifyKeyFieldReference - Cannot verify field reference [" + getService().getResourceName() + "]: " + query, ex);
+			}
 
 			// if the request is for an id or a key, do not add any other filter
 			Set<String> keyFields = new HashSet<>(Arrays.asList(getService().getKeyFields()));

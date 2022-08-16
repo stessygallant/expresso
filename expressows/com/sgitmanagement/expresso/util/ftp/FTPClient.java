@@ -1,4 +1,4 @@
-package com.sgitmanagement.expresso.util;
+package com.sgitmanagement.expresso.util.ftp;
 
 import java.io.File;
 import java.util.List;

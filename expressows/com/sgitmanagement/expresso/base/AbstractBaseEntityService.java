@@ -790,7 +790,13 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				Date endDate = new Date();
 				long delay = (endDate.getTime() - startDate.getTime());
 				if (delay > 500) {
-					logger.warn("Execution " + getTypeOfE().getSimpleName() + " SQL time: " + delay + " ms (" + data.size() + ") " + getTypeOfE().getSimpleName() + ": " + new Gson().toJson(query));
+					String delayMessage = "Execution " + getTypeOfE().getSimpleName() + " SQL time: " + delay + " ms (" + data.size() + ") " + getTypeOfE().getSimpleName() + ": "
+							+ new Gson().toJson(query);
+					if (delay > 5000) {
+						logger.warn(delayMessage);
+					} else {
+						logger.info(delayMessage);
+					}
 				}
 
 				return data;
@@ -1043,52 +1049,64 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				if (filter.getOperator().equals(Filter.Operator.eq)) {
 					// get the path to the field
 					Field field = Util.getField(getTypeOfE(), filter.getField());
-
-					// at least the name must be ??No
-					if (field.getName().length() > 3) {
-
-						@SuppressWarnings("rawtypes")
-						AbstractBaseEntityService service = null;
-						Field keyField = null;
-
-						String keyFieldName = field.getName();
-						String resourceName = field.getName().substring(0, field.getName().length() - "No".length());
-
-						if (field.isAnnotationPresent(KeyField.class)) {
-							// 1) Field: equipmentNo
-							// 2) Sub: equipment.equipmentNo
-							keyField = field;
-							if (filter.getField().indexOf('.') == -1) {
-								// keyfield in this class
-								service = this;
-							}
-						} else if (field.isAnnotationPresent(KeyFieldReference.class) || filter.getField().endsWith("No")) {
-							// 3) Formula: equipmentNo
-							KeyFieldReference keyFieldReference = field.getAnnotation(KeyFieldReference.class);
-							if (keyFieldReference != null) {
-								if (!keyFieldReference.resourceName().equals("")) {
-									resourceName = keyFieldReference.resourceName();
-								}
-								if (!keyFieldReference.keyFieldName().equals("")) {
-									keyFieldName = keyFieldReference.keyFieldName();
-								}
-							}
-
-							// get the keyField from the other resource class
-							Class<?> entityClass = Util.findEntityClassByName(StringUtils.capitalize(resourceName));
-							keyField = Util.getField(entityClass, keyFieldName);
+					if (field == null) {
+						switch (filter.getField()) {
+						case "searchFilterTerm":
+							// ok
+							break;
+						default:
+							logger.warn("verifyKeyFieldReference - Cannot find field [" + filter.getField() + "]");
+							break;
 						}
+					} else {
 
-						if (keyField != null) {
-							if (service == null) {
-								service = newService(resourceName);
+						// at least the name must be ??No
+						if (field.getName().length() > 3) {
+
+							@SuppressWarnings("rawtypes")
+							AbstractBaseEntityService service = null;
+							Field keyField = null;
+
+							String keyFieldName = field.getName();
+							String resourceName = field.getName().substring(0, field.getName().length() - "No".length());
+
+							if (field.isAnnotationPresent(KeyField.class)) {
+								// 1) Field: equipmentNo
+								// 2) Sub: equipment.equipmentNo
+								keyField = field;
+								if (filter.getField().indexOf('.') == -1) {
+									// keyfield in this class
+									service = this;
+								}
+							} else if (field.isAnnotationPresent(KeyFieldReference.class) || filter.getField().endsWith("No")) {
+								// 3) Formula: equipmentNo
+								KeyFieldReference keyFieldReference = field.getAnnotation(KeyFieldReference.class);
+								if (keyFieldReference != null) {
+									if (!keyFieldReference.resourceName().equals("")) {
+										resourceName = keyFieldReference.resourceName();
+									}
+									if (!keyFieldReference.keyFieldName().equals("")) {
+										keyFieldName = keyFieldReference.keyFieldName();
+									}
+								}
+
+								// get the keyField from the other resource class
+								Class<?> entityClass = Util.findEntityClassByName(StringUtils.capitalize(resourceName));
+								keyField = Util.getField(entityClass, keyFieldName);
 							}
 
-							// Get the service for the field
-							String previousKey = (String) filter.getValue();
-							service.formatKeyField(filter, keyField);
-							logger.debug("Field [" + filter.getField() + "] KeyField[" + resourceName + ":" + keyFieldName + "]: Value[" + previousKey + "] -> [" + filter.getValue() + "]"
-									+ (filter.getOperator().equals(Operator.eq) ? "" : " (Using " + filter.getOperator().toString() + ")"));
+							if (keyField != null) {
+								if (service == null) {
+									service = newService(resourceName);
+								}
+								if (service != null) {
+									// Get the service for the field
+									String previousKey = (String) filter.getValue();
+									service.formatKeyField(filter, keyField);
+									logger.debug("Field [" + filter.getField() + "] KeyField[" + resourceName + ":" + keyFieldName + "]: Value[" + previousKey + "] -> [" + filter.getValue() + "]"
+											+ (filter.getOperator().equals(Operator.eq) ? "" : " (Using " + filter.getOperator().toString() + ")"));
+								}
+							}
 						}
 					}
 				}
@@ -1875,8 +1893,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					integerValue = (Integer) filter.getValue();
 				} else if (valueType.equals("Double")) {
 					integerValue = ((Double) filter.getValue()).intValue();
-				} else if (valueType.equals("ArrayList")) {
-					integerValues = (List<Integer>) filter.getValue();
+				} else if (Collection.class.isAssignableFrom(filter.getValue().getClass())) {
+					integerValues = new ArrayList((Collection<Integer>) filter.getValue());
 				} else if (valueType.equals("Integer[]")) {
 					integerValues = Arrays.asList((Integer[]) filter.getValue());
 				} else {
@@ -1930,6 +1948,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						}
 					}
 
+					// if integerValues is empty -> no result
 					predicate = cb.or(getInPredicate(inMaxValues, integerValues, path, cb, false).toArray(new Predicate[0]));
 					break;
 

@@ -17,9 +17,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.ValidationException;
-import com.sgitmanagement.expresso.util.SSHClient;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
+import com.sgitmanagement.expresso.util.ftp.SSHClient;
 
 import jakarta.servlet.http.HttpServletResponse;
 

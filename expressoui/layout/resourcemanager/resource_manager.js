@@ -929,6 +929,10 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
                         if (action.resourceCollectionAction) {
                             action.showButtonInGridToolbar = true;
                             action.showButtonInForm = false;
+                        } else {
+                            if (action.supportMultipleSelections === undefined) {
+                                action.supportMultipleSelections = true;
+                            }
                         }
 
                         // add the performAction method if needed

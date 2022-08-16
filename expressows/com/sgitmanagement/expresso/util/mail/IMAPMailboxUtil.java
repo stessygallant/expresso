@@ -1,4 +1,4 @@
-package com.sgitmanagement.expresso.util;
+package com.sgitmanagement.expresso.util.mail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +16,7 @@ import javax.mail.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPStore;
 

@@ -14,8 +14,8 @@ import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.util.DateUtil;
-import com.sgitmanagement.expresso.util.Mailer;
 import com.sgitmanagement.expresso.util.Util;
+import com.sgitmanagement.expresso.util.mail.Mailer;
 import com.sgitmanagement.expressoext.base.BaseEntity;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
 

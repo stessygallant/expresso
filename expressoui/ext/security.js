@@ -505,9 +505,13 @@ expresso.Security = function () {
             open: function () {
                 //var $windowDiv = $(this);
                 // render the captcha
-                grecaptcha.render("g-recaptcha", {
-                    sitekey: expresso.Common.getSiteNamespace().config.Configurations.googleRecaptchaSitekey
-                });
+                try {
+                    grecaptcha.render("g-recaptcha", {
+                        sitekey: expresso.Common.getSiteNamespace().config.Configurations.googleRecaptchaSitekey
+                    });
+                } catch (e) {
+                    console.error(e);
+                }
             },
             save: function () {
                 var $windowDiv = $(this);
@@ -519,7 +523,10 @@ expresso.Security = function () {
 
                 var recaptchaResponse = $windowDiv.find("[name='g-recaptcha-response']").val();
 
-                if (firstName && lastName && email && notes && recaptchaResponse && company) {
+                if (!recaptchaResponse) {
+                    expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("noRecaptcha"));
+                    return false;
+                } else if (firstName && lastName && email && notes && company) {
                     // regex for email validation
                     var re = /\S+@\S+\.\S+/;
                     if (re.test(email)) {

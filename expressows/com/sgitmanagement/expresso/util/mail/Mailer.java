@@ -1,4 +1,4 @@
-package com.sgitmanagement.expresso.util;
+package com.sgitmanagement.expresso.util.mail;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +28,9 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sgitmanagement.expresso.util.SystemEnv;
+import com.sgitmanagement.expresso.util.Util;
 
 public enum Mailer {
 	INSTANCE;
@@ -329,7 +332,7 @@ public enum Mailer {
 
 	private void sendMail(Message message, String toString, boolean rethrowException) throws Exception {
 		try {
-			logger.info("Sending email [" + message.getSubject() + "] to [" + toString + "]");
+			logger.debug("Sending email [" + message.getSubject() + "] to [" + toString + "]");
 			long startDate = new Date().getTime();
 			Transport.send(message);
 			long endDate = new Date().getTime();

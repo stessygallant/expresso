@@ -1212,24 +1212,28 @@ expresso.Common = (function () {
             // update Google Analytics
             if (expresso.Common.getSiteNamespace().config.Configurations.googleAnalyticsTrackingNumber) {
                 if (expresso.Common.isProduction()) {
-                    if (!googleAnalyticsInitialized) {
-                        googleAnalyticsInitialized = true;
-                        ga('create', {
-                            trackingId: expresso.Common.getSiteNamespace().config.Configurations.googleAnalyticsTrackingNumber,
-                            cookieDomain: 'auto',
-                            name: 't0', // default tracker name
-                            userId: expresso.Common.getUserInfo().id
-                        });
-                    }
+                    try {
+                        if (!googleAnalyticsInitialized) {
+                            googleAnalyticsInitialized = true;
+                            ga('create', {
+                                trackingId: expresso.Common.getSiteNamespace().config.Configurations.googleAnalyticsTrackingNumber,
+                                cookieDomain: 'auto',
+                                name: 't0', // default tracker name
+                                userId: expresso.Common.getUserInfo().id
+                            });
+                        }
 
-                    // always set the page for the subsequent event hit
-                    if (gaFields.hitType == "pageview") {
-                        ga('set', 'page', gaFields.page);
-                    }
+                        // always set the page for the subsequent event hit
+                        if (gaFields.hitType == "pageview") {
+                            ga('set', 'page', gaFields.page);
+                        }
 
-                    //console.log("Sending analytics to Google", gaFields);
-                    delete gaFields["params"]; // do not send params to Google
-                    ga('send', gaFields);
+                        //console.log("Sending analytics to Google", gaFields);
+                        delete gaFields["params"]; // do not send params to Google
+                        ga('send', gaFields);
+                    } catch (e) {
+                        console.warn("Cannot send Google Analytics");
+                    }
                 }
             } else if (expresso.Common.getSiteNamespace().config.Configurations.analyticsResourceService) {
                 // post the data to the service

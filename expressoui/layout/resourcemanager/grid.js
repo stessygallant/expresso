@@ -301,7 +301,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 e.workbook.fileName = _this.resourceManager.resourceName + "-" + (new Date()).getTime() + ".xlsx";
             },
             change: function (e) {
-                _this.onChange(e);
+                // DO NOT CALL THIS
+                // it will be called when we update the selectedRows attribute
+                // _this.onChange(e);
             },
             filter: function (e) {
                 _this.onFilter(e);
@@ -661,7 +663,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     column.filterable = column.filterable || {};
                     column.filterable.cell = column.filterable.cell || {};
                     if (!column.filterable.cell.operator &&
-                        (column.field.endsWith("No") ||
+                        (/*column.field.endsWith("No") ||*/
                             (field && (field.keyField || field.reference || field.keyFieldReference)))) {
                         // use equals by default
                         column.filterable.cell.operator = field && field.keyField && field.keyField.operator ? field.keyField.operator : "eq";
@@ -935,6 +937,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             if (!$(e.target).parent().hasClass("selection")) {
                 // select this row only
                 _this.selectedRows = [_this.kendoGrid.dataItem($tr)];
+                _this.onChange();
             }
         });
 
@@ -1284,7 +1287,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     onRowSelected: function () {
         // console.log(this.resourceManager.getResourceSecurityPath() + " - onRowSelected: " + "[" +
-        //     this.selectedRows.map(e => e.id).join(",") + "]");
+        //    this.selectedRows.map(function (e) {
+        //        return e.id;
+        //    }).join(",") + "]");
         this.writeNbrRecords();
         this.verifySelection();
     },
@@ -2429,14 +2434,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
 
         if (this.hierarchical) {
-            // by default, the tree is expanded.
-            // make sure that the button is correct
+            // by default, the tree is expanded. Collapse if needed
             var $toolbar = this.$domElement.find(".k-grid-toolbar");
             var $icon = $toolbar.find(".exp-hierarchical-expand-button .fa");
             var expand = $icon.hasClass("fa-expand");
             if (expand) {
-                // change the button to collapse
-                $icon.addClass("fa-compress").removeClass("fa-expand");
+                $.each($("tr.k-treelist-group", _this.kendoGrid.tbody), function () {
+                    _this.kendoGrid.collapse(this);
+                });
             }
 
             // TreeList does not display a loading mask on sort and filter
@@ -2748,6 +2753,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         } else if (this.selectedRows.length == 1) {
             // we should select the new one
             var dataItem = this.selectedRows[0];
+            // console.log((this.resourceManager.currentResource ? this.resourceManager.currentResource.id : null) + " -> " +
+            //    (dataItem ? dataItem.id : null));
 
             if (!this.resourceManager.currentResource || this.resourceManager.currentResource.uid != dataItem.uid) {
                 //console.log("  Selecting id[" + dataItem.id + "] uid[" + dataItem.uid + "]");
@@ -2773,11 +2780,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
             // Kendo will highlight the row and this will trigger the change event for KendoGrid
             this.kendoGrid.select($row);
-
-            if (this.hierarchical) {
-                // TreeList does not trigger the change event
-                this.onChange();
-            }
+            this.onChange();
         } else {
             this.clearSelection();
         }
@@ -2836,7 +2839,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 this.kendoGrid.tbody.find(".selection input").prop("checked", false);
             }
             if (fireEvent !== false) {
-                this.onRowSelected();
+                this.onChange();
             }
         }
     },
@@ -3487,7 +3490,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     needSeparator = true;
                     toolbar.push({
                         template: "<button type='button' class='k-button exp-button exp-" + action.name + "-button" +
-                            (action.resourceCollectionAction ? " exp-always-active-button" :
+                            (action.resourceCollectionAction ? " exp-always-active-button" : "") +
+                            (action.supportMultipleSelections === undefined ? "" :
                                 (action.supportMultipleSelections === false ? " exp-single-selection" : " exp-multiple-selection")) +
                             "' title='" + action.title + "'><span class='fa " + action.icon + "'>" +
                             "<span class='exp-button-label' data-text-key='" + action.label + "'></span></span></button>"
@@ -4016,13 +4020,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     addColumnMenu: function () {
         var _this = this;
 
-
         // add the listener on the header (create the menu only on demand)
         this.kendoGrid.element.find("th[role=columnheader]").on("contextmenu", function (e) {
             e.preventDefault();
-            if (!_this.$columnMenu) {
-                _this.createColumnMenu();
-            }
+
+            // create the menu
+            _this.createColumnMenu();
 
             // reset the checkbox according to the current visibility
             _this.$columnMenu.find("[type=checkbox]").each(function () {

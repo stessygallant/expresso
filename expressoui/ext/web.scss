@@ -7,6 +7,35 @@ $menuWidth: 19em;
 $contentTop: 2.5em;
 
 
+/* nunito-sans-regular - latin */
+@font-face {
+    font-family: 'Nunito Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.eot'); /* IE9 Compat Modes */
+    src: local(''),
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.woff') format('woff'), /* Modern Browsers */
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.svg#NunitoSans') format('svg'); /* Legacy iOS */
+}
+
+/* open-sans-regular - latin */
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.eot'); /* IE9 Compat Modes */
+    src: local(''),
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.woff') format('woff'), /* Modern Browsers */
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.svg#OpenSans') format('svg'); /* Legacy iOS */
+}
+
+
 /*
  * ------------------------------------------------------------------------------------------------------------------
  * CSS  for index.html component ONLY

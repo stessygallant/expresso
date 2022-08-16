@@ -1,4 +1,4 @@
-package com.sgitmanagement.expresso.util;
+package com.sgitmanagement.expresso.util.ftp;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -12,21 +12,23 @@ import java.util.List;
 
 import org.apache.commons.net.ftp.FTPFile;
 
-public class FTPSClient extends FTPClient {
-	org.apache.commons.net.ftp.FTPSClient ftps;
+public class UnsecureFTPClient extends FTPClient {
 
-	public FTPSClient(String host, int port, String username, String password) throws Exception {
-		ftps = new org.apache.commons.net.ftp.FTPSClient("ssl");
-		ftps.setDefaultTimeout(TIMEOUT_IN_SECONDS * 1000);
-		ftps.connect(host, port);
-		ftps.login(username, password);
+	org.apache.commons.net.ftp.FTPClient ftp;
+
+	public UnsecureFTPClient(String host, int port, String username, String password) throws Exception {
+		ftp = new org.apache.commons.net.ftp.FTPClient();
+		ftp.setDefaultTimeout(TIMEOUT_IN_SECONDS * 1000);
+
+		ftp.connect(host, port);
+		ftp.login(username, password);
 
 		// Use passive mode as default because most of us are
 		// behind firewalls these days.
-		ftps.enterLocalPassiveMode();
+		ftp.enterLocalPassiveMode();
 	}
 
-	public FTPSClient(String host, String username, String password) throws Exception {
+	public UnsecureFTPClient(String host, String username, String password) throws Exception {
 		this(host, 22, username, password);
 	}
 
@@ -34,14 +36,14 @@ public class FTPSClient extends FTPClient {
 	public void downloadFile(String remoteFileName, String localFileName) throws Exception {
 		// if (binaryTransfer) ftps.setFileType(FTP.BINARY_FILE_TYPE);
 		OutputStream output = new FileOutputStream(localFileName);
-		ftps.retrieveFile(remoteFileName, output);
+		ftp.retrieveFile(remoteFileName, output);
 		output.close();
 	}
 
 	@Override
 	public byte[] downloadFile(String remoteFileName) throws Exception {
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		ftps.retrieveFile(remoteFileName, output);
+		ftp.retrieveFile(remoteFileName, output);
 		output.close();
 		return output.toByteArray();
 	}
@@ -50,21 +52,21 @@ public class FTPSClient extends FTPClient {
 	public void uploadFile(String remoteDir, String remoteFileName, File file) throws Exception {
 		// if (binaryTransfer) ftps.setFileType(FTP.BINARY_FILE_TYPE);
 		InputStream input = new FileInputStream(file);
-		ftps.changeWorkingDirectory(remoteDir);
-		ftps.storeFile(remoteFileName, input);
+		ftp.changeWorkingDirectory(remoteDir);
+		ftp.storeFile(remoteFileName, input);
 		input.close();
 	}
 
 	@Override
 	public void close() {
 		try {
-			ftps.logout();
+			ftp.logout();
 		} catch (IOException e) {
 			// ignore
 		}
 		try {
-			if (ftps.isConnected()) {
-				ftps.disconnect();
+			if (ftp.isConnected()) {
+				ftp.disconnect();
 			}
 		} catch (IOException e) {
 			// ignore
@@ -73,8 +75,8 @@ public class FTPSClient extends FTPClient {
 
 	@Override
 	public List<String> listFiles(String remoteDir) throws Exception {
-		ftps.changeWorkingDirectory(remoteDir);
-		FTPFile[] ftpFiles = ftps.listFiles();
+		ftp.changeWorkingDirectory(remoteDir);
+		FTPFile[] ftpFiles = ftp.listFiles();
 		List<String> files = new ArrayList<>();
 		for (FTPFile ftpFile : ftpFiles) {
 			files.add(ftpFile.getName());
@@ -84,11 +86,12 @@ public class FTPSClient extends FTPClient {
 
 	@Override
 	public void renameFile(String oldFileName, String newFileName) throws Exception {
-		ftps.rename(oldFileName, newFileName);
+		ftp.rename(oldFileName, newFileName);
 	}
 
 	@Override
 	public void deleteFile(String fileName) throws Exception {
-		ftps.deleteFile(fileName);
+		ftp.deleteFile(fileName);
 	}
+
 }
