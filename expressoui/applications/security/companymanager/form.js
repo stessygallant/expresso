@@ -1,1 +1,0 @@
-expresso.applications.security.companymanager.Form = expresso.layout.resourcemanager.Form.extend({});
