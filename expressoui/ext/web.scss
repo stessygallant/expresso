@@ -1,0 +1,630 @@
+@import "../../config/default";
+
+$userDivHeight: 3em;
+$headerHeight: 11em;
+$footerHeight: 2.6em;
+$menuWidth: 19em;
+$contentTop: 2.5em;
+
+
+/* nunito-sans-regular - latin */
+@font-face {
+    font-family: 'Nunito Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.eot'); /* IE9 Compat Modes */
+    src: local(''),
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.woff') format('woff'), /* Modern Browsers */
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('/JavascriptLibraries/fonts/nunitosans/nunito-sans-v12-latin-regular.svg#NunitoSans') format('svg'); /* Legacy iOS */
+}
+
+/* open-sans-regular - latin */
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.eot'); /* IE9 Compat Modes */
+    src: local(''),
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.woff') format('woff'), /* Modern Browsers */
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('/JavascriptLibraries/fonts/opensans/open-sans-v29-latin-regular.svg#OpenSans') format('svg'); /* Legacy iOS */
+}
+
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * CSS  for index.html component ONLY
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+html, body {
+    @include default-div;
+}
+
+body {
+    font-family: $fontFamilyOpenSans;
+    font-size: 0.8em;
+}
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// custom scrollbar: he -webkit-scrollbar is not supported by Firefox or IE and Edge
+// ------------------------------------------------------------------------------------------------------------------
+//
+/* width */
+$scrollbarSize: 0.9em;
+::-webkit-scrollbar {
+    width: $scrollbarSize;
+    height: $scrollbarSize;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    //box-shadow: inset 0 0 5px grey;
+    border-radius: $scrollbarSize / 2;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: $themeColor;
+    border-radius: $scrollbarSize / 2;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: $themeColorDark;
+}
+
+.k-panelbar .k-link.k-header {
+    margin-right: $scrollbarSize;
+}
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// CSS for overlay content (login, splah, etc)
+// ------------------------------------------------------------------------------------------------------------------
+//
+.overlay-content {
+    @include default-div;
+    width: 100%;
+    text-align: center;
+    background: $themeBackground;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 999;
+
+    $width: 20em;
+
+    .logo {
+        padding-top: 0.625em;
+        width: $width;
+    }
+
+    .splash {
+        @include default-div;
+        margin: 0 auto;
+        background-color: $loginBackground;
+
+        .title {
+            width: $width;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+
+            p {
+                margin: 0.625em 0 0 0;
+                padding: 0;
+                text-align: left;
+                color: $loginLabelColor;
+                font-family: $fontFamilyNunitoSans;
+                font-size: 150%;
+                line-height: 1;
+
+                &::first-letter {
+                    font-weight: bold;
+                }
+            }
+        }
+
+        .message-file {
+            margin: 0.625em 0 0.625em 0;
+
+            img {
+                max-width: 100%;
+                max-height: 100%;
+            }
+        }
+    }
+
+    .login {
+        @include default-div;
+        margin: 10% auto 0 auto;
+        width: 90%;
+        max-width: 27em;
+        height: auto;
+        padding: 0 0 1.5em 0;
+        background-color: $loginBackground;
+
+        a:link, a:visited, a:active {
+            color: $loginLabelColor;
+        }
+
+        a:hover {
+            color: $themeColorLight;
+        }
+
+        .login-form {
+            margin-top: 3em;
+            color: $loginLabelColor;
+
+            .authentication-mechanism {
+                .input-wrap {
+                    display: inline-block;
+
+                    &.internal-user {
+                        margin-right: 1.25em;
+                    }
+                }
+            }
+
+            $infoWidth: 20em;
+
+            .authentication-info {
+                margin: 0 auto;
+                width: $infoWidth;
+                text-align: left;
+
+                & > div {
+                    margin-top: 1.25em;
+                }
+
+                label {
+                    display: block;
+                }
+
+                input {
+                    width: $infoWidth;
+                }
+
+                div.username {
+
+                }
+
+                div.password {
+                }
+            }
+
+            div.forgot-password, div.change-password {
+                margin: 0 auto;
+                width: $infoWidth;
+                text-align: right;
+                color: $loginLabelColor;
+
+                a {
+                    font-size: 90%;
+                }
+            }
+
+            div.login-button {
+                margin-top: 1.5em;
+
+                button {
+                    border-radius: 4.5em;
+                    background-color: $loginButtonBackground;
+                    border-color: $loginButtonBackground;
+                    width: calc(#{$infoWidth} - 6.2em);
+                    color: $loginTextColor;
+                    text-transform: uppercase;
+                    font-weight: bold;
+                }
+            }
+
+            div.new-user {
+                margin: 1.25em auto 0 auto;
+                text-align: center;
+                font-size: 90%;
+            }
+        }
+    }
+}
+
+div.main {
+    @include default-div;
+    display: none;
+
+    .main-settings {
+        position: absolute;
+        top: 0.3em;
+        left: 0.9em;
+        background-color: transparent;
+
+        .show-menu-button {
+            display: none;
+            font-size: 180%;
+            color: $themeIconColor;
+
+            &:hover {
+                color: $themeTextColorLight;
+            }
+        }
+    }
+
+    .main-header {
+        @include default-div;
+        height: $headerHeight;
+        background: $themeBackgroundHeader;
+        box-shadow: $themeBackgroundHeaderBoxShadow;
+
+        .logo {
+            width: $logoWidth;
+            margin: $loginMargin;
+        }
+    }
+
+    .main-footer {
+        @include default-div;
+        padding-top: 0.1875em;
+        height: calc(#{$footerHeight} - 0.2em);
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        color: $themeTextColorLight;
+        font-family: $fontFamilyOpenSans;
+        line-height: 1;
+        text-align: center;
+
+        p {
+            margin: 0.1875em 0 0 0;
+            padding: 0;
+            font-size: 85%;
+
+            img.project {
+                margin-left: 0.25em;
+            }
+        }
+
+        .version {
+
+        }
+    }
+
+    $menuIconSize: 1em;
+
+    .main-menu-div {
+        @include default-div;
+
+        .search-menu-div {
+            margin: 0.5em 0 0 2.7em;
+            width: calc(#{$menuWidth} - 5em);
+
+            .search-menu {
+                width: 100%;
+            }
+        }
+
+        ul.main-menu {
+            border: 0;
+            margin: 0;
+            padding: 0;
+            width: $menuWidth;
+            height: calc(100% - #{$footerHeight} - #{$headerHeight} - #{$userDivHeight} - 3em);
+            overflow-x: hidden;
+            overflow-y: auto;
+
+            font-family: $fontFamilyNunitoSans;
+
+            // override Kendo CSS
+            .k-state-hover,
+            .k-state-hover:hover,
+            .k-state-selected,
+            .k-state-focused {
+                //border: 0;
+                background-color: transparent;
+                box-shadow: none;
+            }
+
+            ul.k-group {
+                border: 0;
+                background-color: transparent;
+            }
+
+            //
+            li {
+                border: 0;
+                background-color: transparent;
+                width: $menuWidth;
+
+                // highlight the header of the selected item
+                &.k-state-highlight {
+                    .k-header {
+                        color: $themeColor;
+                    }
+                }
+
+                .k-link {
+                    padding: 0.7em 0 0.6em 1.25em;
+                    line-height: 1;
+
+                    .text {
+                        margin-left: 2em;
+                        font-weight: bold;
+                    }
+
+                    .icon {
+                        text-align: center;
+                        width: 1.5em;
+                        color: $themeTextColorLight;
+                    }
+
+                    // highlight the selected menu item
+                    &.k-state-selected {
+                        color: $themeColor;
+
+                        .icon {
+                            color: $themeColor;
+                        }
+                    }
+
+                    // highlight the menu item on hover
+                    &.k-state-hover {
+                        color: $themeColor;
+
+                        .icon {
+                            color: $themeColor;
+
+                            // if hover on the star icon, highlight it
+                            &.fa-star:hover {
+                                color: $themeColorDark;
+                                cursor: pointer;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // special case for first level
+            & > li {
+
+                // Favorites
+                &.k-first {
+                    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.14) 100%);
+                }
+
+                // k-icon  k-panelbar-collapse k-i-arrow-60-up
+                // k-icon k-i-arrow-60-down k-panelbar-expand
+
+                & > .k-header {
+                    margin-top: 0.8em;
+                    border-bottom: 0.1em solid #D8DADD;
+                    background-color: transparent;
+
+                    .text {
+                        border: 0;
+                        margin-top: 0.3em;
+                        margin-left: 1.25em;
+                        text-transform: uppercase;
+                        font-weight: 800;
+                    }
+
+                    .icon {
+                        color: $themeColor;
+                        height: $menuIconSize;
+                        width: $menuIconSize;
+                        line-height: $menuIconSize;
+                        font-size: $menuIconSize;
+                    }
+                }
+            }
+        }
+    }
+
+    .main-div {
+        @include default-div;
+        position: absolute;
+        top: $contentTop;
+        left: calc(#{$menuWidth} + 1.25em);
+        background-color: white;
+
+        border: $mainDivBorder;
+        width: calc(100% - (#{$menuWidth} + 2.5em));
+        height: calc(100% - #{$contentTop} - #{$footerHeight} - 0.125em);
+        box-shadow: $mainDivShadow;
+    }
+
+    $mainTitleHeight: 3.7em;
+
+    .main-title {
+        @include default-div;
+        height: #{$mainTitleHeight};
+
+        .title {
+            padding: 0.9em 0 0 0.6em;
+            color: $themeTextColor;
+            text-transform: uppercase;
+            font-family: $fontFamilyNunitoSans;
+            font-size: 120%;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .version {
+            position: absolute;
+            right: 0;
+            top: 0;
+            font-size: 80%;
+            color: $themeTextColor;
+            display: none;
+        }
+
+        background: linear-gradient(180deg, rgba(238, 238, 238, 0.1) 0%, rgba(216, 216, 216, 0.2) 100%);
+    }
+
+    .main-content {
+        @include default-div;
+        background-color: white;
+        height: calc(100% - #{$mainTitleHeight});
+    }
+
+    .user-div {
+        @include default-div;
+        position: fixed;
+        bottom: $footerHeight;
+        left: 1.25em;
+        width: calc(#{$menuWidth} - 4em);
+        height: calc(#{$userDivHeight} - 1em);
+        border: 1px solid rgba(111, 130, 148, 0.3);
+        background: linear-gradient(180deg, rgba(238, 238, 238, 0.2) 0%, rgba(216, 216, 216, 0.41) 100%);
+        box-shadow: 0 0.125em 0.1875em 0 rgba(0, 0, 0, 0.2);
+        padding: 0.7em 0.8em 0 0.8em;
+
+        .settings {
+            color: $themeColor;
+            float: right;
+            font-weight: normal;
+            margin-top: 0.1em;
+            font-size: 150%;
+
+            &:hover {
+                color: $themeColorDark;
+                cursor: pointer;
+            }
+        }
+
+        .username {
+            text-transform: uppercase;
+            color: $themeTextColor;
+            font-family: $fontFamilyOpenSans;
+            font-weight: 600;
+        }
+    }
+
+    .user-selector {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}
+
+.exp-system-message {
+    background-color: red;
+    color: white;
+    position: absolute;
+    top: 0;
+    padding: 0.4em 0.625em;
+    text-align: center;
+    width: 100%;
+    font-size: 300%;
+
+    .close-button {
+        position: absolute;
+        top: 0;
+        right: 1.7em;
+        background-color: white;
+        color: red;
+        padding: 0 0.3em;
+        margin: 0;
+        font-size: 70%;
+        cursor: pointer;
+    }
+}
+
+// remove padding on input
+.k-autocomplete .k-input, .k-dropdown-wrap .k-input, .k-multiselect-wrap .k-input, .k-numeric-wrap .k-input,
+.k-picker-wrap .k-input, .k-selectbox .k-input, .k-textbox > input, .k-textbox, input.k-textbox {
+    text-indent: 0.175em;
+    border-radius: 0;
+}
+
+// remove the border on the input
+.k-autocomplete, .k-dropdown-wrap, .k-numeric-wrap, .k-picker-wrap, .k-textbox {
+    border: 0;
+
+    .k-select, .k-input {
+        border: 0;
+    }
+}
+
+// add a line to underline the text
+.k-autocomplete, .k-numeric-wrap, .k-dropdown-wrap, .k-picker-wrap, .k-textbox:not([role=combobox]):not(.k-combobox) {
+    border-bottom: $themeInputBottomBorder;
+}
+
+/*
+  SCREEN MODE CSS
+ */
+.exp-screen-mode-tablet, .exp-screen-mode-phone {
+
+    .main {
+        .main-settings {
+            .show-menu-button {
+                display: block;
+            }
+        }
+
+        .main-header {
+            display: none;
+        }
+
+        .main-menu-div {
+            display: none;
+
+            .search-menu-div {
+                margin: 0.1em 0 0 4em;
+            }
+
+            .main-menu {
+                // width: 100%;
+                height: calc(100% - 9em);
+            }
+        }
+
+        .user-div {
+            display: none;
+        }
+
+        .main-footer {
+            display: none;
+
+            .time-to-load-profile {
+                position: absolute;
+                right: 0;
+            }
+        }
+
+        $mainTitleHeight: 2.5em;
+
+        .main-div {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            overflow: hidden;
+            position: static;
+            background-color: white;
+            width: 100%;
+            height: 100%;
+
+            .main-title {
+                height: $mainTitleHeight;
+
+                .title {
+                    margin-left: 2.5em;
+                    padding-top: 0.4em;
+                }
+
+                .version {
+                    display: block;
+                }
+            }
+
+            .main-content {
+                height: calc(100% - #{$mainTitleHeight});
+            }
+        }
+    }
+}

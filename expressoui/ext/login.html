@@ -1,0 +1,38 @@
+﻿<div class="login">
+    <img class="logo" src="images/logo-login.png" alt="Expresso" border="0">
+
+    <form class="login-form" autocomplete="on">
+
+        <div class="authentication-mechanism">
+            <div class="input-wrap internal-user">
+                <input type="radio" name="authentication" value="kerberos">
+            </div>
+
+            <div class="input-wrap external-user">
+                <input type="radio" name="authentication" value="basic" checked>
+            </div>
+        </div>
+
+        <div class="authentication-info">
+            <div class="input-wrap username">
+                <input type="text" name="userName" class="username-input" autocomplete="username" required>
+            </div>
+
+            <div class="input-wrap password">
+                <input type="password" name="password" class="password-input" autocomplete="current-password" required>
+            </div>
+        </div>
+
+        <div class="forgot-password">
+            <a href="" data-text-key="forgotPassword"></a>
+        </div>
+
+        <div class="login-button">
+            <button type="submit" class="login-button" name="login"></button>
+        </div>
+
+        <div class="new-user">
+            <a href="" data-text-key="newUser"></a>
+        </div>
+    </form>
+</div>

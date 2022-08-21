@@ -1,0 +1,881 @@
+@import "../config/default";
+
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// Common CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+
+.hidden {
+    display: none;
+}
+
+// trick for the float issue
+.clear:after {
+    clear: both;
+    content: "";
+    display: table;
+}
+
+.center {
+    text-align: center;
+}
+
+.pull-left {
+    float: left !important;
+}
+
+.pull-right {
+    float: right !important;
+}
+
+.lowercase {
+    text-transform: lowercase;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+.disabled {
+    pointer-events: none;
+    cursor: default;
+}
+
+.exp-invalid, .exp-invalid-unique, input.k-invalid {
+    box-shadow: 0 0 4px red !important;
+    &:not(.k-combobox) {
+        border: 1px solid red !important;
+    }
+    &.k-combobox {
+        .k-dropdown-wrap {
+            border: 1px solid red !important;
+        }
+    }
+}
+
+::placeholder { // Chrome, Firefox, Opera, Safari 10.1+
+    color: #666666;
+    font-style: italic;
+    opacity: 1; // Firefox
+}
+
+::-ms-input-placeholder { // Microsoft Edge
+    color: #666666;
+    font-style: italic;
+}
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// WINDOW CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+.exp-alert-div.k-window-content, .exp-prompt-div.k-window-content, .exp-window-table-div.k-window-content {
+    // table displayed in a window
+    // max-height at runtime
+    overflow-y: auto;
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+
+        td, th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #ddd;
+        }
+
+        th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: $themeColorLight;
+            color: white;
+        }
+
+        td.invalid {
+            background-color: red;
+            color: white;
+            font-weight: bold;
+        }
+    }
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * PROGRESS BAR
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-progress-bar-div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+
+    .progress-bar {
+        position: absolute;
+        top: 35%;
+        left: calc((100% - 30em) / 2);
+        width: 30em;
+        z-index: 2;
+    }
+
+    .progress-back {
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        opacity: 0.4;
+    }
+
+    .k-progress-status {
+        font-weight: bold;
+    }
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * LOADING MASK
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-loading-mask {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+
+    .exp-loading-text {
+        padding: 5px 20px;
+        color: white;
+        background-color: $themeColor;
+        font-size: 120%;
+        font-weight: bold;
+        position: absolute;
+        top: calc(50% + 30px);
+        left: calc(50% - 180px);
+    }
+}
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// CUSTOM WIDGET CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+.exp-overlay {
+    @include default-div;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    opacity: 0.7;
+    z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+    cursor: no-drop;
+    background-color: white;
+}
+
+.k-notification-info {
+    color: #fff;
+    background-color: $themeColorDark;
+    border-color: $themeColorDark;
+}
+
+.k-multiselect-wrap {
+    max-height: 140px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// LOOKUP SELECTION CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+
+// for backward compatibility, do not put those under the widget fow now
+.exp-lookup-selection-input {
+    width: calc(50% - 20px) !important;
+    display: block;
+    margin: 0 0 5px 0 !important;
+}
+
+.exp-lookup-selection {
+    height: 130px;
+
+    .k-listbox-toolbar {
+        margin-top: 3px;
+    }
+
+    li.k-item {
+        min-height: 13px;
+        line-height: 12px;
+        font-size: 90%;
+    }
+
+    &.exp-lookup-selection-source {
+        width: calc(50% + 16px) !important;
+    }
+
+    &.exp-lookup-selection-target {
+        width: calc(50% - 18px) !important;
+        margin-left: 2px;
+    }
+}
+
+.exp-multilookupselection {
+    background-color: #eeeeee;
+
+    .exp-lookup-selection-input {
+        height: 20px;
+        margin: 2px 0 3px 2px !important;
+        width: calc(50% - 22px) !important;
+    }
+
+    .exp-lookup-selection {
+        height: 150px;
+    }
+}
+
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// MULTI INPUT WIDGET CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+.exp-multiinput {
+    border: none;
+
+    .k-input {
+        width: calc(100% - 27px) !important;
+    }
+
+    .k-button {
+        height: 25px;
+        width: 25px;
+        margin-right: 0;
+    }
+
+    .exp-multiinput-div {
+        margin-top: 2px;
+        min-height: 20px;
+        max-height: 66px;
+        overflow-y: auto;
+        padding: 2px 5px 2px 2px;
+        width: calc(100% - 36px);
+
+        border-radius: 4px;
+        border: 1px solid #dddddd;
+        background-color: #fbfbfb;
+
+        .exp-multiinput-entry {
+            padding: 2px 4px;
+            margin: 2px 0;
+            border: 1px solid #cccccc;
+            background-color: #eeeeee;
+            border-radius: 4px;
+
+            &:hover {
+                background-color: $themeColorLight;
+            }
+
+            .exp-multiinput-value {
+                //width: calc(100% - 7px);
+            }
+
+            .exp-close-button {
+                float: right;
+                margin-right: 4px;
+                font-weight: bold;
+                cursor: pointer;
+
+                &:hover {
+                    color: white;
+                }
+            }
+        }
+    }
+}
+
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// FIELDSET SELECTION CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+.exp-multicheckbox {
+    .header {
+        background-color: #eeeeee;
+        padding: 2px 0 3px 0;
+
+        input[type=search].k-textbox {
+            height: 20px;
+            margin: 0 0 0 2px;
+            width: 150px;
+        }
+
+        .checkbox-div.input-wrap {
+            margin: 0 0 0 10px;
+            padding: 0;
+            width: auto;
+
+            label.k-checkbox-label {
+                font-weight: normal;
+                color: $themeTextColor;
+                text-transform: none;
+                margin-top: 2px;
+            }
+
+            input {
+                margin-top: 1px;
+            }
+        }
+    }
+
+    .content {
+        // height: 150px;
+        max-height: 200px;
+        overflow-y: auto;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+
+        .input-wrap {
+            height: auto;
+            margin: 0;
+            padding: 3px 2px 2px 8px;
+
+            [type=checkbox] {
+                margin-top: 1px;
+            }
+
+            label.k-checkbox-label {
+                margin-top: 1px;
+                font-weight: normal;
+                display: inline;
+            }
+        }
+    }
+}
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// FILTER CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+.exp-widget-filter {
+    $borderColor: #ceced2;
+    $border: 1px solid $borderColor;
+
+    border: $border;
+    border-radius: 4px;
+    min-height: 2em;
+
+    .exp-widget-filter-remove-button {
+        opacity: 0.3;
+
+        &:hover {
+            opacity: 1;
+            cursor: pointer;
+            color: red;
+        }
+    }
+
+    .exp-widget-filter-tabstrip {
+        background-color: white;
+        border-width: 1px;
+
+        .k-tabstrip-item {
+            border: $border;
+            border-bottom-color: transparent;
+        }
+
+        .exp-widget-filter-source {
+            min-height: 5em;
+            overflow: auto;
+            padding: 0.5em 0.2em;
+            border: $border;
+            border-radius: 0 4px 4px 4px;
+            // width: calc(100% - 1em);
+        }
+
+        .exp-widget-filter-visual {
+            max-height: 20em;
+            overflow: auto;
+            border: $border;
+            border-radius: 0 4px 4px 4px;
+
+            // do not allow to delete the first group
+            & > .exp-widget-filter-group > .exp-widget-filter-remove-button {
+                display: none;
+            }
+
+            .exp-widget-filter-group {
+                padding: 0.2em;
+                margin: 0.5em;
+                border: $border;
+                border-radius: 4px;
+                background-color: white;
+                position: relative;
+
+                &.exp-highlight-widget-filter-group {
+                    background-color: #eeeeee;
+                }
+
+                .exp-widget-filter-logic.k-widget {
+                    width: 5em;
+                }
+
+                .exp-widget-filter-filters {
+
+                }
+
+                & > .exp-widget-filter-remove-button {
+                    position: absolute;
+                    top: 0.1em;
+                    right: 0.1em;
+                }
+
+                .exp-widget-filter-add-group-button, .exp-widget-filter-add-rule-button {
+                    height: 1.7em;
+                    float: right;
+
+                    span {
+                        margin-top: 0;
+                    }
+                }
+
+                .exp-widget-filter-add-group-button {
+                    margin-right: 1em;
+                }
+
+                .exp-widget-filter-add-rule-button {
+
+                }
+            }
+
+            .exp-widget-filter-rule {
+                padding: 0.1em;
+                margin: 0.1em;
+                position: relative;
+
+                .exp-widget-filter-field.k-widget {
+                    width: 23em;
+                }
+
+                .exp-widget-filter-operator.k-widget {
+                    width: 12em;
+                }
+
+                .exp-widget-filter-value.k-textbox,
+                span.exp-widget-filter-date-value {
+                    width: 14em !important;
+                }
+
+                .exp-widget-filter-remove-button {
+                    font-size: 120%;
+                }
+            }
+        }
+    }
+}
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// MESSAGE WINDOW CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+.k-window {
+    .k-window-titlebar {
+        .k-window-title {
+            padding: 0;
+            margin: 0;
+        }
+
+        .k-spacer {
+            flex: none;
+        }
+
+        .fa {
+            margin: 0 1.25em 0 0.7em;
+
+            &.exp-message-info {
+                color: $themeColorDark;
+            }
+
+            &.exp-message-warning {
+                color: yellow;
+            }
+
+            &.exp-message-error {
+                color: red;
+            }
+        }
+    }
+}
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// KENDO UI CSS
+// ------------------------------------------------------------------------------------------------------------------
+//
+
+.k-numeric-wrap .k-select {
+    // border-right-width: 1px;  DO NOT it double the line for CEZinc
+}
+
+// for multiselect, allow only 1 selection per line
+.k-multiselect {
+    display: inline-block;
+
+    li.k-button {
+        display: block;
+        float: none;
+        text-align: left;
+    }
+
+    .k-multiselect-wrap {
+        .k-input {
+            border: 0 !important;
+            width: 100% !important;
+        }
+    }
+}
+
+// calendar
+.k-calendar .k-today .k-link {
+    color: $themeColorDark;
+}
+
+// checkbox
+.k-checkbox {
+    border: $themeInputBottomBorder;
+    background-color: #fff;
+    border-radius: 0.2em;
+
+    &:checked {
+        border-color: $themeColorDark;
+        color: white;
+        background-color: $themeColorDark;
+    }
+
+    & + .k-checkbox-label {
+        margin-top: 0.2em;
+    }
+
+    &:disabled {
+        color: $themeTextColor;
+    }
+
+    &:disabled + .k-checkbox-label {
+        color: $themeTextColor;
+        opacity: 1;
+        filter: none;
+    }
+
+}
+
+// radio
+.k-radio {
+    border: $themeInputBottomBorder;
+    background-color: #fff;
+    border-radius: 50%;
+
+    &:checked {
+        border-color: $themeColorDark;
+        color: $themeColorDark;
+    }
+
+    & + .k-radio-label {
+        margin-top: 0.2em;
+    }
+
+    &:disabled, &:disabled + .k-radio-label {
+        color: $themeTextColor;
+        opacity: 1;
+        filter: none;
+        -webkit-filter: none;
+    }
+}
+
+// if using <label><input><span></span></label> strategy for checkbox and radio button
+label input + span {
+    margin-left: 0.7em;
+    vertical-align: bottom;
+}
+
+
+.k-state-hover, .k-state-hover:hover {
+    background-color: $themeColorLight;
+}
+
+.k-picker-wrap.k-state-focused {
+    background-color: $themeColorLight;
+}
+
+.k-dropdown-wrap.k-state-focused {
+    background-color: $themeColorLight;
+}
+
+.k-dropdown-wrap.k-state-hover {
+    background-color: $themeColorLight;
+}
+
+.k-state-selected, .k-state-selected:link, .k-state-selected:visited, .k-tool.k-state-selected, .k-list > .k-state-selected,
+.k-list > .k-state-highlight, .k-panel > .k-state-selected, .k-ghost-splitbar-vertical, .k-ghost-splitbar-horizontal,
+.k-draghandle.k-state-selected:hover, .k-scheduler .k-scheduler-toolbar .k-state-selected,
+.k-scheduler .k-today.k-state-selected, .k-marquee-color {
+    color: $themeTextColor;
+}
+
+.k-numeric-wrap.k-state-focused {
+    background-color: $themeColorLight;
+}
+
+.k-state-focused.k-state-selected, .k-list > .k-state-focused.k-state-selected,
+.k-listview > .k-state-focused.k-state-selected, td.k-state-focused.k-state-selected {
+    background-color: $themeColorLight;
+    box-shadow: inset 0 0 3px 1px $themeColorLight;
+}
+
+.k-split-button:focus:not(.k-state-disabled) > .k-state-active, .k-split-button:focus:not(.k-state-disabled) > .k-button:hover {
+    background-color: $themeColorLight;
+}
+
+.k-button:active, .k-button.k-state-active, .k-button.k-state-active:hover {
+    background-color: $themeColorLight;
+    border-color: $themeColorLight;
+}
+
+.k-button:hover, .k-button.k-state-hover {
+    background-color: $themeColorLight;
+}
+
+.k-slider-selection {
+    background-color: $themeColorDark;
+}
+
+.k-ghost-splitbar {
+    background-color: $themeColorDark;
+    border-color: $themeColorDark;
+}
+
+.k-splitbar-vertical-hover:hover {
+    background-color: $themeColorDark;
+}
+
+.k-split-button.k-state-border-down > .k-button, .k-split-button.k-state-border-up > .k-button {
+    background-color: $themeColorLight;
+}
+
+.k-calendar .k-nav-fast.k-state-hover {
+    background-color: $themeColorLight;
+}
+
+.k-primary {
+    background-color: $themeColor;
+    border-color: $themeColorDark;
+}
+
+.k-state-selected, .k-state-selected:link, .k-state-selected:visited, .k-tool.k-state-selected,
+.k-list > .k-state-selected, .k-list > .k-state-highlight, .k-panel > .k-state-selected, .k-ghost-splitbar-vertical,
+.k-ghost-splitbar-horizontal, .k-draghandle.k-state-selected:hover, .k-scheduler .k-scheduler-toolbar .k-state-selected,
+.k-scheduler .k-today.k-state-selected, .k-marquee-color {
+    background-color: $themeColor;
+    border-color: $themeColorDark;
+}
+
+// remove the border
+.k-tabstrip-top > .k-tabstrip-items-wrapper {
+    border-bottom-width: 0;
+
+    .k-item + .k-item {
+        margin-left: 5px;
+    }
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * Toolbar and buttons CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+// overwrite the size because it is defined as 16px (not scalable)
+.k-icon {
+    font-size: 1.4em;
+}
+
+.k-split-container {
+    background-color: white;
+}
+
+.k-toolbar {
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+
+    .k-split-button {
+        margin: $toolbarButtonMargin;
+        height: $toolbarButtonHeight;
+
+        .k-button {
+            // remove margin
+            margin: 0;
+
+            &:not(.k-split-button-arrow) {
+                // add space to the text field
+                padding: 0.1em 0.8em 0 0.8em;
+            }
+        }
+
+        .k-split-button-arrow {
+            background-color: transparent;
+        }
+    }
+
+    // label
+    label {
+        font-weight: bold;
+        margin-right: 0.5em;
+
+        &:after {
+            content: ":";
+        }
+    }
+
+    .input-wrap {
+        margin-right: 2em;
+
+        .k-datepicker {
+            width: 8.5em;
+        }
+    }
+}
+
+.exp-button,
+.k-grid .k-button.exp-button { // force overwrite over kendo grid
+    margin: $toolbarButtonMargin;
+    padding: $toolbarButtonPadding;
+    height: $toolbarButtonHeight;
+    min-width: $toolbarButtonMinWidth;
+    border: 0.1em solid rgba(111, 130, 148, 0.3);
+    border-radius: $toolbarButtonBorderRadius;
+    background-color: transparent;
+
+    // icon
+    .k-icon {
+        color: $themeIconColor;
+    }
+
+    .fa {
+        color: $themeIconColor;
+        text-align: center;
+        height: 0.9em;
+        margin-top: 0.1em;
+        line-height: 1;
+        font-size: 110%;
+
+        // text
+        .exp-button-label, [data-text-key] {
+            font-size: 90.9%; // % * 110% = original
+            font-family: $themeDefaultFontFamilly;
+            color: $themeTextColor;
+            margin-left: 0.5em;
+            margin-top: 0;
+
+            &:empty {
+                margin-left: 0;
+            }
+        }
+    }
+
+    // text with no icon
+    & > span:not(.fa):not(.fa-stack):not(.k-icon) {
+        color: $themeTextColor;
+        margin-top: 0;
+    }
+
+    &[disabled] {
+        //background-color: transparent;
+        //
+        //span, i {
+        //    color: $themeIconColorDisable;
+        //}
+    }
+
+    &:not([disabled]):hover {
+        border: 0.1em solid $themeIconColor;
+        background-color: transparent;
+    }
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * MOBILE CSS
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-screen-mode-phone {
+    font-size: 95%;
+    line-height: 1.2;
+}
+
+.exp-screen-mode-tablet {
+    font-size: 100%;
+    line-height: 1.2;
+}
+
+.exp-screen-mode-desktop {
+    font-size: 77%;
+}
+
+.exp-screen-mode-desktop {
+    .exp-screen-mode-mobile-only, .exp-screen-mode-tablet-only, .exp-screen-mode-phone-only {
+        display: none;
+    }
+}
+
+.exp-screen-mode-phone, .exp-screen-mode-tablet {
+    .exp-button {
+        // icon
+        .fa {
+            margin-top: 0.3em;
+        }
+
+        // label
+        .exp-button-label {
+            display: none
+        }
+    }
+
+    // Close button on Window
+    .k-window-titlebar .k-window-actions {
+        font-size: 140%;
+    }
+
+    .exp-screen-mode-desktop-only {
+        display: none;
+    }
+}
+
+.exp-screen-mode-tablet {
+    .exp-screen-mode-phone-only {
+        display: none;
+    }
+}
+
+.exp-screen-mode-phone {
+    .exp-screen-mode-tablet-only {
+        display: none;
+    }
+}
+

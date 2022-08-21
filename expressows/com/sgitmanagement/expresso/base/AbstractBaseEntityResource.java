@@ -10,6 +10,7 @@ import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.exception.ValidationException;
+import com.sgitmanagement.expresso.exception.WrongVersionException;
 import com.sgitmanagement.expresso.util.Util;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -123,10 +124,8 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 				getService().verifyActionRestrictions("update", e);
 				return getService().update(v);
 			} catch (ForbiddenException ex2) {
-				// Kendo UI may try to send an update for an already "updated" resource.
-				// just ignore it
-				logger.warn("Cannot update the resource", ex2);
-				return e;
+				logger.warn("Cannot update the resource (probably wrong version): " + ex2);
+				throw new WrongVersionException();
 			}
 		} catch (Exception ex) {
 			getPersistenceManager().rollback(getEntityManager());
@@ -187,7 +186,7 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 	public E performAction(MultivaluedMap<String, String> formParams) throws Exception {
 		String action = Util.getParameterValue(getRequest(), "action");
 
-		logger.info("Performing action [" + action + "] on single [" + this.getClass().getSimpleName() + "]");
+		logger.debug("Performing action [" + action + "] on single [" + this.getClass().getSimpleName() + "]");
 		// with " + formParams);
 
 		try {

@@ -1046,7 +1046,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		if (filter != null) {
 			if (filter.getField() != null) {
 				// verify if the field is a reference
-				if (filter.getOperator().equals(Filter.Operator.eq)) {
+				if (filter.getOperator().equals(Filter.Operator.eq) && !Util.isNull("" + filter.getValue())) {
 					// get the path to the field
 					Field field = Util.getField(getTypeOfE(), filter.getField());
 					if (field == null) {
@@ -1101,7 +1101,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 								}
 								if (service != null) {
 									// Get the service for the field
-									String previousKey = (String) filter.getValue();
+									String previousKey = "" + filter.getValue();
 									service.formatKeyField(filter, keyField);
 									logger.debug("Field [" + filter.getField() + "] KeyField[" + resourceName + ":" + keyFieldName + "]: Value[" + previousKey + "] -> [" + filter.getValue() + "]"
 											+ (filter.getOperator().equals(Operator.eq) ? "" : " (Using " + filter.getOperator().toString() + ")"));
@@ -1498,16 +1498,20 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param keyField
 	 */
 	public void formatKeyField(Filter filter, Field keyField) {
-		String formattedKey = formatKeyField(keyField, (String) filter.getValue());
+		String formattedKey = formatKeyField(keyField, "" + filter.getValue());
 		filter.setValue(formattedKey);
 	}
 
 	final public String formatKeyField(String keyFieldName, Object keyValue) {
-		try {
-			return formatKeyField(Util.getField(getTypeOfE(), keyFieldName), (String) keyValue);
-		} catch (Exception e) {
-			// ignore
-			return (String) keyValue;
+		if (keyValue == null) {
+			return null;
+		} else {
+			try {
+				return formatKeyField(Util.getField(getTypeOfE(), keyFieldName), "" + keyValue);
+			} catch (Exception e) {
+				// ignore
+				return (String) keyValue;
+			}
 		}
 	}
 

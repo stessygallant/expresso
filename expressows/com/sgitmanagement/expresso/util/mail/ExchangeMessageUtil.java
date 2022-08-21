@@ -1,13 +1,10 @@
 package com.sgitmanagement.expresso.util.mail;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
@@ -20,55 +17,44 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.sgitmanagement.expresso.util.MsGraphClient;
 import com.sgitmanagement.expresso.util.SystemEnv;
-import com.sgitmanagement.expresso.util.Util;
 
 /**
  * This class is a utilities to read and send messages
  *
  */
-public class ExchangeMessageUtil {
+public class ExchangeMessageUtil implements MailSender {
 	static private Logger logger = LoggerFactory.getLogger(ExchangeMessageUtil.class);
 	static private Properties mailProps;
 	static private String defaultUserPrincipalName;
-	static private String supportEmail;
-	static private String templateDir;
 
 	private MsGraphClient msGraphClient;
 
 	static {
 		mailProps = SystemEnv.INSTANCE.getProperties("mail");
 		defaultUserPrincipalName = mailProps.getProperty("mail.userPrincipalName");
-		supportEmail = mailProps.getProperty("mail.smtp.support");
-		templateDir = mailProps.getProperty("mail.smtp.template_dir");
 	}
 
 	/**
 	 * 
 	 * @throws Exception
 	 */
-	public ExchangeMessageUtil() throws Exception {
-		connect();
-	}
-
-	/**
-	 * 
-	 * @throws Exception
-	 */
-	private void connect() throws Exception {
+	@Override
+	public void connect() throws Exception {
 		this.msGraphClient = new MsGraphClient();
 		this.msGraphClient.connect();
-
 	}
 
 	/**
 	 * 
 	 */
+	@Override
 	public void disconnect() {
 		try {
 			msGraphClient.disconnect();
 		} catch (Exception e) {
 			// not much that we can do
 		}
+		msGraphClient = null;
 	}
 
 	/**
@@ -104,15 +90,18 @@ public class ExchangeMessageUtil {
 		for (JsonElement jsonElement : rootJonsObject.get("value").getAsJsonArray()) {
 			JsonObject messageJsonObject = (JsonObject) jsonElement;
 
+			String id = messageJsonObject.get("id").getAsString();
 			String subject = messageJsonObject.get("subject").getAsString();
-			if (filter == null || subject.contains(filter)) {
-				String id = messageJsonObject.get("id").getAsString();
-				boolean hasAttachments = messageJsonObject.get("hasAttachments").getAsBoolean();
-				String senderEmail = messageJsonObject.get("sender").getAsJsonObject().get("emailAddress").getAsJsonObject().get("address").getAsString();
-				String content = messageJsonObject.get("body").getAsJsonObject().get("content").getAsString();
 
-				Message message = new Message(id, subject, senderEmail, content, hasAttachments);
-				messages.add(message);
+			if (isValidMessage(id, subject)) {
+				if (filter == null || subject.contains(filter)) {
+					boolean hasAttachments = messageJsonObject.get("hasAttachments").getAsBoolean();
+					String senderEmail = messageJsonObject.get("sender").getAsJsonObject().get("emailAddress").getAsJsonObject().get("address").getAsString();
+					String content = messageJsonObject.get("body").getAsJsonObject().get("content").getAsString();
+
+					Message message = new Message(id, subject, senderEmail, content, hasAttachments);
+					messages.add(message);
+				}
 			}
 		}
 
@@ -143,54 +132,6 @@ public class ExchangeMessageUtil {
 
 	/**
 	 * 
-	 * @param userPrincipalName
-	 * @param to
-	 * @param subject
-	 * @param body
-	 * @throws Exception
-	 */
-	public void sendMessage(String to, String subject, String body) throws Exception {
-		String path = "/users/" + defaultUserPrincipalName + "/sendMail";
-
-		JsonObject topJsonObject = new JsonObject();
-
-		// do not put in sent items
-		topJsonObject.addProperty("saveToSentItems", false);
-
-		// message
-		JsonObject messageJsonObject = new JsonObject();
-		topJsonObject.add("message", messageJsonObject);
-
-		// subject
-		messageJsonObject.addProperty("subject", subject);
-
-		// body
-		JsonObject bodyJsonObject = new JsonObject();
-		messageJsonObject.add("body", bodyJsonObject);
-		bodyJsonObject.addProperty("contentType", "HTML");
-		bodyJsonObject.addProperty("content", Base64.getEncoder().encodeToString(body.getBytes(StandardCharsets.UTF_8)));
-
-		// recipients
-		JsonArray recipientsJsonArray = new JsonArray();
-		messageJsonObject.add("toRecipients", recipientsJsonArray);
-
-		// ccRecipients
-
-		// only 1 to for now
-		JsonObject recipientJsonObject = new JsonObject();
-		JsonObject emailJsonObject = new JsonObject();
-		recipientJsonObject.add("emailAddress", emailJsonObject);
-		emailJsonObject.addProperty("address", to);
-		recipientsJsonArray.add(recipientJsonObject);
-
-		// send
-		String jsonBody = new GsonBuilder().setPrettyPrinting().create().toJson(topJsonObject);
-		// System.out.println(jsonBody);
-		msGraphClient.callMicrosoftGraph(path, jsonBody);
-	}
-
-	/**
-	 * 
 	 * @param tos
 	 * @param ccs
 	 * @param bccs
@@ -199,22 +140,11 @@ public class ExchangeMessageUtil {
 	 * @param importantFlag
 	 * @param messageBody
 	 * @param attachments
-	 * @param bccSupport
 	 */
-	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag, String messageBody,
-			Collection<String> attachments, boolean bccSupport) {
+	@Override
+	public void sendMail(String fromAddress, String fromName, Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag,
+			String messageBody, Collection<String> attachments) {
 		try {
-			if (!SystemEnv.INSTANCE.isInProduction()) {
-				messageBody += "<br><br>---------------------------------------------------";
-				messageBody += "<br>Original TO : " + tos;
-				messageBody += "<br>Original CC : " + ccs;
-				messageBody += "<br>Original BCC: " + bccs;
-				messageBody += "<br>Reply TO : " + replyTo;
-				tos = Arrays.asList(supportEmail);
-				ccs = bccs = null;
-				replyTo = null;
-			}
-
 			String path = "/users/" + defaultUserPrincipalName + "/sendMail";
 
 			JsonObject rootJsonObject = new JsonObject();
@@ -229,6 +159,9 @@ public class ExchangeMessageUtil {
 			// importance
 			messageJsonObject.addProperty("importance", importantFlag ? "high" : "normal");
 
+			// from/sender -> must be the same as the actual defaultUserPrincipalName
+			// messageJsonObject.add("from", createRecipient(fromAddress));
+
 			// subject
 			messageJsonObject.addProperty("subject", subject);
 
@@ -236,7 +169,8 @@ public class ExchangeMessageUtil {
 			JsonObject bodyJsonObject = new JsonObject();
 			messageJsonObject.add("body", bodyJsonObject);
 			bodyJsonObject.addProperty("contentType", "HTML");
-			bodyJsonObject.addProperty("content", Base64.getEncoder().encodeToString(messageBody.getBytes(StandardCharsets.UTF_8)));
+			bodyJsonObject.addProperty("content", messageBody);
+			// Base64.getEncoder().encodeToString(messageBody.getBytes(StandardCharsets.UTF_8)));
 
 			// recipients
 			messageJsonObject.add("toRecipients", createRecipients(tos));
@@ -245,16 +179,6 @@ public class ExchangeMessageUtil {
 			}
 			if (bccs != null) {
 				messageJsonObject.add("bccRecipients", createRecipients(bccs));
-			}
-			if (bccSupport) {
-				JsonArray recipientsJsonArray;
-				if (bccs != null) {
-					recipientsJsonArray = messageJsonObject.get("bccRecipients").getAsJsonArray();
-				} else {
-					recipientsJsonArray = new JsonArray();
-					messageJsonObject.add("bccRecipients", recipientsJsonArray);
-				}
-				recipientsJsonArray.add(createRecipient(supportEmail));
 			}
 
 			// replyTo
@@ -370,112 +294,74 @@ public class ExchangeMessageUtil {
 		return attachments;
 	}
 
-	// ---------- sendMail
-	public void sendMail(String to, String subject, String messageBody) {
-		sendMail(to, null, subject, messageBody);
-	}
+	private boolean isValidMessage(String messageId, String subject) {
+		boolean validEmail = true;
 
-	public void sendMail(String to, String cc, String subject, String messageBody) {
-		sendMail(Arrays.asList(to), Arrays.asList(cc), subject, messageBody, null);
-	}
-
-	public void sendMail(Collection<String> tos, String subject, String messageBody) {
-		sendMail(tos, null, subject, messageBody);
-	}
-
-	public void sendMail(Collection<String> tos, Collection<String> ccs, String subject, String messageBody) {
-		sendMail(tos, ccs, subject, messageBody);
-	}
-
-	public void sendMail(Collection<String> tos, Collection<String> ccs, String subject, String messageBody, Collection<String> attachments) {
-		sendMail(tos, ccs, null, null, subject, false, messageBody, attachments, true);
-	}
-
-	// ---------- sendMail with template
-	public void sendMail(String to, String emailTemplate, Map<String, String> params) {
-		sendMail(to, null, emailTemplate, params);
-	}
-
-	public void sendMail(String to, String cc, String emailTemplate, Map<String, String> params) {
-		sendMail(Arrays.asList(to), Arrays.asList(cc), null, null, false, emailTemplate, params, null);
-	}
-
-	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, boolean importantFlag, String emailTemplate, Map<String, String> params,
-			Collection<String> attachments) {
-		// get the messageBody from the email template
-		String messageBody = getMessageBody(emailTemplate, params);
-		if (messageBody != null) {
-			// get the subject from the title element in the HTML messageBody
-			String subject = "";
-			if (messageBody.indexOf("<title>") != -1 && messageBody.indexOf("</title>") != -1) {
-				subject = messageBody.substring(messageBody.indexOf("<title>") + "<title>".length(), messageBody.indexOf("</title>"));
-			}
-
-			sendMail(tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments, true);
+		// verify invalid email
+		if (subject == null || subject.trim().length() == 0 || subject.startsWith("Réponse automatique :") || subject.startsWith("Réponse automatique :") || subject.startsWith("Automatic")
+				|| subject.startsWith("Fwd:") || subject.startsWith("Re:") || subject.startsWith("RE:") || subject.startsWith("Out of Office")) {
+			validEmail = false;
+		} else if (subject.startsWith("Undeliverable:") || subject.startsWith("Message undeliverable:") || subject.startsWith("Failure") || subject.startsWith("Mail Delivery Subsystem")
+				|| subject.startsWith("Non remis :") || subject.startsWith("Undelivered Mail") || subject.startsWith("Delivery Status Notification (Failure)")) {
+			// logger.warn("Undeliverable email Subject [" + subject + "] Sent: " + message.getSentDate());
+			validEmail = false;
+		} else if (subject.startsWith("Microsoft 365 Message center") || subject.startsWith("Weekly digest: Microsoft service updates") || subject.startsWith("Major update from Message center")) {
+			// spam
+			validEmail = false;
 		}
-	}
 
-	public String getMessageBody(String emailTemplate, Map<String, String> params) {
-		return getMessageBody(emailTemplate, params, false);
-	}
-
-	public String getMessageBody(String emailTemplate, Map<String, String> params, boolean encodeBaseHTMLEntities) {
-		try {
-			// get the email template
-			String messageBody;
-
-			// get the css template
-			String css;
-
+		if (validEmail) {
+			logger.debug("Valid email based on subject [" + subject + "]");
+		} else {
+			logger.debug("Deleting invalid email based on subject [" + subject + "]");
 			try {
-				if (templateDir.startsWith("/") || templateDir.startsWith("\\")) {
-					// get the files from the absolute path
-					messageBody = FileUtils.readFileToString(new File(templateDir + File.separator + emailTemplate + ".html"), StandardCharsets.UTF_8);
-					css = FileUtils.readFileToString(new File(templateDir + File.separator + "email.css"), StandardCharsets.UTF_8);
-				} else {
-					// get the files from the WAR file (WEB-INF/classes)
-					messageBody = Util.getResourceFileContent(templateDir + File.separator + emailTemplate + ".html");
-					css = Util.getResourceFileContent(templateDir + File.separator + "email.css");
-				}
-			} catch (Exception e) {
-				logger.error("Cannot read the template file [" + emailTemplate + "]: " + e);
-				throw e;
+				deleteMessage(messageId);
+			} catch (Exception ex) {
+				// ignore
 			}
+		}
+		return validEmail;
+	}
 
-			// add css to params
-			params.put("css", css);
+	/**
+	 *
+	 * @throws Exception
+	 */
+	public void cleanMailbox() throws Exception {
+		List<Message> messages = getMessages();
 
-			// replace the placeholders
-			messageBody = Util.replacePlaceHolders(messageBody, params, encodeBaseHTMLEntities);
-
-			return messageBody;
-
-		} catch (Exception e) {
-			logger.error("Cannot get Message Body from template", e);
-			return null;
+		for (Message message : messages) {
+			isValidMessage(message.getId(), message.getSubject());
 		}
 	}
 
 	public static void main(String[] args) throws Exception {
 		ExchangeMessageUtil mu = new ExchangeMessageUtil();
-		// mu.sendMessage("stessygallant@gmail.com", "test1", "allo test1");
+		try {
+			mu.connect();
 
-		List<Message> messages = mu.getMessages();
-		for (Message message : messages) {
-			System.out.println(message);
+			// mu.sendMessage("stessygallant@gmail.com", "test1", "allo test1");
 
-			if (message.hasAttachments()) {
-				List<File> attachments = mu.getAttachments(message);
-				for (File attachment : attachments) {
-					System.out.println(attachment.getAbsolutePath());
+			// List<Message> messages = mu.getMessages();
+			// for (Message message : messages) {
+			// System.out.println(message);
+			//
+			// if (message.hasAttachments()) {
+			// List<File> attachments = mu.getAttachments(message);
+			// for (File attachment : attachments) {
+			// System.out.println(attachment.getAbsolutePath());
+			//
+			// attachment.delete();
+			// }
+			// }
+			// // mu.deleteMessage(message.getId());
+			// }
 
-					attachment.delete();
-				}
-			}
-			// mu.deleteMessage(message.getId());
+			mu.cleanMailbox();
+		} finally {
+			mu.disconnect();
 		}
 
-		mu.disconnect();
 		System.out.println("Done");
 	}
 }

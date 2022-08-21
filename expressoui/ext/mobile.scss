@@ -1,0 +1,316 @@
+@import "../../config/default";
+
+$userDivHeight: 40px;
+$headerHeight: 140px;
+$footerHeight: 40px;
+$menuWidth: 240px;
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * CSS  for index.html component ONLY
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+html, body {
+    @include default-div;
+}
+
+body {
+    font-family: $fontFamilyOpenSans;
+    font-size: 0.77em;
+}
+
+//
+// ------------------------------------------------------------------------------------------------------------------
+// CSS for overlay content (login, splah, etc)
+// ------------------------------------------------------------------------------------------------------------------
+//
+.overlay-content {
+    @include default-div;
+    width: 100%;
+    text-align: center;
+    background: $themeBackground;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 999;
+
+    $width: calc(100% - 3em);
+
+    .logo {
+        padding-top: 10px;
+        width: 200px;
+    }
+
+    .splash {
+        @include default-div;
+        margin: 0 auto;
+
+        .title {
+            width: $width;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+
+            p {
+                text-align: left;
+                color: white;
+                font-family: $fontFamilyNunitoSans;
+                font-size: 20px;
+                //font-weight: 600;
+                line-height: 24px;
+            }
+        }
+
+        .message {
+            display: none;
+        }
+    }
+
+    .login {
+        @include default-div;
+        margin: 0 auto;
+
+        a:link, a:visited, a:active {
+            color: #ffffff;
+        }
+
+        a:hover {
+            color: $themeColorLight;
+        }
+
+        .login-form {
+            margin-top: 50px;
+            color: white;
+
+            $infoWidth: 300px;
+
+            .authentication-mechanism {
+                .input-wrap {
+                    display: inline-block;
+
+                    &.internal-user {
+                        margin-right: 20px;
+                    }
+                }
+            }
+
+            .authentication-info {
+                margin: 0 auto;
+                width: $infoWidth;
+                text-align: left;
+
+                & > div {
+                    margin-top: 20px;
+                }
+
+                label {
+                    display: block;
+                    text-transform: uppercase;
+                    opacity: 0.8;
+                    color: #D8F8B6;
+                    font-size: 20px;
+                    font-weight: bold;
+                    letter-spacing: 2px;
+                    line-height: 27px;
+                }
+
+                input {
+                    width: $infoWidth;
+                    background: transparent;
+                    border: none;
+                    border-bottom: 2px solid white;
+                    color: white;
+                    border-radius: 0;
+                    font-size: 20px;
+                    text-indent: 1px;
+                }
+
+                div.username {
+                    input.username-input {
+                        background-image: url('../../images/user-icon.png');
+                        background-repeat: no-repeat;
+                        background-position: right;
+                        background-size: 30px 30px;
+                    }
+                }
+
+                div.password {
+                    margin-top: 40px;
+
+                    input.password-input {
+                        background-image: url('../../images/password-icon.png');
+                        background-repeat: no-repeat;
+                        background-position: right;
+                        background-size: 30px 30px;
+                    }
+                }
+
+            }
+
+            div.forgot-password, div.change-password {
+                margin: 0 auto;
+                width: $infoWidth;
+                text-align: right;
+                color: white;
+                font-size: 12px;
+            }
+
+            div.login-button {
+                margin-top: 50px;
+
+                button.login-button {
+                    border-radius: 70px;
+                    background-color: #F8E71C;
+                    width: $infoWidth;
+                    text-transform: uppercase;
+                    font-size: 26px;
+                    font-weight: 600;
+                    line-height: 36px;
+                    color: $themeTextColor;
+                }
+            }
+
+            div.new-user {
+                display: none;
+            }
+
+        }
+    }
+}
+
+
+.main {
+    @include default-div;
+
+    .main-footer {
+        display: none;
+    }
+
+    .main-menu {
+        @include default-div;
+        overflow: auto;
+        background: $themeBackground;
+
+        .menu-item {
+            float: left;
+            margin: 10px;
+            padding: 15px;
+            border-radius: 20px 20px 20px 0;
+            text-align: center;
+            width: 125px;
+            cursor: pointer;
+
+            .initial {
+                cursor: pointer;
+                color: $themeColorDark;
+                font-family: $fontFamilyNunitoSans;
+                font-size: 70px;
+                font-weight: 900;
+                letter-spacing: -3px;
+                line-height: 80px;
+            }
+
+            .full-name {
+                cursor: pointer;
+                color: white;
+                font-family: $fontFamilyNunitoSans;
+                font-size: 20px;
+                font-weight: 600;
+                line-height: 30px;
+                text-align: center;
+            }
+        }
+
+    }
+
+    .main-div {
+        @include default-div;
+        background-color: white;
+        display: none;
+
+        $mainTitleHeight: 50px;
+
+        .main-title {
+            @include default-div;
+            height: #{$mainTitleHeight};
+            text-align: center;
+
+            .title {
+                display: inline-block;
+                margin: 15px auto 0 auto;
+                color: $themeTextColor;
+                text-transform: uppercase;
+                font-family: $fontFamilyNunitoSans;
+                font-size: 16px;
+                font-weight: 800;
+                line-height: 16px;
+            }
+
+            background: linear-gradient(180deg, rgba(238, 238, 238, 0.1) 0%, rgba(216, 216, 216, 0.2) 100%);
+
+            a {
+                display: block;
+            }
+        }
+
+        .main-content {
+            @include default-div;
+            background-color: #FFFFFF;
+            padding: 10px;
+            width: calc(100% - 2em);
+            height: calc(100% - #{$mainTitleHeight} - 1.5em);
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+    }
+}
+
+.mobile-app {
+    @include default-div;
+
+    div {
+        width: 100%;
+        margin-bottom: 10px;
+
+        .input-wrap {
+            display: inline-block;
+            position: relative; // allowed child to be positioned
+            width: calc(50% - 0.2em);
+
+            &.full-length {
+                width: calc(100% - 1em);
+            }
+        }
+
+
+        label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .k-dropdown, .k-combobox, .k-datetimepicker, .k-textbox, canvas {
+            width: 100%;
+        }
+    }
+
+
+    fieldset {
+        width: calc(100% - 1em);
+        border: 1px solid $themeColor;
+        border-radius: 4px;
+        padding: 0 5px 0 5px;
+
+        legend {
+            font-weight: bold;
+            color: $themeColor;
+        }
+    }
+
+    &.mobile-single-column {
+        div {
+            .input-wrap {
+                width: calc(100% - 1em);
+            }
+        }
+    }
+}

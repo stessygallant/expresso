@@ -1,4 +1,4 @@
-package com.sgitmanagement.expresso.util.ftp;
+package com.sgitmanagement.expresso.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
