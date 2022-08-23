@@ -201,6 +201,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // defined if the manager defined a custom form
         this.customForm = this.resourceManager.sections["form"];
 
+        if (this.resourceManager.options.autoEdit) {
+            // make sure it is not hierarchical otherwise it will open the top row which may be the parent
+            this.hierarchical = false;
+        }
+
         // if hierarchical is not defined but there is a hierarchicalParent, then it is hierarchical
         if (this.hierarchical === undefined && this.resourceManager.model.hierarchicalParent) {
             this.hierarchical = true;
@@ -371,7 +376,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (column && column.field) {
                     var field = model.fields[column.field];
                     // if the field is a key field, highlight it
-                    // if (column.field.endsWith("No") || (field && (field.keyField || field.reference || field.keyFieldReference))) {
                     if (field && field.keyField) {
                         // console.log("Found keyField column [" + column.field + "]");
                         _this.$domElement.find(".k-grid-header .k-filter-row [data-field='" + column.field + "'] input")
@@ -634,18 +638,20 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                 // Ids column: show Labels (usually values)
                 if (field && column.field.endsWith("Ids")) {
+                    var separator = column.separator || ',';
                     // display the labels, but filter on id
                     var labelColumn = column.field.substring(0, column.field.length - 3) + "Labels";
                     column.template = column.template ||
                         "<div class='exp-grid-multiple-lines' title='#=(" + labelColumn
-                        + "||'').replace(/,/g, \"\\r\\n\")#'>#=(" + labelColumn + "||'').replace(/,/g, \"<br>\")#</div>";
+                        + "||'').replace(/\\" + separator + "/g, \"\\r\\n\")#'>#=(" + labelColumn + "||'').replace(/\\" + separator + "/g, \"<br>\")#</div>";
                 }
 
                 // Labels column (usually references as persons, etc)
                 if (field && column.field.endsWith("Labels")) {
+                    var separator = column.separator || ',';
                     column.template = column.template ||
                         "<div class='exp-grid-multiple-lines' title='#=(" + column.field
-                        + "||'').replace(/,/g, \"\\r\\n\")#'>#=(" + column.field + "||'').replace(/,/g, \"<br>\")#</div>";
+                        + "||'').replace(/\\" + separator + "/g, \"\\r\\n\")#'>#=(" + column.field + "||'').replace(/\\" + separator + "/g, \"<br>\")#</div>";
                 }
 
                 // remove the filter if it is set to false
@@ -663,8 +669,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     column.filterable = column.filterable || {};
                     column.filterable.cell = column.filterable.cell || {};
                     if (!column.filterable.cell.operator &&
-                        (/*column.field.endsWith("No") ||*/
-                            (field && (field.keyField || field.reference || field.keyFieldReference)))) {
+                        (/* column.field.endsWith("No") || disable auto for now */
+                            column.keyFieldReference || (field && (field.keyField || field.keyFieldReference)))) {
                         // use equals by default
                         column.filterable.cell.operator = field && field.keyField && field.keyField.operator ? field.keyField.operator : "eq";
                     } else {
@@ -739,18 +745,25 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         };
                         //console.log("Adding FIELD reference to the grid", column.reference);
                     } else if (column.field.endsWith("No")) {
-                        // try to find the mapping (directly or from a derived)
-                        var idFieldName = column.field.substring(
-                            (column.field.indexOf(".") != -1 ? column.field.lastIndexOf(".") + 1 : 0),
-                            column.field.length - 2) + "Id";
+                        // try to find the mapping directly
+                        var idFieldName = column.field.substring(0, column.field.length - 2) + "Id";
                         var idField = model.fields[idFieldName];
+                        // console.log("1-" + column.field + " [" + idFieldName + "]", idField);
 
-                        // try to remove the last part and add Id
+                        // try to find the mapping from a derived
                         if (!idField && column.field.indexOf(".") != -1) {
-                            idFieldName = column.field.substring(0, column.field.lastIndexOf(".")) + "Id";
+                            idFieldName = column.field.substring(column.field.lastIndexOf(".") + 1,
+                                column.field.length - 2) + "Id";
                             idField = model.fields[idFieldName];
-                        }
+                            // console.log("2-" + column.field + " [" + idFieldName + "]", idField);
 
+                            // try to remove the last part and add Id
+                            if (!idField) {
+                                idFieldName = column.field.substring(0, column.field.lastIndexOf(".")) + "Id";
+                                idField = model.fields[idFieldName];
+                                // console.log("3-" + column.field + " [" + idFieldName + "]", idField);
+                            }
+                        }
                         //console.log(column.field + " [" + idFieldName + "]", idField);
 
                         // add a reference to the column (but not if it is a user)
@@ -759,7 +772,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                                 fieldName: idField.reference.fieldName,
                                 resourceManagerDef: idField.reference.resourceManagerDef
                             };
-                            //console.log("Adding AUTO reference to the grid", column.reference);
+                            // console.log("Adding AUTO reference to the grid [" + column.field + "]", column.reference);
                         } else {
                             // console.warn("CANNOT add reference to the grid for column [" + column.field + "]");
                         }
@@ -2189,7 +2202,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (this.referenceResourceManagers[referenceManager]) {
                     this.referenceResourceManagers[referenceManager].displayForm({id: referenceId});
                 } else {
-                    expresso.Common.loadApplication(referenceManager).done(function (resourceManager) {
+                    expresso.Common.loadApplication(referenceManager, {autoEdit: true}).done(function (resourceManager) {
                         _this.referenceResourceManagers[referenceManager] = resourceManager;
                         resourceManager.displayForm({id: referenceId});
                     });
@@ -2434,14 +2447,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
 
         if (this.hierarchical) {
-            // by default, the tree is expanded. Collapse if needed
+            // by default, the tree is expanded.
+            // make sure that the button is correct
             var $toolbar = this.$domElement.find(".k-grid-toolbar");
             var $icon = $toolbar.find(".exp-hierarchical-expand-button .fa");
             var expand = $icon.hasClass("fa-expand");
             if (expand) {
-                $.each($("tr.k-treelist-group", _this.kendoGrid.tbody), function () {
-                    _this.kendoGrid.collapse(this);
-                });
+                // change the button to collapse
+                $icon.addClass("fa-compress").removeClass("fa-expand");
             }
 
             // TreeList does not display a loading mask on sort and filter

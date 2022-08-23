@@ -1828,7 +1828,7 @@ expresso.util.UIUtil = (function () {
                         var id = widget.value();
 
                         if (id || reference.allowCreate === true) {
-                            expresso.Common.loadApplication(reference.resourceManagerDef).done(function (resourceManager) {
+                            expresso.Common.loadApplication(reference.resourceManagerDef, {autoEdit: true}).done(function (resourceManager) {
                                 resourceManager.displayForm(id ? {id: id} : null, function ($window, resource) {
                                     // the form is now opened
                                     if (reference.onEdit) {
