@@ -1376,11 +1376,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         $.each(actions, function (index, action) {
                             //console.log(_this.resourceManager.getResourceSecurityPath() + " " + action.name + ":" + action.allowed);
                             var $button = $toolbar.find(".exp-" + action.name + "-button");
-                            if (_this.selectedRows.length > 1 && $button.hasClass("exp-multiple-selection")) {
-                                // multiple selection buttons must remain active if there is multiple selections.
-                                $button.prop("disabled", false);
-                            } else {
-                                $button.prop("disabled", !action.allowed);
+                            if (!$button.hasClass("exp-always-active-button")) {
+                                if (_this.selectedRows.length > 1 && $button.hasClass("exp-multiple-selection")) {
+                                    // multiple selection buttons must remain active if there is multiple selections.
+                                    $button.prop("disabled", false);
+                                } else {
+                                    $button.prop("disabled", !action.allowed);
+                                }
                             }
                         });
 

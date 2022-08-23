@@ -144,6 +144,7 @@ public class ExchangeMessageUtil implements MailSender {
 	@Override
 	public void sendMail(String fromAddress, String fromName, Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag,
 			String messageBody, Collection<String> attachments) {
+
 		try {
 			String path = "/users/" + defaultUserPrincipalName + "/sendMail";
 
@@ -160,7 +161,8 @@ public class ExchangeMessageUtil implements MailSender {
 			messageJsonObject.addProperty("importance", importantFlag ? "high" : "normal");
 
 			// from/sender -> must be the same as the actual defaultUserPrincipalName
-			// messageJsonObject.add("from", createRecipient(fromAddress));
+			messageJsonObject.add("from", createRecipient(fromAddress));
+			messageJsonObject.add("sender", createRecipient(fromAddress));
 
 			// subject
 			messageJsonObject.addProperty("subject", subject);

@@ -325,10 +325,10 @@ public enum Mailer {
 		Collection<String> attachments = null;
 
 		int i = 0;
-		for (i = 0; i < 10; i++) {
-			Mailer.INSTANCE.sendMail(Arrays.asList(to), Arrays.asList(cc), Arrays.asList(bcc), replyTo, (i + 1) + " - " + subject, importantFlag, messageBody, attachments, true);
-			// Thread.sleep(30000);
-		}
+		// for (i = 0; i < 10; i++) {
+		Mailer.INSTANCE.sendMail(Arrays.asList(to), Arrays.asList(cc), Arrays.asList(bcc), replyTo, (i + 1) + " - " + subject, importantFlag, messageBody, attachments, true);
+		// Thread.sleep(30000);
+		// }
 
 		if (Mailer.INSTANCE.executor != null) {
 			Mailer.INSTANCE.executor.shutdown();
