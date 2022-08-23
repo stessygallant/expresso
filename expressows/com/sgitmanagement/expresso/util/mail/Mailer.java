@@ -146,6 +146,10 @@ public enum Mailer {
 				throw e;
 			}
 
+			if (params == null) {
+				params = new HashMap<>();
+			}
+
 			// add css to params
 			params.put("css", css);
 
