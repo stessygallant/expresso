@@ -459,10 +459,7 @@ public class Query {
 			isnotnullorempty, @Deprecated
 			isnullorempty, @Deprecated
 			isnotnull, @Deprecated
-			isnull, @Deprecated
-			equalsnokey, @Deprecated
-			containsnokey, @Deprecated
-			containsNoKey,
+			isnull
 		}
 
 		private Operator operator;

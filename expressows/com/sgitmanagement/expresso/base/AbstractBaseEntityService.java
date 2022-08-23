@@ -1526,7 +1526,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		try {
 			return Util.formatKeyField(keyField, keyValue);
 		} catch (Exception e) {
-			// ignore
+			logger.warn("Cannot format keyField[" + keyField.getName() + "] with value[" + keyValue + "]");
 			return keyValue;
 		}
 	}
@@ -1850,7 +1850,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			case isNull:
 			case isnull:
 			case equalsNoKey:
-			case equalsnokey:
 				predicate = cb.isNull(path);
 				break;
 
@@ -1938,8 +1937,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// name KendoUI will assume a string instead of int
 				case contains:
 				case eq:
-				case equalsNoKey:
-				case equalsnokey:
 					predicate = cb.equal(path, integerValue);
 					break;
 
@@ -2244,7 +2241,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				switch (op) {
 				case eq:
 				case equalsNoKey:
-				case equalsnokey:
 					predicate = cb.equal(stringPath, stringValue);
 					break;
 				case equalsIgnoreCase:
@@ -2272,8 +2268,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					predicate = cb.notLike(stringPath, "%" + stringValue + "%");
 					break;
 				case contains:
-				case containsNoKey:
-				case containsnokey:
 					predicate = cb.like(stringPath, "%" + stringValue.trim() + "%");
 					break;
 
