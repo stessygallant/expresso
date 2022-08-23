@@ -659,15 +659,15 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         this.removePreviewOverlay();
 
-        if (this.savedDeferred) {
+        if (this.savedDeferred && this.savedDeferred.state() == "pending") {
             this.savedDeferred.reject();
-            this.savedDeferred = null;
         }
+        this.savedDeferred = null;
 
-        if (this.closedDeferred) {
+        if (this.closedDeferred && this.closedDeferred.state() == "pending") {
             this.closedDeferred.reject();
-            this.closedDeferred = null;
         }
+        this.closedDeferred = null;
 
         if (this.showTabs) {
             // put back the preview

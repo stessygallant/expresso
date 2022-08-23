@@ -2,28 +2,15 @@ package com.sgitmanagement.expresso.util.mail;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.Multipart;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -39,19 +26,12 @@ public enum Mailer {
 
 	private ExecutorService executor;
 
-	private Session session;
-	private String username;
-	private String password;
-	private String from;
-	private String fromName;
 	private String support;
 	private boolean sendEmail;
 	private boolean bccSupport;
-
-	private String smtpHost;
-	private String smtpPort;
-	private boolean smtpAuth;
-	private boolean smtpStartTLS;
+	private String fromAddress;
+	private String fromName;
+	private String mailSenderString;
 
 	private String templateDir;
 
@@ -61,43 +41,21 @@ public enum Mailer {
 
 	private Mailer() {
 		Properties props = SystemEnv.INSTANCE.getProperties("mail");
-		username = props.getProperty("mail.smtp.username");
-		password = props.getProperty("mail.smtp.password");
-		from = props.getProperty("mail.smtp.from");
-		fromName = props.getProperty("mail.smtp.from_name");
 		support = props.getProperty("mail.smtp.support");
 		sendEmail = Boolean.parseBoolean(props.getProperty("mail.smtp.send_email", "true"));
+
+		fromAddress = props.getProperty("mail.smtp.from");
+		fromName = props.getProperty("mail.smtp.from_name");
 		bccSupport = Boolean.parseBoolean(props.getProperty("mail.smtp.bcc_support", "false"));
-
-		smtpHost = props.getProperty("mail.smtp.host");
-		smtpPort = props.getProperty("mail.smtp.port");
-		smtpAuth = Boolean.parseBoolean(props.getProperty("mail.smtp.auth", "false"));
-		smtpStartTLS = Boolean.parseBoolean(props.getProperty("mail.smtp.starttls.enable", "false"));
-
-		Properties properties = new Properties();
-		properties.setProperty("mail.smtp.host", smtpHost);
-		properties.setProperty("mail.smtp.port", smtpPort);
-		properties.setProperty("mail.smtp.auth", "" + smtpAuth);
-		properties.setProperty("mail.smtp.starttls.enable", "" + smtpStartTLS);
-
-		properties.setProperty("mail.smtp.connectiontimeout", "" + (20 * 1000));
-		properties.setProperty("mail.smtp.timeout", "" + (40 * 1000)); // read
-		properties.setProperty("mail.smtp.writetimeout", "" + (40 * 1000));
-		properties.setProperty("mail.smtp.ssl.trust", "*");
-
-		// create the session
-		session = Session.getInstance(properties, new javax.mail.Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(username, password);
-			}
-		});
 
 		templateDir = props.getProperty("mail.smtp.template_dir");
 
 		useThreads = Boolean.parseBoolean(props.getProperty("mail.smtp.use_threads", "true"));
 		limitThreads = Boolean.parseBoolean(props.getProperty("mail.smtp.limit_threads", "true"));
 		retryOnError = Boolean.parseBoolean(props.getProperty("mail.smtp.retry_on_error", "true"));
+
+		mailSenderString = props.getProperty("mail.mailSender");
+		logger.info("MailSender [" + mailSenderString + "]");
 
 		if (limitThreads) {
 			executor = Executors.newFixedThreadPool(3);
@@ -161,191 +119,6 @@ public enum Mailer {
 		sendMail(tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments, bccSupport);
 	}
 
-	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag, String messageBody,
-			Collection<String> attachments, boolean bccSupport) {
-
-		try {
-
-			MimeMessage message = new MimeMessage(session);
-
-			if (!SystemEnv.INSTANCE.isInProduction()) {
-				messageBody += "<br>---------------------------------------------------";
-				messageBody += "<br>Original TO : " + tos;
-				messageBody += "<br>Original CC : " + ccs;
-				messageBody += "<br>Original BCC: " + bccs;
-				messageBody += "<br>Reply TO : " + replyTo;
-				tos = Arrays.asList(support);
-				ccs = bccs = null;
-				replyTo = null;
-			}
-
-			if (importantFlag) {
-				message.setHeader("X-Priority", "2");
-			}
-			message.setSubject(subject, "UTF-8");
-
-			InternetAddress senderAddress = new InternetAddress(from);
-			if (fromName != null) {
-				senderAddress.setPersonal(fromName);
-			}
-			message.setFrom(senderAddress);
-
-			// TO (mandatory)
-			boolean atLeastOneTO = false;
-			if (tos != null) {
-				for (String to : tos) {
-					if (to != null) {
-						String[] addresses = to.split("[,; ]");
-						for (String address : addresses) {
-							if (address != null && address.length() > 5 && address.indexOf("@") != -1) {
-								// System.out.println("TO [" + address +"]");
-								try {
-									message.addRecipient(Message.RecipientType.TO, new InternetAddress(address));
-									atLeastOneTO = true;
-								} catch (AddressException ex) {
-									logger.error("Error adding email recepient [" + address + "]");
-								}
-							}
-						}
-					}
-				}
-			}
-			if (!atLeastOneTO) {
-				// throw new Exception("TO address is null or not defined");
-				logger.warn("Email sent with empty TO [" + subject + "]");
-				return;
-			}
-
-			// CC (optional)
-			if (ccs != null) {
-				for (String cc : ccs) {
-					if (cc != null) {
-						String[] addresses = cc.split("[,;]");
-						for (String address : addresses) {
-							if (address != null && address.length() > 0 && address.indexOf("@") != -1) {
-								message.addRecipient(Message.RecipientType.CC, new InternetAddress(address));
-							}
-						}
-					}
-				}
-			}
-
-			// BCC (optional)
-			if (bccs != null) {
-				for (String bcc : bccs) {
-					if (bcc != null) {
-						String[] addresses = bcc.split("[,;]");
-						for (String address : addresses) {
-							if (address != null && address.length() > 0 && address.indexOf("@") != -1) {
-								message.addRecipient(Message.RecipientType.BCC, new InternetAddress(address));
-							}
-						}
-					}
-				}
-			}
-
-			// add the support to emails
-			if (bccSupport) {
-				message.addRecipient(Message.RecipientType.BCC, new InternetAddress(support));
-			}
-
-			if (replyTo != null && replyTo.length() > 0 && replyTo.indexOf("@") != -1) {
-				message.setReplyTo(new javax.mail.Address[] { new javax.mail.internet.InternetAddress(replyTo) });
-			}
-
-			if (attachments == null || attachments.isEmpty()) {
-				message.setContent(messageBody, "text/html; charset=UTF-8");
-			} else {
-				Multipart multipart = new MimeMultipart();
-				message.setContent(multipart);
-
-				// add the messageBody
-				BodyPart messageText = new MimeBodyPart();
-				messageText.setContent(messageBody, "text/html; charset=UTF-8");
-				multipart.addBodyPart(messageText);
-
-				// add the attachments
-				for (String filename : attachments) {
-					BodyPart messageBodyPart = new MimeBodyPart();
-					DataSource source = new FileDataSource(filename);
-					if ((source.getName() == null) || (source.getName().length() <= 0)) {
-						throw new Exception("Problem setting attachment");
-					}
-					messageBodyPart.setDataHandler(new DataHandler(source));
-					messageBodyPart.setFileName(source.getName());
-					multipart.addBodyPart(messageBodyPart);
-				}
-			}
-
-			final String toString = String.join(",", tos);
-			if (sendEmail) {
-				if (useThreads) {
-					// logger.debug("Using thread");
-					Runnable runnable = new Runnable() {
-						@Override
-						public void run() {
-							try {
-								sendMail(message, toString, retryOnError);
-							} catch (Exception e) {
-								if (retryOnError) {
-									try {
-										// we we retry a few times
-										int waitInSeconds = 60;
-										for (int i = 1; i <= 3; i++) {
-											try {
-												logger.warn("Cannot send email [" + message.getSubject() + "] to [" + toString + "] (will retry in " + (i * waitInSeconds) + " seconds):  " + e);
-
-												// we will retry in n minutes
-												Thread.sleep(i * waitInSeconds * 1000);
-												sendMail(message, toString, true);
-												return;
-											} catch (Exception e2) {
-												// try again
-											}
-										}
-
-										// ok, there is nothing to do
-										sendMail(message, toString, false);
-									} catch (Exception e3) {
-										// ignore
-									}
-								}
-							}
-						}
-					};
-
-					if (limitThreads) {
-						// logger.debug("Limiting threads");
-						executor.submit(runnable);
-					} else {
-						// logger.debug("New thread");
-						new Thread(runnable).start();
-					}
-				} else {
-					sendMail(message, toString, false);
-				}
-			}
-		} catch (Exception e) {
-			logger.error("Cannot send email", e);
-		}
-	}
-
-	private void sendMail(Message message, String toString, boolean rethrowException) throws Exception {
-		try {
-			logger.debug("Sending email [" + message.getSubject() + "] to [" + toString + "]");
-			long startDate = new Date().getTime();
-			Transport.send(message);
-			long endDate = new Date().getTime();
-			logger.info("Email sent [" + message.getSubject() + "] to [" + toString + "] in " + (endDate - startDate) + " ms");
-		} catch (Exception e) {
-			if (rethrowException) {
-				throw e;
-			} else {
-				logger.error("Cannot send email [" + message.getSubject() + "] to [" + toString + "]: " + e);
-			}
-		}
-	}
-
 	public String getMessageBody(String emailTemplate, Map<String, String> params) {
 		return getMessageBody(emailTemplate, params, false);
 	}
@@ -389,6 +162,144 @@ public enum Mailer {
 
 	/**
 	 * 
+	 * @param tos
+	 * @param ccs
+	 * @param bccs
+	 * @param replyTo
+	 * @param subject
+	 * @param importantFlag
+	 * @param messageBody
+	 * @param attachments
+	 * @param bccSupport
+	 */
+	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag, String messageBody,
+			Collection<String> attachments, boolean bccSupport) {
+		try {
+			if (!SystemEnv.INSTANCE.isInProduction()) {
+				messageBody += "<br>---------------------------------------------------";
+				messageBody += "<br>Original TO : " + tos;
+				messageBody += "<br>Original CC : " + ccs;
+				messageBody += "<br>Original BCC: " + bccs;
+				messageBody += "<br>Reply TO : " + replyTo;
+				tos = Arrays.asList(support);
+				ccs = bccs = null;
+				replyTo = null;
+			} else {
+				// add the support to emails
+				if (bccSupport) {
+					if (bccs == null) {
+						bccs = new ArrayList<>();
+					}
+					bccs.add(support);
+				}
+			}
+
+			if (tos.isEmpty() || ((String) tos.toArray()[0]).trim().length() == 0) {
+				throw new Exception("TO address is null or not defined");
+			}
+
+			final Map<String, Object> map = new HashMap<>();
+			map.put("tos", tos);
+			map.put("ccs", ccs);
+			map.put("bccs", bccs);
+			map.put("replyTo", replyTo);
+			map.put("subject", subject);
+			map.put("importantFlag", importantFlag);
+			map.put("messageBody", messageBody);
+			map.put("attachments", attachments);
+
+			if (sendEmail) {
+				if (useThreads) {
+					Runnable runnable = new Runnable() {
+						@Override
+						public void run() {
+							try {
+								sendMail(map);
+							} catch (Exception ex) {
+								if (retryOnError) {
+									try {
+										// we we retry a few times
+										int waitInSeconds = 60;
+										for (int i = 1; i <= 3; i++) {
+											try {
+												logger.warn(ex + " (will retry in " + (i * waitInSeconds) + " seconds)");
+
+												// we will retry in n minutes
+												Thread.sleep(i * waitInSeconds * 1000);
+												sendMail(map);
+												return;
+											} catch (Exception ex2) {
+												// try again
+											}
+										}
+
+										// ok, there is nothing to do
+										logger.error(ex.toString());
+
+									} catch (Exception ex3) {
+										// ignore
+									}
+								}
+							}
+						}
+					};
+
+					if (limitThreads) {
+						// logger.debug("Limiting threads");
+						executor.submit(runnable);
+					} else {
+						// logger.debug("New thread");
+						new Thread(runnable).start();
+					}
+				} else {
+					sendMail(map);
+				}
+			}
+
+		} catch (Exception ex) {
+			logger.error("Exception sending email", ex);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void sendMail(Map<String, Object> map) throws Exception {
+		Collection<String> tos = (Collection<String>) map.get("tos");
+		Collection<String> ccs = (Collection<String>) map.get("ccs");
+		Collection<String> bccs = (Collection<String>) map.get("bccs");
+		String replyTo = (String) map.get("replyTo");
+		String subject = (String) map.get("subject");
+		boolean importantFlag = (boolean) map.get("importantFlag");
+		String messageBody = (String) map.get("messageBody");
+		Collection<String> attachments = (Collection<String>) map.get("attachments");
+
+		MailSender mailSender = null;
+		try {
+			if (mailSenderString == null || mailSenderString.equals("smtp")) {
+				mailSender = new SMTPUtil();
+			} else {
+				mailSender = new ExchangeMessageUtil();
+			}
+
+			mailSender.connect();
+
+			logger.debug("Sending email [" + subject + "] to [" + tos + "]");
+			long startDate = new Date().getTime();
+
+			mailSender.sendMail(fromAddress, fromName, tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments);
+
+			long endDate = new Date().getTime();
+			logger.info("Email sent [" + subject + "] to [" + tos + "] in " + (endDate - startDate) + " ms");
+		} catch (Exception ex) {
+			throw new Exception("Cannot send email [" + subject + "] to [" + tos + "]: " + ex);
+		} finally {
+			if (mailSender != null) {
+				mailSender.disconnect();
+			}
+		}
+	}
+
+	/**
+	 * 
 	 */
 	public void close() {
 		if (executor != null) {
@@ -409,12 +320,12 @@ public enum Mailer {
 		String bcc = null;
 		String replyTo = "isabelleegirard@hotmail.com";
 		String subject = "test";
-		String messageBody = "<b>asdfsdfaS</b>";
+		String messageBody = "asfsdfsdsdfs<br><b>asdfsdfaS</b>";
 		boolean importantFlag = true;
 		Collection<String> attachments = null;
 
 		int i = 0;
-		// for (i = 0; i < 50; i++) {
+		// for (i = 0; i < 10; i++) {
 		Mailer.INSTANCE.sendMail(Arrays.asList(to), Arrays.asList(cc), Arrays.asList(bcc), replyTo, (i + 1) + " - " + subject, importantFlag, messageBody, attachments, true);
 		// Thread.sleep(30000);
 		// }

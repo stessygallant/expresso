@@ -107,10 +107,10 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 		if (isUserAdmin()) {
 			// ok
 		} else {
-			// verify if the user is allowed to read the resource
-			verifyUserPrivileges("read", resourceSecurityPath);
+			// verify if the user is allowed to execute the action on the resource
+			verifyUserPrivileges(action, resourceSecurityPath);
 
-			// the user can read the resource. verify if it can read THIS resource
+			// if the action is authorized, verify if it can read THIS resource
 			if (resourceId != null && resourceId != 0 && resourceId != -1)
 				try {
 					AbstractBaseEntityService service = newService(resourceName);

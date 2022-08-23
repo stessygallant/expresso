@@ -45,7 +45,14 @@
 
 .exp-invalid, .exp-invalid-unique, input.k-invalid {
     box-shadow: 0 0 4px red !important;
-    border: 1px solid red !important;
+    &:not(.k-combobox) {
+        border: 1px solid red !important;
+    }
+    &.k-combobox {
+        .k-dropdown-wrap {
+            border: 1px solid red !important;
+        }
+    }
 }
 
 ::placeholder { // Chrome, Firefox, Opera, Safari 10.1+

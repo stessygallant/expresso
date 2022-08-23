@@ -540,7 +540,11 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
             };
             _this.list(null, query, true).done(function () {
                 _this.sections.form.bindOnClose().done(function (resource) {
+                    // modified and saved
                     $deferred.resolve(resource);
+                }).fail(function () {
+                    // close with the X button
+                    $deferred.reject();
                 });
 
                 if (onFormOpen) {
@@ -937,16 +941,10 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
                         // add the performAction method if needed
                         if (!action.performAction) {
-                            if (action.resourceCollectionAction) {
-                                action.performAction = function (resource, data) {
-                                    // resource is null
-                                    return _this.sendRequest(_this.getRelativeWebServicePath(), action.pgmKey, data);
-                                };
-                            } else {
-                                action.performAction = function (resource, data) {
-                                    return _this.sendRequest(_this.getRelativeWebServicePath(resource.id), action.pgmKey, data);
-                                };
-                            }
+                            action.performAction = function (resource, data) {
+                                return _this.sendRequest(_this.getRelativeWebServicePath(
+                                    action.resourceCollectionAction ? undefined : resource.id), action.pgmKey, data);
+                            };
                         }
 
                         if (!action.beforePerformAction) {
@@ -960,10 +958,6 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
                         if (action.showButtonInGridToolbar === undefined) {
                             action.showButtonInGridToolbar =
                                 expresso.Common.getSiteNamespace().config.Configurations.showButtonInGridToolbar;
-                        }
-
-                        if (action.resourceCollectionAction) {
-                            action.showButtonInGridToolbar = true;
                         }
 
                         if (action.showButtonOnMobile === undefined) {

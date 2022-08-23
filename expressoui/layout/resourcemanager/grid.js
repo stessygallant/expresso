@@ -1389,11 +1389,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         $.each(actions, function (index, action) {
                             //console.log(_this.resourceManager.getResourceSecurityPath() + " " + action.name + ":" + action.allowed);
                             var $button = $toolbar.find(".exp-" + action.name + "-button");
-                            if (_this.selectedRows.length > 1 && $button.hasClass("exp-multiple-selection")) {
-                                // multiple selection buttons must remain active if there is multiple selections.
-                                $button.prop("disabled", false);
-                            } else {
-                                $button.prop("disabled", !action.allowed);
+                            if (!$button.hasClass("exp-always-active-button")) {
+                                if (_this.selectedRows.length > 1 && $button.hasClass("exp-multiple-selection")) {
+                                    // multiple selection buttons must remain active if there is multiple selections.
+                                    $button.prop("disabled", false);
+                                } else {
+                                    $button.prop("disabled", !action.allowed);
+                                }
                             }
                         });
 
@@ -2682,7 +2684,16 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         var dataItem = e.model;
 
         if (!dataItem) {
-            console.error("DataItem is null. This is not possible.");
+            console.error("DataItem is null. This is not possible.", e);
+            // var message = [
+            //     "Application: " + expresso.Main.getCurrentAppName(),
+            //     "User: " + (userProfile ? userProfile.label + " (" + userProfile.userName + ") - " + userProfile.email : ""),
+            //     "Message: " + JSON.stringify(e)
+            // ].join("\n<br>");
+            // console.error(message);
+            // expresso.Common.sendRequest("support/mail", "execute",
+            //     "title=" + "Javascript error - DataItem is null. This is not possible" + " &message=" + encodeURIComponent(message),
+            //     null, {ignoreErrors: true});
             expresso.util.UIUtil.buildMessageWindow(_this.getLabel("unknownProblem")).done(function () {
                 window.location.reload();
             });
