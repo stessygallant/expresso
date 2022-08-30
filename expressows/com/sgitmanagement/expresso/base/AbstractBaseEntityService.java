@@ -972,19 +972,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				if (query.activeOnly()) {
 					Filter activeOnlyFilter = getActiveOnlyFilter();
 					if (activeOnlyFilter != null) {
-						// if filter already contains fields for active only,
-						// do not include activeOnlyFilter
-						boolean includeActiveOnlyFilter = true;
-						for (String activeOnlyField : getActiveOnlyFields()) {
-							if (query.getFilter(activeOnlyField) != null) {
-								includeActiveOnlyFilter = false;
-								break;
-							}
-						}
-
-						if (includeActiveOnlyFilter) {
-							query.addFilter(activeOnlyFilter);
-						}
+						query.addFilter(activeOnlyFilter);
 					} else {
 						if (Deactivable.class.isAssignableFrom(getTypeOfE())) {
 							// and remove deactivated option (deactivationDate)
@@ -1033,6 +1021,34 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 
 		return query;
+	}
+
+	/**
+	 * If the query contains a field in the activeOnly filter, do not use the active only filter
+	 * 
+	 * @param query
+	 * @throws Exception
+	 */
+	void verifyActiveOnlyFieldInQuery(Query query) throws Exception {
+		// if active only is requested, get the active only filter
+		if (query.activeOnly()) {
+			Filter activeOnlyFilter = getActiveOnlyFilter();
+			if (activeOnlyFilter != null) {
+				// if filter already contains fields for active only,
+				// do not include activeOnlyFilter
+				boolean includeActiveOnlyFilter = true;
+				for (String activeOnlyField : getActiveOnlyFields()) {
+					if (query.getFilter(activeOnlyField) != null) {
+						includeActiveOnlyFilter = false;
+						break;
+					}
+				}
+
+				if (!includeActiveOnlyFilter) {
+					query.setActiveOnly(false);
+				}
+			}
+		}
 	}
 
 	/**
