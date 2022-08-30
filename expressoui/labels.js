@@ -113,6 +113,7 @@ $.extend(expresso.Labels, {
 
     // Framework
     save: "Enregistrer",
+    cancel: "Annuler",
     confirm: "Confirmer",
     select: "Sélectionner",
     missingFields: "Veuillez compléter les champs manquants",

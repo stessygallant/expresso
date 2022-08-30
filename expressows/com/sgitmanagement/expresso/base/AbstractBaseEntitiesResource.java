@@ -131,18 +131,6 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 				}
 			}
 
-			// by default, from the UI, we want active only
-			if (!query.isActiveOnlySet()) {
-				query.setActiveOnly(true);
-			}
-
-			// for each field, verify if the field is a reference
-			try {
-				getService().verifyKeyFieldReference(query.getFilter());
-			} catch (Exception ex) {
-				logger.error("verifyKeyFieldReference - Cannot verify field reference [" + getService().getResourceName() + "]: " + query, ex);
-			}
-
 			// if the request is for an id or a key, do not add any other filter
 			Set<String> keyFields = new HashSet<>(Arrays.asList(getService().getKeyFields()));
 			keyFields.add("id"); // id is always a key field
@@ -154,8 +142,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 					Filter keyFilter = keyFilters.get(0);
 					if (keyFilter != null && keyFilter.getValue() != null && keyFilter.getOperator().equals(Operator.eq)) {
 
-						// logger.debug("Searching by key field [" + keyFilter.getField() + "] value ["
-						// + keyFilter.getValue() + "]");
+						// logger.debug("Searching by key field [" + keyFilter.getField() + "] value [" + keyFilter.getValue() + "]");
 
 						// create a new query with only the key field
 						Query keyQuery = new Query();
@@ -199,7 +186,24 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 				}
 			}
 
+			// if it is not a search by key
 			if (query.getKeySearch() == null || !query.getKeySearch().booleanValue()) {
+
+				// for each field, verify if the field is a reference
+				try {
+					getService().verifyKeyFieldReference(query.getFilter());
+				} catch (Exception ex) {
+					logger.error("verifyKeyFieldReference - Cannot verify field reference [" + getService().getResourceName() + "]: " + query, ex);
+				}
+
+				// by default, from the UI, we want active only
+				if (!query.isActiveOnlySet()) {
+					query.setActiveOnly(true);
+				}
+
+				// If the query contains a field in the activeOnly filter, do not use the active only filter
+				getService().verifyActiveOnlyFieldInQuery(query);
+
 				// if we need to add the search filter for overall search
 				String searchFilterTerm = query.getSearchFilterTerm();
 				if (searchFilterTerm != null && searchFilterTerm.length() > 0) {

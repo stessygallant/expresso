@@ -112,7 +112,7 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
                 _this.initDOMElement($domElement);
 
                 // then customize the form if needed
-                _this.$domElement.kendoExpressoForm({labels: this.labels}).data("kendoExpressoForm").ready().done(function() {
+                _this.$domElement.kendoExpressoForm({labels: this.labels}).data("kendoExpressoForm").ready().done(function () {
                     // localize the application
                     expresso.Common.localizePage(_this.$domElement, _this.labels);
 
@@ -198,7 +198,10 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
      * @return {*} promise when the request is done
      */
     saveApplicationPreferences: function () {
-        return expresso.Common.saveApplicationPreferences(this.applicationPreferences);
+        var _this = this;
+        return expresso.Common.saveApplicationPreferences(this.applicationPreferences).done(function (updatedApplicationPreferences) {
+            _this.applicationPreferences = updatedApplicationPreferences;
+        });
     },
 
     /**

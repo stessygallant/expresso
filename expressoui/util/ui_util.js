@@ -451,21 +451,33 @@ expresso.util.UIUtil = (function () {
             $windowDiv.kendoPrompt({
                 title: title,
                 content: text,
-                value: "",
+                value: customOptions.value || "",
                 width: customOptions.width || 350,
                 messages: {
-                    okText: customOptions.okText || "Enregistrer",
-                    cancel: customOptions.cancel || "Annuler"
+                    okText: customOptions.okText || expresso.Common.getLabel("save"),
+                    cancel: customOptions.cancel || expresso.Common.getLabel("cancel")
                 }
             }).data("kendoPrompt").open();
 
+            var $input = $windowDiv.closest(".k-window").find("input.k-textbox");
+
             // add a listener on the input field
             // if the user press ENTER, submit it
-            $windowDiv.closest(".k-window").find("input.k-textbox").keypress(function (e) {
+            $input.keypress(function (e) {
                 if (e.which == 13) { // ENTER
                     $windowDiv.closest(".k-window").find("button.k-primary").click();
                 }
             });
+
+            // focus and select the text
+            window.setTimeout(function () {
+                try {
+                    $input.select();
+                    $input.focus();
+                } catch (ex) {
+                    // ignore
+                }
+            }, 100);
 
             return $windowDiv.data("kendoPrompt").result;
         };
