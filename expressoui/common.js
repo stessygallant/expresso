@@ -2029,6 +2029,9 @@ expresso.Common = (function () {
      * @return {*} promise when the request is done
      */
     var saveApplicationPreferences = function (applicationPreferences) {
+        // to avoid issue, we need to duplicate the preferences
+        applicationPreferences = $.extend(true, {}, applicationPreferences);
+
         // first we need to stringify the preferences (saved as varchar in backend)
         applicationPreferences.preferences = JSON.stringify(applicationPreferences.preferences);
 
@@ -2036,12 +2039,9 @@ expresso.Common = (function () {
         return expresso.Common.sendRequest("user/" + expresso.Common.getUserInfo().id + "/preference" +
             (applicationPreferences.id ? "/" + applicationPreferences.id : ""),
             applicationPreferences.id ? "update" : "create", applicationPreferences).then(function (updatedApplicationPreferences) {
-            // update the app preference (including the id if new)
-            $.extend(true, applicationPreferences, updatedApplicationPreferences);
-
             // the parse the preferences to use it as JSON
-            applicationPreferences.preferences = JSON.parse(applicationPreferences.preferences);
-            return applicationPreferences;
+            updatedApplicationPreferences.preferences = JSON.parse(updatedApplicationPreferences.preferences);
+            return updatedApplicationPreferences;
         });
     };
 

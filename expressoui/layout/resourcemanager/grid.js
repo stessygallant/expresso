@@ -124,7 +124,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // register a  listener to display a manager for reference
         var _this = this;
         this.referenceResourceManagers = {};
-        $domElement.on("click", ".reference", function (e) {
+        $domElement.on("click", ".reference", function (/*e*/) {
             // e.preventDefault();
             _this.openReference($(this));
         });
@@ -201,14 +201,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // defined if the manager defined a custom form
         this.customForm = this.resourceManager.sections["form"];
 
-        if (this.resourceManager.options.autoEdit) {
-            // make sure it is not hierarchical otherwise it will open the top row which may be the parent
-            this.hierarchical = false;
-        }
-
         // if hierarchical is not defined but there is a hierarchicalParent, then it is hierarchical
         if (this.hierarchical === undefined && this.resourceManager.model.hierarchicalParent) {
             this.hierarchical = true;
+        }
+
+        // avoid hierarchical when autoEdit: it will open the top row which may be the parent
+        if (this.resourceManager.options.autoEdit) {
+            this.hierarchical = undefined;
         }
 
         // when using local data, do not sync datasource (default is auto sync)
@@ -1486,17 +1486,30 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // utility method to add a filter to the menu
         var addPreferenceToMenu = function (gridPreference) {
-            // add it in the menu
-            _this.$preferencesMenu.data("kendoContextMenu").insertAfter({
-                text: "<span class='filter-name'>" + gridPreference.name + "</span>" +
-                    "<span class='fa fa-times pull-left delete-grid-preference' title='" +
-                    _this.getLabel("deleteGridPreference") + "'></span>"
-                    + "<span class='fa fa-star pull-right favorite-grid-preference' title='" +
-                    _this.getLabel("selectFavoriteGridPreference") + "'></span>",
-                encoded: false,
-                url: "#"
-            }, "li:last-child");
-            var $menuItem = _this.$preferencesMenu.find("li:last-child");
+            var $menuItem;
+
+            // verify if the menu item already exists
+            var spanFilterNames = $.grep(_this.$preferencesMenu.find(".filter-name"), function (f) {
+                return $(f).text() == gridPreference.name;
+            });
+
+            if (spanFilterNames.length) {
+                $menuItem = $(spanFilterNames[0]).closest("li");
+            }
+            else {
+                // add it in the menu
+                _this.$preferencesMenu.data("kendoContextMenu").insertAfter({
+                    text: "<span class='filter-name'>" + gridPreference.name + "</span>" +
+                        "<span class='fa fa-times pull-left delete-grid-preference' title='" +
+                        _this.getLabel("deleteGridPreference") + "'></span>"
+                        + "<span class='fa fa-star pull-right favorite-grid-preference' title='" +
+                        _this.getLabel("selectFavoriteGridPreference") + "'></span>",
+                    encoded: false,
+                    url: "#"
+                }, "li:last-child");
+                $menuItem = _this.$preferencesMenu.find("li:last-child");
+            }
+
             $menuItem.data("gridPreference", gridPreference);
             return $menuItem;
         };
@@ -1534,8 +1547,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                             }
                         });
 
+                        // current preference
+                        var currentSelectedPreference = _this.$domElement.find(".exp-saveconfiguration-button .exp-button-label").text();
+                        // console.log("currentSelectedPreference [" + currentSelectedPreference + "]");
+
                         expresso.util.UIUtil.buildPromptWindow(_this.getLabel("newConfigurationWindowTitle"),
-                            _this.getLabel("newConfigurationWindowText"))
+                            _this.getLabel("newConfigurationWindowText"), {value: currentSelectedPreference || ""})
                             .done(function (gridPreferenceName) {
                                 // add the filters, sort and columns in the app preference
                                 var newGridPreference = {
@@ -1551,6 +1568,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                                 if (!_this.getApplicationPreferences().gridPreferences) {
                                     _this.getApplicationPreferences().gridPreferences = {}
                                 }
+
                                 _this.getApplicationPreferences().gridPreferences[gridPreferenceName] = newGridPreference;
 
                                 // rename the button
