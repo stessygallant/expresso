@@ -1,0 +1,52 @@
+@import "../../../../config/default";
+
+.chat-viewer {
+    @include default-div;
+
+    $chatResponseHeight: 4em;
+
+    .chat-session {
+        height: calc(100% - #{$chatResponseHeight} - 1px);
+        border-bottom: 1px solid gray;
+        overflow-y: auto;
+        background-color: #f8f8f8;
+    }
+
+    .chat-response {
+        height: $chatResponseHeight;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+
+        $chatResponseButtonWidth: 2em;
+
+        .response {
+            display: inline-block;
+            height: 100%;
+            width: calc(100% - #{$chatResponseButtonWidth} - 4px);
+            padding: 0;
+            margin: 0;
+            background-color: #f1f1f1;
+        }
+
+        .send-response-div {
+            display: inline-block;
+            height: 100%;
+            width: $chatResponseButtonWidth;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            vertical-align: top;
+            background-color: #e1e1e1;
+
+            &:hover {
+                background-color: #b2b2b2;
+            }
+
+            .send-response-button {
+                width: $chatResponseButtonWidth;
+                padding-top: $chatResponseHeight / 2.6;
+            }
+        }
+    }
+}
