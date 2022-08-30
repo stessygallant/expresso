@@ -72,6 +72,14 @@
             width: 1
         }, {}
         ];
+    },
+
+    // @override
+    getSort: function () {
+        return {
+            field: "userCreationDate",
+            dir: "desc"
+        };
     }
 });
 

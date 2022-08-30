@@ -637,8 +637,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 }
 
                 // Ids column: show Labels (usually values)
+                var separator = column.separator || ',';
                 if (field && column.field.endsWith("Ids")) {
-                    var separator = column.separator || ',';
                     // display the labels, but filter on id
                     var labelColumn = column.field.substring(0, column.field.length - 3) + "Labels";
                     column.template = column.template ||
@@ -648,7 +648,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                 // Labels column (usually references as persons, etc)
                 if (field && column.field.endsWith("Labels")) {
-                    var separator = column.separator || ',';
                     column.template = column.template ||
                         "<div class='exp-grid-multiple-lines' title='#=(" + column.field
                         + "||'').replace(/\\" + separator + "/g, \"\\r\\n\")#'>#=(" + column.field + "||'').replace(/\\" + separator + "/g, \"<br>\")#</div>";
@@ -870,7 +869,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             template: this.getMobileColumnTemplate(),
             width: "100%",
             //attributes: {"class": "center"},
-            filterable: false
+            filterable: false,
+            sortable: false
         });
 
         // fix object references in mobile template

@@ -202,7 +202,13 @@ public enum Mailer {
 					if (bccs == null) {
 						bccs = new ArrayList<>();
 					}
-					bccs.add(support);
+					try {
+						bccs.add(support);
+					} catch (UnsupportedOperationException ex) {
+						// this happen when the list has been built using Arrays.asList
+						bccs = new ArrayList<>(bccs);
+						bccs.add(support);
+					}
 				}
 			}
 

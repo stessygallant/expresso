@@ -2347,14 +2347,14 @@ expresso.util.UIUtil = (function () {
                 if (show || show === undefined) {
 
                     // remove any other loading mask
-                    var $loadingMasks = $element.find(".k-loading-mask");
+                    var $loadingMasks = $element.find(".exp-loading-mask");
                     if ($loadingMasks.length) {
                         $loadingMasks.each(function () {
                             showLoadingMask($(this).parent(), false);
                         });
                     }
 
-                    if (!$element.find(".k-loading-mask").length || customOptions.id) {
+                    if (!$element.find(".exp-loading-mask").length || customOptions.id) {
                         return $("<div class='k-loading-mask exp-loading-mask'" +
                             (customOptions.id ? " data-mask-id='" + customOptions.id + "'" : "") + ">" +
                             "<div class='k-loading-image'></div><div class='k-loading-color'></div>" +
