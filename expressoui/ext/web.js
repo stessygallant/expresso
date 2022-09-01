@@ -14,6 +14,8 @@ expresso.Main = function () {
     var currentAppInstance = undefined;
     var currentAppName = undefined;
 
+    var chatViewer = undefined;
+
     /**
      * Build the menu for the user
      */
@@ -794,6 +796,21 @@ expresso.Main = function () {
     };
 
     /**
+     * Init
+     */
+    var initChat = function () {
+        var $chatViewerDiv = $("<div class='chat-viewer-div'></div>").appendTo($("body"));
+        expresso.Common.loadApplication("ChatViewer", null, $chatViewerDiv).done(function (applicationInstance) {
+            chatViewer = applicationInstance;
+            try {
+                chatViewer.render();
+            } catch (ex) {
+                console.warn("ChatViewer not supported", ex);
+            }
+        });
+    };
+
+    /**
      * Initialization of the UI (menu and application)
      */
     var initUI = function () {
@@ -880,6 +897,9 @@ expresso.Main = function () {
         if (expresso.Common.getSiteNamespace().config.Configurations.supportSystemMessage) {
             verifySystemMessages();
         }
+
+        // init the chat with users
+        initChat();
 
         // now we can display the application
         var defaultApplication = getDefaultApplication();

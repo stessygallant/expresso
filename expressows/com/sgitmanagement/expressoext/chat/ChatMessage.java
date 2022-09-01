@@ -1,19 +1,18 @@
 package com.sgitmanagement.expressoext.chat;
 
+import java.util.Date;
+
 public class ChatMessage {
+	private Date date;
 	private String from;
 	private String to;
+
+	private Integer fromUserId;
+	private Integer toUserId;
 	private String content;
 
 	public ChatMessage() {
 
-	}
-
-	public ChatMessage(String from, String to, String content) {
-		super();
-		this.from = from;
-		this.to = to;
-		this.content = content;
 	}
 
 	public String getFrom() {
@@ -38,6 +37,30 @@ public class ChatMessage {
 
 	public void setContent(String content) {
 		this.content = content;
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public void setDate(Date date) {
+		this.date = date;
+	}
+
+	public Integer getFromUserId() {
+		return fromUserId;
+	}
+
+	public void setFromUserId(Integer fromUserId) {
+		this.fromUserId = fromUserId;
+	}
+
+	public Integer getToUserId() {
+		return toUserId;
+	}
+
+	public void setToUserId(Integer toUserId) {
+		this.toUserId = toUserId;
 	}
 
 }
