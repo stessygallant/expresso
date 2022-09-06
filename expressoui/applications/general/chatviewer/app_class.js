@@ -9,7 +9,7 @@ expresso.applications.general.chatviewer.ChatViewer = expresso.layout.applicatio
         var $webSocketReady = $.Deferred();
 
         var path = expresso.Common.getWsBasePathURL();
-        path = path.substring(path.indexOf(':'));
+        path = path.substring("http".length); // keep the "s"
         this.webSocket = new WebSocket("ws" + path + "/websocket/chat");
         this.webSocket.onerror = function (event) {
             console.warn("Error on websocket", event);

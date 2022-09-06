@@ -12,6 +12,7 @@
         padding: 0.6em;
         background-color: gray;
         color: white;
+        cursor: pointer;
     }
 
     .chat-session {
@@ -51,6 +52,7 @@
 
                 &.sent-message {
                     float: right;
+                    cursor: pointer;
                 }
 
                 &.new-message:not(.sent-message) {

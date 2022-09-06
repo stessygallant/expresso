@@ -899,8 +899,10 @@ expresso.Main = function () {
         }
 
         // init the chat with users
-        initChat();
-
+        if (expresso.Security.isAdmin()) {
+            initChat();
+        }
+        
         // now we can display the application
         var defaultApplication = getDefaultApplication();
         if (defaultApplication) {

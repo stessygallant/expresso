@@ -1035,7 +1035,8 @@ expresso.util.UIUtil = (function () {
                 var triggerChange = function (ev) {
                     if (resource && attName) {
                         // perform only if done by a user (otherwise the object is already loaded by default)
-                        if (ev && ev.sender && ev.sender._userTriggered) {
+                        // console.log("triggerChange: " + attName, ev);
+                        if ((ev && ev.sender && ev.sender._userTriggered) || (ev && ev.userTriggered)) {
                             //console.log("Setting [" + attName + "]", dataItem);
                             // do not allow to set null: it will crash the grid (ex: equipment.equipmentNo)
                             resource.set(attName, dataItem || objectDefaultValue);
