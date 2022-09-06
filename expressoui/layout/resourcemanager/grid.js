@@ -1495,8 +1495,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
             if (spanFilterNames.length) {
                 $menuItem = $(spanFilterNames[0]).closest("li");
-            }
-            else {
+            } else {
                 // add it in the menu
                 _this.$preferencesMenu.data("kendoContextMenu").insertAfter({
                     text: "<span class='filter-name'>" + gridPreference.name + "</span>" +
@@ -3083,7 +3082,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                             // TreeList does not display a loading mask on sort and filter
                             expresso.util.UIUtil.showLoadingMask(_this.$domElement, true, {id: "readDataSourceTreeList"});
                         }
-                        return _this.resourceManager.getWebServicePath();
+                        return _this.resourceManager.getResourceUrl();
                     }
                 },
                 create: {
@@ -3094,7 +3093,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         // set the current  labels in case of errors
                         expresso.Common.setCurrentRequestLabels(_this.resourceManager.labels);
 
-                        return _this.resourceManager.getWebServicePath();
+                        return _this.resourceManager.getResourceUrl();
                     }
                 },
                 update: {
@@ -3105,7 +3104,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         // set the current  labels in case of errors
                         expresso.Common.setCurrentRequestLabels(_this.resourceManager.labels);
 
-                        return _this.resourceManager.getWebServicePath(e.id);
+                        return _this.resourceManager.getResourceUrl(e.id);
                     }
                 },
                 destroy: {
@@ -3115,7 +3114,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         // set the current  labels in case of errors
                         expresso.Common.setCurrentRequestLabels(_this.resourceManager.labels);
 
-                        return _this.resourceManager.getWebServicePath(e.id);
+                        return _this.resourceManager.getResourceUrl(e.id);
                     }
                 }
             },

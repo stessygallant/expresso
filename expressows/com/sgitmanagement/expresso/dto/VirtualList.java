@@ -3,6 +3,7 @@ package com.sgitmanagement.expresso.dto;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
@@ -15,14 +16,14 @@ public class VirtualList<E> {
 	private List<E> data;
 	private long total;
 
-	public VirtualList() {
-
-	}
-
 	public VirtualList(List<E> data, long total) {
 		super();
 		this.data = data;
 		this.total = total;
+	}
+
+	public VirtualList() {
+		this(Collections.emptyList(), 0);
 	}
 
 	public VirtualList(Collection<E> data) {
@@ -57,5 +58,4 @@ public class VirtualList<E> {
 	public String toString() {
 		return "GridList [total=" + total + "]";
 	}
-
 }

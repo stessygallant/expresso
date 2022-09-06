@@ -308,7 +308,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
             }
 
             // get the count from the server
-            expresso.Common.sendRequest(url, null, null, filter, {
+            this.sendRequest(url, null, null, filter, {
                 ignoreErrors: true,
                 waitOnElement: null
             }).done(function (result) {

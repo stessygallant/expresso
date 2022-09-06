@@ -86,8 +86,14 @@ import com.sgitmanagement.expresso.util.ZipUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.xml.bind.annotation.XmlElement;
 
+/* 
+resourceName: activityLogRequestChange
+resourcePath: activityLogRequest/0/change
+resourceSecurityPath: activityLogRequest/change
+ */
 abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends IUser, I> extends AbstractBaseService<U> {
 	final public static int MAX_SEARCH_RESULTS = 50;
 
@@ -587,7 +593,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			// logger.debug("Search query: " + new Gson().toJson(query));
 			return list(query);
 		} else {
-			logger.error("getSearchFilter method not implemented for the resource [" + getResourcePath() + "]");
+			logger.error("getSearchFilter method not implemented for the resource [" + getResourceName() + "]");
 			return new ArrayList<>();
 		}
 	}
@@ -620,7 +626,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			query.addFilter(filter);
 			return list(query);
 		} else {
-			logger.error("getSearchFilter method not implemented for the resource [" + getResourcePath() + "]");
+			logger.error("getSearchFilter method not implemented for the resource [" + getResourceName() + "]");
 			return new ArrayList<>();
 		}
 	}
@@ -733,10 +739,21 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				// always sort by the id at the end to make sure the result set is stable
 				for (Sort sort : getUniqueQuerySort()) {
-					if (sort.getDir() != null && sort.getDir().equals(Direction.asc)) {
-						orders.add(cb.asc(root.get(sort.getField())));
-					} else {
-						orders.add(cb.desc(root.get(sort.getField())));
+					// make sure it is not already in the sort
+					boolean alreadyInSort = false;
+					for (Sort querySort : query.getSort()) {
+						if (querySort.getField().equals(sort.getField())) {
+							alreadyInSort = true;
+							break;
+						}
+					}
+
+					if (!alreadyInSort) {
+						if (sort.getDir() != null && sort.getDir().equals(Direction.asc)) {
+							orders.add(cb.asc(root.get(sort.getField())));
+						} else {
+							orders.add(cb.desc(root.get(sort.getField())));
+						}
 					}
 				}
 
@@ -802,7 +819,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				return data;
 			}
 		} catch (Exception ex) {
-			logger.error("Error executing query [" + getResourcePath() + "]: " + ex + " - " + new Gson().toJson(query), ex);
+			logger.error("Error executing query [" + getResourceName() + "]: " + ex + " - " + new Gson().toJson(query), ex);
 			throw ex;
 		}
 	}
@@ -986,7 +1003,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				Filter restrictionsFilter = getRestrictionsFilter();
 				if (restrictionsFilter != null) {
 					if (!restrictionsFilter.isSecure()) {
-						logger.error("RestrictionsFilter is not secure [" + getResourcePath() + "]: " + new Gson().toJson(restrictionsFilter));
+						logger.error("RestrictionsFilter is not secure [" + getResourceName() + "]: " + new Gson().toJson(restrictionsFilter));
 						// throw new ValidationException("restrictionsFilterNoSecure");
 					}
 
@@ -1000,7 +1017,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					Filter restrictionsFilter = getRestrictionsFilter();
 					if (restrictionsFilter != null) {
 						if (!restrictionsFilter.isSecure()) {
-							logger.error("RestrictionsFilter is not secure [" + getResourcePath() + "]: " + new Gson().toJson(restrictionsFilter));
+							logger.error("RestrictionsFilter is not secure [" + getResourceName() + "]: " + new Gson().toJson(restrictionsFilter));
 							// throw new ValidationException("restrictionsFilterNoSecure");
 						}
 
@@ -1174,7 +1191,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			// count the total number of records
 			return getEntityManager().createQuery(q).getSingleResult();
 		} catch (Exception ex) {
-			logger.error("Error executing count query[" + getResourcePath() + "]: " + ex + " - " + new Gson().toJson(query));
+			logger.error("Error executing count query[" + getResourceName() + "]: " + ex + " - " + new Gson().toJson(query));
 			throw ex;
 		}
 
@@ -1299,7 +1316,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		// sub resource are allowed based on the state of their master resource
 
 		// if there is a ParentEntity, use the restrictions of the parent
-		if (parentEntity != null) {
+		if (parentEntity != null && getParentEntityField() != null) {
 			if (parentUpdatable == null) {
 				try {
 					getParentEntityService().verifyActionRestrictions("update", parentEntity);
@@ -1559,6 +1576,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		return applicationName + getTypeOfE().getSimpleName() + "Manager";
 	}
 
+	/**
+	 * Nomenclature <br>
+	 * - resourceName: activityLogRequestChange <br>
+	 * - resourcePath: activityLogRequest/0/change <br>
+	 * - resourceSecurityPath: activityLogRequest/change <br>
+	 * 
+	 * @return
+	 */
 	public String getResourceName() {
 		return StringUtils.uncapitalize(getTypeOfE().getSimpleName());
 	}
@@ -1572,6 +1597,59 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	public String getResourceNo(E e) throws Exception {
 		return BeanUtils.getProperty(e, getKeyFields()[0]);
+	}
+
+	/**
+	 * Get the resource paths for this entity.<br>
+	 * IMPORTANT: The default implementation works well for the master resource only. For sub resources, you MAY need to override this
+	 *
+	 * Nomenclature <br>
+	 * - resourceName: activityLogRequestChange <br>
+	 * - resourcePath: activityLogRequest/0/change <br>
+	 * - resourceSecurityPath: activityLogRequest/change <br>
+	 * 
+	 * @return
+	 */
+	public String getResourceSecurityPath() throws Exception {
+		String resourcePath = getResourceName();
+
+		if (getParentEntityField() != null) {
+			// usually, sub resource starts with the name of the parent resource
+			// Ex: project, projectLot and projectLotItem
+			// the resource security path is: project/lot/item
+			String parentResourceName = StringUtils.uncapitalize(getParentEntityService().getTypeOfE().getSimpleName());
+
+			if (resourcePath.startsWith(parentResourceName)) {
+				String parentResourcePath = getParentEntityService().getResourceSecurityPath();
+				resourcePath = parentResourcePath + "/" + StringUtils.uncapitalize(resourcePath.substring(parentResourceName.length()));
+			}
+		}
+		return resourcePath;
+	}
+
+	/**
+	 * Get the resource paths for this entity.<br>
+	 * IMPORTANT: The default implementation works well for the master resource only. For sub resources, you MAY need to override this
+	 *
+	 * Nomenclature <br>
+	 * - resourceName: activityLogRequestChange <br>
+	 * - resourcePath: activityLogRequest/0/change <br>
+	 * - resourceSecurityPath: activityLogRequest/change <br>
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public String getResourcePath(E e) throws Exception {
+		String resourcePath = getResourceName();
+
+		if (getParentEntityField() != null) {
+			String parentResourceName = StringUtils.uncapitalize(getParentEntityService().getTypeOfE().getSimpleName());
+			if (resourcePath.startsWith(parentResourceName)) {
+				String parentResourcePath = getParentEntityService().getResourcePath((E) null);
+				resourcePath = parentResourcePath + "/" + StringUtils.uncapitalize(resourcePath.substring(parentResourceName.length()));
+			}
+		}
+		return resourcePath + "/" + (e != null ? e.getId() : 0);
 	}
 
 	/**
@@ -1593,28 +1671,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			resourceManager = getParentEntityService().getResourceManager() + "." + resourceManager;
 		}
 		return resourceManager;
-	}
-
-	/**
-	 * Get the resource paths for this entity. IMPORTANT: The default implementation works well for the master resource only. For sub resources, you MAY need to override this
-	 *
-	 * @return
-	 */
-	public String getResourcePath() throws Exception {
-		String resourcePath = getResourceName();
-
-		if (getParentEntityField() != null) {
-			// usually, sub resource starts with the name of the parent resource
-			// Ex: project, projectLot and projectLotItem
-			// the resource path is: project/lot/item
-			String parentResourceName = StringUtils.uncapitalize(getParentEntityService().getTypeOfE().getSimpleName());
-
-			if (resourcePath.startsWith(parentResourceName)) {
-				String parentResourcePath = getParentEntityService().getResourcePath();
-				resourcePath = parentResourcePath + "/" + StringUtils.uncapitalize(resourcePath.substring(parentResourceName.length()));
-			}
-		}
-		return resourcePath;
 	}
 
 	/**
@@ -2186,19 +2242,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					if (fromDate == null) {
 						// THIS IS THE DEFAULT FROM THE KENDO UI GRID.
 						// if the database is a datetime and not a date, it will not work
-						if (dateValue == null) {
-							// date format must have been invalid. Compare with null (it will return nothing)
-							predicate = cb.equal(path, dateValue);
-						} else {
-							if (dateValue.getTime() != DateUtils.truncate(dateValue, Calendar.DATE).getTime()) {
-								logger.warn(
-										"Comparing field[" + getTypeOfE().getSimpleName() + "." + filter.getField() + "] date only: " + dateValue + " (Use timestampEquals or sameDayEquals instead)");
-							}
 
-							// we only compare date (not datetime)
-							dateValue = DateUtils.truncate(dateValue, Calendar.DATE);
-							predicate = cb.equal(cb.function(truncFunction, Date.class, path), dateValue);
+						if (dateValue.getTime() != DateUtils.truncate(dateValue, Calendar.DATE).getTime()) {
+							logger.warn("Comparing field[" + getTypeOfE().getSimpleName() + "." + filter.getField() + "] date only: " + dateValue + " (Use timestampEquals or sameDayEquals instead)");
 						}
+
+						// we only compare date (not datetime)
+						dateValue = DateUtils.truncate(dateValue, Calendar.DATE);
+						predicate = cb.equal(cb.function(truncFunction, Date.class, path), dateValue);
 					} else {
 						// DYNAMIC dates
 						// fromDate to toDate
@@ -3172,7 +3223,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	final public void sync() throws Exception {
-		sync(null, null);
+		sync((String) null, null);
 	}
 
 	final public void sync(String section, ProgressSender progressSender) throws Exception {
@@ -3189,6 +3240,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	public void sync(String section, ProgressSender progressSender, int progressWeight) throws Exception {
 		// by default, do nothing
+	}
+
+	public void sync(MultivaluedMap<String, String> formParams, ProgressSender progressSender) throws Exception {
+		// if not overwritten, call the former sync(section)
+		sync(formParams != null ? formParams.getFirst("section") : (String) null, progressSender, 100);
 	}
 
 	/**
@@ -3258,6 +3314,73 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		} catch (Exception ex) {
 			ex.printStackTrace(); // cannot user logger.error
 			return null;
+		}
+	}
+
+	/**
+	 *
+	 * @param action
+	 * @param resourceSecurityPath
+	 * @param resourceName
+	 * @param resourceId
+	 * @throws Exception
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	final public void verifyUserPrivileges(String action, String resourceSecurityPath, String resourceName, Object resourceId) throws ForbiddenException {
+		if (isUserAdmin()) {
+			// ok
+		} else {
+			// verify if the user has the privilege on this resource
+			if (!isUserAllowed(action, Arrays.asList(resourceSecurityPath.split("/")))) {
+				throw new ForbiddenException("User [" + getUser().getUserName() + "] is not allowed to [" + action + "] the resourceSecurityPath [" + resourceSecurityPath + "]");
+			}
+
+			// if the action is authorized, verify if it can access THIS resource
+			if (resourceId != null) {
+				Integer integerResourceId = null;
+				try {
+					integerResourceId = Integer.parseInt("" + resourceId);
+				} catch (Exception ex) {
+					// ignore
+				}
+				if (resourceName != null && (integerResourceId == null || (integerResourceId != 0 && integerResourceId != -1))) {
+					try {
+						AbstractBaseEntityService service = newService(resourceName);
+						if (service != null) {
+							service.get(new Filter("id", resourceId));
+						} else {
+							throw new Exception("Cannot create service for resource[" + resourceName + "]");
+						}
+					} catch (Exception ex) {
+						throw new ForbiddenException("User [" + getUser().getUserName() + "] is not allowed to access resourceName[" + resourceName + "] resourceId[" + resourceId + "]");
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param action
+	 * @param resourceName
+	 * @param resourceId
+	 * @throws ForbiddenException
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	final protected void verifyUserPrivileges(String action, String resourceName, Object resourceId) throws ForbiddenException {
+		try {
+			AbstractBaseEntityService service = newService(resourceName);
+			if (service != null) {
+				verifyUserPrivileges(action, service.getResourceSecurityPath(), resourceName, resourceId);
+			} else {
+				throw new Exception("Cannot create service for resource[" + resourceName + "]");
+			}
+		} catch (ForbiddenException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			String msg = "Cannot validate privileges for user [" + getUser().getUserName() + "] action[" + action + "] resourceName[" + resourceName + "] resourceId[" + resourceId + "]";
+			logger.error(msg, ex);
+			throw new ForbiddenException(msg + ": " + ex);
 		}
 	}
 }
