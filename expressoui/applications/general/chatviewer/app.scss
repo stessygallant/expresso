@@ -3,16 +3,67 @@
 .chat-viewer {
     @include default-div;
 
-    $chatResponseHeight: 4em;
+    $chatResponseHeight: 6em;
+
+    .close-button {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0.6em;
+        background-color: gray;
+        color: white;
+        cursor: pointer;
+    }
 
     .chat-session {
-        height: calc(100% - #{$chatResponseHeight} - 1px);
+        padding: 1em 2em;
+        height: calc(100% - #{$chatResponseHeight} - 2em - 1px);
         border-bottom: 1px solid gray;
-        overflow-y: auto;
         background-color: #f8f8f8;
+        overflow-y: auto;
+
+        .messages {
+            @include default-div;
+            height: fit-content;
+
+            .message {
+                border: 1px solid white;
+                border-radius: 5px;
+                background-color: white;
+                max-width: 80%;
+                padding: 0.1em 1em;
+                margin: 0 0 2em 0;
+                width: fit-content;
+                clear: both;
+
+                .from {
+                    font-weight: bold;
+                }
+
+                .date {
+                    font-size: 70%;
+                    float: right;
+                    margin: 0.5em 0 0 2em;
+                }
+
+                .content {
+                    display: block;
+                }
+
+                &.sent-message {
+                    float: right;
+                    cursor: pointer;
+                }
+
+                &.new-message:not(.sent-message) {
+                    background-color: #f3e5e5;
+                }
+            }
+        }
     }
 
     .chat-response {
+        position: relative;
         height: $chatResponseHeight;
         width: 100%;
         padding: 0;
@@ -20,33 +71,59 @@
 
         $chatResponseButtonWidth: 2em;
 
+        //.response {
+        //    display: inline-block;
+        //    height: calc(100% - 0.4em);
+        //    max-height: calc(#{$chatResponseHeight} - 0.4em);
+        //    width: calc(100% - #{$chatResponseButtonWidth} - 0.4em - 6px);
+        //    padding: 0.2em 0.2em;
+        //    margin: 0;
+        //    background-color: #f1f1f1;
+        //}
+
         .response {
-            display: inline-block;
-            height: 100%;
-            width: calc(100% - #{$chatResponseButtonWidth} - 4px);
-            padding: 0;
-            margin: 0;
-            background-color: #f1f1f1;
+            height: $chatResponseHeight;
+            max-height: $chatResponseHeight;
+        }
+
+        table.k-editor {
+            height: $chatResponseHeight;
+            max-height: $chatResponseHeight;
+
+            //width: calc(100% - #{$chatResponseButtonWidth} - 6px);
+            //padding: 0.2em 0.2em;
+            //margin: 0;
+            //background-color: #f1f1f1;
         }
 
         .send-response-div {
-            display: inline-block;
-            height: 100%;
-            width: $chatResponseButtonWidth;
-            padding: 0;
-            margin: 0;
+            //width: $chatResponseButtonWidth;
             text-align: center;
-            vertical-align: top;
             background-color: #e1e1e1;
+            padding: 0.5em;
+            position: absolute;
+            top: 0;
+            right: 0;
 
             &:hover {
                 background-color: #b2b2b2;
             }
 
             .send-response-button {
-                width: $chatResponseButtonWidth;
-                padding-top: $chatResponseHeight / 2.6;
             }
         }
     }
+}
+
+.chat-viewer-div {
+    z-index: 9999;
+    position: absolute;
+    bottom: 0.1em;
+    right: 0.1em;
+    width: 30em;
+    height: 30em;
+    display: none;
+    border: 1px solid gray;
+    border-radius: 3px;
+
 }

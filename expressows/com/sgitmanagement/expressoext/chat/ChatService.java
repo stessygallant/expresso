@@ -1,6 +1,7 @@
 package com.sgitmanagement.expressoext.chat;
 
 import java.io.IOException;
+import java.util.Date;
 
 import com.sgitmanagement.expressoext.base.BaseWebSocketService;
 
@@ -15,6 +16,9 @@ public class ChatService extends BaseWebSocketService {
 	 * @throws IOException
 	 */
 	public void broadcast(Session broadcastingSession, ChatMessage chatMessage) throws IOException {
+		if (chatMessage.getDate() == null) {
+			chatMessage.setDate(new Date());
+		}
 		for (Session session : broadcastingSession.getOpenSessions()) {
 			// do not send the message to the incoming session
 			if (session.isOpen() && !broadcastingSession.getId().equals(session.getId())) {

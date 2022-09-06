@@ -1,33 +1,12 @@
 package com.sgitmanagement.expressoext.base;
 
-import java.io.IOException;
 import java.util.List;
 
-import com.sgitmanagement.expresso.base.AbstractBaseService;
+import com.sgitmanagement.expresso.base.AbstractBaseWebSocketService;
 import com.sgitmanagement.expressoext.security.AuthorizationHelper;
 import com.sgitmanagement.expressoext.security.User;
 
-import jakarta.websocket.Session;
-
-public class BaseWebSocketService extends AbstractBaseService<User> {
-
-	public void onOpen(Session session) throws IOException {
-		String message = "New session [" + session.getId() + "]";
-		logger.info(message);
-	}
-
-	public void onClose(Session session) throws IOException {
-		String message = "Disconnected session [" + session.getId() + "]";
-		logger.info(message);
-	}
-
-	public void onError(Session session, Throwable throwable) {
-		logger.error("Error on session [" + session.getId() + "]", throwable);
-	}
-
-	public void onMessage(Session session, Object message) throws IOException {
-		// must be implemented by the subclass
-	}
+public class BaseWebSocketService extends AbstractBaseWebSocketService<User> {
 
 	@Override
 	final public boolean isUserInRole(String rolePgmKey) {
