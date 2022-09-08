@@ -2453,10 +2453,43 @@ expresso.util.UIUtil = (function () {
 
         /**
          *
+         * @param resourceManager
+         * @returns {{}}
+         */
+        var getDocumentUploadCustomData = function (resourceManager) {
+            var customData = {};
+            if (resourceManager.appDef.appClass.startsWith("cezinc")) {
+                // add the document meta data (CEZinc only)
+                customData["resourceId"] = resourceManager.getCurrentResourceId();
+                customData["resourceName"] = resourceManager.resourceName;
+                customData["resourceSecurityPath"] = resourceManager.getResourceSecurityPath();
+
+                var documentFolderPath;
+                if (resourceManager.resourceFieldNo && resourceManager.currentResource &&
+                    resourceManager.currentResource[resourceManager.resourceFieldNo]) {
+                    // use the resourceNo
+                    // ex: project/AP-1090, activityLogRequest/0011234
+                    documentFolderPath = resourceManager.getResourceSecurityPath() + "/" +
+                        resourceManager.currentResource[resourceManager.resourceFieldNo];
+                } else {
+                    // probably a sub resource
+                    documentFolderPath = resourceManager.getRelativeWebServicePath(resourceManager.getCurrentResourceId());
+                }
+                customData["documentParameter"] = documentFolderPath;
+                customData["documentCategoryId"] = resourceManager.options.defaultDocumentCategoryId;
+            }
+            return customData;
+        };
+
+
+        /**
+         *
+         * @param $window
          * @param $input
          * @param options
+         * @returns
          */
-        var buildUpload = function ($input, options) {
+        var buildUpload = function ($window, $input, options) {
             var _this = this;
 
             // make sure the input if defined correctly
@@ -2465,94 +2498,98 @@ expresso.util.UIUtil = (function () {
 
             // avoid null pointer
             options = options || {};
+            options.customData = options.customData || {};
 
             // wrap the input
-            $input.wrap("<div><div class='input-wrap exp-upload-div'><div class='k-content'></div></div></div>");
-            //<label>" + this.getLabel("document") + "</label>
-
-            var $window = $input.closest(".k-window-content");
-            if (!$window.length) {
-                $window = $input.closest(".input-wrap").parent();
+            if ($window) {
+                if ($input.parent().hasClass("input-wrap")) {
+                    $input.parent().addClass("exp-upload-div");
+                    $input.wrap("<div class='k-content'></div>");
+                } else {
+                    $input.wrap("<div class='input-wrap exp-upload-div'></div>").wrap("<div class='k-content'></div>");
+                }
             }
 
             var $deferred = $.Deferred();
-            $input.kendoUpload({
+            var kendoUpload;
+            var kendoUploadOptions = $.extend(true, {}, {
                 async: {
-                    saveUrl: options.url || "define later",
+                    saveUrl: "define later",
                     removeUrl: null,
                     autoUpload: false
                 },
                 multiple: false,
                 upload: function (e) {
+                    // console.log("uploading");
                     var data = {};
 
-                    // add the creation user
-                    data["creationUserId"] = expresso.Common.getUserInfo().id;
+                    // add any custom data
+                    if ($window) {
+                        $.each($window.find(".exp-form :input").serializeArray(), function () {
+                            // do not include input from Widget
+                            if (this.name.indexOf("_input") == -1) {
+                                var value = this.value;
 
-                    // add the document meta data
-                    if (options.resourceManager) {
-                        if (options.resourceManager.siblingResourceManager &&
-                            options.resourceManager.appDef.appClass.startsWith("cezinc")) {
-                            // CEZinc only
-                            data["resourceId"] = options.resourceManager.siblingResourceManager.currentResource.id;
-                            data["resourceName"] = options.resourceManager.siblingResourceManager.resourceName;
-                            data["resourceSecurityPath"] = options.resourceManager.siblingResourceManager.getResourceSecurityPath();
-
-                            var documentFolderPath;
-                            if (options.resourceManager.siblingResourceManager.currentResource[_this.resourceManager.siblingResourceManager.resourceFieldNo]) {
-                                // use the resourceNo
-                                // ex: project/AP-1090, activityLogRequest/0011234
-                                documentFolderPath = options.resourceManager.siblingResourceManager.getResourceSecurityPath() + "/" +
-                                    options.resourceManager.siblingResourceManager.currentResource[options.resourceManager.siblingResourceManager.resourceFieldNo];
-                            } else {
-                                // probably a sub resource
-                                documentFolderPath = options.resourceManager.siblingResourceManager.getRelativeWebServicePath(options.resourceManager.siblingResourceManager.currentResource.id);
+                                // because by default any input is empty, if not defined, assign null
+                                if (value === "") {
+                                    value = null;
+                                }
+                                data[this.name] = value;
                             }
-                            data["documentParameter"] = documentFolderPath;
-                        }
+                        });
                     }
+
+                    // add the creation user (this is only mandatory because of the public path)
+                    data["creationUserId"] = expresso.Common.getUserInfo().id;
 
                     // add token if present
                     if (expresso.Security) {
                         data["sessionToken"] = expresso.Security.getSessionToken();
                     }
 
-                    // add any data
-                    if (options.data) {
-                        $.extend(data, options.data);
+                    // add custom data
+                    var d = options.customData;
+                    if (typeof d === "function") {
+                        d = d();
                     }
+                    $.extend(data, d);
 
-                    expresso.util.UIUtil.showLoadingMask($window, true);
+                    expresso.util.UIUtil.showLoadingMask($window, true, {id: "uploadDocument"});
 
                     //console.log("Upload data: " + JSON.stringify(data));
                     e.data = data;
+
+                    // we need to use a special path for upload
+                    var url = options.url;
+                    if (typeof url === "function") {
+                        url = url();
+                    }
+                    e.sender.options.async.saveUrl = url;
                 },
                 success: function (/*e*/) {
                     // remove the progress
-                    expresso.util.UIUtil.showLoadingMask($window, false);
-
+                    expresso.util.UIUtil.showLoadingMask($window, false, {id: "uploadDocument"});
+                    kendoUpload.destroy();
                     $deferred.resolve();
                 },
                 error: function (e) {
                     // remove the progress
-                    expresso.util.UIUtil.showLoadingMask($window, false);
+                    expresso.util.UIUtil.showLoadingMask($window, false, {id: "uploadDocument"});
                     expresso.Common.displayServerValidationMessage(e.XMLHttpRequest);
-                    $deferred.reject();
+                    $deferred.reject(e);
                 }
-            });
+            }, options);
 
-            var kendoUpload = $input.data("kendoUpload");
+            kendoUpload = $input.kendoUpload(kendoUploadOptions).data("kendoUpload");
 
             return {
                 kendoUpload: kendoUpload,
-                upload: function (resource) {
-                    if (options.resourceManager) {
-                        var url = options.resourceManager.getUploadDocumentPath(resource.id);
-                        //console.log("url [" + url + "]");
-                        kendoUpload.options.async.saveUrl = url;
-                    }
+                upload: function () {
                     kendoUpload.upload();
                     return $deferred;
+                },
+                destroy: function () {
+                    kendoUpload.destroy();
                 }
             };
         };
@@ -2581,6 +2618,7 @@ expresso.util.UIUtil = (function () {
             buildCheckBox: buildCheckBox,
             buildRadioButton: buildRadioButton,
             buildUpload: buildUpload,
+            getDocumentUploadCustomData: getDocumentUploadCustomData,
 
             getKendoWidget: getKendoWidget,
             destroyKendoWidgets: destroyKendoWidgets,

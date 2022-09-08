@@ -221,10 +221,35 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
     /**
      *
+     * @param url
+     * @param siblingResourceManager
+     * @returns {*}
      */
-    getUploadDocumentPath: function (id) {
-        return expresso.Common.getWsUploadPathURL() + "/" +
-            this.getRelativeWebServicePath(id) + "?creationUserName=" + expresso.Common.getUserInfo().userName;
+    addSiblingParams: function (url, siblingResourceManager) {
+        // for kendo sync, add sibling info
+        if (siblingResourceManager) {
+            var params = {
+                siblingResourceName: siblingResourceManager.getResourceName(),
+                siblingResourceSecurityPath: siblingResourceManager.getResourceSecurityPath(),
+                siblingResourceId: siblingResourceManager.getCurrentResourceId()
+            };
+            url += (url.indexOf("?") == -1 ? "?" : "&") + $.param(params);
+            // console.log(url);
+        }
+        return url;
+    },
+
+    /**
+     *
+     * @param siblingResourceManager
+     * @param [base64] if using base64 encoding to send the document
+     * @returns {*}
+     */
+    getUploadDocumentPath: function (siblingResourceManager, base64) {
+        // always upload to /document
+        var url = expresso.Common.getWsUploadPathURL() + "/document" + (base64 ? "/base64" : "") +
+            "?creationUserName=" + expresso.Common.getUserInfo().userName;
+        return this.addSiblingParams(url, siblingResourceManager);
     },
 
     /**
