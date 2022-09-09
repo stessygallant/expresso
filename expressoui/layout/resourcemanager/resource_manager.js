@@ -160,6 +160,15 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
     },
 
     /**
+     * Get the complete resource url
+     * @param id
+     * @returns {string}
+     */
+    getResourceUrl: function (id) {
+        return this.getWebServicePath(id);
+    },
+
+    /**
      * Get the resource security name (ex: activityLogRequest/change)
      * @returns {string}
      */
@@ -212,10 +221,35 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
     /**
      *
+     * @param url
+     * @param siblingResourceManager
+     * @returns {*}
      */
-    getUploadDocumentPath: function (id) {
-        return expresso.Common.getWsUploadPathURL() + "/" +
-            this.getRelativeWebServicePath(id) + "?creationUserName=" + expresso.Common.getUserInfo().userName;
+    addSiblingParams: function (url, siblingResourceManager) {
+        // for kendo sync, add sibling info
+        if (siblingResourceManager) {
+            var params = {
+                siblingResourceName: siblingResourceManager.getResourceName(),
+                siblingResourceSecurityPath: siblingResourceManager.getResourceSecurityPath(),
+                siblingResourceId: siblingResourceManager.getCurrentResourceId()
+            };
+            url += (url.indexOf("?") == -1 ? "?" : "&") + $.param(params);
+            // console.log(url);
+        }
+        return url;
+    },
+
+    /**
+     *
+     * @param siblingResourceManager
+     * @param [base64] if using base64 encoding to send the document
+     * @returns {*}
+     */
+    getUploadDocumentPath: function (siblingResourceManager, base64) {
+        // always upload to /document
+        var url = expresso.Common.getWsUploadPathURL() + "/document" + (base64 ? "/base64" : "") +
+            "?creationUserName=" + expresso.Common.getUserInfo().userName;
+        return this.addSiblingParams(url, siblingResourceManager);
     },
 
     /**
@@ -684,12 +718,14 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         var _this = this;
 
         if (this.getCurrentResourceId() != -1) {
+            var params = {
+                actions: actions.join(","),
+                id: this.getCurrentResourceId()
+            };
+
             // send the request to the server
             this.sendRequest(this.getRelativeWebServicePath() + "/verifyActionsRestrictions", null, null,
-                {
-                    actions: actions.join(","),
-                    id: this.getCurrentResourceId()
-                }, {waitOnElement: null, ignoreErrors: true})
+                params, {waitOnElement: null, ignoreErrors: true})
                 .done(function (result) {
                     // promise could have been rejected while waiting for the response
                     if ($deferred.state() == "pending") {
@@ -724,9 +760,11 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
             // verify if the user has the privilege to create
             if (_this.isUserAllowed("create")) {
+                var params = {id: _this.getCurrentResourceId()};
+
                 // send the request to the server
                 this.sendRequest(this.getRelativeWebServicePath() + "/verifyCreationRestrictions", null,
-                    null, {id: _this.getCurrentResourceId()}, {waitOnElement: null, ignoreErrors: true})
+                    null, params, {waitOnElement: null, ignoreErrors: true})
                     .done(function (result) {
                         _this.createActionPromise.resolve(result);
                     })
@@ -769,7 +807,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         //     performAction: function (resource, data) {
         //          // define the request to be called
         //          // perform action on each selected resource (method is called for each resource)
-        //          return expresso.Common.sendRequest(_this.getRelativeWebServicePath(resource.id), "myaction");
+        //          return _this.sendRequest(_this.getRelativeWebServicePath(resource.id), "myaction");
         //     },
         //     afterPerformAction: function(resource) {
         //          // method is called for each resource

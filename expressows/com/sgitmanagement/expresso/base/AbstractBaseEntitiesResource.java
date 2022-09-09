@@ -1,7 +1,6 @@
 package com.sgitmanagement.expresso.base;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,11 +97,15 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 		this(typeOfE, request, response, baseEntityResource, serviceClass, parentId);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public VirtualList<E> list(@Context UriInfo uriInfo, @QueryParam("query") String queryJSONString) throws Exception {
 		Query query = Query.getQuery(queryJSONString);
+		return list(uriInfo, query);
+	}
+
+	@SuppressWarnings("rawtypes")
+	protected VirtualList<E> list(UriInfo uriInfo, Query query) throws Exception {
 
 		if (getParentId() != null && getParentId() == -1) {
 			// this is only to clear the ui grid
@@ -164,7 +167,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 						}
 
 						if (keys.length == 1) {
-							if (keyFilter.getOperator().equals(Operator.eq)) {
+							if (!keyFilter.getField().equals("id") && keyFilter.getOperator().equals(Operator.eq)) {
 								keyQuery.addFilter(new Filter(keyFilter.getField(), getService().formatKeyField(keyFilter.getField(), keys[0])));
 							} else {
 								keyQuery.addFilter(keyFilter);
@@ -172,7 +175,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 						} else {
 							Filter filter = new Filter(Logic.or);
 							for (Object key : keys) {
-								if (keyFilter.getOperator().equals(Operator.eq)) {
+								if (!keyFilter.getField().equals("id") && keyFilter.getOperator().equals(Operator.eq)) {
 									filter.addFilter(new Filter(keyFilter.getField(), getService().formatKeyField(keyFilter.getField(), key)));
 								} else {
 									filter.addFilter(new Filter(keyFilter.getField(), keyFilter.getOperator(), key));
@@ -458,12 +461,14 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 	private void verifyCreationRestrictions() throws Exception {
 		// verification could be done on the parent or/and the current entity
 
+		// id is use for hierarchical grid
 		String idString = getRequest().getParameter("id");
 		E e = null;
 		if (idString != null && idString.length() > 0) {
 			e = baseEntityResource.get(getService().convertId(idString));
 		}
 
+		// get the parent from the path
 		IEntity parentEntity = null;
 		if (getParentId() != null && getService().getParentEntityField() != null) {
 			parentEntity = getService().getParentEntityService().get(getParentId());
@@ -533,7 +538,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 	 * @return
 	 * @throws Exception
 	 */
-	private Map<String, Boolean> verifyActionsRestrictions(String uri, LinkedList<Object> ancestorResources, String idString, String actions) throws Exception {
+	protected Map<String, Boolean> verifyActionsRestrictions(String uri, LinkedList<Object> ancestorResources, String idString, String actions) throws Exception {
 		// logger.debug("verifyActionsRestrictions uri[" + uri + "] id[" + idString + "] actions[" + actions + "]");
 
 		// get the entity (if the user cannot see the entity, it will throw an exception)
@@ -615,8 +620,13 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 			if (formParams != null && section == null) {
 				section = formParams.getFirst("section");
 			}
-			Method method = this.getService().getClass().getMethod("sync", String.class, ProgressSender.class);
-			method.invoke(this.getService(), section, new ProgressSender(useProgressSender != null ? getResponse() : null));
+			if (section != null) {
+				// backward compatible when section is on query string
+				this.getService().sync(section, new ProgressSender(useProgressSender != null ? getResponse() : null));
+			} else {
+				this.getService().sync(formParams, new ProgressSender(useProgressSender != null ? getResponse() : null));
+			}
+
 			this.getService().commit(); // we need to commit before the end of the synchronized to let the other session get our modifications
 		}
 	}

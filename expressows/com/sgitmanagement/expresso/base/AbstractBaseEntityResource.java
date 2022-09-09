@@ -8,9 +8,7 @@ import java.util.Map;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.BaseException;
-import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.exception.ValidationException;
-import com.sgitmanagement.expresso.exception.WrongVersionException;
 import com.sgitmanagement.expresso.util.Util;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -119,14 +117,10 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 			// get the entity
 			E e = get(this.id);
 
-			try {
-				// verify if the user can update this resource
-				getService().verifyActionRestrictions("update", e);
-				return getService().update(v);
-			} catch (ForbiddenException ex2) {
-				logger.warn("Cannot update the resource (probably wrong version): " + ex2);
-				throw new WrongVersionException();
-			}
+			// verify if the user can update this resource
+			getService().verifyActionRestrictions("update", e);
+
+			return getService().update(v);
 		} catch (Exception ex) {
 			getPersistenceManager().rollback(getEntityManager());
 			throw ex;

@@ -1253,18 +1253,27 @@ public class Util {
 	 * @param entityBasePackage
 	 * @return
 	 */
+	// for performance only
+	private static Map<String, Class<?>> classNameCache = new HashMap<>();
+
 	public static Class<?> findEntityClassByName(String name) {
-		String entityBasePackage = SystemEnv.INSTANCE.getDefaultProperties().getProperty("entity_base_package");
-		for (Package p : Package.getPackages()) {
-			if (p.getName().startsWith(entityBasePackage)) {
-				try {
-					return Class.forName(p.getName() + "." + name);
-				} catch (ClassNotFoundException e) {
-					// not in this package, try another
+		if (classNameCache.containsKey(name)) {
+			return classNameCache.get(name);
+		} else {
+			String entityBasePackage = SystemEnv.INSTANCE.getDefaultProperties().getProperty("entity_base_package");
+			for (Package p : Package.getPackages()) {
+				if (p.getName().startsWith(entityBasePackage)) {
+					try {
+						Class<?> clazz = Class.forName(p.getName() + "." + name);
+						classNameCache.put(name, clazz);
+						return clazz;
+					} catch (ClassNotFoundException e) {
+						// not in this package, try another
+					}
 				}
 			}
+			return null;
 		}
-		return null;
 	}
 
 	static public void main(String[] args) throws Exception {

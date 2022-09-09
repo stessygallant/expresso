@@ -1495,8 +1495,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
             if (spanFilterNames.length) {
                 $menuItem = $(spanFilterNames[0]).closest("li");
-            }
-            else {
+            } else {
                 // add it in the menu
                 _this.$preferencesMenu.data("kendoContextMenu").insertAfter({
                     text: "<span class='filter-name'>" + gridPreference.name + "</span>" +
@@ -2037,61 +2036,60 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     performDelete: function () {
         var _this = this;
         if (this.selectedRows.length) {
-
             var label;
             if (this.selectedRows.length == 1) {
                 label = this.getLabel("deleteConfirmation");
             } else {
                 label = this.getLabel("deleteConfirmationMany", {count: this.selectedRows.length});
             }
-        }
-        expresso.util.UIUtil.buildYesNoWindow(_this.getLabel("confirmTitle"), label).done(function () {
-            var deletedRows = _this.selectedRows;
+            expresso.util.UIUtil.buildYesNoWindow(_this.getLabel("confirmTitle"), label).done(function () {
+                var deletedRows = _this.selectedRows;
 
-            // first unselect the rows
-            _this.publishEvent(_this.RM_EVENTS.RESOURCE_SELECTED, null);
-            _this.selectedRows = [];
+                // first unselect the rows
+                _this.publishEvent(_this.RM_EVENTS.RESOURCE_SELECTED, null);
+                _this.selectedRows = [];
 
-            var i, dataItem;
-            var patchForKendoBug = true;
-            if (patchForKendoBug && _this.virtualScroll) {
+                var i, dataItem;
+                var patchForKendoBug = true;
+                if (patchForKendoBug && _this.virtualScroll) {
 
-                // there are some problems with Kendo UI Grid when using virtual scrolling to delete rows.
-                // in this case, we need to delete them manually
-                var promises = [];
-                for (i = 0; i < deletedRows.length; i++) {
-                    dataItem = deletedRows[i];
-                    //console.log("Removing dataitem: " + dataItem.id);
-                    promises.push(_this.sendRequest(_this.resourceManager.getRelativeWebServicePath(dataItem.id), "delete"));
-                }
-                $.when.apply(null, promises).done(function () {
-                    _this.loadResources().done(function () {
-                        _this.publishEvent(_this.RM_EVENTS.RESOURCE_DELETED, null);
-                    });
-                });
-            } else {
-
-                for (i = 0; i < deletedRows.length; i++) {
-                    dataItem = deletedRows[i];
-                    // console.log("Removing dataitem: " + dataItem.id);
-                    _this.kendoGrid.dataSource.remove(dataItem); // this will cause a grid refresh
-                }
-
-                if (_this.autoSyncGridDataSource) {
-                    _this.kendoGrid.dataSource.sync()
-                        .done(function () {
-                            // dataBound will select the first row
+                    // there are some problems with Kendo UI Grid when using virtual scrolling to delete rows.
+                    // in this case, we need to delete them manually
+                    var promises = [];
+                    for (i = 0; i < deletedRows.length; i++) {
+                        dataItem = deletedRows[i];
+                        //console.log("Removing dataitem: " + dataItem.id);
+                        promises.push(_this.sendRequest(_this.resourceManager.getRelativeWebServicePath(dataItem.id), "delete"));
+                    }
+                    $.when.apply(null, promises).always(function () {
+                        _this.loadResources().done(function () {
                             _this.publishEvent(_this.RM_EVENTS.RESOURCE_DELETED, null);
-                            _this.selectFirstRow();
-                        })
-                        .fail(function () {
-                            // reload the grid
-                            _this.kendoGrid.dataSource.cancelChanges();
-                            _this.loadResources();
                         });
+                    });
+                } else {
+
+                    for (i = 0; i < deletedRows.length; i++) {
+                        dataItem = deletedRows[i];
+                        // console.log("Removing dataitem: " + dataItem.id);
+                        _this.kendoGrid.dataSource.remove(dataItem); // this will cause a grid refresh
+                    }
+
+                    if (_this.autoSyncGridDataSource) {
+                        _this.kendoGrid.dataSource.sync()
+                            .done(function () {
+                                // dataBound will select the first row
+                                _this.publishEvent(_this.RM_EVENTS.RESOURCE_DELETED, null);
+                                _this.selectFirstRow();
+                            })
+                            .fail(function () {
+                                // reload the grid
+                                _this.kendoGrid.dataSource.cancelChanges();
+                                _this.loadResources();
+                            });
+                    }
                 }
-            }
-        });
+            });
+        }
     },
 
     performCustomAction: function (action) {
@@ -3083,7 +3081,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                             // TreeList does not display a loading mask on sort and filter
                             expresso.util.UIUtil.showLoadingMask(_this.$domElement, true, {id: "readDataSourceTreeList"});
                         }
-                        return _this.resourceManager.getWebServicePath();
+                        return _this.resourceManager.getResourceUrl();
                     }
                 },
                 create: {
@@ -3094,7 +3092,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         // set the current  labels in case of errors
                         expresso.Common.setCurrentRequestLabels(_this.resourceManager.labels);
 
-                        return _this.resourceManager.getWebServicePath();
+                        return _this.resourceManager.getResourceUrl();
                     }
                 },
                 update: {
@@ -3105,7 +3103,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         // set the current  labels in case of errors
                         expresso.Common.setCurrentRequestLabels(_this.resourceManager.labels);
 
-                        return _this.resourceManager.getWebServicePath(e.id);
+                        return _this.resourceManager.getResourceUrl(e.id);
                     }
                 },
                 destroy: {
@@ -3115,7 +3113,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         // set the current  labels in case of errors
                         expresso.Common.setCurrentRequestLabels(_this.resourceManager.labels);
 
-                        return _this.resourceManager.getWebServicePath(e.id);
+                        return _this.resourceManager.getResourceUrl(e.id);
                     }
                 }
             },
