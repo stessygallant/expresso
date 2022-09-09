@@ -65,11 +65,11 @@ expresso.applications.security.rolemanager.RoleManager = expresso.layout.resourc
                 reference: "application",
                 nullable: true
             },
-            privilegeIds: {
-                multipleSelection: true,
-                reference: "privileges",
-                nullable: true
-            },
+            // privilegeIds: {
+            //     multipleSelection: true,
+            //     reference: "privileges",
+            //     nullable: true
+            // },
 
             /**
              * Labels
@@ -93,7 +93,7 @@ expresso.applications.security.rolemanager.RoleManager = expresso.layout.resourc
             applicationLabels: {
                 type: "string",
                 transient: true
-            },
+            }
         };
 
         expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "role", fields);

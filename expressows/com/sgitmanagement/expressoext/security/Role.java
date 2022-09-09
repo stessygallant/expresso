@@ -55,17 +55,18 @@ public class Role extends BaseOption {
 
 	/*
 	 * Privilege
+	 * 
+	 * // @Formula(value = "(SELECT GROUP_CONCAT(t.privilegename SEPARATOR ',') FROM role_privilege r INNER JOIN privilege t ON t.id = r.privilege_id WHERE r.role_id = id)") // private String
+	 * privilegeLabels;
+	 * 
+	 * @Formula(value = "(SELECT GROUP_CONCAT(r.privilege_id SEPARATOR  ',') FROM role_privilege r WHERE r.role_id = id)") private String privilegeStringIds;
+	 * 
+	 * @ElementCollection(fetch = FetchType.LAZY)
+	 * 
+	 * @CollectionTable(name = "role_privilege", joinColumns = @JoinColumn(name = "role_id"))
+	 * 
+	 * @Column(name = "privilege_id") private Set<Integer> privilegeIds = new HashSet<>();
 	 */
-	// @Formula(value = "(SELECT GROUP_CONCAT(t.privilegename SEPARATOR ',') FROM role_privilege r INNER JOIN privilege t ON t.id = r.privilege_id WHERE r.role_id = id)")
-	// private String privilegeLabels;
-
-	@Formula(value = "(SELECT GROUP_CONCAT(r.privilege_id SEPARATOR  ',') FROM role_privilege r WHERE r.role_id = id)")
-	private String privilegeStringIds;
-
-	@ElementCollection(fetch = FetchType.LAZY)
-	@CollectionTable(name = "role_privilege", joinColumns = @JoinColumn(name = "role_id"))
-	@Column(name = "privilege_id")
-	private Set<Integer> privilegeIds = new HashSet<>();
 
 	@ManyToMany
 	@JoinTable(name = "role_privilege", joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "privilege_id", referencedColumnName = "id"))
@@ -300,19 +301,13 @@ public class Role extends BaseOption {
 
 	/*
 	 * Privilege
+	 * 
+	 * public Set<Integer> getPrivilegeIds() { return Util.stringIdsToIntegers(this.privilegeStringIds); }
+	 * 
+	 * public void setPrivilegeIds(Set<Integer> privilegeIds) { this.privilegeIds.clear(); this.privilegeIds.addAll(privilegeIds); }
+	 * 
+	 * public Set<Privilege> getPrivilege() { return privileges; }
 	 */
-	public Set<Integer> getPrivilegeIds() {
-		return Util.stringIdsToIntegers(this.privilegeStringIds);
-	}
-
-	public void setPrivilegeIds(Set<Integer> privilegeIds) {
-		this.privilegeIds.clear();
-		this.privilegeIds.addAll(privilegeIds);
-	}
-
-	public Set<Privilege> getPrivilege() {
-		return privileges;
-	}
 
 	// @XmlElement
 	// public String getPrivilegeLabels() {

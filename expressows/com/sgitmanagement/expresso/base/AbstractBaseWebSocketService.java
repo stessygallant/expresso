@@ -6,13 +6,11 @@ import jakarta.websocket.Session;
 
 public abstract class AbstractBaseWebSocketService<U extends IUser> extends AbstractBaseService<U> {
 	public void onOpen(Session session) throws IOException {
-		String message = "New session [" + session.getId() + "]";
-		logger.info(message);
+		logger.debug("New session [" + session.getId() + "]");
 	}
 
 	public void onClose(Session session) throws IOException {
-		String message = "Disconnected session [" + session.getId() + "]";
-		logger.info(message);
+		logger.debug("Disconnected session [" + session.getId() + "]");
 	}
 
 	public void onError(Session session, Throwable throwable) {
