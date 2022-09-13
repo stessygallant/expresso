@@ -110,52 +110,32 @@
         // we need to use an unique ID (and not only the class)
         var buttonId = this.$domElement.find(".exp-upload-button").attr("id");
 
-        $fileDiv.kendoUpload({
+        var expressoUpload = expresso.util.UIUtil.buildUpload(null, $fileDiv, {
+            url: function () {
+                return _this.resourceManager.getUploadDocumentPath(_this.resourceManager.siblingResourceManager);
+            },
+            customData: function () {
+                return expresso.util.UIUtil.getDocumentUploadCustomData(_this.resourceManager.siblingResourceManager);
+            },
             async: {
-                saveUrl: _this.resourceManager.getUploadDocumentPath(),
-                removeUrl: null,
                 autoUpload: true
             },
-            multiple: false,
-            showFileList: false,
-            dropZone: "#" + buttonId,
-            upload: function (e) {
-
-                var data = {};
-
-                // add the creation user
-                data["creationUserId"] = expresso.Common.getUserInfo().id;
-
-                // add the document meta data
-                if (_this.resourceManager.siblingResourceManager && _this.resourceManager.siblingResourceManager.currentResource) {
-                    data["resourceName"] = _this.resourceManager.siblingResourceManager.getResourceName();
-                    data["resourceId"] = _this.resourceManager.siblingResourceManager.currentResource.id;
-                }
-
-                // add token if present
-                if (expresso.Security) {
-                    data["sessionToken"] = expresso.Security.getSessionToken();
-                }
-
-                //console.log("Upload data: " + JSON.stringify(data));
-                e.data = data;
-
-                expresso.util.UIUtil.showLoadingMask(_this.$domElement, true);
-            },
-            success: function (e) {
-                //  refresh the resource
-                // var updatedResource = e.response;
-                // _this.resourceManager.sections.grid.updateResource(resource, updatedResource);
-                _this.resourceManager.sections.grid.loadResources();
-                expresso.util.UIUtil.showLoadingMask(_this.$domElement, false);
-            },
-            error: function (e) {
-                expresso.util.UIUtil.showLoadingMask(_this.$domElement, false);
-                expresso.Common.displayServerValidationMessage(e.XMLHttpRequest);
-            }
+            dropZone: "#" + buttonId
         });
 
-        this.kendoUpload = $fileDiv.data("kendoUpload");
+        expressoUpload.$deferred.done(function () {
+            // refresh the resources
+            _this.loadResources();
+        });
+
+        this.kendoUpload = expressoUpload.kendoUpload;
+    },
+
+    // @override
+    getResourceUrl: function (id) {
+        var url = expresso.layout.resourcemanager.ResourceManager.fn.getResourceUrl.call(this, id);
+        // for kendo sync, add sibling info
+        return this.addSiblingParams(url, this.siblingResourceManager);
     },
 
     // @override

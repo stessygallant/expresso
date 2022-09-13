@@ -1,5 +1,5 @@
 ﻿expresso.applications.general.documentmanager.Form = expresso.layout.resourcemanager.Form.extend({
-    fileUploadSupport: true,
+    deprecatedFileUploadSupport: true,
 
     // @override
     initForm: function ($window, resource) {

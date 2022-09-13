@@ -11,7 +11,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
     readOnly: undefined,
 
     // set to true if this manager needs Drag&Drop support
-    fileUploadSupport: false,
+    deprecatedFileUploadSupport: false,
     kendoUpload: undefined,
 
     // this promise is used to listen to a save event
@@ -125,7 +125,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             resource: resource,
             model: model
         });
-        //this.addPromise($form.data("kendoExpressoForm").ready());
+        this.addPromise($form.data("kendoExpressoForm").ready());
 
         // we show tabs only if there is tabs
         this.showTabs = this.originalShowTabs;
@@ -380,7 +380,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         this.addValidationAttributes($form, model, resource);
 
         // add support if needed
-        if ($window.find("[type=file]").length) {
+        if ($window.find("[type=file]").length || this.deprecatedFileUploadSupport) {
             this.addDocumentUploadSupport($window, resource);
         }
 
@@ -1230,7 +1230,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         // add support if needed
         // if ((this.isUserAllowed("create") && !resource.id) || (this.isUserAllowed("update") && resource.id)) {
-        if (!resource.id) {
+        if (!resource.id || _this.deprecatedFileUploadSupport) {
 
             // hide the default button for new document
             $window.find(".k-grid-update").hide();
@@ -1241,7 +1241,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 var $input = $(this);
                 expressoUpload = expresso.util.UIUtil.buildUpload($window, $input, {
                     url: function () {
-                        if (_this.resourceManager.getResourceSecurityPath() == "document") {
+                        if (_this.deprecatedFileUploadSupport) {
+                            return expresso.Common.getWsUploadPathURL() + "/" +
+                                _this.resourceManager.getRelativeWebServicePath(resource.id) +
+                                "?creationUserName=" + expresso.Common.getUserInfo().userName;
+                        } else if (_this.resourceManager.getResourceSecurityPath() == "document") {
                             return _this.resourceManager.getUploadDocumentPath(_this.resourceManager.siblingResourceManager);
                         } else {
                             // the current form is already the sibling for the document
@@ -1273,13 +1277,14 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         _this.saveAndClose();
                     }
                 } else {
-                    // when the file is inline the form, we must save the resource first and then upload the file
                     _this.save().done(function () {
                         if (expressoUpload.kendoUpload.getFiles().length) {
                             // the resource.currentResource is not yet updated. just wait
                             window.setTimeout(function () {
                                 expressoUpload.upload().done(function () {
                                     _this.close();
+                                    // refresh resource
+                                    _this.resourceManager.sections.grid.reloadCurrentResource();
                                 });
                             }, 1);
                         } else {

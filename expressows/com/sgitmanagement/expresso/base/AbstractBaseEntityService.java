@@ -2242,14 +2242,19 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					if (fromDate == null) {
 						// THIS IS THE DEFAULT FROM THE KENDO UI GRID.
 						// if the database is a datetime and not a date, it will not work
+						if (dateValue == null) {
+							// date format must have been invalid. Compare with null (it will return nothing)
+							predicate = cb.equal(path, dateValue);
+						} else {
+							if (dateValue.getTime() != DateUtils.truncate(dateValue, Calendar.DATE).getTime()) {
+								logger.warn(
+										"Comparing field[" + getTypeOfE().getSimpleName() + "." + filter.getField() + "] date only: " + dateValue + " (Use timestampEquals or sameDayEquals instead)");
+							}
 
-						if (dateValue.getTime() != DateUtils.truncate(dateValue, Calendar.DATE).getTime()) {
-							logger.warn("Comparing field[" + getTypeOfE().getSimpleName() + "." + filter.getField() + "] date only: " + dateValue + " (Use timestampEquals or sameDayEquals instead)");
+							// we only compare date (not datetime)
+							dateValue = DateUtils.truncate(dateValue, Calendar.DATE);
+							predicate = cb.equal(cb.function(truncFunction, Date.class, path), dateValue);
 						}
-
-						// we only compare date (not datetime)
-						dateValue = DateUtils.truncate(dateValue, Calendar.DATE);
-						predicate = cb.equal(cb.function(truncFunction, Date.class, path), dateValue);
 					} else {
 						// DYNAMIC dates
 						// fromDate to toDate

@@ -6,15 +6,6 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedMap;
-
 import org.apache.commons.codec.binary.Base64;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -27,6 +18,16 @@ import com.sgitmanagement.expresso.exception.InvalidCredentialsException;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.security.User;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileService<E>, R extends BaseFileResource<E, S>> extends AbstractBaseEntitiesResource<E, S, R, User, Integer> {
 	public BaseFilesResource(Class<E> typeOfE, @Context HttpServletRequest request, @Context HttpServletResponse response, R baseFileResource, Class<S> serviceClass) {
@@ -42,10 +43,10 @@ public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileSe
 	 *
 	 * @throws Exception
 	 */
-	// DO NOT DEFINE: it will overwrite the performAction
-	// @POST
-	// @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	// @Produces(MediaType.APPLICATION_JSON)
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("base64")
 	public E uploadFile(MultivaluedMap<String, String> formParams) throws Exception {
 		String fileName = formParams.getFirst("fileName");
 		String imgBase64 = formParams.getFirst("imgBase64");

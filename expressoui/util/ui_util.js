@@ -2458,12 +2458,12 @@ expresso.util.UIUtil = (function () {
          */
         var getDocumentUploadCustomData = function (resourceManager) {
             var customData = {};
+            customData["resourceId"] = resourceManager.getCurrentResourceId();
+            customData["resourceName"] = resourceManager.resourceName;
+            customData["resourceSecurityPath"] = resourceManager.getResourceSecurityPath();
+
             if (resourceManager.appDef.appClass.startsWith("cezinc")) {
                 // add the document meta data (CEZinc only)
-                customData["resourceId"] = resourceManager.getCurrentResourceId();
-                customData["resourceName"] = resourceManager.resourceName;
-                customData["resourceSecurityPath"] = resourceManager.getResourceSecurityPath();
-
                 var documentFolderPath;
                 if (resourceManager.resourceFieldNo && resourceManager.currentResource &&
                     resourceManager.currentResource[resourceManager.resourceFieldNo]) {
@@ -2520,6 +2520,8 @@ expresso.util.UIUtil = (function () {
                 },
                 multiple: false,
                 upload: function (e) {
+                    expresso.util.UIUtil.showLoadingMask($window || $input, true, {id: "uploadDocument"});
+
                     // console.log("uploading");
                     var data = {};
 
@@ -2554,7 +2556,6 @@ expresso.util.UIUtil = (function () {
                     }
                     $.extend(data, d);
 
-                    expresso.util.UIUtil.showLoadingMask($window, true, {id: "uploadDocument"});
 
                     //console.log("Upload data: " + JSON.stringify(data));
                     e.data = data;
@@ -2583,6 +2584,7 @@ expresso.util.UIUtil = (function () {
             kendoUpload = $input.kendoUpload(kendoUploadOptions).data("kendoUpload");
 
             return {
+                $deferred: $deferred,
                 kendoUpload: kendoUpload,
                 upload: function () {
                     kendoUpload.upload();
