@@ -628,9 +628,7 @@ expresso.Common = (function () {
             if (expresso.util.Util.getUrlParameter("screenMode")) {
                 sm = expresso.util.Util.getUrlParameter("screenMode");
             } else {
-                // if (navigator.userAgent.indexOf("Mobile") != -1) {
-                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                    $window.width() < 900) {
+                if ($("html").hasClass("k-mobile")) {
                     if ($window.width() < 500 || $window.height() < 500) {
                         sm = expresso.Common.SCREEN_MODES.PHONE;
                     } else {

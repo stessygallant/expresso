@@ -1219,96 +1219,98 @@ k-widget k-window
     width: 20em;
 }
 
-.exp-screen-mode-phone, .exp-screen-mode-tablet {
-    .k-window-titlebar .k-window-action {
-        padding: 0.1em;
-        width: 1.5em;
-        height: 1.5em;
+.k-mobile {
+    .exp-screen-mode-phone, .exp-screen-mode-tablet {
+        .k-window-titlebar .k-window-action {
+            padding: 0.1em;
+            width: 1.5em;
+            height: 1.5em;
 
-        .k-icon {
-            font-size: 1.25em;
+            .k-icon {
+                font-size: 1.25em;
+            }
         }
-    }
 
-    .exp-grid {
-        tbody {
-            tr {
-                td {
-                    line-height: 1.5;
+        .exp-grid {
+            tbody {
+                tr {
+                    td {
+                        line-height: 1.5;
+                    }
                 }
             }
         }
     }
-}
 
-.exp-screen-mode-tablet {
-    .exp-grid {
-        tbody {
-            tr {
-                td {
-                    line-height: 1.8;
+    .exp-screen-mode-tablet {
+        .exp-grid {
+            tbody {
+                tr {
+                    td {
+                        line-height: 1.8;
+                    }
                 }
             }
         }
     }
-}
 
-.exp-screen-mode-phone {
-    // form is single column
-    .exp-form {
-        .input-wrap {
-            width: 100%;
+    .exp-screen-mode-phone {
+        // form is single column
+        .exp-form {
+            .input-wrap {
+                width: 100%;
 
-            [type=checkbox], [type=radio] {
-                margin-top: 2em;
+                [type=checkbox], [type=radio] {
+                    margin-top: 2em;
+                }
             }
         }
-    }
 
-    // do not display the column header
-    .exp-grid {
-        .k-grid-header {
-            display: none;
-            height: 0;
-        }
-
-        tbody tr {
-            &.k-state-selected {
-                font-weight: normal;
+        // do not display the column header
+        .exp-grid {
+            .k-grid-header {
+                display: none;
+                height: 0;
             }
 
-            td {
-                white-space: normal;
-                text-align: left;
-                padding: 0.4em 0.5em;
+            tbody tr {
+                &.k-state-selected {
+                    font-weight: normal;
+                }
 
-                .mobile-grid-column {
-                    height: 5.7em;
+                td {
+                    white-space: normal;
+                    text-align: left;
+                    padding: 0.4em 0.5em;
 
-                    .mobile-grid-column-number {
-                        color: $themeColorDark;
-                        font-weight: bold;
-                        display: block;
-                    }
+                    .mobile-grid-column {
+                        height: 5.7em;
 
-                    .mobile-grid-column-top-right {
-                        float: right;
-                        font-size: 95%;
-                    }
+                        .mobile-grid-column-number {
+                            color: $themeColorDark;
+                            font-weight: bold;
+                            display: block;
+                        }
 
-                    .mobile-grid-column-middle-right {
-                        float: right;
-                        font-size: 85%;
-                    }
+                        .mobile-grid-column-top-right {
+                            float: right;
+                            font-size: 95%;
+                        }
 
-                    .mobile-grid-column-middle-left {
-                        font-size: 85%;
-                        font-weight: bold;
-                        display: block;
-                    }
+                        .mobile-grid-column-middle-right {
+                            float: right;
+                            font-size: 85%;
+                        }
 
-                    .mobile-grid-column-description {
-                        font-size: 95%;
+                        .mobile-grid-column-middle-left {
+                            font-size: 85%;
+                            font-weight: bold;
+                            display: block;
+                        }
+
+                        .mobile-grid-column-description {
+                            font-size: 95%;
+                        }
                     }
                 }
             }

@@ -824,58 +824,59 @@ label input + span {
  * MOBILE CSS
  * ------------------------------------------------------------------------------------------------------------------
  */
-.exp-screen-mode-phone {
-    font-size: 95%;
-    line-height: 1.2;
-}
-
-.exp-screen-mode-tablet {
-    font-size: 100%;
-    line-height: 1.2;
-}
-
-.exp-screen-mode-desktop {
-    font-size: 77%;
-}
-
-.exp-screen-mode-desktop {
-    .exp-screen-mode-mobile-only, .exp-screen-mode-tablet-only, .exp-screen-mode-phone-only {
-        display: none;
+.k-mobile {
+    .exp-screen-mode-phone {
+        font-size: 95%;
+        line-height: 1.2;
     }
-}
 
-.exp-screen-mode-phone, .exp-screen-mode-tablet {
-    .exp-button {
-        // icon
-        .fa {
-            margin-top: 0.3em;
-        }
+    .exp-screen-mode-tablet {
+        font-size: 100%;
+        line-height: 1.2;
+    }
 
-        // label
-        .exp-button-label {
-            display: none
+    .exp-screen-mode-desktop {
+        font-size: 77%;
+    }
+
+    .exp-screen-mode-desktop {
+        .exp-screen-mode-mobile-only, .exp-screen-mode-tablet-only, .exp-screen-mode-phone-only {
+            display: none;
         }
     }
 
-    // Close button on Window
-    .k-window-titlebar .k-window-actions {
-        font-size: 140%;
+    .exp-screen-mode-phone, .exp-screen-mode-tablet {
+        .exp-button {
+            // icon
+            .fa {
+                margin-top: 0.3em;
+            }
+
+            // label
+            .exp-button-label {
+                display: none
+            }
+        }
+
+        // Close button on Window
+        .k-window-titlebar .k-window-actions {
+            font-size: 140%;
+        }
+
+        .exp-screen-mode-desktop-only {
+            display: none;
+        }
     }
 
-    .exp-screen-mode-desktop-only {
-        display: none;
+    .exp-screen-mode-tablet {
+        .exp-screen-mode-phone-only {
+            display: none;
+        }
+    }
+
+    .exp-screen-mode-phone {
+        .exp-screen-mode-tablet-only {
+            display: none;
+        }
     }
 }
-
-.exp-screen-mode-tablet {
-    .exp-screen-mode-phone-only {
-        display: none;
-    }
-}
-
-.exp-screen-mode-phone {
-    .exp-screen-mode-tablet-only {
-        display: none;
-    }
-}
-
