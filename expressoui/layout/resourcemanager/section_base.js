@@ -73,7 +73,11 @@ expresso.layout.resourcemanager.SectionBase = kendo.Class.extend({
             // return a already resolved promise
             return $.Deferred().resolve().promise();
         } else {
-            return $.when.apply(null, this.readyPromises);
+            var $element = this.$window || this.$domElement;
+            expresso.util.UIUtil.showLoadingMask($element, true, "waitSectionReady");
+            return $.when.apply(null, this.readyPromises).always(function () {
+                expresso.util.UIUtil.showLoadingMask($element, false, "waitSectionReady");
+            });
         }
     },
 

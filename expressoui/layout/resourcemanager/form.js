@@ -125,8 +125,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             resource: resource,
             model: model
         });
-        // TODO when a user does not have access to a resource, the combobox/dropdownlist will never be ready
-        // this.addPromise($form.data("kendoExpressoForm").ready());
+        this.addPromise($form.data("kendoExpressoForm").ready());
 
         // we show tabs only if there is tabs
         this.showTabs = this.originalShowTabs;

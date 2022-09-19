@@ -2966,8 +2966,16 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         dataSourceOptions = $.extend(true, {}, dataSourceOptions);
         // console.log("********** " + this.resourceManager.resourceName + " v:" + this.virtualScroll + ": " + JSON.stringify(dataSourceOptions));
 
-        // if virtual scroll, use the query method (Do NOT use the read method: filter will not be sent
-        var $queryDeferred = this.kendoGrid.dataSource.query(dataSourceOptions);
+        // the first time, we must call the query method.
+        // then upon refresh, if localData, we need to call the read method (query method will not go to the server)
+        var $queryDeferred;
+        if (this.localData && this.kendoGrid.dataSource.total() > 0) {
+            // force read for localData
+            $queryDeferred = this.kendoGrid.dataSource.read();
+        } else {
+            // if virtual scroll, use the query method (Do NOT use the read method: filter will not be sent)
+            $queryDeferred = this.kendoGrid.dataSource.query(dataSourceOptions);
+        }
 
         if (this.hierarchical) {
             expresso.util.UIUtil.showLoadingMask(this.$domElement, true, {id: "grid"});
@@ -3452,11 +3460,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             needSeparator = true;
         }
 
-        if (!this.localData) {
-            // add the refresh button
-            toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-refresh-button" title="refresh"><span class="fa fa-refresh"><span class="exp-button-label" data-text-key="refreshButton"></span></span></button>'});
-            needSeparator = true;
-        }
+        // add the refresh button
+        toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-refresh-button" title="refresh"><span class="fa fa-refresh"><span class="exp-button-label" data-text-key="refreshButton"></span></span></button>'});
+        needSeparator = true;
 
         // add a separator
         if (needSeparator) {

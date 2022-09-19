@@ -189,6 +189,7 @@ expresso.util.UIUtil = (function () {
 
             // if the DOM element is not present, return immediately
             if (!$input || !$input.length) {
+                alert("$input is not valid");
                 return $deferred.reject();
             }
 
@@ -227,7 +228,7 @@ expresso.util.UIUtil = (function () {
                 if (resourceName && !expresso.Common.isUserAllowed(resourceName, "read")) {
                     console.warn("Hiding server side combo box because user does not have read access to [" + resourceName + "]");
                     $input.closest("div").hide();
-                    return $deferred.reject();
+                    return $deferred.resolve();
                 }
             }
 
@@ -1183,6 +1184,7 @@ expresso.util.UIUtil = (function () {
             var $deferred = $.Deferred();
 
             if (!$input || $input.length == 0) {
+                alert("$input is not valid");
                 return $deferred.reject();
             }
 
@@ -1354,6 +1356,7 @@ expresso.util.UIUtil = (function () {
 
             // if the DOM element is not present, return immediately
             if (!$input || !$input.length) {
+                alert("$input is not valid");
                 return $deferred.reject();
             }
 
