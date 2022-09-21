@@ -189,8 +189,8 @@ expresso.util.UIUtil = (function () {
 
             // if the DOM element is not present, return immediately
             if (!$input || !$input.length) {
-                alert("$input is not valid");
-                return $deferred.reject();
+                // the input may be removed because of permission
+                return $deferred.resolve();
             }
 
             // patch: if the input has .k-textbox class, remove it
@@ -1184,8 +1184,8 @@ expresso.util.UIUtil = (function () {
             var $deferred = $.Deferred();
 
             if (!$input || $input.length == 0) {
-                alert("$input is not valid");
-                return $deferred.reject();
+                // the input may be removed because of permission
+                return $deferred.resolve();
             }
 
             // patch: if the input has .k-textbox class, remove it
@@ -1356,8 +1356,8 @@ expresso.util.UIUtil = (function () {
 
             // if the DOM element is not present, return immediately
             if (!$input || !$input.length) {
-                alert("$input is not valid");
-                return $deferred.reject();
+                // the input may be removed because of permission
+                return $deferred.resolve();
             }
 
             // make sure it is an input

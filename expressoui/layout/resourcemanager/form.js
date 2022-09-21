@@ -301,20 +301,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         var saveButtonLabel = this.getLabel("saveButtonLabel");
         $window.find(".k-grid-update").html("<span class='k-icon k-i-check'></span>" + saveButtonLabel);
 
-        // on each button, display a loading mask
-        $window.on("click", ".k-edit-buttons .k-button:not(.k-split-button-arrow)", function (e) {
-            // disable the button for 2 seconds (avoid double click)
-            try {
-                var $button = $(e.target);
-                expresso.util.UIUtil.setFieldReadOnly($button);
-                window.setTimeout(function () {
-                    expresso.util.UIUtil.setFieldReadOnly($button, false);
-                }, 1000);
-            } catch (ex) {
-                console.warn("Cannot disable button", ex);
-            }
-        });
-
         // apply the restrictions from the model
         $window.find(":input").each(function () {
             var $this = $(this);
