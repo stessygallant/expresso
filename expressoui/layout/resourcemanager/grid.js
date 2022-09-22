@@ -565,6 +565,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 reorderable: false,
                 filterable: false,
                 sortable: false,
+                // problem: multiple selections does not work with lock column
+                // moreover, the selection after page reselection does not work
+                // locked: true,
                 width: 24,
                 attributes: {"class": "selection"}
             });
@@ -634,6 +637,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     if (field && field.hierarchicalParent || column.hideHierarchical) {
                         column.hidden = true;
                     }
+                }
+
+                // key fields are always locked by default
+                if (field && field.keyField) {
+                    // column.locked = column.locked !== false; // DO NOT USE IT for now (refer to the multipleSelection comment)
                 }
 
                 // Ids column: show Labels (usually values)

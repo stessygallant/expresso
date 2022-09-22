@@ -1938,32 +1938,6 @@ expresso.Common = (function () {
     };
 
     /**
-     * Avoid the problem when user clicks multiple times on a button
-     */
-    var avoidDoubleClickOnButtons = function () {
-        // $("body").on("dblclick", "button:not(.allow-double-click),a:not(.allow-double-click)", function (e) {
-        //     var $button = $(this);
-        //     console.log("double click detected");
-        //     e.preventDefault();
-        //     e.stopImmediatePropagation();
-        // });
-
-        // when clicking a button, disable the button for 1 second
-        $("body").on("click", ".k-button", function (e) {
-            // disable the button for 1 second (avoid double click)
-            var $button = $(e.target);
-            if ($button && $button.length) {
-                // console.log("Disabling button for 1 second on " + e.target.className);
-                expresso.util.UIUtil.setFieldReadOnly($button);
-                window.setTimeout(function () {
-                    expresso.util.UIUtil.setFieldReadOnly($button, false);
-                }, 1000);
-            }
-        });
-    };
-
-
-    /**
      * Load the application preferences
      * @param applicationName
      * @return {*} promise when the request is done
@@ -2075,8 +2049,6 @@ expresso.Common = (function () {
 
         // set the default for Ajax calls
         initAjax();
-
-        avoidDoubleClickOnButtons();
 
         // resize section on window resize
         var $window = $(window);

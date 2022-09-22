@@ -2358,6 +2358,9 @@ expresso.util.UIUtil = (function () {
          * @param [customOptions]
          */
         var showLoadingMask = function ($element, show, customOptions) {
+            if (typeof customOptions === "string") {
+                customOptions = {id: customOptions};
+            }
             customOptions = customOptions || {};
             if ($element && $element.length == 1) {
                 if (show || show === undefined) {
