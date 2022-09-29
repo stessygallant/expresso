@@ -247,8 +247,9 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	static public <S extends AbstractBaseService<V>, V extends IUser> S newServiceStatic(Class<S> serviceClass) throws Exception {
-		return newServiceStatic(serviceClass, null);
+		return newServiceStatic(serviceClass, (V) UserManager.getInstance().getUser());
 	}
 
 	/**

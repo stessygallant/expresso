@@ -3291,8 +3291,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	static public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newServiceStatic(Class<S> serviceClass, Class<T> entityClass) {
-		return newServiceStatic(serviceClass, entityClass, null);
+		return newServiceStatic(serviceClass, entityClass, (V) UserManager.getInstance().getUser());
 	}
 
 	/**
