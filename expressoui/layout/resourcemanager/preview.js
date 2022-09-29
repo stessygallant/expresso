@@ -95,7 +95,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
         // if there is not content, remove the split
         if (!this.contents.length) {
             try {
-                $domElement.closest("[data-role=splitter]").data("kendoSplitter").collapse(".k-pane:nth-child(3)");
+                $domElement.closest("[data-role=splitter]").data("kendoSplitter").collapse($domElement.closest(".k-pane"));
             } catch (ex) {
                 console.warn("No splitter to collapse");
             }

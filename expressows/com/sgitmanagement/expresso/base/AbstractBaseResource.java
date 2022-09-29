@@ -75,7 +75,7 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 
 	@SuppressWarnings("unchecked")
 	final protected U getUser() {
-		return (U) request.getAttribute("user");
+		return (U) UserManager.getInstance().getUser();
 	}
 
 	final public EntityManager getEntityManager() {
@@ -108,7 +108,6 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 	protected S newService(Class<S> serviceClass) {
 		try {
 			S service = serviceClass.getDeclaredConstructor().newInstance();
-			service.setUser(getUser());
 			service.setRequest(request);
 			service.setResponse(response);
 

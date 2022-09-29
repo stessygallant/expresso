@@ -29,7 +29,6 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	private HttpServletResponse response;
 
 	private EntityManager entityManager;
-	private U user;
 	private Integer parentId;
 
 	protected AbstractBaseService() {
@@ -67,15 +66,9 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 		return null; // default persistence unit by default
 	}
 
+	@SuppressWarnings("unchecked")
 	final public U getUser() {
-		if (user == null) {
-			user = getSystemUser();
-		}
-		return user;
-	}
-
-	final public void setUser(U user) {
-		this.user = user;
+		return (U) UserManager.getInstance().getUser();
 	}
 
 	public PersistenceManager getPersistenceManager() {
@@ -199,7 +192,6 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	public <S extends AbstractBaseService<U>> S newService(Class<S> serviceClass) {
 		try {
 			S service = serviceClass.getDeclaredConstructor().newInstance();
-			service.setUser(getUser());
 			service.setRequest(getRequest());
 			service.setResponse(getResponse());
 
@@ -239,10 +231,13 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newService(Class<S> serviceClass, Class<T> entityClass, V user) {
 		try {
 			S service = serviceClass.getDeclaredConstructor().newInstance();
-			service.setUser(user);
 			service.setTypeOfE(entityClass);
 			service.setRequest(getRequest());
 			service.setResponse(getResponse());
+			if (user == null) {
+				user = service.getSystemUser();
+			}
+			UserManager.getInstance().setUser(user);
 
 			registerService(service);
 			return service;
@@ -268,11 +263,10 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	 */
 	static public <S extends AbstractBaseService<V>, V extends IUser> S newServiceStatic(Class<S> serviceClass, V user) throws Exception {
 		S service = serviceClass.getDeclaredConstructor().newInstance();
-
 		if (user == null) {
 			user = service.getSystemUser();
 		}
-		service.setUser(user);
+		UserManager.getInstance().setUser(user);
 		return service;
 	}
 
