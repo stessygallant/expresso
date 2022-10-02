@@ -3277,7 +3277,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 			S service = serviceClass.getDeclaredConstructor().newInstance();
 
-			service.setUser(getUser());
 			service.setTypeOfE(entityClass);
 			service.setRequest(getRequest());
 			service.setResponse(getResponse());
@@ -3292,8 +3291,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	static public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newServiceStatic(Class<S> serviceClass, Class<T> entityClass) {
-		return newServiceStatic(serviceClass, entityClass, null);
+		return newServiceStatic(serviceClass, entityClass, (V) UserManager.getInstance().getUser());
 	}
 
 	/**
@@ -3310,11 +3310,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		try {
 			S service = serviceClass.getDeclaredConstructor().newInstance();
 			service.setTypeOfE(entityClass);
-
 			if (user == null) {
 				user = service.getSystemUser();
 			}
-			service.setUser(user);
+			UserManager.getInstance().setUser(user);
 			return service;
 		} catch (Exception ex) {
 			ex.printStackTrace(); // cannot user logger.error

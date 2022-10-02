@@ -15,8 +15,9 @@ public abstract class AbstractBaseWebSocketResource<S extends AbstractBaseServic
 		this.serviceClass = serviceClass;
 	}
 
+	@SuppressWarnings("unchecked")
 	final protected U getUser() {
-		return null; // TODO request.getAttribute("user");
+		return (U) UserManager.getInstance().getUser();
 	}
 
 	final public EntityManager getEntityManager() {
@@ -41,7 +42,6 @@ public abstract class AbstractBaseWebSocketResource<S extends AbstractBaseServic
 	protected S newService(Class<S> serviceClass) {
 		try {
 			S service = serviceClass.getDeclaredConstructor().newInstance();
-			service.setUser(getUser());
 
 			// put service in request to be closed
 			service.registerService(service);

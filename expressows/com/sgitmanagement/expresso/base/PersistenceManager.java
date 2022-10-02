@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.util.SystemEnv;
 
-public class PersistenceManager {
+public class PersistenceManager implements AutoCloseable {
 
 	final static protected Logger logger = LoggerFactory.getLogger(PersistenceManager.class);
 	private static Map<String, EntityManagerFactory> emFactoryMap = new HashMap<>();
@@ -305,5 +305,10 @@ public class PersistenceManager {
 
 	public int getNumberOpenConnections() {
 		return entityManagerCounter.get();
+	}
+
+	@Override
+	public void close() throws Exception {
+		commitAndClose();
 	}
 }

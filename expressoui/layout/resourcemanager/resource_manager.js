@@ -623,11 +623,13 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
                 var $previewDiv = this.$domElement.find(".exp-container-preview");
                 if ($(window).height() < 550) {
                     kendoSplitter.collapse($previewDiv);
+                    // overwrite the attribute (not done by the user)
+                    this.autoCollapsedPreview = true;
                 } else {
-                    kendoSplitter.expand($previewDiv);
+                    if (this.autoCollapsedPreview === true) {
+                        kendoSplitter.expand($previewDiv);
+                    }
                 }
-                // overwrite the attribute (not done by the user)
-                this.autoCollapsedPreview = true;
             }
         }
 
