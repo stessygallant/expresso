@@ -1825,6 +1825,11 @@ expresso.Common = (function () {
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
 
+            if (typeof d.id === "object") {
+                // this is a fix for this problem: String{"muid"} is not equal to "muid"
+                d.id = "" + d.id;
+            }
+
             // NOTE
             // value,text: is mandatory for Grid filtering using combobox
             // id,label: used by combobox and dropdownlist in form.

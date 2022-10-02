@@ -29,6 +29,11 @@ public class DocumentService extends BaseFileService<Document> {
 		if (params.get("documentTypeId") != null) {
 			document.setDocumentTypeId(Integer.parseInt(params.get("documentTypeId")));
 		}
+		if (params.get("documentTypePgmKey") != null) {
+			document.setDocumentTypeId(newService(DocumentTypeService.class, DocumentType.class)
+					.get(new Query().addFilter(new Filter("resourceName", params.get("resourceName"))).addFilter(new Filter("pgmKey", params.get("documentTypePgmKey")))).getId());
+		}
+
 		document.setFromDate(DateUtil.parseDate(params.get("fromDate")));
 		document.setToDate(DateUtil.parseDate(params.get("toDate")));
 

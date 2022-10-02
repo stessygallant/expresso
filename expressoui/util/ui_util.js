@@ -1170,7 +1170,58 @@ expresso.util.UIUtil = (function () {
             }
 
             return value;
-        }
+        };
+
+        // utility method to convert a list of string to a datasource
+        /**
+         *
+         * @param list
+         * @param [labels]
+         * @param [dataValueField]
+         * @param [dataTextField]
+         * @returns {*}
+         */
+        var convertList = function (list, labels, dataValueField, dataTextField) {
+            dataValueField = dataValueField || "id";
+            dataTextField = dataTextField || "label";
+
+            // if the list is only string, build a complete data source
+            if (list && list.length) {
+                var d = list[0];
+                if (typeof d === "string") {
+                    var data = [];
+                    $.each(list, function () {
+                        var i = {};
+                        i[dataValueField] = this;
+                        i[dataTextField] = this;
+                        data.push(i);
+                    });
+                    list = data;
+                }
+            }
+
+            return expresso.Common.updateDataValues(list, labels);
+        };
+
+        /**
+         * Set the datasource on the $input (dropdownlist or combobox)
+         * @param $input
+         * @param data
+         * @param [defaultValue]
+         * @param [labels]
+         */
+        var setDataSource = function ($input, data, defaultValue, labels) {
+            var widget = getKendoWidget($input);
+            data = convertList(data, labels);
+
+            //console.log("Setting new datasource on [" + $input[0].name + "]", dataSource);
+            widget.value(null);
+            widget.setDataSource(new kendo.data.DataSource({data: data}));
+            if (defaultValue) {
+                //console.log("Setting default value [" + defaultValue + "] " + (typeof defaultValue));
+                $input.setval(defaultValue);
+            }
+        };
 
         /**
          * Build the option list from the rest service and initialize a KendoUI DropDownList
@@ -1206,25 +1257,6 @@ expresso.util.UIUtil = (function () {
                 customOptions.grouping = customOptions.grouping || customOptions.field.values.grouping;
                 customOptions.sortField = customOptions.sortField || customOptions.field.values.sortField;
             }
-
-            // utility method to convert a list of string to a datasource
-            var convertList = function (list) {
-                // if the list is only string, build a complete data source
-                if (list && list.length) {
-                    var d = list[0];
-                    if (typeof d === "string") {
-                        var data = [];
-                        $.each(list, function () {
-                            var i = {};
-                            i[dataValueField] = this;
-                            i[dataTextField] = this;
-                            data.push(i);
-                        });
-                        list = data;
-                    }
-                }
-                return list;
-            };
 
             var dataSource;
             if (typeof wsListPathOrData === "string") {
@@ -1265,7 +1297,7 @@ expresso.util.UIUtil = (function () {
                             }
 
                             // if the list is only string, build a complete data source
-                            response = convertList(response);
+                            response = convertList(response, customOptions.labels, dataValueField, dataTextField);
 
                             if (customOptions.sortField) {
                                 // always sort on the label
@@ -1284,7 +1316,7 @@ expresso.util.UIUtil = (function () {
                 };
             } else {
                 // if the list is only string, build a complete data source
-                wsListPathOrData = convertList(wsListPathOrData);
+                wsListPathOrData = convertList(wsListPathOrData, customOptions.labels, dataValueField, dataTextField);
 
                 dataSource = {
                     data: wsListPathOrData,
@@ -1295,19 +1327,21 @@ expresso.util.UIUtil = (function () {
                 };
             }
 
+            var initValue = retrieveCurrentValue($input, customOptions);
+            // console.log("initValue: " + initValue);
             var defaultOptions = {
                 dataValueField: dataValueField,
                 dataTextField: dataTextField,
                 valuePrimitive: true,
                 dataSource: dataSource,
                 enable: customOptions.enable,
-                value: retrieveCurrentValue($input, customOptions),
+                value: initValue,
                 height: 400,
                 filter: (customOptions.grouping && customOptions.grouping.filter !== false ? "contains" : customOptions.inplaceFilter),
                 change: onChangeEvent($input, customOptions),
                 dataBound: function (/*e*/) {
-                    if (customOptions.selectFirstOption === true && !$input.val()) {
-                        //console.log("Selecting first option");
+                    if (customOptions.selectFirstOption === true && !initValue) {
+                        // console.log("Selecting first option");
                         $input.data("kendoDropDownList").select(0);
                     }
                 }
@@ -2516,8 +2550,6 @@ expresso.util.UIUtil = (function () {
                 }
             }
 
-            var $deferred = $.Deferred();
-            var kendoUpload;
             var kendoUploadOptions = $.extend(true, {}, {
                 async: {
                     saveUrl: "define later",
@@ -2562,7 +2594,6 @@ expresso.util.UIUtil = (function () {
                     }
                     $.extend(data, d);
 
-
                     //console.log("Upload data: " + JSON.stringify(data));
                     e.data = data;
 
@@ -2573,33 +2604,21 @@ expresso.util.UIUtil = (function () {
                     }
                     e.sender.options.async.saveUrl = url;
                 },
-                success: function (/*e*/) {
+                success: function (e) {
+                    if (options.onUploaded) {
+                        options.onUploaded(e);
+                    }
                     // remove the progress
                     expresso.util.UIUtil.showLoadingMask($window, false, {id: "uploadDocument"});
-                    kendoUpload.destroy();
-                    $deferred.resolve();
                 },
                 error: function (e) {
+                    expresso.Common.displayServerValidationMessage(e.XMLHttpRequest);
                     // remove the progress
                     expresso.util.UIUtil.showLoadingMask($window, false, {id: "uploadDocument"});
-                    expresso.Common.displayServerValidationMessage(e.XMLHttpRequest);
-                    $deferred.reject(e);
                 }
             }, options);
 
-            kendoUpload = $input.kendoUpload(kendoUploadOptions).data("kendoUpload");
-
-            return {
-                $deferred: $deferred,
-                kendoUpload: kendoUpload,
-                upload: function () {
-                    kendoUpload.upload();
-                    return $deferred;
-                },
-                destroy: function () {
-                    kendoUpload.destroy();
-                }
-            };
+            return $input.kendoUpload(kendoUploadOptions).data("kendoUpload");
         };
 
         // return public properties and methods
@@ -2621,6 +2640,7 @@ expresso.util.UIUtil = (function () {
             buildDropDownTree: buildDropDownTree,  // local (array or url) and single select
             buildLookupSelection: buildLookupSelection, // remote multiple select lookup
             addDataItemToWidget: addDataItemToWidget,
+            setDataSource: setDataSource,
 
             buildTreeView: buildTreeView,
             buildCheckBox: buildCheckBox,

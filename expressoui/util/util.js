@@ -433,6 +433,25 @@ expresso.util.Util = (function () {
         };
     };
 
+    /**
+     *
+     */
+    /**
+     * Store or get the value in the local cache
+     * @param key
+     * @param value
+     */
+    var cache = function (key, value) {
+        if (typeof (Storage) !== "undefined") {
+            if (value === undefined) {
+                return localStorage.getItem(key);
+            } else {
+                localStorage.setItem(key, value);
+            }
+        }
+        return undefined;
+    };
+
     // return public properties and methods
     return {
         // public methods
@@ -440,6 +459,7 @@ expresso.util.Util = (function () {
         getUrlParameters: getUrlParameters,
         guid: guid,
         escapeHTML: escapeHTML,
+        cache: cache,
 
         pad: pad,
         lightenDarkenColor: lightenDarkenColor,
