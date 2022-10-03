@@ -679,7 +679,7 @@ $formPreviewHeight: 12em;
         padding: 0.5em 1.25em;
         vertical-align: middle;
 
-        &.full-length {
+        &.full-length, &.exp-full-length {
             width: 100%;
         }
     }
@@ -733,23 +733,13 @@ $formPreviewHeight: 12em;
                 margin: 0 0 0 0.16em;
             }
         }
-
-        &.checkbox-group {
-            .input-wrap {
-                padding: 0;
-
-                label {
-                    margin-top: 4px;
-                }
-            }
-        }
     }
 
     &.exp-form-single-column {
         div.input-wrap {
             width: 100%;
 
-            &.full-length {
+            &.full-length, &.exp-full-length {
                 width: 100%;
             }
         }
@@ -759,11 +749,11 @@ $formPreviewHeight: 12em;
         div.input-wrap {
             width: calc(33% - 2px);
 
-            &.double-length {
+            &.double-length, &.exp-double-length {
                 width: calc(66% - 2px);
             }
 
-            &.full-length {
+            &.full-length, &.exp-full-length {
                 width: 100%;
             }
         }
@@ -773,16 +763,15 @@ $formPreviewHeight: 12em;
         div.input-wrap {
             width: calc(25% - 3px);
 
-            &.double-length {
+            &.double-length, &.exp-double-length {
                 width: calc(50% - 2px);
             }
 
-            &.full-length {
+            &.full-length, &.exp-full-length {
                 width: 100%;
             }
         }
     }
-
 
     fieldset:not(.k-donotconvert) {
         @include default-div;
@@ -903,6 +892,26 @@ $formPreviewHeight: 12em;
         display: inline-block;
         width: 100%;
         text-align: left;
+    }
+
+    .checkbox-group, .radio-group {
+        .checkbox-div, .radio-div, // checkbox div (built using buildCheckbox)
+        &.input-wrap, & > .input-wrap // checkbox div (built using expressoForm)
+        {
+            margin: 0 0 0 10px;
+            padding: 0;
+
+            label.k-checkbox-label, label.k-radio-label {
+                font-weight: normal;
+                color: $themeTextColor;
+                text-transform: none;
+                margin: 0 0 0 0.6em;
+            }
+
+            input[type=checkbox], input[type=radio] {
+                margin-top: 1px;
+            }
+        }
     }
 }
 

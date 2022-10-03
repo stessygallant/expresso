@@ -212,8 +212,7 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
             // when there is a change in sibling resource (create or delete), publish an update on the current resource
             _this.subResourceManager.eventCentral.subscribeEvent([_this.RM_EVENTS.RESOURCE_CREATED,
                 _this.RM_EVENTS.RESOURCE_DELETED], function () {
-                // refresh the count
-                _this.resourceManager.sections.preview.refreshCount(_this.$tab);
+                _this.refreshCount();
             });
 
             _this.subResourceManager.render().done(function () {
@@ -274,6 +273,13 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
      */
     reloadMasterResource: function () {
         this.resourceManager.sections.grid.reloadCurrentResource();
+    },
+
+    /**
+     * Force the refresh of the count
+     */
+    refreshCount: function () {
+        this.resourceManager.sections.preview.refreshCount(this.$tab);
     },
 
     // @override

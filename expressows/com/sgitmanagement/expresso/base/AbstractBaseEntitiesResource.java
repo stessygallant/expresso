@@ -547,7 +547,8 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 		if (idString != null && idString.length() > 0) {
 			e = baseEntityResource.get(getService().convertId(idString));
 		} else {
-			// there is no ID, we need to validate if we can at least update the parent
+			// there is no ID, this mean a new resource
+			// we need to validate if we can at least update the parent
 			isParentUpdateAllowed = isParentUpdateAllowed(uri, ancestorResources);
 		}
 
@@ -556,7 +557,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 			boolean allowed;
 			if (e == null && isParentUpdateAllowed != null && isParentUpdateAllowed == false) {
 				allowed = false;
-			} else if (e == null && (action.equals("update"))) {
+			} else if (e == null && (action.equals("update") || action.equals("delete") || action.equals("duplicate"))) {
 				// to update the resource must already exists
 				allowed = false;
 			} else {

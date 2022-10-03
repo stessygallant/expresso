@@ -1230,10 +1230,10 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             $window.find(".k-grid-update").hide();
 
             // TO DO support multiple files in form
-            var expressoUpload;
+            var kendoUpload;
             $window.find("[type=file]").each(function () {
                 var $input = $(this);
-                expressoUpload = expresso.util.UIUtil.buildUpload($window, $input, {
+                kendoUpload = expresso.util.UIUtil.buildUpload($window, $input, {
                     url: function () {
                         if (_this.deprecatedFileUploadSupport) {
                             return expresso.Common.getWsUploadPathURL() + "/" +
@@ -1253,6 +1253,18 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                             // the current form is already the sibling for the document
                             return expresso.util.UIUtil.getDocumentUploadCustomData(_this.resourceManager);
                         }
+                    },
+                    onUploaded: function () {
+                        _this.close();
+                        // refresh count
+                        _this.resourceManager.eventCentral.publishEvent(_this.RM_EVENTS.RESOURCE_CREATED);
+                        
+                        // refresh resource
+                        if (_this.resourceManager.getResourceSecurityPath() == "document" || _this.deprecatedFileUploadSupport) {
+                            _this.resourceManager.sections.grid.loadResources();
+                        } else {
+                            _this.resourceManager.sections.grid.reloadCurrentResource();
+                        }
                     }
                 });
             });
@@ -1260,26 +1272,19 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             // add the upload button
             this.addButton($window, this.getLabel("save"), {primary: true}, function () {
                 // if the URL is document, only upload
-                if (_this.resourceManager.getResourceSecurityPath() == "document") {
-                    if (expressoUpload.kendoUpload.getFiles().length) {
-                        expressoUpload.upload().done(function () {
-                            _this.resourceManager.sections.grid.loadResources();
-                            _this.close();
-                        });
+                if (_this.resourceManager.getResourceSecurityPath() == "document" || _this.deprecatedFileUploadSupport) {
+                    if (kendoUpload.getFiles().length) {
+                        kendoUpload.upload();
                     } else {
                         // update only
                         _this.saveAndClose();
                     }
                 } else {
                     _this.save().done(function () {
-                        if (expressoUpload.kendoUpload.getFiles().length) {
+                        if (kendoUpload.getFiles().length) {
                             // the resource.currentResource is not yet updated. just wait
                             window.setTimeout(function () {
-                                expressoUpload.upload().done(function () {
-                                    _this.close();
-                                    // refresh resource
-                                    _this.resourceManager.sections.grid.reloadCurrentResource();
-                                });
+                                kendoUpload.upload();
                             }, 1);
                         } else {
                             _this.close();

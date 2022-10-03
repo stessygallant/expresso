@@ -107,6 +107,10 @@ public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileSe
 		if (!SystemEnv.INSTANCE.isInProduction()) {
 			// first we must validate the token
 			String sessionToken = params.get("sessionToken");
+			if (sessionToken == null) {
+				sessionToken = getRequest().getHeader("X-Session-Token");
+			}
+
 			if (!Util.equals(sessionToken, getRequest().getSession().getAttribute("sessionToken"))) {
 				throw new InvalidCredentialsException();
 			}

@@ -110,7 +110,7 @@
         // we need to use an unique ID (and not only the class)
         var buttonId = this.$domElement.find(".exp-upload-button").attr("id");
 
-        var expressoUpload = expresso.util.UIUtil.buildUpload(null, $fileDiv, {
+        this.kendoUpload = expresso.util.UIUtil.buildUpload(null, $fileDiv, {
             url: function () {
                 return _this.resourceManager.getUploadDocumentPath(_this.resourceManager.siblingResourceManager);
             },
@@ -120,15 +120,15 @@
             async: {
                 autoUpload: true
             },
+            onUploaded: function () {
+                // refresh count
+                _this.resourceManager.eventCentral.publishEvent(_this.RM_EVENTS.RESOURCE_CREATED);
+
+                // refresh the resources
+                _this.loadResources();
+            },
             dropZone: "#" + buttonId
         });
-
-        expressoUpload.$deferred.done(function () {
-            // refresh the resources
-            _this.loadResources();
-        });
-
-        this.kendoUpload = expressoUpload.kendoUpload;
     },
 
     // @override

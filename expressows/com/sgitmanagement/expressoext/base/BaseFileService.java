@@ -13,10 +13,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.ValidationException;
+import com.sgitmanagement.expresso.util.ImageUtil;
 import com.sgitmanagement.expresso.util.SSHClient;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
@@ -176,6 +178,17 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 			}
 		}
 
+		// if file is an image an there is a maxWidth, resize it
+		if (isImage(fileName) && params.get("maxWidth") != null) {
+			int maxWidth = Integer.parseInt(params.get("maxWidth"));
+			File targetImageFile = File.createTempFile(e.getFileNameNoSuffix(), "." + e.getSuffix());
+			ImageUtil.resizeImage(file, targetImageFile, maxWidth, null);
+
+			// replace the file with the new shrink file
+			FileUtils.copyFile(targetImageFile, file);
+			targetImageFile.delete();
+		}
+
 		changeFilePermission(file);
 		try {
 			scanAntiVirus(file.getAbsolutePath());
@@ -188,6 +201,7 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 			}
 			throw ex1;
 		}
+
 		return e;
 	}
 
