@@ -9,6 +9,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.InvalidCredentialsException;
 import com.sgitmanagement.expresso.util.Util;
@@ -48,7 +49,7 @@ public class AuthorizationFilter implements Filter {
 
 		try {
 			// get the user
-			User user = (User) request.getAttribute("user");
+			User user = (User) UserManager.getInstance().getUser();
 
 			boolean allowed = false;
 			String action = null;
@@ -119,7 +120,7 @@ public class AuthorizationFilter implements Filter {
 							String creationUserName = Util.getParameterValue(request, "creationUserName");
 							if (creationUserName != null) {
 								user = AuthorizationHelper.getUser(creationUserName);
-								request.setAttribute("user", user);
+								UserManager.getInstance().setUser(user);
 							}
 
 							allowed = AuthorizationHelper.isUserAllowed(user, action, resources);
@@ -146,9 +147,6 @@ public class AuthorizationFilter implements Filter {
 					String appNAme = request.getHeader(HEADER_APPLICATION_NAME);
 					String ip = Util.getIpAddress(request);
 					String userAgent = request.getHeader("User-Agent");
-
-					// set the user for the audit
-					AuditTrailInterceptor.setUserId(user.getId());
 
 					// logger.debug(String.format("START %10s %10s %s %s %s %s%s", (ip != null ? ip : "n/a"),
 					// (user != null ? user.getUserName() : "n/a"), version, appNAme, request.getMethod(),

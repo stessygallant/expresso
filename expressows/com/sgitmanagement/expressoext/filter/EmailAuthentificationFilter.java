@@ -3,6 +3,18 @@ package com.sgitmanagement.expressoext.filter;
 import java.io.IOException;
 
 import javax.persistence.EntityManager;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sgitmanagement.expresso.base.PersistenceManager;
+import com.sgitmanagement.expresso.base.UserManager;
+import com.sgitmanagement.expresso.exception.BaseException;
+import com.sgitmanagement.expresso.util.Util;
+import com.sgitmanagement.expressoext.security.AuthorizationHelper;
+import com.sgitmanagement.expressoext.security.User;
+import com.sgitmanagement.expressoext.util.AuthenticationService;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -12,16 +24,6 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sgitmanagement.expresso.base.PersistenceManager;
-import com.sgitmanagement.expresso.exception.BaseException;
-import com.sgitmanagement.expresso.util.Util;
-import com.sgitmanagement.expressoext.security.AuthorizationHelper;
-import com.sgitmanagement.expressoext.security.User;
-import com.sgitmanagement.expressoext.util.AuthenticationService;
 
 public class EmailAuthentificationFilter implements Filter {
 	final private static Logger logger = LoggerFactory.getLogger(EmailAuthentificationFilter.class);
@@ -53,7 +55,7 @@ public class EmailAuthentificationFilter implements Filter {
 				AuthenticationService authenticationService = AuthenticationService.newServiceStatic(AuthenticationService.class);
 
 				// get the user
-				User user = (User) request.getAttribute("user");
+				User user = (User) UserManager.getInstance().getUser();
 				String action = Util.getParameterValue(request, "action");
 
 				// bypass if the user has the role

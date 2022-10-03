@@ -12,25 +12,26 @@
         }, {
             field: "fileName",
             width: 200
-        }, {
-            field: "description"
-        }
-        ];
+        }];
 
         if (this.resourceManager.model.fields["documentTypeId"].values.data &&
             this.resourceManager.model.fields["documentTypeId"].values.data.length > 0) {
-            columns.push.apply(columns, [{
+            columns.push({
                 field: "documentTypeId",
                 width: 150
-            }]);
+            });
         }
 
+        columns.push({
+            field: "description"
+        });
+
         if (this.resourceManager.options.showDates) {
-            columns.push.apply(columns, [{
+            columns.push({
                 field: "fromDate"
             }, {
                 field: "toDate"
-            }]);
+            });
         }
 
         return columns;

@@ -7,6 +7,7 @@ import javax.persistence.NoResultException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.exception.InvalidCredentialsException;
 import com.sgitmanagement.expresso.util.SystemEnv;
@@ -60,7 +61,7 @@ public class SessionValidationFilter implements Filter {
 					user = getUser(session, request, response);
 
 					// store the user in the request
-					request.setAttribute("user", user);
+					UserManager.getInstance().setUser(user);
 
 					// validate the session (NOT for PROD for now)
 					if (SystemEnv.INSTANCE.isInProduction() || isSessionValid(session, request, response, user)) {
@@ -87,7 +88,7 @@ public class SessionValidationFilter implements Filter {
 						response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 					} else {
 						// store the user in the request
-						request.setAttribute("user", user);
+						UserManager.getInstance().setUser(user);
 
 						// continue
 						chain.doFilter(request, response);
@@ -95,8 +96,8 @@ public class SessionValidationFilter implements Filter {
 				}
 
 			} finally {
-				// clear the request
-				request.removeAttribute("user");
+				// remove the user
+				UserManager.getInstance().close();
 			}
 		}
 	}

@@ -5,6 +5,7 @@
     initForm: function ($window, resource) {
         expresso.layout.resourcemanager.Form.fn.initForm.call(this, $window, resource);
 
+        // hide if not document types are defined for the resource
         if (!(this.resourceManager.model.fields["documentTypeId"].values.data &&
             this.resourceManager.model.fields["documentTypeId"].values.data.length > 0)) {
             expresso.util.UIUtil.hideField($window.find("[name=documentTypeId]"));
@@ -21,5 +22,4 @@
             expresso.util.UIUtil.hideField($window.find("[name=toDate]"));
         }
     }
-
 });

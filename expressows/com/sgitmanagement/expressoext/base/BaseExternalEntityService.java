@@ -11,7 +11,6 @@ import com.sgitmanagement.expresso.base.ExternalEntity;
 import com.sgitmanagement.expresso.util.DateUtil;
 import com.sgitmanagement.expresso.util.ProgressSender;
 import com.sgitmanagement.expresso.util.SystemEnv;
-import com.sgitmanagement.expressoext.filter.AuditTrailInterceptor;
 import com.sgitmanagement.expressoext.util.Config;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -112,16 +111,9 @@ public class BaseExternalEntityService<E extends BaseUpdatableEntity & ExternalE
 				progressSender.addLevel("Synchronisation");
 			}
 
-			// we must reset the thread user because otherwise it will
-			// assign the current user to the modification, which is not true
-			// because it has been done by another user on a remote system
-			AuditTrailInterceptor.setUserId(null);
-			try {
-				getExternalInterface().sync(section, progressSender, progressWeight);
-			} finally {
-				// put back the current user
-				AuditTrailInterceptor.setUserId(getUser().getId());
-			}
+			setUpdateLastModified(false);
+			getExternalInterface().sync(section, progressSender, progressWeight);
+
 			if (progressSender != null) {
 				progressSender.completeLevel();
 			}

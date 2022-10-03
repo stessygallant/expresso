@@ -18,8 +18,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import com.sgitmanagement.expresso.base.Auditable;
-import com.sgitmanagement.expresso.base.ForbidAudit;
+import com.sgitmanagement.expresso.audit.Auditable;
+import com.sgitmanagement.expresso.audit.ForbidAudit;
 import com.sgitmanagement.expresso.base.IUser;
 import com.sgitmanagement.expresso.base.KeyField;
 import com.sgitmanagement.expresso.util.DeserializeOnlyStringAdapter;

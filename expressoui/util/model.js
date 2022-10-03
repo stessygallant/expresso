@@ -314,10 +314,15 @@ expresso.util.Model = (function () {
 
                                 // resource manager
                                 if (reference.resourceName) {
+                                    // backward compatibility
+                                    if (reference.resourceManagerDef !== undefined) {
+                                        reference.resourceManager = reference.resourceManagerDef;
+                                    }
+
                                     // by default, reference allow search button. values does not.
                                     if (field.values) {
                                         if (!reference.searchButtonEnabled) {
-                                            reference.resourceManagerDef = null;
+                                            reference.resourceManager = null;
                                         } else {
                                             //reference.allowCreate = true;
                                             reference.allowView = false;
@@ -326,15 +331,15 @@ expresso.util.Model = (function () {
 
                                     // if we do not want to display the search button, make sure the manager is null
                                     if (reference.searchButtonEnabled === false) {
-                                        reference.resourceManagerDef = null;
+                                        reference.resourceManager = null;
                                     }
 
                                     // define the manager if not defined
-                                    if (reference.resourceManagerDef === undefined) {
-                                        reference.resourceManagerDef = reference.resourceName.capitalize() + "Manager";
+                                    if (reference.resourceManager === undefined) {
+                                        reference.resourceManager = reference.resourceName.capitalize() + "Manager";
                                     }
                                 } else {
-                                    reference.resourceManagerDef = null;
+                                    reference.resourceManager = null;
                                 }
                             }
 

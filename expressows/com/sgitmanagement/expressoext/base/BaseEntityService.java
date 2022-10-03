@@ -17,7 +17,6 @@ import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.util.DateUtil;
 import com.sgitmanagement.expresso.util.Util;
-import com.sgitmanagement.expressoext.document.Document;
 import com.sgitmanagement.expressoext.modif.RequiredApproval;
 import com.sgitmanagement.expressoext.modif.RequiredApprovalService;
 import com.sgitmanagement.expressoext.security.AuthorizationHelper;
@@ -160,35 +159,6 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 		} catch (NumberFormatException e) {
 			return -1;
 		}
-	}
-
-	/**
-	 * Verify if the user can upload a document for this resource
-	 *
-	 * @param resourceId
-	 * @throws Exception
-	 */
-	public void verifyDocumentUploadRestrictions(Integer resourceId) throws Exception {
-		// TODO by default a user can upload a document if he can update the resource
-		// try {
-		// verifyActionRestrictions("update", get(resourceId));
-		// } catch (ForbiddenException ex) {
-		// throw new ForbiddenException("userNotAllowedToUploadDocument");
-		// }
-	}
-
-	/**
-	 * Verify if the user can download the document from the resource
-	 * 
-	 * @param document
-	 * @param resourceId
-	 * @throws Exception
-	 */
-	public void verifyDocumentDownloadRestrictions(Document document, Integer resourceId) throws Exception {
-		// TODO by default, a user can download the document if he can read the resource
-		// if (!isUserAllowed("read")) {
-		// throw new ForbiddenException("userNotAllowedToDownloadDocument");
-		// }
 	}
 
 	/**

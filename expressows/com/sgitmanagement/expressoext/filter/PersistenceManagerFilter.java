@@ -34,8 +34,6 @@ public class PersistenceManagerFilter implements Filter {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
 
-		// create a manager
-		PersistenceManager persistenceManager = PersistenceManager.getInstance();
 		try {
 			// continue
 			chain.doFilter(request, response);
@@ -45,7 +43,7 @@ public class PersistenceManagerFilter implements Filter {
 			AbstractBaseService.closeServices();
 
 			// close the connection
-			persistenceManager.commitAndClose();
+			PersistenceManager.getInstance().commitAndClose();
 		}
 	}
 }

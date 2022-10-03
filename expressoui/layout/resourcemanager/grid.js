@@ -745,10 +745,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                 // if the column end with No, verify if there is the same resource with Id
                 if (!column.reference && column.reference !== false) {
-                    if (field && field.reference && field.reference.resourceManagerDef) {
+                    if (field && field.reference && field.reference.resourceManager) {
                         column.reference = {
                             fieldName: field.reference.fieldName,
-                            resourceManagerDef: field.reference.resourceManagerDef
+                            resourceManager: field.reference.resourceManager
                         };
                         //console.log("Adding FIELD reference to the grid", column.reference);
                     } else if (column.field.endsWith("No")) {
@@ -777,7 +777,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         if (idField && idField.reference && idField.reference.resourceName != "user") {
                             column.reference = {
                                 fieldName: idField.reference.fieldName,
-                                resourceManagerDef: idField.reference.resourceManagerDef
+                                resourceManager: idField.reference.resourceManager
                             };
                             // console.log("Adding AUTO reference to the grid [" + column.field + "]", column.reference);
                         } else {
@@ -790,7 +790,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     if (typeof column.reference === "string") {
                         column.reference = {
                             fieldName: column.reference,
-                            resourceManagerDef: column.reference.capitalize().substring(0, column.reference.length - 2) + "Manager"
+                            resourceManager: column.reference.capitalize().substring(0, column.reference.length - 2) + "Manager"
                         };
                         //console.log("Adding column reference to the grid", column.reference);
                     }
@@ -804,11 +804,15 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         }
                     }
 
+                    // backward compatibility
+                    if (column.reference.resourceManagerDef !== undefined) {
+                        column.reference.resourceManager = column.reference.resourceManagerDef;
+                    }
                     // add TTTLE
-                    if (column.reference.resourceManagerDef) {
+                    if (column.reference.resourceManager) {
                         column.template = column.template || "<span class='reference' " +
                             " data-reference-id='#=" + column.reference.fieldName + "#'" +
-                            " data-reference-manager='" + column.reference.resourceManagerDef + "'" +
+                            " data-reference-manager='" + column.reference.resourceManager + "'" +
                             (title ? " title='" + title + "'" : "") +
                             ">#=(" + column.field + "?" + column.field + ":'')#</span>";
                     }
