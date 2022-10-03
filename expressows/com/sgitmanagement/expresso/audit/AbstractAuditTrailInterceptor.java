@@ -19,13 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.base.FieldRestriction;
+import com.sgitmanagement.expresso.base.IEntity;
 import com.sgitmanagement.expresso.base.IUser;
 import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.util.DateUtil;
 import com.sgitmanagement.expresso.util.Util;
-
-import ca.cezinc.expressoservice.base.BaseEntity;
 
 abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
 	final static protected Logger logger = LoggerFactory.getLogger(AbstractAuditTrailInterceptor.class);
@@ -36,6 +35,7 @@ abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
 		logger.debug("New AbstractAuditTrailInterceptor");
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
 		if (entity instanceof Auditable) {
@@ -52,7 +52,7 @@ abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
 							String prop = propertyNames[i];
 							Field field = Util.getField(entity, prop);
 
-							recordAuditTrail((BaseEntity) entity, field, previousValue, currentValue);
+							recordAuditTrail((IEntity) entity, field, previousValue, currentValue);
 						} catch (Exception ex) {
 							logger.error("Cannot record audit trail: " + ex);
 						}
@@ -73,7 +73,8 @@ abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
 	 * @param newValue
 	 * @throws Exception
 	 */
-	private void recordAuditTrail(BaseEntity e, Field field, Object currentValue, Object newValue) throws Exception {
+	@SuppressWarnings("rawtypes")
+	private void recordAuditTrail(IEntity e, Field field, Object currentValue, Object newValue) throws Exception {
 		String fieldName = field != null ? field.getName() : "";
 
 		// entity name
@@ -121,15 +122,15 @@ abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
 							// logger.debug("listField.getDeclaringClass(): " + listField.getType().getName());
 							EntityManager em = PersistenceManager.getInstance().getEntityManager();
 
-							BaseEntity currentValueEntity = null;
+							IEntity currentValueEntity = null;
 							if (currentValue != null) {
-								currentValueEntity = (BaseEntity) em.find(listField.getType(), (Integer) currentValue);
+								currentValueEntity = (IEntity) em.find(listField.getType(), (Integer) currentValue);
 								currentStringValue = currentValueEntity.getLabel();
 							}
 
-							BaseEntity newValueEntity = null;
+							IEntity newValueEntity = null;
 							if (newValue != null) {
-								newValueEntity = (BaseEntity) em.find(listField.getType(), (Integer) newValue);
+								newValueEntity = (IEntity) em.find(listField.getType(), (Integer) newValue);
 								if (newValueEntity != null) {
 									newStringValue = newValueEntity.getLabel();
 								} else {
@@ -177,7 +178,8 @@ abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
 
 					// save Audit (only if it changed)
 					if (!Util.equals(newStringValue, currentStringValue)) {
-						createAuditTrail(StringUtils.uncapitalize(entityClassName), e.getId(), fieldName, currentStringValue, newStringValue, UserManager.getInstance().getUser());
+						// NOTE: only support Integer id
+						createAuditTrail(StringUtils.uncapitalize(entityClassName), (Integer) e.getId(), fieldName, currentStringValue, newStringValue, UserManager.getInstance().getUser());
 					}
 				} catch (Exception ex) {
 					// do not stop because there is a problem with the AuditTrail
