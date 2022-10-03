@@ -123,7 +123,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         $form.kendoExpressoForm({
             labels: this.resourceManager.labels,
             resource: resource,
-            model: model
+            model: model,
+            resourceManager: this.resourceManager
         });
         this.addPromise($form.data("kendoExpressoForm").ready());
 

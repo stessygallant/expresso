@@ -18,7 +18,7 @@
             this.readyPromises = [];
 
             //console.log("Options", this.options);
-            this.processInputElements(element, this.options.labels, this.options.resource);
+            this.processInputElements(element);
         },
 
         /**
@@ -44,12 +44,13 @@
         /**
          *
          * @param form
-         * @param labels
-         * @param resource
          */
-        processInputElements: function (form, labels, resource) {
+        processInputElements: function (form) {
             var _this = this;
             var $form = $(form);
+
+            var labels = this.options.labels;
+            var resource = this.options.resource;
 
             // add a progress to the form
             //expresso.util.UIUtil.showLoadingMask($form, true);
@@ -568,14 +569,31 @@
         displayInlineGrid: function (resource, field, $input) {
             $input.hide();
 
+            var masterResourceManager = this.options.resourceManager;
             var $div = $("<div class='exp-grid-inline'></div>").appendTo($input.parent());
+
+            // if the parent is already created -> inline grid is online (auto sync ON)
+            // if the parent is not already created -> inline grid is offline (auto sync OFF)
             expresso.Common.loadApplication(field.inlineGridResourceManager, {
-                autoSyncGridDataSource: false,
+                autoSyncGridDataSource: !!(resource && resource.id), // false,
                 multipleSelectionEnabled: false
             }).done(function (appInstance) {
                 $div.data("resourceManager", appInstance);
-                // we must fake a master current resource
-                appInstance.masterResourceManager.currentResource = {id: (resource && resource.id ? resource.id : -1)};
+                if (masterResourceManager) {
+                    appInstance.masterResourceManager = masterResourceManager;
+
+                    // when there is a change in subresource (update or create or delete), publish an update on the current resource
+                    appInstance.eventCentral.subscribeEvent([appInstance.RM_EVENTS.RESOURCE_UPDATED, appInstance.RM_EVENTS.RESOURCE_CREATED,
+                        appInstance.RM_EVENTS.RESOURCE_DELETED], function () {
+                        console.log("INLINEGRID - child has been changed (reloading master and refreshing counts)");
+                        //force the refresh of the form
+                        appInstance.masterResourceManager.currentResource.dirty = true;
+                        appInstance.masterResourceManager.sections.grid.reloadCurrentResource();
+                    });
+                } else {
+                    // we must fake a master current resource
+                    appInstance.masterResourceManager.currentResource = {id: (resource && resource.id ? resource.id : -1)};
+                }
                 appInstance.list($div, {});
             });
         },

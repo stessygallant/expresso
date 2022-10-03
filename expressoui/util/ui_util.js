@@ -2409,15 +2409,12 @@ expresso.util.UIUtil = (function () {
             }
 
             // if we need to wait for the form to be ready
-            $waitingPromise.done(function () {
-                var widget = expresso.util.UIUtil.getKendoWidget($input);
-                if (widget) {
-                    widget.bind("change", function (e) {
-                        // console.log($input.attr("name") +
-                        //     " expressoTriggered:" + e.expressoTriggered +
-                        //     " expressoUserTriggered:" + e.expressoUserTriggered
-                        //     , e);
-
+            var widget = expresso.util.UIUtil.getKendoWidget($input);
+            if (widget) {
+                widget.bind("change", function (e) {
+                    //console.log("bindOnChange (widget) waiting: " + $input[0].name);
+                    $waitingPromise.done(function () {
+                        //console.log("bindOnChange (widget) DONE: " + $input[0].name);
                         if (!e.isDefaultPrevented()) {
                             var dataItem;
                             e.sender = e.sender || {};
@@ -2451,10 +2448,16 @@ expresso.util.UIUtil = (function () {
                             onChangeCallback.call(widget, e, dataItem);
                         }
                     });
-                } else {
-                    $input.on("change", onChangeCallback);
-                }
-            });
+                });
+            } else {
+                $input.on("change", function (e) {
+                    // console.log("bindOnChange waiting: " + $input[0].name);
+                    $waitingPromise.done(function () {
+                        //console.log("bindOnChange DONE: " + $input[0].name);
+                        onChangeCallback.call(e && e.target ? e.target : $input[0], e);
+                    });
+                });
+            }
         };
 
         /**
@@ -2496,8 +2499,6 @@ expresso.util.UIUtil = (function () {
          * @returns
          */
         var buildUpload = function ($window, $input, options) {
-            var _this = this;
-
             // make sure the input if defined correctly
             // <input name='file' type='file' />
             $input.attr("type", "file");
