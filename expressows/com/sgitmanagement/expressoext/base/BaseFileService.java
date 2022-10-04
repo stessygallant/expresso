@@ -2,13 +2,13 @@ package com.sgitmanagement.expressoext.base;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -130,8 +130,11 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 	 * @throws Exception
 	 */
 	protected E uploadFile(E e, InputStream fileInputStream, String fileName, Map<String, String> params) throws Exception {
-
-		verifyFileExtension(fileName);
+		String fileExtension = null;
+		if (fileName.indexOf('.') != -1) {
+			fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+			verifyFileExtension(fileExtension);
+		}
 
 		fileName = purgeFileName(fileName);
 
@@ -149,47 +152,47 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 
 		e = merge(e, params);
 
-		// ObjectMapper mapper = new ObjectMapper();
-		// MyPojo pojo = mapper.convertValue(map, getTypeOfE());
-
 		String filePath = getFolder(e);
+		File file = getFile(filePath, fileName);
 
-		OutputStream out = null;
-		File file = null;
-		try {
+		if (file.exists()) {
+			if (fileExtension != null) {
+				fileName = fileName.substring(0, fileName.length() - fileExtension.length() - 1) + "-" + new Date().getTime() + "." + fileExtension;
+			} else {
+				fileName += "-" + new Date().getTime();
+			}
+			e.setFileName(fileName);
 			file = getFile(filePath, fileName);
-			logger.info("Uploading file [" + file.getAbsolutePath() + "]");
-			out = new FileOutputStream(file);
-
-			int read = 0;
-			byte[] bytes = new byte[1024];
-
-			while ((read = fileInputStream.read(bytes)) != -1) {
-				out.write(bytes, 0, read);
-			}
-		} finally {
-			try {
-				fileInputStream.close();
-			} catch (Exception ex) {
-			}
-			try {
-				out.close();
-			} catch (Exception ex) {
-			}
 		}
+
+		// write the file
+		FileUtils.copyInputStreamToFile(fileInputStream, file);
 
 		// if file is an image an there is a maxWidth, resize it
-		if (isImage(fileName) && params.get("maxWidth") != null) {
-			int maxWidth = Integer.parseInt(params.get("maxWidth"));
-			File targetImageFile = File.createTempFile(e.getFileNameNoSuffix(), "." + e.getSuffix());
-			ImageUtil.resizeImage(file, targetImageFile, maxWidth, null);
+		if (isImage(fileName)) {
+			if (params.get("maxWidth") != null) {
+				int maxWidth = Integer.parseInt(params.get("maxWidth"));
+				File targetImageFile = File.createTempFile(e.getFileNameNoSuffix(), "." + e.getSuffix());
+				ImageUtil.resizeImage(file, targetImageFile, maxWidth, null);
 
-			// replace the file with the new shrink file
-			FileUtils.copyFile(targetImageFile, file);
-			targetImageFile.delete();
+				// replace the file with the new shrink file
+				FileUtils.copyFile(targetImageFile, file);
+				targetImageFile.delete();
+			}
+
+			// if the file is an image, create a thumbnail
+			try {
+				ImageUtil.createThumbnailImage(file);
+			} catch (Exception ex) {
+				// if we cannot create the thumbnail, it is not dramatic
+				logger.warn("Cannot create thumbnail for file [ " + file.getAbsolutePath() + "]: " + ex);
+			}
 		}
 
+		// change file permission
 		changeFilePermission(file);
+
+		// scan for virus
 		try {
 			scanAntiVirus(file.getAbsolutePath());
 		} catch (ValidationException ex1) {
@@ -319,29 +322,26 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 	 *
 	 * @param fileName
 	 */
-	private void verifyFileExtension(String fileName) {
+	private void verifyFileExtension(String fileExtension) {
 		String[] allowedExtensions = new String[] {
 				// image
-				".jpg", ".jpeg", ".png", ".bmp", ".gif",
+				"jpg", "jpeg", "png", "bmp", "gif",
 				// office
-				".doc", ".xls", ".ppt", ".docx", ".xlsx", ".pptx",
+				"doc", "xls", "ppt", "docx", "xlsx", "pptx",
 				// emails
-				".eml", ".msg",
+				"eml", "msg",
 				// text
-				".pdf", ".txt", ".csv",
+				"pdf", "txt", "csv",
 				// others
-				".zip" };
+				"zip" };
 
-		String extension = fileName.substring(fileName.lastIndexOf('.'));
-
-		boolean contains = Arrays.stream(allowedExtensions).anyMatch(extension::equalsIgnoreCase);
+		boolean contains = Arrays.stream(allowedExtensions).anyMatch(fileExtension::equalsIgnoreCase);
 		if (!contains) {
-			logger.warn("Found invalid extension [" + extension + "]");
+			logger.warn("Found invalid extension [" + fileExtension + "]");
 
 			Map<String, Object> params = new HashMap<>();
 			params.put("allowedExtensions", String.join(", ", allowedExtensions));
 			throw new ValidationException("invalidFileExtension", params);
 		}
 	}
-
 }

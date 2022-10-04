@@ -92,4 +92,28 @@ public class ImageUtil {
 		graphics2D.dispose();
 		return bi;
 	}
+
+	/**
+	 * Will create a thumbnail image from the image file
+	 *
+	 * @param imageFile
+	 * @return the thumbnail image file
+	 * @throws Exception
+	 */
+	public static File createThumbnailImage(File imageFile) throws Exception {
+		int IMG_WIDTH = 70;
+		int IMG_HEIGHT = 50;
+
+		File thumbnailFile = getThumbnailImageFile(imageFile);
+		ImageUtil.resizeImage(imageFile, thumbnailFile, IMG_WIDTH, IMG_HEIGHT);
+		return thumbnailFile;
+	}
+
+	public static File getThumbnailImageFile(File imageFile) {
+		String filePath = imageFile.getAbsolutePath();
+		String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
+		filePath = filePath.substring(0, filePath.lastIndexOf("."));
+		File thumbnailFile = new File(filePath + "-thumbnail." + fileExtension);
+		return thumbnailFile;
+	}
 }
