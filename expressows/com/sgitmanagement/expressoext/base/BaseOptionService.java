@@ -1,7 +1,5 @@
 package com.sgitmanagement.expressoext.base;
 
-import java.util.Date;
-
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
@@ -55,11 +53,5 @@ public class BaseOptionService<E extends BaseOption> extends BaseDeactivableEnti
 		filter.addFilter(new Filter("description", Operator.contains, term));
 		filter.addFilter(new Filter("pgmKey", Operator.contains, term));
 		return filter;
-	}
-
-	@Override
-	public void delete(Integer id) throws Exception {
-		E e = get(id);
-		e.setDeactivationDate(new Date());
 	}
 }
