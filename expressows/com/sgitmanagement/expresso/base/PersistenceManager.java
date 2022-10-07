@@ -265,6 +265,8 @@ public class PersistenceManager implements AutoCloseable {
 			}
 		}
 		entityManagersThreadLocal.remove();
+
+		UserManager.getInstance().close();
 	}
 
 	/**

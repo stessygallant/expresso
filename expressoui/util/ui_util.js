@@ -318,7 +318,7 @@ expresso.util.UIUtil = (function () {
                             }
 
                             // always sort on the label
-                            if (!customOptions.avoidSorting) {
+                            if (!customOptions.avoidSorting && !(customOptions.field && customOptions.field.reference && customOptions.field.reference.avoidSorting)) {
                                 response.sort(function (r1, r2) {
                                     return r1["label"].localeCompare(r2["label"]);
                                 });
@@ -1172,9 +1172,8 @@ expresso.util.UIUtil = (function () {
             return value;
         };
 
-        // utility method to convert a list of string to a datasource
         /**
-         *
+         * Utility method to convert a list of string to a datasource
          * @param list
          * @param [labels]
          * @param [dataValueField]
@@ -1217,7 +1216,7 @@ expresso.util.UIUtil = (function () {
             //console.log("Setting new datasource on [" + $input[0].name + "]", dataSource);
             widget.value(null);
             widget.setDataSource(new kendo.data.DataSource({data: data}));
-            if (defaultValue) {
+            if (defaultValue !== undefined) {
                 //console.log("Setting default value [" + defaultValue + "] " + (typeof defaultValue));
                 $input.setval(defaultValue);
             }
@@ -1795,12 +1794,16 @@ expresso.util.UIUtil = (function () {
                     dataSource: dataSource,
 
                     check: function (/*e*/) {
-                        // var dataItem = this.dataItem(e.item);
-                        // console.log("MultiSelect - select: " + (dataItem ? dataItem.id : "NULL"));
                     },
                     change: function (/*e*/) {
-                        // var dataItem = this.dataItem(e.item);
-                        // console.log("MultiSelect - change: " + (dataItem ? dataItem.id : "NULL"));
+                    },
+                    select: function (/*e*/) {
+                        // var dataItem = this.dataItem(e.node);
+                        // console.log("TreeView - Selecting: " + this.text(e.node), dataItem);
+                        // if () {
+                        //     // prevent selection
+                        //     e.preventDefault();
+                        // }
                     },
                     dataBound: function (/*e*/) {
 
@@ -1878,7 +1881,7 @@ expresso.util.UIUtil = (function () {
                         var id = widget.value();
 
                         if (id || reference.allowCreate === true) {
-                            expresso.Common.loadApplication(reference.resourceManagerDef, {autoEdit: true}).done(function (resourceManager) {
+                            expresso.Common.loadApplication(reference.resourceManager, {autoEdit: true}).done(function (resourceManager) {
                                 resourceManager.displayForm(id ? {id: id} : null, function ($window, resource) {
                                     // the form is now opened
                                     if (reference.onEdit) {
@@ -1957,7 +1960,7 @@ expresso.util.UIUtil = (function () {
 
             $searchButton.kendoButton({
                 click: function () {
-                    expresso.util.UIUtil.buildSearchWindow(reference.resourceManagerDef, reference.filter, reference.sort).done(function (dataItem) {
+                    expresso.util.UIUtil.buildSearchWindow(reference.resourceManager, reference.filter, reference.sort).done(function (dataItem) {
                         // add the dataItem and trigger the change
                         addDataItemToWidget(dataItem, widget);
                         widget.trigger("change", {expressoUserTriggered: true});
@@ -2244,7 +2247,13 @@ expresso.util.UIUtil = (function () {
          */
         var highlightField = function ($form, fieldName, clazz, removeHighlight) {
             //Check if KendoUI widget because it creates an extra span
-            var $f = $form.find("[name='" + fieldName + "']");
+            var $f;
+            if (fieldName) {
+                $f = $form.find("[name='" + fieldName + "']");
+            } else {
+                // the first param is the field
+                $f = $form;
+            }
             if ($f.is("[data-role]")) {
                 $f = $f.closest('.k-widget');
             }
@@ -2613,7 +2622,9 @@ expresso.util.UIUtil = (function () {
                     expresso.util.UIUtil.showLoadingMask($window, false, {id: "uploadDocument"});
                 },
                 error: function (e) {
-                    expresso.Common.displayServerValidationMessage(e.XMLHttpRequest);
+                    if (e && e.operation == "upload" && e.XMLHttpRequest) {
+                        expresso.Common.displayServerValidationMessage(e.XMLHttpRequest);
+                    }
                     // remove the progress
                     expresso.util.UIUtil.showLoadingMask($window, false, {id: "uploadDocument"});
                 }

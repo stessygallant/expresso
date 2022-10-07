@@ -1811,8 +1811,13 @@ expresso.Common = (function () {
      * @param [labels] if not null, used for list translation
      */
     var updateDataValues = function (data, labels) {
-        if (data.data) {
+        if (data && data.data) {
             data = data.data;
+        }
+
+        // if not data, return now
+        if (!data || !data.length) {
+            return [];
         }
 
         // try to get the type labels (if defined)
@@ -1828,6 +1833,14 @@ expresso.Common = (function () {
             if (typeof d.id === "object") {
                 // this is a fix for this problem: String{"muid"} is not equal to "muid"
                 d.id = "" + d.id;
+            }
+
+            // backward compatibility
+            if (d.value) {
+                d.id = d.value;
+            }
+            if (d.text) {
+                d.label = d.text;
             }
 
             // NOTE

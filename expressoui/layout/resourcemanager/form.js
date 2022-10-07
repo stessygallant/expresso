@@ -245,8 +245,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
             // verify the model
             var field = _this.getFieldForInput($input, model);
-            if (field && ((field.reference && field.reference.resourceManagerDef) ||
-                (field.values && field.values.resourceManagerDef))) {
+            if (field && ((field.reference && field.reference.resourceManager) ||
+                (field.values && field.values.resourceManager))) {
                 expresso.util.UIUtil.addSearchButton($input, field.reference || field.values);
             }
         });
@@ -476,6 +476,20 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 $formReadyPromise.resolve();
             });
         }, 10);
+
+        // add a listener to all buttons to avoid double click
+        this.$window.find(".k-edit-buttons").on("click", "button,a", function () {
+            // console.log("click: " + this.name + ":" + this.className);
+            expresso.util.UIUtil.showLoadingMask(_this.$window, true, "formSaveAction");
+
+            // patch: if after 5 seconds, the loading mask is still there, remove it
+            window.setTimeout(function () {
+                if (_this.$window && _this.$window.find(".exp-loading-mask[data-mask-id=formSaveAction]").length) {
+                    console.warn("Missing remove loading mask!");
+                    expresso.util.UIUtil.showLoadingMask(_this.$window, false, "formSaveAction");
+                }
+            }, 5000);
+        });
     },
 
     /**
@@ -640,8 +654,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         if (this.$window) {
             this.$window.find(".exp-form-preview .exp-overlay").remove();
             this.$window.find(".exp-form-preview .exp-create-main-button").remove();
-
-            expresso.util.UIUtil.showLoadingMask(this.$window, false);
         }
     },
 
@@ -998,6 +1010,18 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             }
         }
 
+        if (valid === true || valid === undefined) {
+            // ok
+        } else if (valid === false) {
+            // if not valid, remove the loading mask
+            expresso.util.UIUtil.showLoadingMask(this.$window, false, "formSaveAction");
+        } else {
+            // promise
+            valid.fail(function () {
+                expresso.util.UIUtil.showLoadingMask(_this.$window, false, "formSaveAction");
+            });
+        }
+
         return valid;
     },
 
@@ -1061,7 +1085,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         // remove the loading mask
         if (this.$window) {
-            expresso.util.UIUtil.showLoadingMask(this.$window, false);
+            expresso.util.UIUtil.showLoadingMask(this.$window, false, "formSaveAction");
         }
     },
 
@@ -1258,7 +1282,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         _this.close();
                         // refresh count
                         _this.resourceManager.eventCentral.publishEvent(_this.RM_EVENTS.RESOURCE_CREATED);
-                        
+
                         // refresh resource
                         if (_this.resourceManager.getResourceSecurityPath() == "document" || _this.deprecatedFileUploadSupport) {
                             _this.resourceManager.sections.grid.loadResources();

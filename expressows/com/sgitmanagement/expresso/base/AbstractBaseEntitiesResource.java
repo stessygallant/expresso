@@ -1,6 +1,8 @@
 package com.sgitmanagement.expresso.base;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +20,7 @@ import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expresso.dto.VirtualList;
+import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.exception.ValidationException;
 import com.sgitmanagement.expresso.util.ProgressSender;
@@ -604,6 +607,45 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 	@Path("resourceManager")
 	public void generateResourceManager(@DefaultValue("") @QueryParam(value = "namespace") String namespace) throws Exception {
 		getService().generateResourceManager(namespace);
+	}
+
+	/**
+	 * This method is applied on a collection, but it may return an entity
+	 * 
+	 * @param formParams
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.APPLICATION_JSON)
+	public E performCollectionAction(MultivaluedMap<String, String> formParams) throws Exception {
+		String action = Util.getParameterValue(getRequest(), "action");
+
+		logger.debug("PerformING entity collection action [" + action + "] on [" + this.getClass().getSimpleName() + "]");
+		try {
+			getService().getPersistenceManager().startTransaction(getEntityManager());
+			Method method = this.getClass().getMethod(action, MultivaluedMap.class);
+			return (E) method.invoke(this, formParams);
+		} catch (NoSuchMethodException e) {
+			getService().getPersistenceManager().rollback(getEntityManager());
+			logger.error("No such method [" + action + "] exists");
+			throw new BaseException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "No method defined for the action [" + action + "]");
+		} catch (BaseException e) {
+			getService().getPersistenceManager().rollback(getEntityManager());
+			throw e;
+		} catch (Exception e) {
+			getService().getPersistenceManager().rollback(getEntityManager());
+			if (e instanceof InvocationTargetException && e.getCause() != null && e.getCause() instanceof BaseException) {
+				throw (BaseException) e.getCause();
+			} else {
+				throw e;
+			}
+		} finally {
+			getService().getPersistenceManager().commit(getEntityManager());
+		}
+		// logger.info("PerformED action [" + action + "] on [" + this.getClass().getSimpleName() + "]");
 	}
 
 	/**

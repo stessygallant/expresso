@@ -4,26 +4,29 @@ Date.prototype.addDays = function (days) {
     return d;
 };
 
-Date.prototype.addSeconds = function (seconds) {
-    var d = new Date(this.valueOf());
-    d.setSeconds(d.getSeconds() + seconds);
-    return d;
-};
-
-
 Date.prototype.addHours = function (hours) {
     var d = new Date(this.valueOf());
     d.setHours(d.getHours() + hours);
     return d;
 };
 
+Date.prototype.addMinutes = function (minutes) {
+    var d = new Date(this.valueOf());
+    d.setMinutes(d.getMinutes() + minutes);
+    return d;
+};
+
+Date.prototype.addSeconds = function (seconds) {
+    var d = new Date(this.valueOf());
+    d.setSeconds(d.getSeconds() + seconds);
+    return d;
+};
 
 Date.prototype.dateOnly = function () {
     var d = new Date(this.valueOf());
     d.setHours(0, 0, 0, 0);
     return d;
 };
-
 
 Date.prototype.lastSaturday = function () {
     return new Date(this.getFullYear(), this.getMonth(), this.getDate() - this.getDay() - 1);
