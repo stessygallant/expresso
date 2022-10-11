@@ -3589,16 +3589,18 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // add a separator
             if (needSeparator) {
                 this.addSeparatorToToolbar(toolbar);
-                //needSeparator = false;
             }
 
             // always add the excel button
             toolbar.push(this.TOOLBAR_BUTTONS.EXCEL);
+        }
 
-            // build the report selector button if needed (not for sibling resource)
-            if (this.getReports() && this.resourceManager.displayAsMaster) {
-                toolbar.push({template: '<div class="exp-report-selector"></div>'});
+        // build the report selector button if needed (not for sibling resource)
+        if (this.getReports() && this.resourceManager.displayAsMaster) {
+            if (needSeparator) {
+                this.addSeparatorToToolbar(toolbar);
             }
+            toolbar.push({template: '<div class="exp-report-selector"></div>'});
         }
 
         return toolbar;

@@ -45,9 +45,11 @@
 
 .exp-invalid, .exp-invalid-unique, input.k-invalid {
     box-shadow: 0 0 4px red !important;
+
     &:not(.k-combobox) {
         border: 1px solid red !important;
     }
+
     &.k-combobox {
         .k-dropdown-wrap {
             border: 1px solid red !important;
@@ -836,7 +838,7 @@ label input + span {
         .exp-button {
             // icon
             .fa {
-                margin-top: 0.3em;
+                margin-top: 0.1em;
             }
 
             // label

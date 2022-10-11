@@ -30,7 +30,7 @@ public class AuditTrailInterceptor extends AbstractAuditTrailInterceptor {
 			AuditTrail auditTrail = new AuditTrail(resourceName, resourceId, fieldName, currentStringValue, newStringValue, user.getId());
 			PersistenceManager.getInstance().getEntityManager().persist(auditTrail);
 		} catch (Exception ex) {
-			logger.error("Cannot create audit trail: " + ex);
+			logger.error("Cannot create audit trail", ex);
 		}
 	}
 

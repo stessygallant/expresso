@@ -42,9 +42,6 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 	public void performFormAction(MultivaluedMap<String, String> formParams) throws Exception {
 		String action = Util.getParameterValue(getRequest(), "action");
 
-		if (action == null) {
-			action = "performPost";
-		}
 		logger.debug("PerformING action [" + action + "] on [" + this.getClass().getSimpleName() + "]"); // + Util.getMemoryStats());
 		// with " + formParams);
 		try {

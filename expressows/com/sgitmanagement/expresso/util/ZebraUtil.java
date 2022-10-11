@@ -189,8 +189,20 @@ public enum ZebraUtil {
 				// use LP directly
 				// -c Exit only after further access to any of the input files is no longer required. The application can then safely delete or modify the files without affecting the output operation.
 				// -n quantity
-				Process p = Runtime.getRuntime().exec("lp -c -n " + quantity + " -d " + printerName + " " + pngFile.getAbsolutePath());
-				p.waitFor();
+
+				// PATCH: when printing all in a batch, the latest are poor quality (problem with the ink or the paper)
+				// wait between each printing
+				boolean bacthPrinting = false;
+				if (bacthPrinting) {
+					Process p = Runtime.getRuntime().exec("lp -c -n " + quantity + " -d " + printerName + " " + pngFile.getAbsolutePath());
+					p.waitFor();
+				} else {
+					for (int i = 0; i < quantity; i++) {
+						Process p = Runtime.getRuntime().exec("lp -c -d " + printerName + " " + pngFile.getAbsolutePath());
+						p.waitFor();
+						Thread.sleep(1000); // sleep between each print
+					}
+				}
 				pngFile.delete();
 			}
 		} finally {

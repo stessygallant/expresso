@@ -902,7 +902,7 @@ expresso.Main = function () {
         if (expresso.Security.isAdmin()) {
             initChat();
         }
-        
+
         // now we can display the application
         var defaultApplication = getDefaultApplication();
         if (defaultApplication) {
@@ -1222,7 +1222,7 @@ expresso.Main = function () {
                 currentAppInstance.destroy();
             } catch (e) {
                 // cannot do much
-                console.error(e);
+                //console.error(e);
             }
         }
         currentAppInstance = null;

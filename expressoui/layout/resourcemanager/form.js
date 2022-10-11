@@ -803,7 +803,9 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         // this could generate a network call or it could execute the onSaved method immediately
         // in that case, the saveDeferred will be automatically resolve
         setTimeout(function () {
-            _this.$window.find(".k-grid-update").trigger("click");
+            if (_this.$window) {
+                _this.$window.find(".k-grid-update").trigger("click");
+            }
         }, 10);
 
         return this.savedDeferred;
