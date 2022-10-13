@@ -112,25 +112,19 @@
             border-left: 1px solid $themeColor;
         }
 
-        // default value for any button with fontawesome stack buttons
-        .exp-stack-button {
-            .fa-stack {
-                // margin: -0.1em 0 0 -0.2em;
-                width: 1em;
-                height: 0.9em;
-                line-height: 1;
-            }
-        }
+        // when using the X as icon
+        .fa-stack {
+            width: 1em;
+            height: 0.9em;
+            line-height: 1;
 
-        // Clear filter button
-        .exp-clearfilters-button {
             .fa-times {
                 color: rgba(255, 0, 0, 0.61);
                 margin: 0.6em 0 0 0.6em;
                 font-size: 90%;
             }
 
-            span.exp-button-label {
+            & + span.exp-button-label {
                 margin-left: 0.9em;
             }
         }

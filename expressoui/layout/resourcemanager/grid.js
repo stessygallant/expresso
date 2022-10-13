@@ -719,6 +719,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     column.width = column.width || 110;
                 }
 
+                // numbers
                 if (field && field.type == "number" && !column.field.endsWith("Id")) {
                     column.attributes = column.attributes || {};
                     column.attributes.class = "number";
@@ -744,7 +745,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 }
 
                 // if the column end with No, verify if there is the same resource with Id
-                if (!column.reference && column.reference !== false) {
+                if (column.reference || column.reference === false) {
+                    // do not add reference
+                } else {
                     if (field && field.reference && field.reference.resourceManager) {
                         column.reference = {
                             fieldName: field.reference.fieldName,
@@ -835,6 +838,20 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     // allow multi selection
                     if (column.filterable !== false) {
                         column.filterable = {multi: true, extra: false}
+                    }
+
+
+                    // PATCH: In TreeList, the column does not support ID mapping
+                    if (this.hierarchical) {
+                        // put the values in a static tree
+                        var valuesName = "values_" + column.field.toUpperCase();
+                        var map = {};
+                        column.values.forEach(function (v) {
+                            map[v.id] = v;
+                        });
+                        window.TreeListValues = window.TreeListValues || {};
+                        window.TreeListValues[valuesName] = map;
+                        column.template = column.template || "#=" + column.field + "?window.TreeListValues['" + valuesName + "'][" + column.field + "].label:''#";
                     }
                 }
 
@@ -1099,6 +1116,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         $grid.find(".exp-delete-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performDelete();
+        });
+
+        $grid.find(".exp-activate-button").on("click.grid", function (e) {
+            e.preventDefault();
+            _this.performCustomAction("activate");
         });
 
         $grid.find(".exp-deactivate-button").on("click.grid", function (e) {
@@ -3502,7 +3524,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             toolbar.push({template: '<button type="button" class="k-button exp-button exp-single-selection exp-update-button" title="modifyRecord"><span class="fa fa-pencil"><span class="exp-button-label" data-text-key="modifyRecordButton"></span></span></button>'});
         }
 
-        // add the deactivate button
+        // add the activate and deactivate button
+        if (this.isUserAllowed("activate")) {
+            toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-activate-button" title="activateRecords"><span class="fa-stack"><i class="fa fa-asterisk fa-stack-1x"></i><i class="fa fa-times fa-stack-1x"></i></span><span class="exp-button-label" data-text-key="activateRecordsButton"></span></button>'});
+        }
         if (this.isUserAllowed("deactivate")) {
             toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-deactivate-button" title="deactivateRecords"><span class="fa fa-asterisk"><span class="exp-button-label" data-text-key="deactivateRecordsButton"></span></span></button>'});
         }
@@ -3575,7 +3600,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         if (this.isFilterable() && (this.virtualScroll || this.hierarchical)) {
             // add the clear filter button
-            toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-clearfilters-button exp-stack-button" title="clearFilters"><span class="fa-stack"><i class="fa fa-filter fa-stack-1x"></i><i class="fa fa-times fa-stack-1x"></i></span><span class="exp-button-label" data-text-key="clearFiltersButton"></span></button>'});
+            toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-clearfilters-button" title="clearFilters"><span class="fa-stack"><i class="fa fa-filter fa-stack-1x"></i><i class="fa fa-times fa-stack-1x"></i></span><span class="exp-button-label" data-text-key="clearFiltersButton"></span></button>'});
 
             // add the search overall input
             toolbar.push({template: "<input type='search' class='k-textbox exp-always-active-button search-overall-input' placeholder='searchPlaceHolder'>"});
@@ -4124,6 +4149,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         this.originalMethod = null;
         this.previousSelectedResource = null;
         this.columnMap = null;
+
+        // remove any TreeListValues
+        window.TreeListValues = null;
 
         // remove the menu preferences if needed
         if (this.$preferencesMenu) {

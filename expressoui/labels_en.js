@@ -240,6 +240,7 @@ $.extend(expresso.Labels, {
     synchronizeButton: "",
     processButton: "",
     createNewRecordButton: "",
+    activateRecordsButton: "",
     deactivateRecordsButton: "",
     duplicateRecordButton: "",
     viewRecordButton: "",

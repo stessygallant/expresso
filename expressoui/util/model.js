@@ -399,6 +399,11 @@ expresso.util.Model = (function () {
                                         // set a flag on the model
                                         resourceManager.model.requireApprovalRole = true;
                                     }
+
+                                    // set the hierarchical parent
+                                    if (modelField.hierarchicalParent === undefined && field.hierarchicalParent !== undefined) {
+                                        modelField.hierarchicalParent = field.hierarchicalParent;
+                                    }
                                 }
                             }
                         })
