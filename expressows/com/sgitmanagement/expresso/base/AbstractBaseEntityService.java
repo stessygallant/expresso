@@ -108,6 +108,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 	private boolean parentEntityLookup = false;
 	private Field parentEntityField = null;
+	private Field hierarchicalParentEntityField = null;
 
 	// for performance optimization
 	private Boolean parentUpdatable = null;
@@ -158,6 +159,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			throw new Exception("Problem with JAXB: Cannot create a null entity. Please verify your JSON object (maybe the type attribute is missing?)");
 		}
 
+		// validate before merge
+		validateMerge(e);
+
 		// set the creation date and user if Creatable
 		if (Creatable.class.isAssignableFrom(getTypeOfE())) {
 			if (((Creatable) e).getCreationDate() == null) {
@@ -186,7 +190,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			if (refreshAfterMerge) {
 				flushAndRefresh(e);
 			}
-			onPostCreate(e);
+			onPostMerge(e);
 		} catch (PersistenceException ex) {
 			// from now, the session is rollback only. Anything done previously will be rollbacked
 			// throw ExceptionUtils.getRootCause(ex);
@@ -237,29 +241,17 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 * @throws Exception
 	 */
-	public void onPostCreate(E e) throws Exception {
-		onPostMerge(e);
-	}
-
-	/**
-	 * This method is used to validate constraint upon create/update methods
-	 *
-	 * @param e
-	 * @return
-	 * @throws Exception
-	 */
-	public void onPostUpdate(E e) throws Exception {
-		onPostMerge(e);
-	}
-
-	/**
-	 * This method is used to validate constraint upon create/update methods
-	 *
-	 * @param e
-	 * @return
-	 * @throws Exception
-	 */
 	public void onPostMerge(E e) throws Exception {
+		// by default, do nothing
+	}
+
+	/**
+	 * Throw ValidationException on error
+	 * 
+	 * @param e
+	 * @throws Exception
+	 */
+	public void validateMerge(E e) throws Exception {
 		// by default, do nothing
 	}
 
@@ -292,6 +284,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		if (e == null) {
 			throw new Exception("Problem with JAXB: Cannot create a null entity. Please verify your JSON object (maybe the 'type' attribute is missing?)");
 		}
+
+		// validate before merge
+		validateMerge(e);
 
 		if (getEntityManager().contains(e)) {
 			// ok, already in the session
@@ -360,7 +355,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			flushAndRefresh(e);
 		}
 
-		onPostUpdate(e);
+		onPostMerge(e);
 		return e;
 	}
 
@@ -741,10 +736,12 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				for (Sort sort : getUniqueQuerySort()) {
 					// make sure it is not already in the sort
 					boolean alreadyInSort = false;
-					for (Sort querySort : query.getSort()) {
-						if (querySort.getField().equals(sort.getField())) {
-							alreadyInSort = true;
-							break;
+					if (query.getSort() != null) {
+						for (Sort querySort : query.getSort()) {
+							if (querySort.getField().equals(sort.getField())) {
+								alreadyInSort = true;
+								break;
+							}
 						}
 					}
 
@@ -796,7 +793,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				// if the query is for an hierarchical list, we need to include all parents and children
 				if (query.hierarchical()) {
-					appendHierarchicalEntities(data, query.activeOnly());
+					int beforeDataSize = data.size();
+					int sqlQueryCount = appendHierarchicalEntities(data, query.activeOnly()) + 1;
+					logger.debug("Number of SQL Queries for hierarchical: " + sqlQueryCount + " Total entities: " + data.size() + " (before: " + beforeDataSize + ")");
 				}
 
 				if (data.size() > 5000) {
@@ -828,18 +827,38 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * 
 	 * @param data
 	 */
-	private void appendHierarchicalEntities(List<E> data, boolean activeOnly) throws Exception {
+	private int appendHierarchicalEntities(List<E> data, boolean activeOnly) throws Exception {
+		boolean useBatchFetchForParent = true;
+		boolean useBatchFetchForChildren = true;
+
 		// build a map with the key
 		Set<I> ids = new HashSet<>();
 		data.forEach(e -> ids.add(e.getId()));
 
-		for (E e : new ArrayList<>(data)) {
-			// append parents
-			appendHierarchicalParentEntities(e, data, ids);
+		int sqlQueryCount = 0;
 
-			// append children
-			appendHierarchicalChildEntities(e, data, ids, activeOnly);
+		// append parents
+		if (useBatchFetchForParent) {
+			sqlQueryCount += appendHierarchicalParentEntities(data, data, ids);
 		}
+
+		// append children
+		if (useBatchFetchForChildren) {
+			sqlQueryCount += appendHierarchicalChildEntities(data, data, ids, activeOnly);
+		}
+
+		// append children
+		for (E e : new ArrayList<>(data)) {
+			if (!useBatchFetchForParent) {
+				sqlQueryCount += appendHierarchicalParentEntities(e, data, ids);
+			}
+			if (!useBatchFetchForChildren) {
+				if (data.size() < AbstractBaseEntitiesResource.MAX_HIERARCHICAL_RESULTS) {
+					sqlQueryCount += appendHierarchicalChildEntities(e, data, ids, activeOnly);
+				}
+			}
+		}
+		return sqlQueryCount;
 	}
 
 	/**
@@ -849,7 +868,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param ids
 	 * @throws Exception
 	 */
-	private void appendHierarchicalParentEntities(E e, List<E> data, Set<I> ids) throws Exception {
+	private int appendHierarchicalParentEntities(E e, List<E> data, Set<I> ids) throws Exception {
+		int sqlQueryCount = 0;
 		if (e != null) {
 			if (!ids.contains(e.getId())) {
 				ids.add(e.getId());
@@ -858,8 +878,73 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 			// get the hierarchy reference
 			E hierarchicalParent = getHierarchicalParentEntity(e);
-			appendHierarchicalParentEntities(hierarchicalParent, data, ids);
+			sqlQueryCount++;
+			if (hierarchicalParent != null) {
+				sqlQueryCount += appendHierarchicalParentEntities(hierarchicalParent, data, ids);
+			}
 		}
+		return sqlQueryCount;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private E getHierarchicalParentEntity(E e) throws Exception {
+		Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
+		if (hierarchicalParentEntityField != null) {
+
+			// this does not work as it does not use the getter
+			// IEntity parentEntityInstance = (IEntity) getParentEntityField().get(e);
+			E hierarchicalParentEntity = (E) PropertyUtils.getProperty(e, hierarchicalParentEntityField.getName());
+
+			// if the parent is LAZY, then we get a proxy
+			// we need to initialize the proxy
+			if (hierarchicalParentEntity != null && hierarchicalParentEntity instanceof HibernateProxy) {
+				hierarchicalParentEntity = (E) Hibernate.unproxy(hierarchicalParentEntity);
+			}
+
+			return hierarchicalParentEntity;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * get all the parents in 1 query (for performance reason)
+	 * 
+	 * @param hierarchicalParentEntities only the list of the entities to get the parent
+	 * @param data                       complete list of data
+	 * @param ids
+	 * @return
+	 * @throws Exception
+	 */
+	private int appendHierarchicalParentEntities(List<E> hierarchicalParentEntities, List<E> data, Set<I> ids) throws Exception {
+		int sqlQueryCount = 0;
+		if (!hierarchicalParentEntities.isEmpty()) {
+			Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
+			String hierarchicalParentIdFieldName = hierarchicalParentEntityField.getName() + "Id";
+			Filter hierarchicalParentIdsFilter = new Filter(Logic.or);
+			for (E e : hierarchicalParentEntities) {
+				Integer hierarchicalParentId = (Integer) PropertyUtils.getProperty(e, hierarchicalParentIdFieldName);
+				if (hierarchicalParentId != null && !ids.contains(hierarchicalParentId)) {
+					hierarchicalParentIdsFilter.addFilter(new Filter("id", hierarchicalParentId));
+				}
+			}
+			if (hierarchicalParentIdsFilter.hasFilters()) {
+				sqlQueryCount++;
+				logger.debug("Getting " + hierarchicalParentIdsFilter.getFilters().size() + " new HierarchicalParentEntities");
+				List<E> newHierarchicalParentEntities = new ArrayList<>();
+				for (E e : list(new Query().setVerified(true).addFilter(hierarchicalParentIdsFilter))) {
+					if (!ids.contains(e.getId())) {
+						ids.add(e.getId());
+						data.add(e);
+						newHierarchicalParentEntities.add(e);
+					}
+				}
+
+				// now get the upper level
+				sqlQueryCount += appendHierarchicalParentEntities(newHierarchicalParentEntities, data, ids);
+			}
+		}
+		return sqlQueryCount;
 	}
 
 	/**
@@ -870,23 +955,67 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param activeOnly
 	 * @throws Exception
 	 */
-	private void appendHierarchicalChildEntities(E e, List<E> data, Set<I> ids, boolean activeOnly) throws Exception {
+	private int appendHierarchicalChildEntities(List<E> hierarchicalChildEntities, List<E> data, Set<I> ids, boolean activeOnly) throws Exception {
+		int sqlQueryCount = 0;
+		// if we already reaches the maximum limit, do not include children
+		if (data.size() < AbstractBaseEntitiesResource.MAX_HIERARCHICAL_RESULTS) {
+			if (!hierarchicalChildEntities.isEmpty()) {
+				Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
+				String hierarchicalParentIdFieldName = hierarchicalParentEntityField.getName() + "Id";
+				Filter hierarchicalChildIdsFilter = new Filter(Logic.or);
+				for (E e : hierarchicalChildEntities) {
+					hierarchicalChildIdsFilter.addFilter(new Filter(hierarchicalParentIdFieldName, e.getId()));
+				}
+				sqlQueryCount++;
+				logger.debug("Getting " + hierarchicalChildIdsFilter.getFilters().size() + " new HierarchicalChildEntities");
+				List<E> newHierarchicalChildEntities = new ArrayList<>();
+				for (E e : list(new Query().addFilter(hierarchicalChildIdsFilter))) {
+					if (!ids.contains(e.getId())) {
+						ids.add(e.getId());
+						data.add(e);
+						newHierarchicalChildEntities.add(e);
+					}
+				}
+
+				// now get the down level
+				sqlQueryCount += appendHierarchicalChildEntities(newHierarchicalChildEntities, data, ids, activeOnly);
+			}
+		}
+		return sqlQueryCount;
+	}
+
+	/**
+	 * 
+	 * @param e
+	 * @param data
+	 * @param ids
+	 * @param activeOnly
+	 * @throws Exception
+	 */
+	private int appendHierarchicalChildEntities(E e, List<E> data, Set<I> ids, boolean activeOnly) throws Exception {
+		int sqlQueryCount = 0;
 		// if we already reaches the maximum limit, do not include children
 		if (data.size() < AbstractBaseEntitiesResource.MAX_HIERARCHICAL_RESULTS) {
 			Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
 			if (hierarchicalParentEntityField != null) {
-				// get all resources where the hierarchicalParentEntity is the current entity
-				Query childrenQuery = new Query().setActiveOnly(activeOnly);
-				childrenQuery.addFilter(new Filter(hierarchicalParentEntityField.getName() + "Id", e.getId()));
-				for (E child : list(childrenQuery)) {
-					if (!ids.contains(child.getId())) {
-						ids.add(child.getId());
-						data.add(child);
-						appendHierarchicalChildEntities(child, data, ids, activeOnly);
+				Filter parentFilter = new Filter(hierarchicalParentEntityField.getName() + "Id", e.getId());
+
+				// verify first if there is at least one children with this parentId
+				sqlQueryCount++;
+				if (count(new Query().setVerified(true).addFilter(parentFilter)) > 0) {
+					// get all resources where the hierarchicalParentEntity is the current entity
+					sqlQueryCount++;
+					for (E child : list(new Query().setActiveOnly(activeOnly).addFilter(parentFilter))) {
+						if (!ids.contains(child.getId())) {
+							ids.add(child.getId());
+							data.add(child);
+							sqlQueryCount += appendHierarchicalChildEntities(child, data, ids, activeOnly);
+						}
 					}
 				}
 			}
 		}
+		return sqlQueryCount;
 	}
 
 	/**
@@ -1339,36 +1468,16 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 */
 	private Field getHierarchicalParentEntityField() {
-		Field hierarchicalParentEntityField = null;
-		for (Field field : getTypeOfE().getDeclaredFields()) {
-			if (field.isAnnotationPresent(HierarchicalParentEntity.class)) {
-				field.setAccessible(true);
-				hierarchicalParentEntityField = field;
-				break;
+		if (this.hierarchicalParentEntityField == null) {
+			for (Field field : getTypeOfE().getDeclaredFields()) {
+				if (field.isAnnotationPresent(HierarchicalParentEntity.class)) {
+					field.setAccessible(true);
+					this.hierarchicalParentEntityField = field;
+					break;
+				}
 			}
 		}
-		return hierarchicalParentEntityField;
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	private E getHierarchicalParentEntity(E e) throws Exception {
-		Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
-		if (hierarchicalParentEntityField != null) {
-
-			// this does not work as it does not use the getter
-			// IEntity parentEntityInstance = (IEntity) getParentEntityField().get(e);
-			E hierarchicalParentEntity = (E) PropertyUtils.getProperty(e, hierarchicalParentEntityField.getName());
-
-			// if the parent is LAZY, then we get a proxy
-			// we need to initialize the proxy
-			if (hierarchicalParentEntity != null && hierarchicalParentEntity instanceof HibernateProxy) {
-				hierarchicalParentEntity = (E) Hibernate.unproxy(hierarchicalParentEntity);
-			}
-
-			return hierarchicalParentEntity;
-		} else {
-			return null;
-		}
+		return this.hierarchicalParentEntityField;
 	}
 
 	/**
