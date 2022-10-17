@@ -1318,7 +1318,9 @@ expresso.util.UIUtil = (function () {
                 };
             } else {
                 // if the list is only string, build a complete data source
-                wsListPathOrData = convertList(wsListPathOrData, customOptions.labels, dataValueField, dataTextField);
+                if (wsListPathOrData) {
+                    wsListPathOrData = convertList(wsListPathOrData, customOptions.labels, dataValueField, dataTextField);
+                }
 
                 dataSource = {
                     data: wsListPathOrData,

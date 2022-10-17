@@ -920,28 +920,30 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		int sqlQueryCount = 0;
 		if (!hierarchicalParentEntities.isEmpty()) {
 			Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
-			String hierarchicalParentIdFieldName = hierarchicalParentEntityField.getName() + "Id";
-			Filter hierarchicalParentIdsFilter = new Filter(Logic.or);
-			for (E e : hierarchicalParentEntities) {
-				Integer hierarchicalParentId = (Integer) PropertyUtils.getProperty(e, hierarchicalParentIdFieldName);
-				if (hierarchicalParentId != null && !ids.contains(hierarchicalParentId)) {
-					hierarchicalParentIdsFilter.addFilter(new Filter("id", hierarchicalParentId));
-				}
-			}
-			if (hierarchicalParentIdsFilter.hasFilters()) {
-				sqlQueryCount++;
-				logger.debug("Getting " + hierarchicalParentIdsFilter.getFilters().size() + " new HierarchicalParentEntities");
-				List<E> newHierarchicalParentEntities = new ArrayList<>();
-				for (E e : list(new Query().setVerified(true).addFilter(hierarchicalParentIdsFilter))) {
-					if (!ids.contains(e.getId())) {
-						ids.add(e.getId());
-						data.add(e);
-						newHierarchicalParentEntities.add(e);
+			if (hierarchicalParentEntityField != null) {
+				String hierarchicalParentIdFieldName = hierarchicalParentEntityField.getName() + "Id";
+				Filter hierarchicalParentIdsFilter = new Filter(Logic.or);
+				for (E e : hierarchicalParentEntities) {
+					Integer hierarchicalParentId = (Integer) PropertyUtils.getProperty(e, hierarchicalParentIdFieldName);
+					if (hierarchicalParentId != null && !ids.contains(hierarchicalParentId)) {
+						hierarchicalParentIdsFilter.addFilter(new Filter("id", hierarchicalParentId));
 					}
 				}
+				if (hierarchicalParentIdsFilter.hasFilters()) {
+					sqlQueryCount++;
+					logger.debug("Getting " + hierarchicalParentIdsFilter.getFilters().size() + " new HierarchicalParentEntities");
+					List<E> newHierarchicalParentEntities = new ArrayList<>();
+					for (E e : list(new Query().setVerified(true).addFilter(hierarchicalParentIdsFilter))) {
+						if (!ids.contains(e.getId())) {
+							ids.add(e.getId());
+							data.add(e);
+							newHierarchicalParentEntities.add(e);
+						}
+					}
 
-				// now get the upper level
-				sqlQueryCount += appendHierarchicalParentEntities(newHierarchicalParentEntities, data, ids);
+					// now get the upper level
+					sqlQueryCount += appendHierarchicalParentEntities(newHierarchicalParentEntities, data, ids);
+				}
 			}
 		}
 		return sqlQueryCount;
