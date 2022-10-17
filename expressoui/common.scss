@@ -480,6 +480,29 @@
     }
 }
 
+// DATE SELECTOR
+.exp-date-selector {
+    & > div.input-wrap {
+        margin: 0;
+
+        .date {
+            width: 10em;
+        }
+    }
+
+    button.exp-day-selector {
+        margin: 0.1em 0.3em;
+
+        &.exp-previous-day {
+            padding: 0.45em 0.7em 0.35em 0.6em;
+        }
+
+        &.exp-next-day {
+            padding: 0.45em 0.6em 0.35em 0.7em;
+        }
+    }
+}
+
 //
 // ------------------------------------------------------------------------------------------------------------------
 // MESSAGE WINDOW CSS

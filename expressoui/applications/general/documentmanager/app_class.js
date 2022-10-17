@@ -35,10 +35,19 @@
                 values: {
                     resourcePath: "documentType",
                     filter: function () {
+                        var resourceName;
+                        if (_this.siblingResourceManager) {
+                            resourceName = _this.siblingResourceManager.getResourceName();
+                        } else if (expresso.util.Util.getUrlParameter("resourceName")) {
+                            resourceName = expresso.util.Util.getUrlParameter("resourceName");
+                        } else {
+                            resourceName = null;
+                        }
+
                         return {
                             field: "resourceName",
                             operator: "eq",
-                            value: _this.siblingResourceManager.getResourceName()
+                            value: resourceName
                         }
                     }
                 }

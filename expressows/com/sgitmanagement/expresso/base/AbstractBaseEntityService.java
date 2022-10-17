@@ -160,7 +160,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 
 		// validate before merge
-		validateMerge(e);
+		validateEntity(e);
 
 		// set the creation date and user if Creatable
 		if (Creatable.class.isAssignableFrom(getTypeOfE())) {
@@ -251,7 +251,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param e
 	 * @throws Exception
 	 */
-	public void validateMerge(E e) throws Exception {
+	public void validateEntity(E e) throws Exception {
 		// by default, do nothing
 	}
 
@@ -286,7 +286,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 
 		// validate before merge
-		validateMerge(e);
+		validateEntity(e);
 
 		if (getEntityManager().contains(e)) {
 			// ok, already in the session
@@ -2815,17 +2815,44 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			String field = fieldName;
 			AppClassField appClassField = appClassFieldMap.get(fieldName);
 			if (appClassField.getReference() != null) {
-				// remove the ID
-				field = field.substring(0, field.length() - 2);
-				if (appClassField.getReference() instanceof String && ((String) appClassField.getReference()).equals("user")) {
-					field += ".fullName";
-				} else if (appClassField.getReference() instanceof Reference) {
-					// Reference reference = (Reference) appClassField.getReference();
-					field += ".description";
+				if (field.endsWith("Id")) {
+					// remove the ID
+					field = field.substring(0, field.length() - 2);
+					if (appClassField.getReference() instanceof String && ((String) appClassField.getReference()).equals("user")) {
+						field += ".fullName";
+					} else if (appClassField.getReference() instanceof Reference) {
+						// Reference reference = (Reference) appClassField.getReference();
+						// do no put the reference in columns
+						// use formula instead
+						continue;
+					} else {
+						field += ".description";
+					}
+				} else {
+					// do not include Ids (multiple)
+					continue;
 				}
 			}
-			sb.append("            field: \"" + field + "\",\n");
-			sb.append("            width: 120\n");
+			sb.append("            field: \"" + field + "\"");
+
+			if (appClassField.getType() != null && (appClassField.getType().equals("date") || appClassField.getType().equals("boolean"))) {
+				// no width
+				sb.append("\n");
+			} else {
+				sb.append(",\n");
+				int width;
+				if (appClassField.getType() != null && appClassField.getType().equals("number") && appClassField.getReference() == null) {
+					width = 100;
+				} else if (field.endsWith("No")) {
+					width = 80;
+				} else if (appClassField.getMaxLength() != null && appClassField.getMaxLength() > 100) {
+					width = 200;
+				} else {
+					width = 120;
+				}
+				sb.append("            width: " + width + "\n");
+			}
+
 			sb.append("        }, {\n");
 		}
 		if (getParentEntityField() != null) {
@@ -2841,7 +2868,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		sb.append("    // @override\n");
 		sb.append("    getMobileColumns: function () {\n");
 		sb.append("        return {\n");
-		sb.append("            mobileNumberFieldName: null,\n");
+		sb.append("            mobileNumberFieldName: \"" + getKeyFields()[0] + "\",\n");
 		sb.append("            mobileDescriptionFieldName: null,\n");
 		sb.append("            mobileTopRightFieldName: null,\n");
 		sb.append("            mobileMiddleLeftFieldName: null,\n");
@@ -2869,7 +2896,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				if (field.endsWith("Id")) {
 					field = field.substring(0, field.length() - 2);
 				}
-				sb.append("    " + field + ": \"" + field + "\",\n");
+				sb.append("    " + field + ": \"" + StringUtils.capitalize(field) + "\",\n");
 			}
 		}
 		sb.append("\n");

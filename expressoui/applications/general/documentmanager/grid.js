@@ -4,15 +4,26 @@
 
     // @override
     getColumns: function () {
-        var columns = [{
+        var columns = [];
+
+        if (this.resourceManager.displayAsMaster) {
+            columns.push({
+                field: "resourceName",
+                width: 120
+            }, {
+                field: "resourceId",
+                width: 70
+            });
+        }
+        columns.push({
             field: "creationDate"
         }, {
             field: "creationUserFullName",
             width: 150
         }, {
             field: "fileName",
-            width: 200
-        }];
+            width: 300
+        });
 
         if (this.resourceManager.model.fields["documentTypeId"].values.data &&
             this.resourceManager.model.fields["documentTypeId"].values.data.length > 0) {
@@ -23,10 +34,11 @@
         }
 
         columns.push({
-            field: "description"
+            field: "description",
+            width: 300
         });
 
-        if (this.resourceManager.options.showDates) {
+        if (this.resourceManager.options.showDates || this.resourceManager.displayAsMaster) {
             columns.push({
                 field: "fromDate"
             }, {
@@ -61,16 +73,28 @@
     // @override
     getGridFilter: function () {
         var gridFilter = []; // expresso.layout.resourcemanager.Grid.fn.getGridFilter.call(this);
-        var resource = this.resourceManager.siblingResourceManager.currentResource;
-        gridFilter.push.apply(gridFilter, [{
-            field: "resourceId",
-            operator: "eq",
-            value: (resource ? resource.id : null)
-        }, {
-            field: "resourceName",
-            operator: "eq",
-            value: this.resourceManager.siblingResourceManager.getResourceName()
-        }]);
+        var resourceName;
+        if (this.resourceManager.displayAsMaster) {
+            resourceName = expresso.util.Util.getUrlParameter("resourceName");
+            gridFilter.push({
+                field: "resourceName",
+                operator: "eq",
+                value: resourceName
+            });
+        } else {
+            var resource = this.resourceManager.siblingResourceManager.currentResource;
+            resourceName = this.resourceManager.siblingResourceManager.getResourceName();
+            gridFilter.push({
+                field: "resourceName",
+                operator: "eq",
+                value: resourceName
+            }, {
+                field: "resourceId",
+                operator: "eq",
+                value: (resource ? resource.id : null)
+            });
+        }
+
         // console.log("document getGridFilter: " + JSON.stringify(gridFilter));
         return gridFilter;
     },

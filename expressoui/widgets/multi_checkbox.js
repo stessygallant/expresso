@@ -11,6 +11,7 @@
         filter: undefined,
         autoLoad: undefined,
         readOnly: false,
+        activeOnly: true,
 
         options: {
             // the name is what it will appear in the kendo namespace (kendo.ui.ExpressoMultiCheckbox).
@@ -26,6 +27,7 @@
             value: undefined,
             autoLoad: true,
             showHeader: true,
+            activeOnly: true,
             dataValueField: "id",
             dataTextField: "label"
         },
@@ -186,7 +188,6 @@
             if ($.isArray(dataSource)) {
                 dataSource = {data: dataSource};
             }
-
             if (dataSource.data) {
                 $dataDeferred = $.Deferred().resolve(dataSource.data);
             } else if (dataSource.url && this.autoLoad) {
@@ -209,16 +210,19 @@
          */
         _addNewDataItem: function (dataItem) {
             // add the checkboxes
-            var $checkboxDiv = expresso.util.UIUtil.buildCheckBox(name, dataItem[this.options.dataTextField],
-                dataItem[this.options.dataValueField]).appendTo(this.$wrapper.find(".content"));
+            if (!dataItem.deactivationDate || !this.activeOnly) {
+                var $checkboxDiv = expresso.util.UIUtil.buildCheckBox(name, dataItem[this.options.dataTextField] +
+                    (dataItem.deactivationDate ? " *" : ""),
+                    dataItem[this.options.dataValueField]).appendTo(this.$wrapper.find(".content"));
 
-            // add all possible values to $select
-            $("<option value='" + dataItem[this.options.dataValueField] + "'>" +
-                dataItem[this.options.dataTextField] + "</option>").appendTo(this.$element);
-            $checkboxDiv.find("input").data("dataItem", dataItem);
+                // add all possible values to $select
+                $("<option value='" + dataItem[this.options.dataValueField] + "'>" +
+                    dataItem[this.options.dataTextField] + "</option>").appendTo(this.$element);
+                $checkboxDiv.find("input").data("dataItem", dataItem);
 
-            if (this.readOnly) {
-                expresso.util.UIUtil.setFieldReadOnly($checkboxDiv.find("input"));
+                if (this.readOnly) {
+                    expresso.util.UIUtil.setFieldReadOnly($checkboxDiv.find("input"));
+                }
             }
         },
 

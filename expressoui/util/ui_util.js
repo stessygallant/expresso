@@ -135,6 +135,9 @@ expresso.util.UIUtil = (function () {
                     case "expressofilter":
                         widget = $element.data("kendoExpressoFilter");
                         break;
+                    case "expressodateselector":
+                        widget = $element.data("kendoExpressoDateSelector");
+                        break;
 
                     // Cezinc Widget (BACKWARD compatibility only)
                     case "cezincsingleselect":
