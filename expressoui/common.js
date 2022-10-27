@@ -1511,7 +1511,7 @@ expresso.Common = (function () {
         delete customOptions.queryParameters.screenMode;
         delete customOptions.queryParameters.securityToken;
         delete customOptions.queryParameters.userName;
-        //  delete customOptions.queryParameters.loginToken;
+        delete customOptions.queryParameters.loginToken;
         // delete customOptions.queryParameters.fullScreen;
 
         // add the queryParameters to the URL

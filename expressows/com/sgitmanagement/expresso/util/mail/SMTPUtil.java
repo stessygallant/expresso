@@ -74,6 +74,7 @@ public class SMTPUtil implements MailSender {
 		}
 		message.setFrom(senderAddress);
 
+		int countRecipients = 0;
 		// TO (mandatory)
 		if (tos != null) {
 			for (String to : tos) {
@@ -81,6 +82,7 @@ public class SMTPUtil implements MailSender {
 					String[] addresses = to.split("[,; ]");
 					for (String address : addresses) {
 						if (address != null && address.length() > 5 && address.indexOf("@") != -1) {
+							countRecipients++;
 							message.addRecipient(Message.RecipientType.TO, new InternetAddress(address));
 						}
 					}
@@ -95,6 +97,7 @@ public class SMTPUtil implements MailSender {
 					String[] addresses = cc.split("[,;]");
 					for (String address : addresses) {
 						if (address != null && address.length() > 0 && address.indexOf("@") != -1) {
+							countRecipients++;
 							message.addRecipient(Message.RecipientType.CC, new InternetAddress(address));
 						}
 					}
@@ -109,11 +112,17 @@ public class SMTPUtil implements MailSender {
 					String[] addresses = bcc.split("[,;]");
 					for (String address : addresses) {
 						if (address != null && address.length() > 0 && address.indexOf("@") != -1) {
+							countRecipients++;
 							message.addRecipient(Message.RecipientType.BCC, new InternetAddress(address));
 						}
 					}
 				}
 			}
+		}
+
+		// avoid sending an email to all because of a bug in the application logic
+		if (countRecipients > 50) {
+			throw new Exception("tooManyRecipients");
 		}
 
 		if (replyTo != null && replyTo.length() > 0 && replyTo.indexOf("@") != -1) {

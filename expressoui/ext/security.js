@@ -765,13 +765,17 @@ expresso.Security = function () {
                 if (sessionToken) {
                     xhr.setRequestHeader("X-Session-Token", sessionToken);
                 }
+                var credentials;
                 if (userName) {
-                    var credentials = window.btoa(unescape(encodeURIComponent(userName + ":" + password)));
-                    xhr.setRequestHeader("Authorization", "Basic " + credentials);
+                    credentials = window.btoa(unescape(encodeURIComponent(userName + ":" + password)));
                 }
                 if (loginToken) {
-                    xhr.setRequestHeader("X-Login-Token", loginToken);
+                    credentials = loginToken;
                 }
+                if (credentials) {
+                    xhr.setRequestHeader("Authorization", "Basic " + credentials);
+                }
+
             }
         }).done(function (data, textStatus, jqXHR) {
             storeSessionToken(jqXHR);
@@ -894,7 +898,7 @@ expresso.Security = function () {
         }).fail(function () {
             // then try using rest
             expresso.Common.setAuthenticationPath("rest");
-            performLogin().done(function () {
+            performLogin(null, null, expresso.util.Util.getUrlParameter("loginToken")).done(function () {
                 // success continue using Kerberos rest
                 $loginDeferred.resolve();
             }).fail(function () {

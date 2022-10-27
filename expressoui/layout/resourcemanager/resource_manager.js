@@ -796,6 +796,8 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         //     showButtonInSiblingGridToolbar: true, // default is true
         //     showButtonInForm: true,              // default is true
         //     showButtonOnMobile: true,            // default is true
+        //     toolbarMarker: null,                 // defaul is null (meaning at the end).
+        //              [exp-toolbar-marker-addition|exp-toolbar-marker-edition|exp-toolbar-marker-actionexp-toolbar-marker-filter]
         //     supportMultipleSelections: true,     // default is true
         //     resourceCollectionAction: false,     // default is false
         //     saveBeforeAction: true,              // default is true

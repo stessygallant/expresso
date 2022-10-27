@@ -2024,40 +2024,75 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // once the duplicatedResource is done, put it in the grid and edit
             $deferred.done(function (duplicatedResource) {
                 // console.log("*************:" + JSON.stringify(duplicatedResource), duplicatedResource);
-
-                // we need to set to null any field in the model not defined in the JSON
-                var model = _this.resourceManager.model;
-                for (var f in model.fields) {
-                    //var field = model.fields[f];
-                    if (duplicatedResource[f] == undefined) {
-                        duplicatedResource[f] = null;
-                    }
-                }
-
-                if (_this.kendoGrid.dataSource.page() != 1) {
-                    // always go to the page 1
-                    _this.kendoGrid.wrapper.find(".k-scrollbar").scrollTop(0);
-                }
-
-                // because scrollTop will close the edit window, we need to wait
-                setTimeout(function () {
-                    // now insert the new duplicated resource and select it
-                    _this.kendoGrid.dataSource.pushInsert(0, duplicatedResource);
-
-                    // we need to select the newly inserted resource
-                    if (_this.hierarchical) {
-                        // in hierarchical grid, we need to search for the new resource as
-                        // it is not the first one
-                        _this.selectRowById(duplicatedResource.id);
-                    } else {
-                        // it is always the first row
-                        _this.selectFirstRow();
-                    }
-
-                    _this.performEdit();
-                }, 100);
+                _this.openEditorForNewResource(duplicatedResource);
             });
         }
+    },
+
+    /**
+     *
+     */
+    openEditorForNewResource: function (resource) {
+        var _this = this;
+
+        // we need to set to null any field in the model not defined in the JSON
+        var model = _this.resourceManager.model;
+        for (var f in model.fields) {
+            var field = model.fields[f];
+            if (resource[f] == undefined) {
+                // complete resource with default value
+                if (field.defaultValue !== undefined) {
+                    resource[f] = field.defaultValue;
+                } else if (field.nullable) {
+                    resource[f] = null;
+                } else {
+                    // default from Kendo
+                    switch (field.type) {
+                        case "number":
+                            resource[f] = 0;
+                            break;
+                        case "date":
+                            resource[f] = new Date();
+                            break;
+                        case "boolean":
+                            resource[f] = false;
+                            break;
+                        case "string":
+                        default:
+                            resource[f] = null;
+                            break;
+                    }
+                }
+            }
+        }
+
+        // for each column, if there is a reference to an object, make sure the object exists to avoid null issue
+        if (this.objectsNeededForColumns) {
+            $.extend(true, resource, this.objectsNeededForColumns);
+        }
+
+        if (_this.kendoGrid.dataSource.page() != 1) {
+            // always go to the page 1
+            _this.kendoGrid.wrapper.find(".k-scrollbar").scrollTop(0);
+        }
+
+        // because scrollTop will close the edit window, we need to wait
+        window.setTimeout(function () {
+            // now insert the new duplicated resource and select it
+            _this.kendoGrid.dataSource.pushInsert(0, resource);
+
+            // we need to select the newly inserted resource
+            if (_this.hierarchical) {
+                // in hierarchical grid, we need to search for the new resource as
+                // it is not the first one
+                _this.selectRowById(resource.id);
+            } else {
+                // it is always the first row
+                _this.selectFirstRow();
+            }
+
+            _this.performEdit();
+        }, 100);
     },
 
     performEdit: function () {
@@ -3570,15 +3605,16 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 (action.showButtonInSiblingGridToolbar !== false || _this.resourceManager.displayAsMaster)) {
                 // show on mobile only if ok
                 if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP || action.showButtonOnMobile) {
-                    needSeparator = true;
-                    toolbar.push({
+                    var buttonTemplate = {
                         template: "<button type='button' class='k-button exp-button exp-" + action.name + "-button" +
                             (action.resourceCollectionAction ? " exp-always-active-button" : "") +
                             (action.supportMultipleSelections === undefined ? "" :
                                 (action.supportMultipleSelections === false ? " exp-single-selection" : " exp-multiple-selection")) +
                             "' title='" + action.title + "'><span class='fa " + action.icon + "'>" +
                             "<span class='exp-button-label' data-text-key='" + action.label + "'></span></span></button>"
-                    });
+                    };
+                    _this.addButtonToToolbar(toolbar, buttonTemplate, action.toolbarMarker);
+                    needSeparator = true;
                 }
             }
         });

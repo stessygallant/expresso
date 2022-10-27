@@ -39,7 +39,7 @@
                 var date = _this.element.val();
                 if (date) {
                     date = expresso.util.Formatter.parseDate(date);
-                    date = date.addDays($(this).hasClass("next-day") ? 1 : -1);
+                    date = date.addDays($(this).hasClass("exp-next-day") ? 1 : -1);
                     _this.value(date);
                     _this.trigger("change");
                 }
