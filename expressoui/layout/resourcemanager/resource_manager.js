@@ -539,6 +539,10 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
      */
     displayForm: function (resource, onFormOpen) {
         var _this = this;
+
+        // avoid issue with hierarchical
+        this.options.autoEdit = true;
+        
         var $deferred = $.Deferred();
         this.isReady().done(function () {
             if (resource && !resource.id) {

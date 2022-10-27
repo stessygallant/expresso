@@ -162,7 +162,8 @@
                             field: field,
                             filter: field.reference.filter,
                             nullable: field.nullable,
-                            serverFiltering: field.reference.serverFiltering !== false
+                            serverFiltering: field.reference.serverFiltering !== false,
+                            fieldReference: field.reference
                         }));
                     } else {
                         this.readyPromises.push(
@@ -172,7 +173,8 @@
                                 field: field,
                                 filter: field.reference.filter,
                                 nullable: field.nullable,
-                                serverFiltering: field.reference.serverFiltering
+                                serverFiltering: field.reference.serverFiltering,
+                                fieldReference: field.reference
                             }));
                     }
                 } else {
@@ -185,7 +187,8 @@
                             triggerChangeOnInit: field.reference.triggerChangeOnInit,
                             parentId: field.reference.parentId,
                             parentRootId: field.reference.parentRootId,
-                            allowNodeSelection: field.reference.allowNodeSelection
+                            allowNodeSelection: field.reference.allowNodeSelection,
+                            fieldReference: field.reference
                         }));
                     } else {
                         this.readyPromises.push(
@@ -197,7 +200,8 @@
                                 nullable: field.nullable,
                                 triggerChangeOnInit: field.reference.triggerChangeOnInit,
                                 cascadeFrom: field.reference.cascadeFromId,
-                                cascadeFromField: field.reference.cascadeFromField
+                                cascadeFromField: field.reference.cascadeFromField,
+                                fieldReference: field.reference
                             }));
                     }
                 }
@@ -211,7 +215,8 @@
                             resource: resource,
                             model: model,
                             field: field,
-                            nullable: field.nullable
+                            nullable: field.nullable,
+                            fieldValues: field.values
                         }));
                     // }
                 } else {
@@ -224,7 +229,8 @@
                                 filter: field.values.filter,
                                 triggerChangeOnInit: field.values.triggerChangeOnInit,
                                 parentId: field.values.parentId,
-                                allowNodeSelection: field.values.allowNodeSelection
+                                allowNodeSelection: field.values.allowNodeSelection,
+                                fieldValues: field.values
                             }));
                         } else {
                             this.readyPromises.push(expresso.util.UIUtil.buildDropDownTree($el, field.values.data, {
@@ -233,7 +239,8 @@
                                 field: field,
                                 triggerChangeOnInit: field.values.triggerChangeOnInit,
                                 parentId: field.values.parentId,
-                                allowNodeSelection: field.values.allowNodeSelection
+                                allowNodeSelection: field.values.allowNodeSelection,
+                                fieldValues: field.values
                             }));
                         }
                     } else {
@@ -249,7 +256,8 @@
                                 grouping: field.values.grouping,
                                 sortField: field.values.sortField,
                                 cascadeFrom: field.values.cascadeFromId,
-                                cascadeFromField: field.values.cascadeFromField
+                                cascadeFromField: field.values.cascadeFromField,
+                                fieldValues: field.values
                             }));
                         } else {
                             this.readyPromises.push(expresso.util.UIUtil.buildDropDownList($el, field.values.data, {
@@ -260,7 +268,8 @@
                                 triggerChangeOnInit: field.values.triggerChangeOnInit,
                                 selectFirstOption: field.values.selectFirstOption,
                                 grouping: field.values.grouping,
-                                sortField: field.values.sortField
+                                sortField: field.values.sortField,
+                                fieldValues: field.values
                             }));
                         }
                     }

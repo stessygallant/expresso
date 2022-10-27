@@ -1400,7 +1400,7 @@ expresso.util.UIUtil = (function () {
 
             // make sure it is an input
             if ($input[0].nodeName != "INPUT") {
-                console.warn("You should use <input> for a kendoDropDownTree for [" + $input[0].name + "]. Otherwise $input.val() will return null");
+                // console.warn("You should use <input> for a kendoDropDownTree for [" + $input[0].name + "]. Otherwise $input.val() will return null");
             }
 
             //console.log("buildDropDownTree: " + wsListPathOrData, customOptions);
@@ -1627,12 +1627,13 @@ expresso.util.UIUtil = (function () {
 
             // deal with undefined customOptions
             customOptions = customOptions || {};
+			customOptions.fieldReference = customOptions.fieldReference || {};
 
             var dataSource;
             var serverFiltering = (customOptions.serverFiltering !== false);
 
             var dataValueField = customOptions.dataValueField || "id";
-            var dataTextField = customOptions.dataTextField || "label";
+            var dataTextField = customOptions.dataTextField || customOptions.fieldReference.dataValueField || "label";
 
             if (typeof wsListPathOrData === "string") {
                 var url;
@@ -1928,7 +1929,11 @@ expresso.util.UIUtil = (function () {
                     var id = this.value();
                     var $icon = $viewButton.find("i.fa");
 
-                    $viewButton.prop("disabled", false);
+                    $viewButton.removeClass("exp-ref-view-button")
+                        .removeClass("exp-ref-add-button")
+                        .addClass("exp-ref-view-button")
+                        .prop("disabled", false);
+
                     $icon.removeClass("fa-eye")
                         .removeClass("fa-pencil")
                         .removeClass("fa-plus")
@@ -1953,6 +1958,11 @@ expresso.util.UIUtil = (function () {
                             expresso.Common.sendRequest(reference.resourcePath + "/verifyCreationRestrictions").done(function (result) {
                                 if (result && result.allowed) {
                                     $icon.removeClass("fa-eye").addClass("fa-plus");
+                                    $viewButton.removeClass("exp-ref-view-button").addClass("exp-ref-add-button");
+                                    // because the readonly process has already passed, we need to verify it now
+                                    if ($viewButton.hasClass("readonly")) {
+                                        $viewButton.prop("disabled", true);
+                                    }
                                 }
                             });
                         } else {
@@ -2182,9 +2192,7 @@ expresso.util.UIUtil = (function () {
                         }
 
                         // if there is an action button beside the input (exemple a lookup)
-                        if ($inputWrap.hasClass("exp-ref-with-buttons")) {
-                            $inputWrap.find("button.exp-ref-search-button").prop("disabled", readonly);
-                        }
+                        $inputWrap.find("button.exp-ref-button:not(.exp-ref-view-button)").prop("disabled", readonly);
                     }
                 }
             });

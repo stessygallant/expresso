@@ -828,66 +828,23 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param data
 	 */
 	private int appendHierarchicalEntities(List<E> data, boolean activeOnly) throws Exception {
-		boolean useBatchFetchForParent = true;
-		boolean useBatchFetchForChildren = true;
-
 		// build a map with the key
 		Set<I> ids = new HashSet<>();
 		data.forEach(e -> ids.add(e.getId()));
 
 		int sqlQueryCount = 0;
 
+		// append children
+		sqlQueryCount += appendHierarchicalChildEntities(data, data, ids, activeOnly);
+
 		// append parents
-		if (useBatchFetchForParent) {
-			sqlQueryCount += appendHierarchicalParentEntities(data, data, ids);
-		}
+		sqlQueryCount += appendHierarchicalParentEntities(data, data, ids);
 
-		// append children
-		if (useBatchFetchForChildren) {
-			sqlQueryCount += appendHierarchicalChildEntities(data, data, ids, activeOnly);
-		}
-
-		// append children
-		for (E e : new ArrayList<>(data)) {
-			if (!useBatchFetchForParent) {
-				sqlQueryCount += appendHierarchicalParentEntities(e, data, ids);
-			}
-			if (!useBatchFetchForChildren) {
-				if (data.size() < AbstractBaseEntitiesResource.MAX_HIERARCHICAL_RESULTS) {
-					sqlQueryCount += appendHierarchicalChildEntities(e, data, ids, activeOnly);
-				}
-			}
-		}
-		return sqlQueryCount;
-	}
-
-	/**
-	 * 
-	 * @param e
-	 * @param data
-	 * @param ids
-	 * @throws Exception
-	 */
-	private int appendHierarchicalParentEntities(E e, List<E> data, Set<I> ids) throws Exception {
-		int sqlQueryCount = 0;
-		if (e != null) {
-			if (!ids.contains(e.getId())) {
-				ids.add(e.getId());
-				data.add(e);
-			}
-
-			// get the hierarchy reference
-			E hierarchicalParent = getHierarchicalParentEntity(e);
-			sqlQueryCount++;
-			if (hierarchicalParent != null) {
-				sqlQueryCount += appendHierarchicalParentEntities(hierarchicalParent, data, ids);
-			}
-		}
 		return sqlQueryCount;
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private E getHierarchicalParentEntity(E e) throws Exception {
+	protected E getHierarchicalParentEntity(E e) throws Exception {
 		Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
 		if (hierarchicalParentEntityField != null) {
 
@@ -922,17 +879,19 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
 			if (hierarchicalParentEntityField != null) {
 				String hierarchicalParentIdFieldName = hierarchicalParentEntityField.getName() + "Id";
-				Filter hierarchicalParentIdsFilter = new Filter(Logic.or);
+				Set<Integer> hierarchicalParentIds = new HashSet<>();
 				for (E e : hierarchicalParentEntities) {
 					Integer hierarchicalParentId = (Integer) PropertyUtils.getProperty(e, hierarchicalParentIdFieldName);
 					if (hierarchicalParentId != null && !ids.contains(hierarchicalParentId)) {
-						hierarchicalParentIdsFilter.addFilter(new Filter("id", hierarchicalParentId));
+						hierarchicalParentIds.add(hierarchicalParentId);
 					}
 				}
-				if (hierarchicalParentIdsFilter.hasFilters()) {
+
+				if (!hierarchicalParentIds.isEmpty()) {
 					sqlQueryCount++;
-					logger.debug("Getting " + hierarchicalParentIdsFilter.getFilters().size() + " new HierarchicalParentEntities");
+					logger.debug("Getting " + hierarchicalParentIds.size() + " new HierarchicalParentEntities");
 					List<E> newHierarchicalParentEntities = new ArrayList<>();
+					Filter hierarchicalParentIdsFilter = new Filter("id", Operator.inIds, hierarchicalParentIds);
 					for (E e : list(new Query().setVerified(true).addFilter(hierarchicalParentIdsFilter))) {
 						if (!ids.contains(e.getId())) {
 							ids.add(e.getId());
@@ -962,15 +921,16 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		// if we already reaches the maximum limit, do not include children
 		if (data.size() < AbstractBaseEntitiesResource.MAX_HIERARCHICAL_RESULTS) {
 			if (!hierarchicalChildEntities.isEmpty()) {
-				Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
-				String hierarchicalParentIdFieldName = hierarchicalParentEntityField.getName() + "Id";
-				Filter hierarchicalChildIdsFilter = new Filter(Logic.or);
+				Set<Integer> hierarchicalChildIds = new HashSet<>();
 				for (E e : hierarchicalChildEntities) {
-					hierarchicalChildIdsFilter.addFilter(new Filter(hierarchicalParentIdFieldName, e.getId()));
+					hierarchicalChildIds.add((Integer) e.getId());
 				}
 				sqlQueryCount++;
-				logger.debug("Getting " + hierarchicalChildIdsFilter.getFilters().size() + " new HierarchicalChildEntities");
+				logger.debug("Getting " + hierarchicalChildIds.size() + " new HierarchicalChildEntities");
 				List<E> newHierarchicalChildEntities = new ArrayList<>();
+				Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
+				String hierarchicalParentIdFieldName = hierarchicalParentEntityField.getName() + "Id";
+				Filter hierarchicalChildIdsFilter = new Filter(hierarchicalParentIdFieldName, Operator.inIds, hierarchicalChildIds);
 				for (E e : list(new Query().addFilter(hierarchicalChildIdsFilter))) {
 					if (!ids.contains(e.getId())) {
 						ids.add(e.getId());
@@ -981,40 +941,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				// now get the down level
 				sqlQueryCount += appendHierarchicalChildEntities(newHierarchicalChildEntities, data, ids, activeOnly);
-			}
-		}
-		return sqlQueryCount;
-	}
-
-	/**
-	 * 
-	 * @param e
-	 * @param data
-	 * @param ids
-	 * @param activeOnly
-	 * @throws Exception
-	 */
-	private int appendHierarchicalChildEntities(E e, List<E> data, Set<I> ids, boolean activeOnly) throws Exception {
-		int sqlQueryCount = 0;
-		// if we already reaches the maximum limit, do not include children
-		if (data.size() < AbstractBaseEntitiesResource.MAX_HIERARCHICAL_RESULTS) {
-			Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
-			if (hierarchicalParentEntityField != null) {
-				Filter parentFilter = new Filter(hierarchicalParentEntityField.getName() + "Id", e.getId());
-
-				// verify first if there is at least one children with this parentId
-				sqlQueryCount++;
-				if (count(new Query().setVerified(true).addFilter(parentFilter)) > 0) {
-					// get all resources where the hierarchicalParentEntity is the current entity
-					sqlQueryCount++;
-					for (E child : list(new Query().setActiveOnly(activeOnly).addFilter(parentFilter))) {
-						if (!ids.contains(child.getId())) {
-							ids.add(child.getId());
-							data.add(child);
-							sqlQueryCount += appendHierarchicalChildEntities(child, data, ids, activeOnly);
-						}
-					}
-				}
 			}
 		}
 		return sqlQueryCount;
@@ -1190,6 +1116,16 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						includeActiveOnlyFilter = false;
 						break;
 					}
+
+					// if the UI is based on values (statusId) and the filter is based on the pgmKey (status.pgmKey)
+					if (activeOnlyField.endsWith("pgmKey")) {
+						String idField = activeOnlyField.substring(0, activeOnlyField.length() - ".pgmKey".length()) + "Id";
+						if (query.getFilter(idField) != null) {
+							includeActiveOnlyFilter = false;
+							break;
+						}
+					}
+
 				}
 
 				if (!includeActiveOnlyFilter) {
@@ -2121,6 +2057,20 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				case contains:
 				case eq:
 					predicate = cb.equal(path, integerValue);
+					break;
+
+				case inIds:
+					// do not use distinct because if there is a clob, Oracle will throw an exception
+					// use this operator only for Ids
+					if (integerValues == null) {
+						integerValues = new ArrayList<Integer>();
+						if (integerValue != null) {
+							integerValues.add(integerValue);
+						}
+					}
+
+					// if integerValues is empty -> no result
+					predicate = cb.or(getInPredicate(inMaxValues, integerValues, path, cb, false).toArray(new Predicate[0]));
 					break;
 
 				case in:

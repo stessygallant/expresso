@@ -127,6 +127,8 @@ $.extend(expresso.Labels, {
     message_info: "Information",
     message_warning: "Avertissement",
     message_error: "Erreur",
+    noRecords: "Aucun enregistrement trouvé.",
+    searchInactiveRecords: "Voulez-vous faire une recherche dans les enregistrements inactifs?",
 
     // error
     invalidCaptcha: "Impossible de vérifier le Captcha",

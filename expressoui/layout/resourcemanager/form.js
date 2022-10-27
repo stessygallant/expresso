@@ -802,7 +802,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         // simulate a click by the user on the update button
         // this could generate a network call or it could execute the onSaved method immediately
         // in that case, the saveDeferred will be automatically resolve
-        setTimeout(function () {
+        window.setTimeout(function () {
             if (_this.$window) {
                 _this.$window.find(".k-grid-update").trigger("click");
             }
@@ -823,16 +823,20 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * Close the window
      */
     close: function () {
-        // console.log("FORM - close - " + this.resourceManager.resourceName + ":" + this.savedResource + ":" + this.closedDeferred);
-        if (this.savedResource) {
-            if (this.closedDeferred) {
-                this.closedDeferred.resolve(this.savedResource);
-                this.closedDeferred = null;
+        // must be ready before closing
+        var _this = this;
+        this.isReady().done(function () {
+            // console.log("FORM - close - " + _this.resourceManager.resourceName + ":" + _this.savedResource + ":" + _this.closedDeferred);
+            if (_this.savedResource) {
+                if (_this.closedDeferred) {
+                    _this.closedDeferred.resolve(_this.savedResource);
+                    _this.closedDeferred = null;
+                }
+                _this.savedResource = null;
             }
-            this.savedResource = null;
-        }
 
-        this.destroyForm();
+            _this.destroyForm();
+        });
     },
 
     /**
@@ -1096,7 +1100,13 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @return {undefined|*} promise that will contain the new resource once saved
      */
     bindOnClose: function () {
-        return this.closedDeferred;
+        if (this.closedDeferred) {
+            return this.closedDeferred;
+        } else {
+            // form already been closed
+            console.warn("Form already closed");
+            return $.Deferred().reject();
+        }
     },
 
     /**
