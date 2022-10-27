@@ -164,6 +164,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             _this.verifySelection();
         });
 
+        // listen to the button to perform a search in all inactives records
+        $domElement.on("click", "button.exp-grid-search-inactive", function () {
+            $domElement.find(".exp-active-only-button").trigger("click");
+        });
+
         // Remove some options
         delete kendo.ui.FilterMenu.fn.options.operators.string.isempty;
         delete kendo.ui.FilterMenu.fn.options.operators.string.isnotempty;
@@ -2006,11 +2011,20 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 duplicatedResource.lastModifiedUser = undefined;
                 duplicatedResource.lastModifiedUserFullName = undefined;
 
+                // for hierarchical
+                if (duplicatedResource.hasChildren) {
+                    duplicatedResource.hasChildren = false;
+                }
+
+                // if there is a number, reset it
+                if (duplicatedResource.type && duplicatedResource[duplicatedResource.type + "No"]) {
+                    duplicatedResource[duplicatedResource.type + "No"] = null;
+                }
+
                 this.initializeDuplicatedResource(duplicatedResource);
 
                 $deferred.resolve(duplicatedResource);
             } else {
-
                 this.sendRequest(_this.resourceManager.getRelativeWebServicePath(this.resourceManager.currentResource.id), "duplicate")
                     .done(function (duplicatedResource) {
 
@@ -2638,9 +2652,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         $window.data("kendoWindow").bind("close", function () {
             // console.log("Kendo Window has been closed");
             // this event is call twice when the window is closed by the Escape key or X button
-            var dataItem = _this.kendoGrid.dataItem(_this.kendoGrid.select());
+            var $row = _this.kendoGrid.select();
+            var dataItem = _this.kendoGrid.dataItem($row);
             if (_this.selectedRows.length == 1 && !dataItem) {
                 _this.clearSelection();
+            } else {
+                // need to customize the row again
+                _this.customizeRow(dataItem, $row);
             }
         });
 
@@ -3329,12 +3347,19 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 console.warn("REMOVING FROM KENDO IS NOT ALLOWED");
                 e.preventDefault();
                 _this.kendoGrid.cancelChanges();
-            }
+            },
             // saveChanges: function(e) {
             //     if (!confirm("Are you sure you want to save all changes?")) {
             //         e.preventDefault();
             //     }
-            // }
+            // },
+            noRecords: _this.resourceManager.displayAsMaster,
+            messages: {
+                noRecords: _this.getLabel("noRecords") +
+                    (_this.activeOnly !== undefined ? "<span class='exp-no-record-message'>" +
+                        _this.getLabel("searchInactiveRecords") + "<button class='k-button exp-grid-search-inactive'>" +
+                        _this.getLabel("search") + "</button></span>" : "")
+            }
         };
 
         // configure the form
@@ -4151,7 +4176,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         this.columnMap = null;
 
         // remove any TreeListValues
-        window.TreeListValues = null;
+        // TODO window.TreeListValues = null;
 
         // remove the menu preferences if needed
         if (this.$preferencesMenu) {

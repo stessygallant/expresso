@@ -134,8 +134,9 @@ public class Query {
 		return hierarchical;
 	}
 
-	public void setHierarchical(Boolean hierarchical) {
+	public Query setHierarchical(Boolean hierarchical) {
 		this.hierarchical = hierarchical;
+		return this;
 	}
 
 	public boolean hierarchical() {
@@ -444,6 +445,9 @@ public class Query {
 
 			// number and string only
 			in, notIn,
+
+			// for Id only (number)
+			inIds,
 
 			// If you want to perform a search with a keyField, but you do not want to
 			// use the functionality of the framework that bypass all other filters, use:

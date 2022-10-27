@@ -84,6 +84,17 @@
     @include default-div;
     padding: 0 0 0 2px;
 
+    .k-grid-norecords-template {
+        width: auto;
+        padding: 1em 2em;
+
+        .exp-no-record-message {
+            button.exp-grid-search-inactive {
+                margin-left: 1em;
+            }
+        }
+    }
+
     table {
         // Grid columns with no width are collapsed if the space is not enough, thus min-width on the tables is needed
         min-width: 10em;

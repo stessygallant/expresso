@@ -285,6 +285,10 @@ public class DateUtil {
 		return DateUtils.addYears(date, years);
 	}
 
+	static public Date addMonths(Date date, int months) {
+		return DateUtils.addMonths(date, months);
+	}
+
 	static public Date addWorkingDays(Date date, int days) {
 		Calendar calendar = addWorkingDays(DateUtils.toCalendar(date), days);
 		return calendar.getTime();

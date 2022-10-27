@@ -917,14 +917,19 @@ public class Util {
 	 *
 	 */
 	public static String writeCSVContent(String separator, List<String> headerRow, List<List<String>> rows, String enclosingChar) {
-		// 1 - enclose header
-		if (enclosingChar != null) {
-			for (int i = 0; i < headerRow.size(); i++) {
-				headerRow.set(i, StringUtils.wrap(headerRow.get(i), enclosingChar));
+		String content = "";
+
+		if (headerRow != null) {
+
+			// 1 - enclose header
+			if (enclosingChar != null) {
+				for (int i = 0; i < headerRow.size(); i++) {
+					headerRow.set(i, StringUtils.wrap(headerRow.get(i), enclosingChar));
+				}
 			}
+			// 2 - separator header
+			content = String.join(separator, headerRow) + "\r\n";
 		}
-		// 2 - separator header
-		String content = String.join(separator, headerRow) + "\r\n";
 
 		for (List<String> column : rows) {
 			// 1 - enclose
