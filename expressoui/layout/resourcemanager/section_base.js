@@ -50,7 +50,7 @@ expresso.layout.resourcemanager.SectionBase = kendo.Class.extend({
         }
 
         // resize the section at the end of this call
-        setTimeout(function () {
+        window.setTimeout(function () {
             _this.resizeContent();
         }, 100);
     },

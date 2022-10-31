@@ -1135,7 +1135,7 @@ expresso.Main = function () {
                         }
 
                         // show the content page after the delay
-                        var messageTimeout = setTimeout(function () {
+                        var messageTimeout = window.setTimeout(function () {
                             $div.off();
                             $overlayDiv.remove();
                             $deferred.resolve();

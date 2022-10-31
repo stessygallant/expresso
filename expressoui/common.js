@@ -1168,7 +1168,7 @@ expresso.Common = (function () {
                         // make sure to trigger the change event
                         kendoProgressBar.value(99.9);
                         kendoProgressBar.value(100);
-                        setTimeout(function () {
+                        window.setTimeout(function () {
                             kendoProgressBar.destroy();
                             kendoProgressBar = null;
                             $kendoProgressBarDiv.remove();

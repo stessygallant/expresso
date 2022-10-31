@@ -485,7 +485,7 @@ expresso.Security = function () {
 
             loadProfile().done(function () {
                 $deferred.resolve();
-                setTimeout(function () {
+                window.setTimeout(function () {
                     $overlayDiv.remove();
                     $overlayDiv = null;
                 }, 1000);

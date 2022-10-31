@@ -1981,7 +1981,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         if (this.kendoGrid.dataSource.page() != 1) {
             // always go to the page 1
             this.kendoGrid.wrapper.find(".k-scrollbar").scrollTop(0);
-            setTimeout(function () {
+            window.setTimeout(function () {
                 _this.kendoGrid.addRow();
             }, 10);
         } else {
@@ -2692,8 +2692,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             if (_this.selectedRows.length == 1 && !dataItem) {
                 _this.clearSelection();
             } else {
-                // need to customize the row again
-                _this.customizeRow(dataItem, $row);
+                if (dataItem) {
+                    // need to customize the row again
+                    _this.customizeRow(dataItem, $row);
+                }
             }
         });
 
@@ -3077,7 +3079,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
             if (autoEdit) {
                 // wait for the selection of the first row in dataBound
-                //setTimeout(function () {
+                // window.setTimeout(function () {
                 var resource = _this.resourceManager.currentResource;
 
                 var id;
@@ -3865,7 +3867,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @param updatedResource
      */
     updateResource: function (resource, updatedResource) {
-        //console.log(this.resourceManager.getResourceSecurityPath() + " dirty:" + resource.dirty);
+        // console.log(this.resourceManager.getResourceSecurityPath() + " dirty:" + resource.dirty, updatedResource);
 
         // need to parse the resource first
         updatedResource = this.parseResponseItem(updatedResource);

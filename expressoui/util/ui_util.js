@@ -1467,6 +1467,17 @@ expresso.util.UIUtil = (function () {
             // create the widget
             var kendoDropDownTree = $input.kendoDropDownTree(defaultOptions).data("kendoDropDownTree");
 
+            // PATCH: dataItem from DropDownTree required the selected node
+            // by default, is not is provided, provide the one selected from the treeview
+            kendoDropDownTree.oriDataItem = kendoDropDownTree.dataItem;
+            kendoDropDownTree.dataItem = function (node) {
+                if (node === undefined) {
+                    return kendoDropDownTree.oriDataItem(kendoDropDownTree.treeview.select());
+                } else {
+                    return kendoDropDownTree.oriDataItem(node);
+                }
+            };
+
             // build the tree
             $dataDeferred.done(function (data) {
                 // build the tree from the result
@@ -1627,7 +1638,7 @@ expresso.util.UIUtil = (function () {
 
             // deal with undefined customOptions
             customOptions = customOptions || {};
-			customOptions.fieldReference = customOptions.fieldReference || {};
+            customOptions.fieldReference = customOptions.fieldReference || {};
 
             var dataSource;
             var serverFiltering = (customOptions.serverFiltering !== false);
@@ -2396,7 +2407,7 @@ expresso.util.UIUtil = (function () {
             popupNotification.show(text);
 
             // after, we need to remove the HTML element
-            setTimeout(function () {
+            window.setTimeout(function () {
                 popupNotification.destroy();
                 popupNotification = null;
                 $popupNotification.remove();
@@ -2477,11 +2488,11 @@ expresso.util.UIUtil = (function () {
 
                             if ($input.data("role") == "dropdowntree") {
                                 // DropdownTree
-                                // only this.value() is available
                                 e.sender._userTriggered = !e.expressoTriggered;
 
-                                // get the dataItem from the treeview
-                                dataItem = widget.treeview.dataItem(widget.treeview.select());
+                                // only this.value() is available
+                                // this.dataItem() has been added in buildDropDownTree
+                                dataItem = widget.dataItem();
                             } else {
                                 // ComboBox and DropDownList
                                 // this.dataItem() and this.value() are available

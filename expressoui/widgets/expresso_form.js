@@ -414,7 +414,7 @@
                         if (kendo.culture() && kendo.culture().name == "fr-CA") {
                             $el[0].addEventListener('keydown', function (event) {
                                 if (event.key === '.') {
-                                    setTimeout(function () {
+                                    window.setTimeout(function () {
                                         event.target.value += ',';
                                     }, 4);
                                     event.preventDefault();
@@ -471,7 +471,7 @@
                             $el.kendoDropDownList();
 
                             // trigger the change event
-                            setTimeout(function () {
+                            window.setTimeout(function () {
                                 $el.data("kendoDropDownList").trigger("change");
                             }, 10);
                         }

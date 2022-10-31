@@ -141,21 +141,20 @@ expresso.util.Model = (function () {
                         // for each field ending with Id, we need to create an object as KendoUI will throw an exception
                         // if the object is not defined
                         if (f.endsWith("Id")) {
-                            var objectName = f.substring(0, f.length - 2);
-                            model.fields[objectName] = model.fields[objectName] || {
-                                defaultValue: {},
-                                transient: true
-                            };
+                            // only for first level object
+                            // otherwise the grid.fixObjectReferences will take care of it
+                            if (f.indexOf(".") == -1) {
+                                var objectFieldName = f.substring(0, f.length - 2);
+                                model.fields[objectFieldName] = model.fields[objectFieldName] || {
+                                    defaultValue: {},
+                                    transient: true
+                                };
+                            }
 
                             // if there is no default value, set it to null (number are usually defaulted to 0)
                             if (field.defaultValue === undefined) {
                                 field.defaultValue = null;
                             }
-
-                            // if the Id is not mandatory, set the nullable attribute
-                            // if (field.nullable === undefined) {
-                            //     field.nullable = !(field.validation && field.validation.required);
-                            // }
                         }
 
                         // any derived field is transient

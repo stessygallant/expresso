@@ -168,7 +168,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
             });
 
             // init the first tab
-            setTimeout(function () {
+            window.setTimeout(function () {
                 var tabIndex = 0; // select the fist one by default
                 if (_this.resourceManager) {
                     if (_this.resourceManager.options.defaultTab) {
