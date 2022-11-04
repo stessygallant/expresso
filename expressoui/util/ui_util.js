@@ -6,6 +6,7 @@ expresso.util = expresso.util || {};
  * It uses the Javascript Module encapsulation pattern to provide public and private properties.
  */
 expresso.util.UIUtil = (function () {
+        var MAXIMUM_RESULTS = 50;
 
         /**
          * Get a Kendo UI widget from a DOM element
@@ -188,7 +189,6 @@ expresso.util.UIUtil = (function () {
          */
         var buildComboBox = function ($input, resourceURL, customOptions) {
             var $deferred = $.Deferred();
-            var maximumResults = 50;
 
             // if the DOM element is not present, return immediately
             if (!$input || !$input.length) {
@@ -208,7 +208,11 @@ expresso.util.UIUtil = (function () {
                 return $deferred.reject();
             }
 
+            // avoid null pointer
             customOptions = customOptions || {};
+            customOptions.field = customOptions.field || {};
+            customOptions.field.reference = customOptions.field.reference || {};
+            customOptions.fieldReference = customOptions.fieldReference || {};
 
             // get the info from the field if defined
             if (customOptions.field && customOptions.field.reference) {
@@ -241,12 +245,11 @@ expresso.util.UIUtil = (function () {
                 (customOptions.field && customOptions.field.autoBind !== undefined ? customOptions.field.autoBind : true);
 
             // custom label
-            var label = "label";
-            if (customOptions.field && customOptions.field.reference && customOptions.field.reference.label) {
-                label = customOptions.field.reference.label;
-                if (typeof label === "function") {
-                    label = label();
-                }
+            var dataTextField = customOptions.dataTextField || customOptions.fieldReference.dataTextField ||
+                customOptions.field.reference.label /*deprecated*/ || "label";
+
+            if (typeof dataTextField === "function") {
+                dataTextField = dataTextField();
             }
 
             var autoSearch = true;
@@ -261,7 +264,7 @@ expresso.util.UIUtil = (function () {
             cb = $input.kendoComboBox({
                 autoBind: autoBind,
                 dataValueField: "id",
-                dataTextField: label,
+                dataTextField: dataTextField,
                 valuePrimitive: true,
                 filter: "contains",
                 //suggest: true, // auto select first option
@@ -321,18 +324,21 @@ expresso.util.UIUtil = (function () {
                             }
 
                             // always sort on the label
-                            if (!customOptions.avoidSorting && !(customOptions.field && customOptions.field.reference && customOptions.field.reference.avoidSorting)) {
+                            if (!customOptions.avoidSorting && !customOptions.field.reference.avoidSorting) {
                                 response.sort(function (r1, r2) {
-                                    return r1["label"].localeCompare(r2["label"]);
+                                    if (r1[dataTextField] && r2[dataTextField]) {
+                                        return r1[dataTextField].localeCompare(r2[dataTextField]);
+                                    } else {
+                                        return 1;
+                                    }
                                 });
                             }
 
                             // verify if there is a null element at the end
-                            if (response && response.length >= maximumResults) {
-                                response.push({
-                                    id: 0,
-                                    label: expresso.Common.getLabel("tooManyResults")
-                                });
+                            if (response && response.length >= MAXIMUM_RESULTS) {
+                                var tooManyEntry = {id: 0};
+                                tooManyEntry[dataTextField] = expresso.Common.getLabel("tooManyResults");
+                                response.push(tooManyEntry);
                             }
 
                             return response;
@@ -620,6 +626,7 @@ expresso.util.UIUtil = (function () {
          * @param options
          */
         var setWindowDimension = function ($windowContent, options) {
+            // console.log("setWindowDimension");
 
             // avoid null issue
             options = options || {};
@@ -732,7 +739,7 @@ expresso.util.UIUtil = (function () {
             };
 
             // bind on resize
-            kendoWindow.unbind("resize", onResize).bind("resize", onResize);
+            kendoWindow.unbind("resize").bind("resize", onResize);
         };
 
         /**
@@ -1248,8 +1255,10 @@ expresso.util.UIUtil = (function () {
 
             // deal with undefined customOptions
             customOptions = customOptions || {};
+            customOptions.fieldValues = customOptions.fieldValues || {};
+
             var dataValueField = customOptions.dataValueField || "id";
-            var dataTextField = customOptions.dataTextField || "label";
+            var dataTextField = customOptions.dataTextField || customOptions.fieldValues.dataTextField || "label";
 
             // get the info from the field if defined
             if (customOptions.field && customOptions.field.values) {
@@ -1644,7 +1653,7 @@ expresso.util.UIUtil = (function () {
             var serverFiltering = (customOptions.serverFiltering !== false);
 
             var dataValueField = customOptions.dataValueField || "id";
-            var dataTextField = customOptions.dataTextField || customOptions.fieldReference.dataValueField || "label";
+            var dataTextField = customOptions.dataTextField || customOptions.fieldReference.dataTextField || "label";
 
             if (typeof wsListPathOrData === "string") {
                 var url;
@@ -1708,6 +1717,13 @@ expresso.util.UIUtil = (function () {
                                     return -1;
                                 }
                             });
+
+                            // verify if there is a null element at the end
+                            if (response && response.length >= MAXIMUM_RESULTS) {
+                                var tooManyEntry = {id: 0};
+                                tooManyEntry[dataTextField] = expresso.Common.getLabel("tooManyResults");
+                                response.push(tooManyEntry);
+                            }
 
                             return response;
                         }

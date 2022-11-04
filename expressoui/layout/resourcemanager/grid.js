@@ -1790,9 +1790,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     _this.kendoGrid.reorderColumn(columnIndex, column);
                 }
 
-                // set the column width
-                _this.kendoGrid.resizeColumn(column, this.width);
-
+                // TreeList does not have resizeColumn method
+                if (_this.kendoGrid.resizeColumn) {
+                    // set the column width
+                    _this.kendoGrid.resizeColumn(column, this.width);
+                }
                 columnIndex++;
             } else {
                 // this column does not exist anymore
@@ -3752,7 +3754,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             response = this.parseResponseItem(response);
         }
         return response;
-
     },
 
     /**
@@ -4202,7 +4203,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.kendoGrid = null;
         }
 
-        //this.dataSource.destroy(); // does not exists
         this.dataSource = null;
 
         this.gridConfig = null;
@@ -4212,9 +4212,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         this.originalMethod = null;
         this.previousSelectedResource = null;
         this.columnMap = null;
-
-        // remove any TreeListValues
-        // TODO window.TreeListValues = null;
 
         // remove the menu preferences if needed
         if (this.$preferencesMenu) {

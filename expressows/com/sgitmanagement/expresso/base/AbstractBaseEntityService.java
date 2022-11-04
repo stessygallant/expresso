@@ -2016,19 +2016,24 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				} else if (valueType.equals("Double")) {
 					integerValue = ((Double) filter.getValue()).intValue();
 				} else if (Collection.class.isAssignableFrom(filter.getValue().getClass())) {
-					integerValues = new ArrayList((Collection<Integer>) filter.getValue());
+					integerValues = new ArrayList<>((Collection<Integer>) filter.getValue());
 				} else if (valueType.equals("Integer[]")) {
 					integerValues = Arrays.asList((Integer[]) filter.getValue());
 				} else {
 					String v = (String) filter.getValue();
-					try {
-						if (v.indexOf('.') == -1) {
-							integerValue = Integer.parseInt(v);
-						} else {
-							integerValue = (int) Float.parseFloat(v);
+					if (v.indexOf(',') != -1) {
+						// list of integer. Usually for Operator.in
+						integerValues = new ArrayList<>(Util.stringIdsToIntegers(v));
+					} else {
+						try {
+							if (v.indexOf('.') == -1) {
+								integerValue = Integer.parseInt(v);
+							} else {
+								integerValue = (int) Float.parseFloat(v);
+							}
+						} catch (NumberFormatException ex) {
+							// invalid number, use null (predicate will always be false)
 						}
-					} catch (NumberFormatException ex) {
-						// invalid number, use null (predicate will always be false)
 					}
 				}
 				switch (op) {
