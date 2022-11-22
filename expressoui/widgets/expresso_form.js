@@ -594,10 +594,13 @@
                     // when there is a change in subresource (update or create or delete), publish an update on the current resource
                     appInstance.eventCentral.subscribeEvent([appInstance.RM_EVENTS.RESOURCE_UPDATED, appInstance.RM_EVENTS.RESOURCE_CREATED,
                         appInstance.RM_EVENTS.RESOURCE_DELETED], function () {
-                        //console.log("INLINEGRID - child has been changed (reloading master and refreshing counts)");
-                        //force the refresh of the form
-                        appInstance.masterResourceManager.currentResource.dirty = true;
-                        appInstance.masterResourceManager.sections.grid.reloadCurrentResource();
+                        // console.log("INLINEGRID - child has been changed (reloading master and refreshing counts)");
+                        if (appInstance.masterResourceManager.currentResource) {
+                            //force the refresh of the form
+                            // DO NOT DO IT MANUALLY -> appInstance.masterResourceManager.currentResource.dirty = true;
+                            appInstance.masterResourceManager.currentResource.set("makeCurrentResourceDirty", true);
+                            appInstance.masterResourceManager.sections.grid.reloadCurrentResource();
+                        }
                     });
                 } else {
                     // we must fake a master current resource

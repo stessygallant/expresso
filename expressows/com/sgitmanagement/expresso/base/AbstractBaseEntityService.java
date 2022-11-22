@@ -1118,7 +1118,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 
 					// if the UI is based on values (statusId) and the filter is based on the pgmKey (status.pgmKey)
-					if (activeOnlyField.endsWith("pgmKey")) {
+					if (activeOnlyField.endsWith(".pgmKey")) {
 						String idField = activeOnlyField.substring(0, activeOnlyField.length() - ".pgmKey".length()) + "Id";
 						if (query.getFilter(idField) != null) {
 							includeActiveOnlyFilter = false;
@@ -2792,6 +2792,12 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			}
 			sb.append("            field: \"" + field + "\"");
 
+			// be default, hide some fields
+			if (fieldName.equals("deactivationDate")) {
+				sb.append(",\n");
+				sb.append("            hidden: true");
+			}
+
 			if (appClassField.getType() != null && (appClassField.getType().equals("date") || appClassField.getType().equals("boolean"))) {
 				// no width
 				sb.append("\n");
@@ -3221,7 +3227,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					appClassField.setEditable(false);
 				}
 
-				if (fieldName.endsWith("sortOrder")) {
+				if (fieldName.equals("sortOrder")) {
 					appClassField.setDefaultValue(1);
 				}
 

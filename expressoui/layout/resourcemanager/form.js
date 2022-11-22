@@ -893,11 +893,15 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             // verify if there is at least one row in the grid
             var $div = $window.find("[name='" + fieldName + "']").siblings(".exp-grid-inline");
             var inlineGridResourceManager = $div.data("resourceManager");
-            var inlineGridDataSource = inlineGridResourceManager.sections.grid.dataSource;
-            if (inlineGridDataSource.total() == 0) {
-                console.log("Required field is null [" + fieldName + "]");
-                $div.addClass("exp-invalid");
-                return false;
+            if (inlineGridResourceManager) {
+                var inlineGridDataSource = inlineGridResourceManager.sections.grid.dataSource;
+                if (inlineGridDataSource.total() == 0) {
+                    console.log("Required field is null [" + fieldName + "]");
+                    $div.addClass("exp-invalid");
+                    return false;
+                } else {
+                    return true;
+                }
             } else {
                 return true;
             }

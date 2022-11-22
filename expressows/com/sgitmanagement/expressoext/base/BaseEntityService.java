@@ -170,76 +170,71 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 	 */
 	@Override
 	protected void createUpdateApprobationRequired(E e, Field field, Object currentValue, Object newValue) throws Exception {
-		try {
-			String currentStringValue = null;
-			String newStringValue = null;
-			Integer newValueReferenceId = null;
+		String currentStringValue = null;
+		String newStringValue = null;
+		Integer newValueReferenceId = null;
 
-			// if the field is a reference, get the reference
-			if (field.getName().endsWith("Id")) {
-				String referenceName = field.getName().substring(0, field.getName().length() - 2);
-				newValueReferenceId = (Integer) newValue;
+		// if the field is a reference, get the reference
+		if (field.getName().endsWith("Id")) {
+			String referenceName = field.getName().substring(0, field.getName().length() - 2);
+			newValueReferenceId = (Integer) newValue;
 
-				// get the field associated with it
-				Field referenceField = Util.getField(e, referenceName);
-				if (referenceField != null) {
-					BaseEntity currentValueEntity = null;
-					if (currentValue != null) {
-						currentValueEntity = (BaseEntity) getEntityManager().find(referenceField.getType(), (Integer) currentValue);
-						currentStringValue = currentValueEntity.getLabel();
-					}
+			// get the field associated with it
+			Field referenceField = Util.getField(e, referenceName);
+			if (referenceField != null) {
+				BaseEntity currentValueEntity = null;
+				if (currentValue != null) {
+					currentValueEntity = (BaseEntity) getEntityManager().find(referenceField.getType(), (Integer) currentValue);
+					currentStringValue = currentValueEntity.getLabel();
+				}
 
-					BaseEntity newValueEntity = null;
-					if (newValue != null) {
-						newValueEntity = (BaseEntity) getEntityManager().find(referenceField.getType(), (Integer) newValue);
-						if (newValueEntity != null) {
-							newStringValue = newValueEntity.getLabel();
-						} else {
-							logger.warn("Cannot find [" + referenceField.getType() + " with id [" + newValue + "]");
-						}
+				BaseEntity newValueEntity = null;
+				if (newValue != null) {
+					newValueEntity = (BaseEntity) getEntityManager().find(referenceField.getType(), (Integer) newValue);
+					if (newValueEntity != null) {
+						newStringValue = newValueEntity.getLabel();
+					} else {
+						logger.warn("Cannot find [" + referenceField.getType() + " with id [" + newValue + "]");
 					}
 				}
-			} else {
-				if (currentValue instanceof Date || newValue instanceof Date) {
-					// format date or date time
-					if (field.isAnnotationPresent(Temporal.class)) {
-						Temporal temporalAnnotation = field.getAnnotation(Temporal.class);
+			}
+		} else {
+			if (currentValue instanceof Date || newValue instanceof Date) {
+				// format date or date time
+				if (field.isAnnotationPresent(Temporal.class)) {
+					Temporal temporalAnnotation = field.getAnnotation(Temporal.class);
 
-						if (temporalAnnotation.value().equals(TemporalType.TIMESTAMP)) {
-							// date time
-							currentStringValue = DateUtil.formatDate((Date) currentValue, DateUtil.DATETIME_NOSEC_FORMAT_TL.get());
+					if (temporalAnnotation.value().equals(TemporalType.TIMESTAMP)) {
+						// date time
+						currentStringValue = DateUtil.formatDate((Date) currentValue, DateUtil.DATETIME_NOSEC_FORMAT_TL.get());
 
-							newStringValue = DateUtil.formatDate((Date) newValue, DateUtil.DATETIME_NOSEC_FORMAT_TL.get());
-						} else {
-							// date only
-							currentStringValue = DateUtil.formatDate((Date) currentValue, DateUtil.DATE_FORMAT_TL.get());
-
-							newStringValue = DateUtil.formatDate((Date) newValue, DateUtil.DATE_FORMAT_TL.get());
-						}
+						newStringValue = DateUtil.formatDate((Date) newValue, DateUtil.DATETIME_NOSEC_FORMAT_TL.get());
 					} else {
-						logger.error("Date with no annotation? [" + field.getName() + "]");
+						// date only
+						currentStringValue = DateUtil.formatDate((Date) currentValue, DateUtil.DATE_FORMAT_TL.get());
+
+						newStringValue = DateUtil.formatDate((Date) newValue, DateUtil.DATE_FORMAT_TL.get());
 					}
 				} else {
-					currentStringValue = currentValue != null ? "" + currentValue : null;
-					newStringValue = newValue != null ? "" + newValue : null;
+					logger.error("Date with no annotation? [" + field.getName() + "]");
 				}
+			} else {
+				currentStringValue = currentValue != null ? "" + currentValue : null;
+				newStringValue = newValue != null ? "" + newValue : null;
 			}
-
-			// entity name
-			String entityClassName = e.getClass().getSimpleName();
-
-			// if this is a proxy object, the entityClassName will contains a underscore (remove it)
-			if (entityClassName.indexOf('_') != -1) {
-				entityClassName = entityClassName.substring(0, entityClassName.indexOf('_'));
-			}
-
-			// create the modification
-			String resourceDescription = BeanUtils.getProperty(e, e.getClass().getAnnotation(RequireApproval.class).descriptionFieldName());
-			newService(RequiredApprovalService.class, RequiredApproval.class)
-					.create(new RequiredApproval(getResourceName(), e.getId(), getResourceNo(e), resourceDescription, field.getName(), currentStringValue, newStringValue, newValueReferenceId));
-		} catch (Exception ex) {
-			logger.error("Cannot createUpdateApprobationRequired", ex);
 		}
-	}
 
+		// entity name
+		String entityClassName = e.getClass().getSimpleName();
+
+		// if this is a proxy object, the entityClassName will contains a underscore (remove it)
+		if (entityClassName.indexOf('_') != -1) {
+			entityClassName = entityClassName.substring(0, entityClassName.indexOf('_'));
+		}
+
+		// create the modification
+		String resourceDescription = BeanUtils.getProperty(e, e.getClass().getAnnotation(RequireApproval.class).descriptionFieldName());
+		newService(RequiredApprovalService.class, RequiredApproval.class)
+				.create(new RequiredApproval(getResourceName(), e.getId(), getResourceNo(e), resourceDescription, field.getName(), currentStringValue, newStringValue, newValueReferenceId));
+	}
 }

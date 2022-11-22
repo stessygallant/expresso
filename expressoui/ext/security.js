@@ -648,7 +648,7 @@ expresso.Security = function () {
         var $overlayDiv = $("<div class='overlay-content'></div>").appendTo($("body"));
         expresso.Common.loadHTML($overlayDiv, "expresso/ext/login.html").done(function ($div) {
 
-            if (!expresso.Common.getSiteNamespace().config.Configurations.supportSSO) {
+            if (!expresso.Common.getSiteNamespace().config.Configurations.localAccount) {
                 $div.find(".authentication-mechanism").hide();
             } else {
                 // do not allow password request on SSO

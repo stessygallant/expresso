@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sgitmanagement.expresso.util.Util;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -15,11 +20,6 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import jakarta.servlet.http.HttpSession;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sgitmanagement.expresso.util.Util;
 
 /**
  * We need to remove the BASIC auth support from Kerberos (it triggers the browser native Basic Auth window)
@@ -96,6 +96,10 @@ public class SpnegoResponseFilter implements Filter {
 				}
 			};
 		}
+
+		// if (request.getHeader(WWW_AUTHORIZATION) != null) {
+		// logger.info("WWW_AUTHORIZATION: [" + request.getHeader(WWW_AUTHORIZATION) + "]");
+		// }
 
 		// we need to have a final request variable for inner function
 		final HttpServletRequest request2 = request;

@@ -35,7 +35,7 @@
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=localAccount]"));
         }
 
-        if (!expresso.Common.getSiteNamespace().config.Configurations.supportSSO) {
+        if (!expresso.Common.getSiteNamespace().config.Configurations.localAccount) {
             expresso.util.UIUtil.hideField($window.find("[name=localAccount]"));
         }
 

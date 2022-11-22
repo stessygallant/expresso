@@ -81,7 +81,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                 } else {
                     if (!userAllowed) {
                         console.warn("User is not allowed to see the tab [" + contentUrl + "]. " +
-                            "User not allowed read on[ " + resourceSecurityPath + "]");
+                            "User not allowed read on [" + resourceSecurityPath + "]");
                     }
                 }
             }
@@ -283,7 +283,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
         var resource = this.resourceManager.currentResource;
         if (resource && resource.id) {
             var url;
-            var filter;
+            var filter = {};
 
             // for subresource, always count and display ALL resources by default(not only active resources)
             if (typeof tabContent.countUrl === "string") {
@@ -292,11 +292,18 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
             } else {
                 url = tabContent.countUrl.url.replace("{id}", resource.id);
 
-                // make a copy to avoid mofifying the source
-                if ($.isArray(tabContent.countUrl.filter)) {
-                    filter = {logic: "and", filters: $.extend(true, [], tabContent.countUrl.filter)};
-                } else {
-                    filter = $.extend(true, {}, tabContent.countUrl.filter);
+                if (tabContent.countUrl.filter) {
+                    filter = tabContent.countUrl.filter;
+                    if (typeof tabContent.countUrl.filter === "function") {
+                        filter = filter();
+                    } else {
+                        // make a copy to avoid mofifying the source
+                        if ($.isArray(filter)) {
+                            filter = {logic: "and", filters: $.extend(true, [], filter)};
+                        } else {
+                            filter = $.extend(true, {}, filter);
+                        }
+                    }
                 }
                 filter = expresso.Common.buildKendoFilter(filter, {
                     countOnly: true,
