@@ -963,16 +963,16 @@ k-widget k-window
     box-shadow: 3px 3px 7px 0 rgba(0, 0, 0, 0.19);
 
     .k-window-titlebar {
-        height: 50px;
         border-bottom: 2px solid rgba(53, 64, 82, 0.5);
         overflow: hidden;
 
         .k-window-title {
             display: inline-block;
-            padding: $windowTitlePaddingTop 0 0 calc(#{$formPadding} + 2px);
             color: $themeColorDark;
             font-weight: bold;
             text-transform: uppercase;
+            //padding: $windowTitlePaddingTop 0 0 calc(#{$formPadding} + 2px);
+            padding: 0.5em 0 0.5em calc(#{$formPadding} + 2px);
         }
     }
 

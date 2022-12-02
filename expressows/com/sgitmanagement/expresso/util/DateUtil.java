@@ -51,6 +51,12 @@ public class DateUtil {
 			return new SimpleDateFormat("M/d/yyyy h:mm:ss a");
 		}
 	};
+	public static final ThreadLocal<DateFormat> US_DATETIME_FULL_NOSEC_FORMAT_TL = new ThreadLocal<DateFormat>() {
+		@Override
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("MM/dd/yyyy HH:mm a");
+		}
+	};
 	public static final ThreadLocal<DateFormat> DATE_FORMAT_SHORT_YEAR_TL = new ThreadLocal<DateFormat>() {
 		@Override
 		protected DateFormat initialValue() {
@@ -104,7 +110,7 @@ public class DateUtil {
 	public static final ThreadLocal<DateFormat> DATETIME2_FORMAT_TS = new ThreadLocal<DateFormat>() {
 		@Override
 		protected DateFormat initialValue() {
-			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSS");
+			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 		}
 	};
 	public static final ThreadLocal<DateFormat> DATETIMEZ2_FORMAT_TL = new ThreadLocal<DateFormat>() {
@@ -182,6 +188,8 @@ public class DateUtil {
 			try {
 				if (dateString.length() == 0) {
 					// cannot convert
+				} else if (dateString.contains("/") && (dateString.contains("AM") || dateString.contains("PM")) && dateString.length() == 19) {
+					date = US_DATETIME_FULL_NOSEC_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.contains("/") && (dateString.contains("AM") || dateString.contains("PM"))) {
 					date = US_DATETIME_SHORT_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.length() == 8 && dateString.contains("/")) {
@@ -212,7 +220,7 @@ public class DateUtil {
 					date = DATETIME_MMM_NOSEC_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.length() >= 22 && dateString.length() <= 24 && (dateString.contains("AM") || dateString.contains("PM"))) {
 					date = DATETIME_USA_FORMAT_TL.get().parse(dateString);
-				} else if (dateString.length() >= 21 && dateString.length() <= 24 && dateString.contains("T") && dateString.contains(".") && dateString.lastIndexOf("-") < 12
+				} else if (dateString.length() >= 21 && dateString.length() <= 23 && dateString.contains("T") && dateString.contains(".") && dateString.lastIndexOf("-") < 12
 						&& !dateString.contains("+") && !Character.isLetter(dateString.charAt(dateString.length() - 1))) {
 					date = DATETIME2_FORMAT_TS.get().parse(dateString);
 				} else if (dateString.length() == 23) {
@@ -485,6 +493,7 @@ public class DateUtil {
 
 		// System.out.println(getHoursBetweenTime("18:00", "06:00"));
 
-		System.out.println(DateUtil.parseDate("2021-09-19T14:03:47Z"));
+		// System.out.println(DateUtil.parseDate("2021-09-19T14:03:47Z"));
+		System.out.println(DateUtil.parseDate("2016-06-30T11:01:57.7446"));
 	}
 }

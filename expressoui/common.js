@@ -66,6 +66,7 @@ expresso.Common = (function () {
             sort: undefined,
             activeOnly: undefined,
             countOnly: undefined,
+            hierarchical: undefined,
             pageSize: undefined,
             skip: undefined,
             filter: {
@@ -107,7 +108,7 @@ expresso.Common = (function () {
                 kendoQuery.filter.filters.push(criterion);
             } else {
                 for (var p in criterion) {
-                    if (p != "countOnly" && p != "activeOnly") {
+                    if (p != "countOnly" && p != "activeOnly" && p != "hierarchical") {
                         kendoQuery.filter.filters.push({field: p, operator: "eq", value: criterion[p]});
                     } else {
                         // set them at the query level

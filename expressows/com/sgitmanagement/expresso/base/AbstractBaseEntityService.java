@@ -28,6 +28,7 @@ import java.util.Set;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import javax.persistence.EntityGraph;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -873,7 +874,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 * @throws Exception
 	 */
-	private int appendHierarchicalParentEntities(List<E> hierarchicalParentEntities, List<E> data, Set<I> ids) throws Exception {
+	protected int appendHierarchicalParentEntities(List<E> hierarchicalParentEntities, List<E> data, Set<I> ids) throws Exception {
+		if (ids == null) {
+			// build a map with the key
+			ids = new HashSet<>();
+			for (E e : data) {
+				ids.add(e.getId());
+			}
+		}
 		int sqlQueryCount = 0;
 		if (!hierarchicalParentEntities.isEmpty()) {
 			Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
@@ -2508,7 +2516,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				break;
 
 			default:
-				if (!path.getJavaType().isEnum()) {
+				if (path.getJavaType().isAnnotationPresent(Embeddable.class)) {
+					predicate = cb.equal(path, filter.getValue());
+				} else if (!path.getJavaType().isEnum()) {
 					throw new Exception("Type [" + type + "] valueType [" + valueType + "] not supported");
 				} else {
 					// The field is an Enum

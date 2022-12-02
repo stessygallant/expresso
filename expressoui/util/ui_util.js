@@ -588,14 +588,21 @@ expresso.util.UIUtil = (function () {
         var getFormWidth = function ($form, options) {
             options = options || {};
 
-            var sideMargin = 10;
+            var fontSize = getDefaultFontSize($form[0]) || 12;
+            //console.log("fontSize: " + fontSize);
+
+            var percFactor = fontSize / 12; // 12px if the default font size
+            //console.log("percFactor: " + percFactor);
+
+            var sideMargin = 10 * percFactor;
             var width = options.width;
             var $browserWindow = $(window);
-            var singleColumnWidth = 420;
+            var singleColumnWidth = 420 * percFactor;
+            var maxWidth = Math.min($browserWindow.width() - sideMargin, 1500 * percFactor);
 
             if (!width) {
                 if ($form.hasClass("exp-form-max-width")) {
-                    width = Math.min($browserWindow.width() - 20, 1500);
+                    width = maxWidth;
                 } else if ($form.hasClass("exp-form-single-column")) {
                     width = singleColumnWidth;
                 } else if ($form.hasClass("exp-form-three-columns")) {
@@ -606,18 +613,37 @@ expresso.util.UIUtil = (function () {
                     // default double column
                     width = singleColumnWidth * 2;
                 }
-
-                // make sure not to be larger than the window
-                width = Math.min($browserWindow.width() - sideMargin, width);
             } else {
                 if (typeof width === "string" && width.endsWith("px")) {
-                    width = parseInt(width.substring(0, width.length - 2));
+                    width = parseInt(width.substring(0, width.length - 2)) * percFactor;
                 } else if (width == "100%" || width == "max") {
-                    // allow 10 pixels on each side
-                    width = $browserWindow.width() - (2 * sideMargin);
+                    width = maxWidth;
                 }
             }
+
+            // make sure not to be larger than the window
+            width = Math.min(maxWidth, width);
+            // console.log("width: " + width);
             return width;
+        };
+
+        var getEmSize = function (el) {
+            return parseFloat(window.getComputedStyle(el, "").fontSize.match(/(\d+(\.\d*)?)px/)[1]);
+        };
+
+        /**
+         *
+         * @param parentElement
+         * @returns {number}
+         */
+        var getDefaultFontSize = function (parentElement) {
+            parentElement = parentElement || document.body;
+            var div = document.createElement('div');
+            div.style.width = "1000em";
+            parentElement.appendChild(div);
+            var pixels = div.offsetWidth / 1000;
+            parentElement.removeChild(div);
+            return pixels;
         };
 
         /**
@@ -1307,6 +1333,14 @@ expresso.util.UIUtil = (function () {
                                 response = response.data;
                             }
 
+                            if (typeof dataTextField === "function") {
+                                $.each(response, function() {
+                                    var item = this;
+
+                                    item.label = dataTextField(item);
+                                });
+                            }
+
                             // if the list is only string, build a complete data source
                             response = convertList(response, customOptions.labels, dataValueField, dataTextField);
 
@@ -1344,7 +1378,7 @@ expresso.util.UIUtil = (function () {
             // console.log("initValue: " + initValue);
             var defaultOptions = {
                 dataValueField: dataValueField,
-                dataTextField: dataTextField,
+                dataTextField: (typeof dataTextField === "function"?"label":dataTextField),
                 valuePrimitive: true,
                 dataSource: dataSource,
                 enable: customOptions.enable,
