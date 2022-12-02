@@ -91,7 +91,7 @@ abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
 		// because flush could be called multiples times in the same transaction, we need to verify
 		String key = entityClassName + ":" + e.getId() + ":" + fieldName + ":" + currentValue + ":" + newValue;
 		if (auditThreadLocal.get().contains(key)) {
-			logger.debug("Avoid double auditing: " + key);
+			// logger.debug("Avoid double auditing: " + key);
 		} else {
 			auditThreadLocal.get().add(key);
 

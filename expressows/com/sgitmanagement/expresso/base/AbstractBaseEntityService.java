@@ -2373,6 +2373,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					stringValue = (String) filter.getValue();
 				} else if (valueType.equals("ArrayList")) {
 					stringValues = (List<String>) filter.getValue();
+				} else if (valueType.equals("HashSet")) {
+					stringValues = new ArrayList<>((Set<String>) filter.getValue());
 				} else if (valueType.equals("String[]")) {
 					stringValues = Arrays.asList((String[]) filter.getValue());
 				} else { // valueType.equals("String")
