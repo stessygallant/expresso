@@ -1429,7 +1429,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                             //console.log(_this.resourceManager.getResourceSecurityPath() + " " + action.name + ":" + action.allowed);
                             var $button = $toolbar.find(".exp-" + action.name + "-button");
                             if (!$button.hasClass("exp-always-active-button")) {
-                                if (_this.selectedRows.length > 1 && $button.hasClass("exp-multiple-selection")) {
+                                if (_this.selectedRows.length > 1 && $button.hasClass("exp-single-selection")) {
+                                    // this button is already disabled, we cannot enable it
+                                } else if (_this.selectedRows.length > 1 && $button.hasClass("exp-multiple-selection")) {
                                     // multiple selection buttons must remain active if there is multiple selections.
                                     $button.prop("disabled", false);
                                 } else {

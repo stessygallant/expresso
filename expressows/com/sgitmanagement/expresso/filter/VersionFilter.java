@@ -1,6 +1,10 @@
 package com.sgitmanagement.expresso.filter;
 
 import java.io.IOException;
+import java.util.Enumeration;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -11,9 +15,6 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Servlet Filter implementation class SecurityFilter
  */
@@ -21,17 +22,20 @@ public class VersionFilter implements Filter {
 	final private static Logger logger = LoggerFactory.getLogger(VersionFilter.class);
 	private static String currentVersion;
 	private final static int SC_UPGRADE_NEEDED = 426;
+	private boolean debug = false;
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest req = (HttpServletRequest) request;
 
-		// logger.info("HTTP Header");
-		// Enumeration<String> headerNames = req.getHeaderNames();
-		// while (headerNames.hasMoreElements()) {
-		// String headerName = headerNames.nextElement();
-		// logger.info(" Header [" + headerName + "=" + req.getHeader(headerName) + "]");
-		// }
+		if (debug) {
+			logger.info("VersionFilter - HTTP Header");
+			Enumeration<String> headerNames = req.getHeaderNames();
+			while (headerNames.hasMoreElements()) {
+				String headerName = headerNames.nextElement();
+				logger.info(" Header [" + headerName + "=" + req.getHeader(headerName) + "]");
+			}
+		}
 
 		String requestVersion = req.getHeader("X-Version");
 
