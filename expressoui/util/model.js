@@ -164,6 +164,12 @@ expresso.util.Model = (function () {
 
                         // inline grids are always transient
                         if (field.inlineGridResourceManager) {
+                            if (typeof field.inlineGridResourceManager === "string") {
+                                field.inlineGridResourceManager = {
+                                    resourceManager: field.inlineGridResourceManager
+                                }
+                            }
+
                             field.transient = true;
                             if (!field.nullable) {
                                 field.validation = field.validation || {};
@@ -249,13 +255,13 @@ expresso.util.Model = (function () {
                             if (typeof reference === "function") {
                                 // execute the function
                                 reference = reference();
-                            } else if ($.isArray(reference)) {
-                                reference = {
-                                    data: field.values
-                                };
                             }
 
-                            if (reference === true) {
+                            if ($.isArray(reference)) {
+                                reference = {
+                                    data: reference
+                                };
+                            } else if (reference === true) {
                                 reference = {};
                             } else if (typeof reference === "string") {
                                 reference = {

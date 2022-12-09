@@ -583,9 +583,10 @@
 
             // if the parent is already created -> inline grid is online (auto sync ON)
             // if the parent is not already created -> inline grid is offline (auto sync OFF)
-            expresso.Common.loadApplication(field.inlineGridResourceManager, {
+            expresso.Common.loadApplication(field.inlineGridResourceManager.resourceManager, {
                 autoSyncGridDataSource: !!(resource && resource.id), // false,
-                multipleSelectionEnabled: false
+                multipleSelectionEnabled: false,
+                activeOnly: field.inlineGridResourceManager.activeOnly
             }).done(function (appInstance) {
                 $div.data("resourceManager", appInstance);
                 if (masterResourceManager) {

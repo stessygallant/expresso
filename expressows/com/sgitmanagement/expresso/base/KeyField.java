@@ -11,6 +11,8 @@ import java.lang.annotation.Target;
 public @interface KeyField {
 	public int padding() default 0;
 
+	public boolean rightSpacePadding() default false;
+
 	public int length() default 0;
 
 	public String prefix() default "";

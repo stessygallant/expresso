@@ -766,7 +766,7 @@ label input + span {
         font-weight: bold;
         margin-right: 0.5em;
 
-        &:after {
+        &:not(.k-checkbox-label):after {
             content: ":";
         }
     }

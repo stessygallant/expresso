@@ -146,11 +146,11 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
      * @returns {*} a Ajax promise
      */
     sendRequest: function (path, action, data, queryString, options) {
-
         // add the application labels and send the request
-        options = options || {};
-        options.labels = this.labels;
-        return expresso.Common.sendRequest(path, action, data, queryString, options);
+        return expresso.Common.sendRequest(path, action, data, queryString, $.extend({}, {
+            waitOnElement: this.$domElement,
+            labels: this.labels
+        }, options));
     },
 
     /**
