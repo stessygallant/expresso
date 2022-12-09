@@ -33,8 +33,12 @@ expresso.applications.general.requiredapprovalmanager.Grid = expresso.layout.res
         }, {
             field: "resourceFieldName",
             width: 200,
-            template: "#= fmtResourceFieldName #"
-            //filterable: false
+            hidden: true
+        }, {
+            field: "resourceFieldName",
+            width: 200,
+            template: "#= fmtResourceFieldName #",
+            filterable: false
         }, {
             field: "oldValue",
             width: 150
