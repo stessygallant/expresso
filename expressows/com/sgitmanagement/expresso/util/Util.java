@@ -337,6 +337,7 @@ public class Util {
 					// key).replace(' ', '0');
 					key = StringUtils.leftPad(key, keyFieldAnnotation.padding(), '0');
 				}
+
 				// add a space padding
 				if (keyFieldAnnotation.rightSpacePadding()) {
 					key = StringUtils.rightPad(key, keyFieldAnnotation.length());

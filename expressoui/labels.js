@@ -10,7 +10,7 @@ $.extend(expresso.Labels, {
     title: "Titre",
     extKey: "Code externe",
     pgmKey: "Code",
-    sortOrder: "Ordre de tri",
+    sortOrder: {label: "Ordre de tri", shortLabel: "Tri"},
     status: "Statut",
     date: "Date",
     type: "Type",

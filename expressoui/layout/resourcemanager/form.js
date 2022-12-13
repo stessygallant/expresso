@@ -250,15 +250,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 expresso.util.UIUtil.addSearchButton($input, field.reference || field.values);
             }
         });
-
-        // if the field is an id, do not allow 0. Set it to null
-        $window.find(":input").each(function () {
-            if (this.name.endsWith("Id") && $(this).val() === 0) {
-                $(this).setval(null);
-                console.warn("Attribute [" + this.name + "] is an ID but has value 0 instead of null");
-            }
-        });
-
+        
         // apply the security if readOnly
         var $readOnlyDeferred = $.Deferred();
         if (!resource || !resource.id) {
@@ -345,24 +337,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             }
         });
 
-        // patch for date: for new resource only
-        // if type=date and the defaultValue is not defined and nullable is not true,
-        // then set the date value to current date
-        // if you set it directly in app_class, the date will be initialized at the initialization
-        // of the app_class and then 2 days later you will still get the same date
-        if (!resource.id) {
-            for (var f in model.fields) {
-                if (f) {
-                    var field = model.fields[f];
-                    if (field && field.type === "date" && field.defaultValue === undefined &&
-                        field.nullable !== true) {
-                        resource.set(f, new Date());
-                        //console.log(f + ": " + resource[f]);
-                    }
-                }
-            }
-        }
-
         // add tooltip if needed
         this.tooltipWidget = $window.kendoTooltip({
             filter: "label[title]",
@@ -412,22 +386,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             _this.onClose(e);
         });
 
-        // for combo box with values (directly defined in the form.html)
-        // set Combo box filter to contains
-        $window.find("[data-role=combobox][data-source]").each(function () {
-            var comboBox = $(this).data("kendoComboBox");
-            comboBox.options.filter = "contains";
-            comboBox.options.suggest = true;
-
-            comboBox.bind("change", function (e) {
-                var widget = e.sender;
-                if (widget.value() && widget.select() === -1) {
-                    //custom has been selected
-                    widget.value(""); //reset widget
-                }
-            });
-        });
-
         // auto select the text on focus for combobox
         $window.find("input[role=combobox]").on("focus", function () {
             $(this).select();
@@ -474,6 +432,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         window.setTimeout(function () {
             _this.isReady().done(function () {
                 $formReadyPromise.resolve();
+                _this.initFormResource($window, resource);
             });
         }, 10);
 
@@ -482,14 +441,41 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             // console.log("click: " + this.name + ":" + this.className);
             expresso.util.UIUtil.showLoadingMask(_this.$window, true, "formSaveAction");
 
-            // patch: if after 5 seconds, the loading mask is still there, remove it
+            // patch: if after n seconds, the loading mask is still there, remove it
             window.setTimeout(function () {
                 if (_this.$window && _this.$window.find(".exp-loading-mask[data-mask-id=formSaveAction]").length) {
                     console.warn("Missing remove loading mask!");
                     expresso.util.UIUtil.showLoadingMask(_this.$window, false, "formSaveAction");
                 }
-            }, 5000);
+            }, 10000);
         });
+    },
+
+    /**
+     * Once the form is ready, we can set the data on the resource
+     * @param $window
+     * @param resource
+     */
+    initFormResource: function ($window, resource) {
+        var model = this.resourceManager.model;
+
+        // patch for date: for new resource only
+        // if type=date and the defaultValue is not defined and nullable is not true,
+        // then set the date value to current date
+        // if you set it directly in app_class, the date will be initialized at the initialization
+        // of the app_class and then 2 days later you will still get the same date
+        if (!resource.id) {
+            for (var f in model.fields) {
+                if (f) {
+                    var field = model.fields[f];
+                    if (field && field.type === "date" && field.defaultValue === undefined &&
+                        field.nullable !== true) {
+                        resource.set(f, new Date());
+                        //console.log(f + ": " + resource[f]);
+                    }
+                }
+            }
+        }
     },
 
     /**

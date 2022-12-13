@@ -840,6 +840,12 @@ expresso.Security = function () {
                 }
                 break;
 
+            case expresso.Common.HTTP_CODES.CUSTOM_UNAUTHORIZED : // 451
+                expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("invalidCredentials")).done(function () {
+                    $deferred.reject();
+                });
+                break;
+
             default:
                 //window.location.reload(true);
                 expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("unexpectedLoginError")).done(function () {

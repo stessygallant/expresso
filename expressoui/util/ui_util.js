@@ -218,9 +218,12 @@ expresso.util.UIUtil = (function () {
             if (customOptions.field && customOptions.field.reference) {
                 customOptions.nullable = customOptions.nullable || customOptions.field.nullable;
                 customOptions.filter = customOptions.filter || customOptions.field.reference.filter;
-                customOptions.triggerChangeOnInit = customOptions.triggerChangeOnInit || customOptions.field.reference.triggerChangeOnInit;
                 customOptions.cascadeFrom = customOptions.cascadeFrom || customOptions.field.reference.cascadeFrom;
                 customOptions.cascadeFromField = customOptions.cascadeFromField || customOptions.field.reference.cascadeFromField;
+
+                if (customOptions.triggerChangeOnInit === undefined) {
+                    customOptions.triggerChangeOnInit = customOptions.field.reference.triggerChangeOnInit;
+                }
             }
 
             var url;
@@ -1289,10 +1292,12 @@ expresso.util.UIUtil = (function () {
             // get the info from the field if defined
             if (customOptions.field && customOptions.field.values) {
                 customOptions.nullable = customOptions.nullable || customOptions.field.nullable;
-                customOptions.triggerChangeOnInit = customOptions.triggerChangeOnInit || customOptions.field.values.triggerChangeOnInit;
                 customOptions.selectFirstOption = customOptions.selectFirstOption || customOptions.field.values.selectFirstOption;
                 customOptions.grouping = customOptions.grouping || customOptions.field.values.grouping;
                 customOptions.sortField = customOptions.sortField || customOptions.field.values.sortField;
+                if (customOptions.triggerChangeOnInit === undefined) {
+                    customOptions.triggerChangeOnInit = customOptions.field.values.triggerChangeOnInit;
+                }
             }
 
             var dataSource;
@@ -1334,7 +1339,7 @@ expresso.util.UIUtil = (function () {
                             }
 
                             if (typeof dataTextField === "function") {
-                                $.each(response, function() {
+                                $.each(response, function () {
                                     var item = this;
 
                                     item.label = dataTextField(item);
@@ -1378,7 +1383,7 @@ expresso.util.UIUtil = (function () {
             // console.log("initValue: " + initValue);
             var defaultOptions = {
                 dataValueField: dataValueField,
-                dataTextField: (typeof dataTextField === "function"?"label":dataTextField),
+                dataTextField: (typeof dataTextField === "function" ? "label" : dataTextField),
                 valuePrimitive: true,
                 dataSource: dataSource,
                 enable: customOptions.enable,

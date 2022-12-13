@@ -212,7 +212,7 @@ public enum Mailer {
 				}
 			}
 
-			if (tos == null || tos.isEmpty() || ((String) tos.toArray()[0]).trim().length() == 0) {
+			if (tos == null || tos.isEmpty() || ((String) tos.toArray()[0]) == null || ((String) tos.toArray()[0]).trim().length() == 0) {
 				throw new Exception("TO address is null or not defined");
 			}
 
