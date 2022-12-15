@@ -699,7 +699,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	public List<E> list(Query query) throws Exception {
 		try {
 			query = verifyQuery(query);
-
 			// logger.debug("List query: " + new Gson().toJson(query));
 
 			// use the CriteriaBuilder to create the query
@@ -934,12 +933,12 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					hierarchicalChildIds.add((Integer) e.getId());
 				}
 				sqlQueryCount++;
-				logger.debug("Getting " + hierarchicalChildIds.size() + " new HierarchicalChildEntities");
+				logger.debug("Getting " + hierarchicalChildIds.size() + " new HierarchicalChildEntities activeOnly: " + activeOnly);
 				List<E> newHierarchicalChildEntities = new ArrayList<>();
 				Field hierarchicalParentEntityField = getHierarchicalParentEntityField();
 				String hierarchicalParentIdFieldName = hierarchicalParentEntityField.getName() + "Id";
 				Filter hierarchicalChildIdsFilter = new Filter(hierarchicalParentIdFieldName, Operator.inIds, hierarchicalChildIds);
-				for (E e : list(new Query().addFilter(hierarchicalChildIdsFilter))) {
+				for (E e : list(new Query().setActiveOnly(activeOnly).addFilter(hierarchicalChildIdsFilter))) {
 					if (!ids.contains(e.getId())) {
 						ids.add(e.getId());
 						data.add(e);
@@ -1045,10 +1044,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		// getTypeOfE().getName());
 
 		// if the query is already verified, skip it
-		if (query.getVerified() == null || !query.getVerified().booleanValue()) {
+		if (!query.verified()) {
 			query.setVerified(true);
 
-			if (query.getKeySearch() == null || !query.getKeySearch().booleanValue()) {
+			if (!query.keySearch()) {
 
 				// if active only is requested, get the active only filter
 				if (query.activeOnly()) {

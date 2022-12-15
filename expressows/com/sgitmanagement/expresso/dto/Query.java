@@ -112,6 +112,10 @@ public class Query {
 		return this;
 	}
 
+	public boolean keySearch() {
+		return this.keySearch != null && this.keySearch.booleanValue();
+	}
+
 	public Boolean getVerified() {
 		return verified;
 	}
@@ -119,6 +123,10 @@ public class Query {
 	public Query setVerified(Boolean verified) {
 		this.verified = verified;
 		return this;
+	}
+
+	public boolean verified() {
+		return this.verified != null && this.verified.booleanValue();
 	}
 
 	public Boolean getCreateIfNotFound() {
