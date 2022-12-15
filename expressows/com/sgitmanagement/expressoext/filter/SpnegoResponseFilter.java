@@ -41,7 +41,7 @@ public class SpnegoResponseFilter implements Filter {
 		HttpServletResponse httpServletResponse = (HttpServletResponse) resp;
 
 		try {
-			if (httpServletRequest.getHeader(WWW_AUTHORIZATION) != null) {
+			if (debug && httpServletRequest.getHeader(WWW_AUTHORIZATION) != null) {
 				for (String token : Collections.list(httpServletRequest.getHeaders(WWW_AUTHORIZATION))) {
 					if (token.length() > 20) {
 						token = token.substring(token.length() - 20) + " (=" + token.length() + " chars)";
@@ -121,9 +121,9 @@ public class SpnegoResponseFilter implements Filter {
 			int httpCode = httpServletResponse.getStatus();
 			if (httpCode == HttpServletResponse.SC_UNAUTHORIZED) {
 				// it may take 3 calls before getting the Kerberos token
-				// if (debug) {
-				logger.info("Replying UNAUTHORIZED: " + httpServletRequest.getPathInfo() + ": " + httpServletRequest.getHeader("Cookie") + ":" + httpServletRequest.getHeader(WWW_AUTHORIZATION));
-				// }
+				if (debug) {
+					logger.info("Replying UNAUTHORIZED: " + httpServletRequest.getPathInfo() + ": " + httpServletRequest.getHeader("Cookie") + ":" + httpServletRequest.getHeader(WWW_AUTHORIZATION));
+				}
 
 				// if login failed, remove the WWW_AUTHORIZATION from the session
 				httpSession.removeAttribute(WWW_AUTHORIZATION);

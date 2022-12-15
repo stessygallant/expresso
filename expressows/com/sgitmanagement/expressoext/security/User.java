@@ -66,10 +66,12 @@ public class User extends Person implements IUser, Auditable {
 	@Column(name = "note")
 	private String note;
 
+	@ForbidAudit
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "last_visit_date")
 	private Date lastVisitDate;
 
+	@ForbidAudit
 	@Column(name = "nbr_failed_attempts")
 	private int nbrFailedAttempts;
 
