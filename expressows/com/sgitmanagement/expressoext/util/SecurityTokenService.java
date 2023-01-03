@@ -3,7 +3,7 @@ package com.sgitmanagement.expressoext.util;
 import java.util.Calendar;
 import java.util.Date;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;

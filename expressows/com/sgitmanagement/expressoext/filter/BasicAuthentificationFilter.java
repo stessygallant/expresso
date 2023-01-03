@@ -3,8 +3,8 @@ package com.sgitmanagement.expressoext.filter;
 import java.io.IOException;
 import java.security.Principal;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;

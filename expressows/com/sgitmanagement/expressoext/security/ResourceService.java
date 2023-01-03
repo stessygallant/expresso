@@ -1,6 +1,6 @@
 package com.sgitmanagement.expressoext.security;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.apache.commons.lang3.StringUtils;
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.apache.commons.codec.binary.Base64;
 import org.ietf.jgss.GSSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public class SpnegoResponseFilter implements Filter {
 
 	private static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
 	private static final String WWW_NEGOCIATE = "Negotiate";
+	private static final String WWW_BASIC = "Basic ";
 	private static final String WWW_AUTHORIZATION = "Authorization";
 
 	private boolean debug = false;
@@ -40,8 +42,10 @@ public class SpnegoResponseFilter implements Filter {
 		HttpServletRequest httpServletRequest = (HttpServletRequest) req;
 		HttpServletResponse httpServletResponse = (HttpServletResponse) resp;
 
+		String requestAuthorization = httpServletRequest.getHeader(WWW_AUTHORIZATION);
+
 		try {
-			if (debug && httpServletRequest.getHeader(WWW_AUTHORIZATION) != null) {
+			if (debug && requestAuthorization != null) {
 				for (String token : Collections.list(httpServletRequest.getHeaders(WWW_AUTHORIZATION))) {
 					if (token.length() > 20) {
 						token = token.substring(token.length() - 20) + " (=" + token.length() + " chars)";
@@ -55,12 +59,24 @@ public class SpnegoResponseFilter implements Filter {
 
 			// we need to keep the Authorization in the session for direct GET URL (which does not contains the
 			// Authorization Header).
-			if (httpServletRequest.getHeader(WWW_AUTHORIZATION) != null && httpSession.getAttribute(WWW_AUTHORIZATION) == null && httpServletRequest.getHeader(WWW_AUTHORIZATION).startsWith("Basic")) {
-				httpSession.setAttribute(WWW_AUTHORIZATION, httpServletRequest.getHeader(WWW_AUTHORIZATION));
+			if (requestAuthorization != null && httpSession.getAttribute(WWW_AUTHORIZATION) == null && requestAuthorization.startsWith(WWW_BASIC)) {
+				// if a user tries to connect user BASIC AUTH in the internal network, report it (should be Negociate)
+				String ip = Util.getIpAddress(httpServletRequest);
+				String userAgent = httpServletRequest.getHeader("User-Agent");
+				boolean mobile = userAgent.indexOf("Mobile") != -1;
+				if (mobile || !Util.isInternalIpAddress(ip)) {
+					// ok, they cannot use SSO Kerberos
+				} else {
+					String userPassBase64 = requestAuthorization.substring(WWW_BASIC.length());
+					String userPassDecoded = new String(Base64.decodeBase64(userPassBase64));
+					String authUser = userPassDecoded.substring(0, userPassDecoded.indexOf(':'));
+					logger.warn("Got a SSO call with Basic Auth for internal user[" + authUser + "] IP[" + ip + "] User-Agent[" + userAgent + "]");
+				}
+				httpSession.setAttribute(WWW_AUTHORIZATION, requestAuthorization);
 			}
 
 			// use the authorization in the session
-			if (httpSession.getAttribute(WWW_AUTHORIZATION) != null && httpServletRequest.getHeader(WWW_AUTHORIZATION) == null) {
+			if (httpSession.getAttribute(WWW_AUTHORIZATION) != null && requestAuthorization == null) {
 				httpServletRequest = new HttpServletRequestWrapper(httpServletRequest) {
 					@Override
 					public String getHeader(String name) {

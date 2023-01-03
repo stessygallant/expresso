@@ -1,6 +1,6 @@
 package com.sgitmanagement.expressoext.security;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.dto.Query.Filter;

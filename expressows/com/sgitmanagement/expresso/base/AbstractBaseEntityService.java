@@ -26,34 +26,34 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EntityGraph;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.LockModeType;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.OneToOne;
-import javax.persistence.PersistenceException;
-import javax.persistence.Subgraph;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -564,7 +564,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	final public E lockNoWait(E e) {
 		Map<String, Object> properties = new HashMap<>();
-		properties.put("javax.persistence.lock.timeout", 0);
+		properties.put("jakarta.persistence.lock.timeout", 0);
 		getEntityManager().flush();
 		getEntityManager().refresh(e, LockModeType.PESSIMISTIC_WRITE, properties);
 		return e;
@@ -777,7 +777,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				// This is mandatory to eagerly fetch the data using CriteriaBuilder
 				EntityGraph<E> fetchGraph = getEntityManager().createEntityGraph(getTypeOfE());
-				typedQuery.setHint("javax.persistence.loadgraph", buildEntityGraph(fetchGraph, getTypeOfE(), query, null));
+				typedQuery.setHint("jakarta.persistence.loadgraph", buildEntityGraph(fetchGraph, getTypeOfE(), query, null));
 
 				// then issue the SQL query
 				Date startDate = new Date();

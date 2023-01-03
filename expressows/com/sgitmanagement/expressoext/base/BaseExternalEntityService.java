@@ -3,7 +3,7 @@ package com.sgitmanagement.expressoext.base;
 import java.util.Date;
 import java.util.Properties;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.apache.commons.lang3.time.DateUtils;
 

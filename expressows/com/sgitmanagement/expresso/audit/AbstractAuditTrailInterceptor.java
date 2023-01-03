@@ -6,13 +6,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.annotations.Formula;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
@@ -26,13 +21,18 @@ import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.util.DateUtil;
 import com.sgitmanagement.expresso.util.Util;
 
-abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
+
+abstract public class AbstractAuditTrailInterceptor implements Interceptor {
 	final static protected Logger logger = LoggerFactory.getLogger(AbstractAuditTrailInterceptor.class);
 	private static ThreadLocal<Set<String>> auditThreadLocal = new ThreadLocal<>();
 
 	public AbstractAuditTrailInterceptor() {
 		super();
-		logger.debug("New AbstractAuditTrailInterceptor");
+		// logger.debug("New AbstractAuditTrailInterceptor");
 	}
 
 	@SuppressWarnings("rawtypes")

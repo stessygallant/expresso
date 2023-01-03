@@ -2,7 +2,7 @@ package com.sgitmanagement.expressoext.base;
 
 import java.io.IOException;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

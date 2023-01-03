@@ -2,7 +2,7 @@ package com.sgitmanagement.expressoext.filter;
 
 import java.io.IOException;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

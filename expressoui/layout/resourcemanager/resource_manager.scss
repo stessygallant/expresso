@@ -700,7 +700,7 @@ $formPreviewHeight: 12em;
     .input-wrap {
         line-height: 1.7;
 
-        label:not(.k-checkbox-label):not(.k-radio-label) {
+        label:not(.k-checkbox-label):not(.k-radio-label):not(.exp-switch) {
             display: block;
             font-size: 95%;
             font-weight: bold;

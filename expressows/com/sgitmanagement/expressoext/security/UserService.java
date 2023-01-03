@@ -4,7 +4,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import com.sgitmanagement.expresso.base.PersistenceManager;
 

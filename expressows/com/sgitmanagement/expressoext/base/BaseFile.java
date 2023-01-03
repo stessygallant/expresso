@@ -1,8 +1,8 @@
 package com.sgitmanagement.expressoext.base;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 
 @MappedSuperclass
 public abstract class BaseFile extends BaseUpdatableEntity {

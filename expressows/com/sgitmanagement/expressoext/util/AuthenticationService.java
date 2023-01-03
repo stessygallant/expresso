@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -112,6 +112,11 @@ public class AuthenticationService extends BaseService {
 			if (user.getTerminationDate() != null) {
 				// cannot change password if the account is blocked
 				throw new ValidationException("accountBlocked");
+			}
+
+			if (user.isGenericAccount()) {
+				// cannot change password if it is not a local account
+				throw new ValidationException("cannotResetGenericAccountPassword");
 			}
 
 			sendForgetPasswordTokenMail(user);

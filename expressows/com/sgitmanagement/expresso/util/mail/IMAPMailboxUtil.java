@@ -6,12 +6,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import javax.mail.Flags;
-import javax.mail.Flags.Flag;
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
+import jakarta.mail.Folder;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

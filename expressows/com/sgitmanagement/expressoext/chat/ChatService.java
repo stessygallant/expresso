@@ -27,7 +27,7 @@ public class ChatService extends BaseWebSocketService {
 						logger.debug("Sending from[" + chatMessage.getFrom() + " message[" + chatMessage.getContent() + "]");
 						session.getBasicRemote().sendObject(chatMessage);
 					} catch (Exception ex) {
-						logger.error("Cannot send message to session[" + session.getId() + "]: " + ex);
+						logger.warn("Cannot send message to session[" + session.getId() + "]: " + ex);
 					}
 				}
 			}
