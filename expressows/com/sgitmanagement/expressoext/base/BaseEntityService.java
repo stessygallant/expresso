@@ -6,13 +6,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-
 import org.apache.commons.beanutils.BeanUtils;
 
 import com.sgitmanagement.expresso.base.AbstractBaseEntityService;
+import com.sgitmanagement.expresso.base.Creatable;
 import com.sgitmanagement.expresso.base.RequireApproval;
+import com.sgitmanagement.expresso.base.Updatable;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.util.DateUtil;
@@ -25,6 +24,8 @@ import com.sgitmanagement.expressoext.security.ResourceService;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.util.ReportUtil;
 
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityService<E, User, Integer> {
@@ -236,5 +237,25 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 		String resourceDescription = BeanUtils.getProperty(e, e.getClass().getAnnotation(RequireApproval.class).descriptionFieldName());
 		newService(RequiredApprovalService.class, RequiredApproval.class)
 				.create(new RequiredApproval(getResourceName(), e.getId(), getResourceNo(e), resourceDescription, field.getName(), currentStringValue, newStringValue, newValueReferenceId));
+	}
+
+	/**
+	 * 
+	 * @param creatable
+	 * @return
+	 */
+	public boolean isLastModifiedBySystem(Creatable creatable) {
+		if (creatable instanceof Updatable) {
+			Updatable updatable = (Updatable) creatable;
+			if (updatable.getLastModifiedUser() != null) {
+				return updatable.getLastModifiedUser().getUserName().equals(AuthorizationHelper.SYSTEM_USERNAME);
+			} else {
+				// no update. use creatable
+				return creatable.getCreationUser().getUserName().equals(AuthorizationHelper.SYSTEM_USERNAME);
+			}
+		} else {
+			// creatable only
+			return creatable.getCreationUser().getUserName().equals(AuthorizationHelper.SYSTEM_USERNAME);
+		}
 	}
 }

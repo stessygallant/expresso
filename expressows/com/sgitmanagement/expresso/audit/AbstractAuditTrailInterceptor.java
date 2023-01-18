@@ -26,7 +26,9 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
-abstract public class AbstractAuditTrailInterceptor implements Interceptor {
+//  extends EmptyInterceptor 
+//  implements Interceptor
+abstract public class AbstractAuditTrailInterceptor implements Interceptor, Serializable {
 	final static protected Logger logger = LoggerFactory.getLogger(AbstractAuditTrailInterceptor.class);
 	private static ThreadLocal<Set<String>> auditThreadLocal = new ThreadLocal<>();
 

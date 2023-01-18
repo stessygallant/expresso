@@ -5,6 +5,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.sgitmanagement.expresso.audit.Auditable;
+import com.sgitmanagement.expresso.audit.ForbidAudit;
+import com.sgitmanagement.expresso.base.IUser;
+import com.sgitmanagement.expresso.base.KeyField;
+import com.sgitmanagement.expresso.util.DeserializeOnlyStringAdapter;
+import com.sgitmanagement.expresso.util.JAXBDateAdapter;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,14 +24,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
-
-import com.sgitmanagement.expresso.audit.Auditable;
-import com.sgitmanagement.expresso.audit.ForbidAudit;
-import com.sgitmanagement.expresso.base.IUser;
-import com.sgitmanagement.expresso.base.KeyField;
-import com.sgitmanagement.expresso.util.DeserializeOnlyStringAdapter;
-import com.sgitmanagement.expresso.util.JAXBDateAdapter;
-
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @Entity

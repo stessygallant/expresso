@@ -5,6 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.annotations.Formula;
+
+import com.sgitmanagement.expresso.util.Util;
+import com.sgitmanagement.expressoext.base.BaseExternalOption;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -16,12 +21,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Formula;
-
-import com.sgitmanagement.expresso.util.Util;
-import com.sgitmanagement.expressoext.base.BaseExternalOption;
-
 import jakarta.xml.bind.annotation.XmlElement;
 
 @Entity
@@ -37,6 +36,9 @@ public class JobTitle extends BaseExternalOption {
 
 	@OneToMany(mappedBy = "jobTitle")
 	private List<JobTitleApprobationAmount> jobTitleApprobationAmounts;
+
+	@OneToMany(mappedBy = "jobTitle")
+	private List<User> users;
 
 	@ManyToMany
 	@JoinTable(name = "job_title_role",
@@ -101,5 +103,9 @@ public class JobTitle extends BaseExternalOption {
 
 	public Set<JobTitle> getManagedJobTitles() {
 		return managedJobTitles;
+	}
+
+	public List<User> getUsers() {
+		return users;
 	}
 }

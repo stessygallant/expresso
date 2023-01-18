@@ -3,8 +3,6 @@ package com.sgitmanagement.expressoext.base;
 import java.util.Date;
 import java.util.Properties;
 
-import jakarta.persistence.NoResultException;
-
 import org.apache.commons.lang3.time.DateUtils;
 
 import com.sgitmanagement.expresso.base.ExternalEntity;
@@ -12,6 +10,8 @@ import com.sgitmanagement.expresso.util.DateUtil;
 import com.sgitmanagement.expresso.util.ProgressSender;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expressoext.util.Config;
+
+import jakarta.persistence.NoResultException;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class BaseExternalEntityService<E extends BaseUpdatableEntity & ExternalEntity<Integer>> extends BaseEntityService<E> implements AutoCloseable {

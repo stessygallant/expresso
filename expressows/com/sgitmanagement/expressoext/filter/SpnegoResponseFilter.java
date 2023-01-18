@@ -142,7 +142,12 @@ public class SpnegoResponseFilter implements Filter {
 				}
 
 				// if login failed, remove the WWW_AUTHORIZATION from the session
-				httpSession.removeAttribute(WWW_AUTHORIZATION);
+				try {
+					httpSession.removeAttribute(WWW_AUTHORIZATION);
+				} catch (IllegalStateException ex) {
+					// may happen when logout: Session already invalidated
+					// ignore
+				}
 
 				// if user is not authenticated, it will return
 				// WWW-Authenticate: Negotiate

@@ -1,12 +1,12 @@
 package com.sgitmanagement.expressoext.util;
 
+import com.sgitmanagement.expressoext.base.BaseResource;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MultivaluedMap;
-
-import com.sgitmanagement.expressoext.base.BaseResource;
 
 @Path("/authentication")
 public class AuthenticationResource extends BaseResource<AuthenticationService> {

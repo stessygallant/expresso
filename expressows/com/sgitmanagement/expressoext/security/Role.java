@@ -5,6 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.annotations.Formula;
+
+import com.sgitmanagement.expresso.util.Util;
+import com.sgitmanagement.expressoext.base.BaseOption;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -16,12 +21,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Formula;
-
-import com.sgitmanagement.expresso.util.Util;
-import com.sgitmanagement.expressoext.base.BaseOption;
-
 import jakarta.xml.bind.annotation.XmlElement;
 
 /**

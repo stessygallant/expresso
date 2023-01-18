@@ -1,9 +1,9 @@
 package com.sgitmanagement.expressoext.security;
 
+import com.sgitmanagement.expressoext.base.BaseEntityService;
+
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
-
-import com.sgitmanagement.expressoext.base.BaseEntityService;
 
 public class PrivilegeService extends BaseEntityService<Privilege> {
 	public Privilege get(int actionId, int resourceId) {

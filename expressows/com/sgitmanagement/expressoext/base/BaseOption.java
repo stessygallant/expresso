@@ -1,9 +1,9 @@
 package com.sgitmanagement.expressoext.base;
 
+import com.sgitmanagement.expresso.base.IBaseType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-
-import com.sgitmanagement.expresso.base.IBaseType;
 
 @MappedSuperclass
 public abstract class BaseOption extends BaseDeactivableEntity implements IBaseType {

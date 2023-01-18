@@ -1,10 +1,10 @@
 package com.sgitmanagement.expressoext.base;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import com.sgitmanagement.expresso.base.AbstractBaseEntityResource;
 import com.sgitmanagement.expressoext.security.User;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Methods allowed on an entity<br>

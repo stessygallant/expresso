@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.NoResultException;
-
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
@@ -15,6 +13,7 @@ import com.sgitmanagement.expressoext.base.BaseFileService;
 import com.sgitmanagement.expressoext.security.Resource;
 import com.sgitmanagement.expressoext.security.ResourceService;
 
+import jakarta.persistence.NoResultException;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class DocumentService extends BaseFileService<Document> {
@@ -76,10 +75,10 @@ public class DocumentService extends BaseFileService<Document> {
 	}
 
 	@Override
-	public void downloadFile(HttpServletResponse response, Document document) throws Exception {
+	public void downloadFile(HttpServletResponse response, Document document, boolean thumbnail) throws Exception {
 		// verify if the user has the privilege to read this resource
 		verifyUserPrivileges(document);
-		super.downloadFile(response, document);
+		super.downloadFile(response, document, thumbnail);
 	}
 
 	@Override

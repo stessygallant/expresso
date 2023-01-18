@@ -2,14 +2,14 @@ package com.sgitmanagement.expressoext.base;
 
 import java.io.IOException;
 
-import jakarta.persistence.EntityManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.base.ExternalEntity;
 import com.sgitmanagement.expresso.util.ProgressSender;
 import com.sgitmanagement.expressoext.security.User;
+
+import jakarta.persistence.EntityManager;
 
 public class BaseExternalInterface<E extends BaseUpdatableEntity & ExternalEntity<Integer>, S extends BaseExternalEntityService<E>> implements ExternalInterface<E, S, User, Integer> {
 	final static protected Logger logger = LoggerFactory.getLogger(BaseExternalInterface.class);

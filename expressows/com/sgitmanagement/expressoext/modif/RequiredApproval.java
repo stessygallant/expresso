@@ -2,6 +2,10 @@ package com.sgitmanagement.expressoext.modif;
 
 import java.util.Date;
 
+import com.sgitmanagement.expresso.util.JAXBDateAdapter;
+import com.sgitmanagement.expressoext.base.BaseCreatableEntity;
+import com.sgitmanagement.expressoext.security.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,11 +14,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-
-import com.sgitmanagement.expresso.util.JAXBDateAdapter;
-import com.sgitmanagement.expressoext.base.BaseCreatableEntity;
-import com.sgitmanagement.expressoext.security.User;
-
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 

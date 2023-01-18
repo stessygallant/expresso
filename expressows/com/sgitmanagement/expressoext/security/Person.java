@@ -2,6 +2,12 @@ package com.sgitmanagement.expressoext.security;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Formula;
+
+import com.sgitmanagement.expresso.base.Creatable;
+import com.sgitmanagement.expresso.base.Updatable;
+import com.sgitmanagement.expresso.util.JAXBDateAdapter;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,13 +18,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-
-import org.hibernate.annotations.Formula;
-
-import com.sgitmanagement.expresso.base.Creatable;
-import com.sgitmanagement.expresso.base.Updatable;
-import com.sgitmanagement.expresso.util.JAXBDateAdapter;
-
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 

@@ -2,6 +2,10 @@ package com.sgitmanagement.expressoext.security;
 
 import java.util.Date;
 
+import com.sgitmanagement.expresso.base.ParentEntity;
+import com.sgitmanagement.expresso.util.JAXBDateAdapter;
+import com.sgitmanagement.expressoext.base.BaseEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,10 +15,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import com.sgitmanagement.expresso.base.ParentEntity;
-import com.sgitmanagement.expresso.util.JAXBDateAdapter;
-import com.sgitmanagement.expressoext.base.BaseEntity;
 
 @Entity
 @Table(name = "role_info")

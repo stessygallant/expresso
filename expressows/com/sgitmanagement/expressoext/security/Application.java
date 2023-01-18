@@ -3,6 +3,8 @@ package com.sgitmanagement.expressoext.security;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.sgitmanagement.expressoext.base.BaseUpdatableDeactivableEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,8 +14,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.sgitmanagement.expressoext.base.BaseUpdatableDeactivableEntity;
 
 @Entity
 @Table(name = "application")

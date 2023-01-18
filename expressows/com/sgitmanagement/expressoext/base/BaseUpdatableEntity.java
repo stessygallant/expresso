@@ -2,6 +2,12 @@ package com.sgitmanagement.expressoext.base;
 
 import java.util.Date;
 
+import org.hibernate.annotations.Formula;
+
+import com.sgitmanagement.expresso.base.Updatable;
+import com.sgitmanagement.expresso.util.JAXBDateAdapter;
+import com.sgitmanagement.expressoext.security.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -11,12 +17,6 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import org.hibernate.annotations.Formula;
-
-import com.sgitmanagement.expresso.base.Updatable;
-import com.sgitmanagement.expresso.util.JAXBDateAdapter;
-import com.sgitmanagement.expressoext.security.User;
 
 @MappedSuperclass
 public abstract class BaseUpdatableEntity extends BaseCreatableEntity implements Updatable {

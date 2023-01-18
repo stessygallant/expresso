@@ -2,6 +2,9 @@ package com.sgitmanagement.expressoext.document;
 
 import java.util.Date;
 
+import com.sgitmanagement.expresso.util.JAXBDateAdapter;
+import com.sgitmanagement.expressoext.base.BaseFile;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,9 +15,6 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import com.sgitmanagement.expresso.util.JAXBDateAdapter;
-import com.sgitmanagement.expressoext.base.BaseFile;
 
 @Entity
 @Table(name = "document")

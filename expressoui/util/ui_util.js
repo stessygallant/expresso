@@ -1734,10 +1734,15 @@ expresso.util.UIUtil = (function () {
                                 if (!initialized) {
                                     initialized = true;
                                     data.id = retrieveCurrentValue($select, customOptions);
+
+                                    // we need also the first 50 data
+                                    data.retrieveIdOnly = false;
                                 }
+
                                 if (filter.filters.length) {
                                     data.query = JSON.stringify({filter: filter});
                                 }
+
                                 return data;
                             }
                         }

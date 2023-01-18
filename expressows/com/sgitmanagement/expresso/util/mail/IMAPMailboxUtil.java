@@ -6,19 +6,19 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import jakarta.mail.Flags;
-import jakarta.mail.Flags.Flag;
-import jakarta.mail.Folder;
-import jakarta.mail.Message;
-import jakarta.mail.MessagingException;
-import jakarta.mail.Session;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPStore;
+
+import jakarta.mail.Flags;
+import jakarta.mail.Flags.Flag;
+import jakarta.mail.Folder;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
 
 /**
  * This class is a utilities to read mailbox and return messages

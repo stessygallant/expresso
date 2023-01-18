@@ -1,10 +1,10 @@
 package com.sgitmanagement.expressoext.util;
 
+import com.sgitmanagement.expressoext.base.BaseCreatableEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-
-import com.sgitmanagement.expressoext.base.BaseCreatableEntity;
 
 @Entity
 @Table(name = "security_token")

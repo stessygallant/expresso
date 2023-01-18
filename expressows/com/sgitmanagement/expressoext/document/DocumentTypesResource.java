@@ -1,13 +1,13 @@
 package com.sgitmanagement.expressoext.document;
 
+import com.sgitmanagement.expressoext.base.BaseOptionResource;
+import com.sgitmanagement.expressoext.base.BaseOptionsResource;
+import com.sgitmanagement.expressoext.document.DocumentTypesResource.DocumentTypeResource;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
-
-import com.sgitmanagement.expressoext.base.BaseOptionResource;
-import com.sgitmanagement.expressoext.base.BaseOptionsResource;
-import com.sgitmanagement.expressoext.document.DocumentTypesResource.DocumentTypeResource;
 
 @Path("documentType")
 public class DocumentTypesResource extends BaseOptionsResource<DocumentType, DocumentTypeService, DocumentTypeResource> {

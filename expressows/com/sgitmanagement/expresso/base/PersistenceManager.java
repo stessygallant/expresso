@@ -4,17 +4,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sgitmanagement.expresso.util.SystemEnv;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.RollbackException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sgitmanagement.expresso.util.SystemEnv;
 
 public class PersistenceManager implements AutoCloseable {
 
@@ -85,6 +85,7 @@ public class PersistenceManager implements AutoCloseable {
 			// Create the entity manager
 			entityManager = createEntityManager(entityManagerFactory);
 			entityManagerMap.put(persistenceUnit, entityManager);
+			entityManager.setProperty("expresso.persistence_unit", persistenceUnit);
 			// logger.debug("New connection to [" + persistenceUnit + "]");
 		}
 
@@ -203,9 +204,9 @@ public class PersistenceManager implements AutoCloseable {
 					tx.setRollbackOnly();
 				}
 			}
-		} catch (Exception e2) {
-			thrownException = e2;
-			// logger.error("Unexpected error", e2);
+		} catch (Exception ex) {
+			thrownException = ex;
+			// logger.error("Unexpected error", ex);
 		}
 
 		if (thrownException != null) {
@@ -250,8 +251,8 @@ public class PersistenceManager implements AutoCloseable {
 			if (startNewTransaction) {
 				tx.begin();
 			}
-		} catch (Exception e2) {
-			logger.error("Unexpected error", e2);
+		} catch (Exception ex) {
+			logger.error("Unexpected error", ex);
 		}
 	}
 
@@ -277,14 +278,10 @@ public class PersistenceManager implements AutoCloseable {
 	public void commitAndClose(EntityManager em) {
 		try {
 			commit(em, false);
-		} catch (Exception e2) {
+		} catch (Exception ex) {
 			// ignore
 		} finally {
-			try {
-				em.close();
-			} catch (Exception e2) {
-				// ignore
-			}
+			close(em);
 		}
 
 		// int activeConnections =
@@ -298,9 +295,12 @@ public class PersistenceManager implements AutoCloseable {
 	 * @param em
 	 */
 	public void close(EntityManager em) {
+		// remove it from the cache
+		entityManagersThreadLocal.get().remove(em.getProperties().get("expresso.persistence_unit"));
+
 		try {
 			em.close();
-		} catch (Exception e2) {
+		} catch (Exception ex) {
 			// ignore
 		}
 	}
@@ -311,6 +311,10 @@ public class PersistenceManager implements AutoCloseable {
 
 	@Override
 	public void close() throws Exception {
-		commitAndClose();
+		try {
+			commitAndClose();
+		} catch (Exception ex) {
+			// ignore
+		}
 	}
 }

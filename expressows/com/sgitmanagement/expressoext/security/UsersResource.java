@@ -3,6 +3,11 @@ package com.sgitmanagement.expressoext.security;
 import java.util.List;
 import java.util.Set;
 
+import com.sgitmanagement.expresso.exception.ForbiddenException;
+import com.sgitmanagement.expressoext.base.BaseDeactivableEntityResource;
+import com.sgitmanagement.expressoext.base.BaseEntitiesResource;
+import com.sgitmanagement.expressoext.security.UsersResource.UserResource;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.DELETE;
@@ -15,11 +20,6 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
-
-import com.sgitmanagement.expresso.exception.ForbiddenException;
-import com.sgitmanagement.expressoext.base.BaseDeactivableEntityResource;
-import com.sgitmanagement.expressoext.base.BaseEntitiesResource;
-import com.sgitmanagement.expressoext.security.UsersResource.UserResource;
 
 @Path("/user")
 public class UsersResource extends BaseEntitiesResource<User, UserService, UserResource> {

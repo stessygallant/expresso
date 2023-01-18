@@ -51,11 +51,27 @@ public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileSe
 		String fileName = formParams.getFirst("fileName");
 		String imgBase64 = formParams.getFirst("imgBase64");
 
+		String fileType;
+		if (fileName.endsWith(".png")) {
+			// backward compatibility: remove it
+			fileName = fileName.substring(0, fileName.length() - ".png".length());
+		}
+
 		if (imgBase64 != null && imgBase64.startsWith("data:") && imgBase64.indexOf(',') != -1) {
 			// remove the header
 			// data:image/png;base64,
+			fileType = imgBase64.substring("data:".length() + 1);
+			fileType = fileType.substring(0, fileType.indexOf(';'));
+
 			imgBase64 = imgBase64.substring(imgBase64.indexOf(',') + 1);
+		} else {
+			// assume png
+			fileType = ".png";
 		}
+
+		// complete the fileName
+		fileName += "." + fileType;
+		logger.info("Upload [" + fileName + "]");
 
 		byte[] data = Base64.decodeBase64(imgBase64);
 		InputStream fileInputStream = new ByteArrayInputStream(data);

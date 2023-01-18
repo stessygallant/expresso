@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.NoResultException;
-
 import org.apache.commons.lang3.time.DateUtils;
 
 import com.sgitmanagement.expresso.base.IEntity;
@@ -24,6 +22,8 @@ import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expresso.util.mail.Mailer;
 import com.sgitmanagement.expressoext.util.AuthenticationService;
 
+import jakarta.persistence.NoResultException;
+
 public class BaseUserService<U extends User> extends BasePersonService<U> {
 	static public enum PasswordRule {
 		weak, strong, strong15, secure
@@ -34,6 +34,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 
 		user.setCreationDate(new Date()); // person
 		user.setUserCreationDate(new Date()); // user
+		user.setCreationUserId(getUser().getId());
 
 		if (user.getPersonId() != null) {
 			// make sure there is no user already existing for this id

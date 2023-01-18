@@ -2,6 +2,11 @@ package com.sgitmanagement.expressoext.security;
 
 import java.util.Date;
 
+import com.sgitmanagement.expresso.base.ParentEntity;
+import com.sgitmanagement.expresso.base.ProtectedByCreator;
+import com.sgitmanagement.expresso.util.JAXBDateAdapter;
+import com.sgitmanagement.expressoext.base.BaseEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,11 +18,6 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import com.sgitmanagement.expresso.base.ParentEntity;
-import com.sgitmanagement.expresso.base.ProtectedByCreator;
-import com.sgitmanagement.expresso.util.JAXBDateAdapter;
-import com.sgitmanagement.expressoext.base.BaseEntity;
 
 @Entity
 @Table(name = "user_info")

@@ -7,6 +7,7 @@ import com.mchange.v2.c3p0.C3P0Registry;
 import com.mchange.v2.c3p0.PooledDataSource;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.mail.Mailer;
+import com.sgitmanagement.expressoext.ldap.ActiveDirectoryLDAPClient;
 
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -29,6 +30,7 @@ public class ExpressoServletContextListener implements ServletContextListener {
 
 		// terminate any service, etc
 		Mailer.INSTANCE.close();
+		ActiveDirectoryLDAPClient.INSTANCE.close();
 
 		// close connection pool
 		for (Object o : C3P0Registry.getPooledDataSources()) {

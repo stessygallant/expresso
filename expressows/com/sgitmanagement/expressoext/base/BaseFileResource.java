@@ -6,17 +6,6 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedMap;
-
 import org.apache.commons.codec.binary.Base64;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -28,6 +17,19 @@ import com.sgitmanagement.expresso.exception.InvalidCredentialsException;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+
 public abstract class BaseFileResource<E extends BaseFile, S extends BaseFileService<E>> extends BaseEntityResource<E, S> {
 
 	public BaseFileResource(Class<E> typeOfE, HttpServletRequest request, HttpServletResponse response) {
@@ -37,8 +39,12 @@ public abstract class BaseFileResource<E extends BaseFile, S extends BaseFileSer
 	@GET
 	@Path("file/{fileName}")
 	// we ignore the filename. it is only for the browser
-	public void downloadFile(@PathParam("fileName") String fileName) throws Exception {
-		getService().downloadFile(getId());
+	public void downloadFile(@PathParam("fileName") String fileName, @QueryParam(value = "thumbnail") @DefaultValue("false") boolean thumbnail) throws Exception {
+		if (getId() == -1) {
+			return;
+		} else {
+			getService().downloadFile(getId(), thumbnail);
+		}
 	}
 
 	/**

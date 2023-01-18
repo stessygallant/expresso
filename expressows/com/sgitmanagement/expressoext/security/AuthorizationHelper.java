@@ -5,14 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.base.IUser;
 import com.sgitmanagement.expresso.base.PersistenceManager;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 
 public class AuthorizationHelper {
 	final private static Logger logger = LoggerFactory.getLogger(AuthorizationHelper.class);

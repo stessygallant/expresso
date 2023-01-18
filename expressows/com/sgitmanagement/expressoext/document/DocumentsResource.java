@@ -1,13 +1,13 @@
 package com.sgitmanagement.expressoext.document;
 
+import com.sgitmanagement.expressoext.base.BaseFileResource;
+import com.sgitmanagement.expressoext.base.BaseFilesResource;
+import com.sgitmanagement.expressoext.document.DocumentsResource.DocumentResource;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
-
-import com.sgitmanagement.expressoext.base.BaseFileResource;
-import com.sgitmanagement.expressoext.base.BaseFilesResource;
-import com.sgitmanagement.expressoext.document.DocumentsResource.DocumentResource;
 
 @Path("/document")
 public class DocumentsResource extends BaseFilesResource<Document, DocumentService, DocumentResource> {

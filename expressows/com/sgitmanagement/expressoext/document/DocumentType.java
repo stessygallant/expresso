@@ -1,10 +1,10 @@
 package com.sgitmanagement.expressoext.document;
 
+import com.sgitmanagement.expressoext.base.BaseOption;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-
-import com.sgitmanagement.expressoext.base.BaseOption;
 
 @Entity
 @Table(name = "document_type")

@@ -4,8 +4,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.persistence.NoResultException;
-
 import org.apache.commons.lang3.RandomStringUtils;
 
 import com.sgitmanagement.expresso.dto.Query.Filter;
@@ -20,6 +18,7 @@ import com.sgitmanagement.expressoext.security.AuthorizationHelper;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
 
+import jakarta.persistence.NoResultException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 

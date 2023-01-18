@@ -1,9 +1,9 @@
 package com.sgitmanagement.expressoext.modif;
 
+import com.sgitmanagement.expressoext.base.BaseOption;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-
-import com.sgitmanagement.expressoext.base.BaseOption;
 
 @Entity
 @Table(name = "required_approval_status")

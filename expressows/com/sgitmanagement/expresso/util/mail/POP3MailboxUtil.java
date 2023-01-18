@@ -13,6 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sgitmanagement.expresso.util.MsGraphClient;
+import com.sgitmanagement.expresso.util.SystemEnv;
+
 import jakarta.mail.Flags;
 import jakarta.mail.Folder;
 import jakarta.mail.Message;
@@ -23,13 +30,6 @@ import jakarta.mail.Session;
 import jakarta.mail.Store;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeUtility;
-
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sgitmanagement.expresso.util.MsGraphClient;
-import com.sgitmanagement.expresso.util.SystemEnv;
 
 /**
  * This class is a utilities to read mailbox and return messages

@@ -5,12 +5,12 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Immutable;
-
 @Entity
 @Table(name = "person")
 @Inheritance(strategy = InheritanceType.JOINED)
-@Immutable
+// do not use this because with Hibernate 6.1, when you login with a user with a department, it fails
+// org.hibernate.UnsupportedLockAttemptException: Lock mode not supported
+// @Immutable
 public class BasicPerson extends BasePerson {
 
 }

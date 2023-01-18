@@ -11,6 +11,8 @@ import java.io.InputStream;
 import javax.imageio.ImageIO;
 
 public class ImageUtil {
+	public static final int IMG_WIDTH = 70;
+	public static final int IMG_HEIGHT = 50;
 
 	/**
 	 * Will create a thumbnail image from the image file
@@ -21,9 +23,6 @@ public class ImageUtil {
 	 * @throws Exception
 	 */
 	public static File createThumbnailImage(File imageFile, File thumbnailFile) throws Exception {
-		int IMG_WIDTH = 70;
-		int IMG_HEIGHT = 50;
-
 		try (InputStream is = new FileInputStream(imageFile)) {
 			resizeImage(is, thumbnailFile, IMG_WIDTH, IMG_HEIGHT);
 		}
@@ -101,9 +100,6 @@ public class ImageUtil {
 	 * @throws Exception
 	 */
 	public static File createThumbnailImage(File imageFile) throws Exception {
-		int IMG_WIDTH = 70;
-		int IMG_HEIGHT = 50;
-
 		File thumbnailFile = getThumbnailImageFile(imageFile);
 		ImageUtil.resizeImage(imageFile, thumbnailFile, IMG_WIDTH, IMG_HEIGHT);
 		return thumbnailFile;

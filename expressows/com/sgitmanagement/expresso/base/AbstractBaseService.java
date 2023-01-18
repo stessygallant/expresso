@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import jakarta.persistence.EntityManager;
-
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 import org.slf4j.Logger;
@@ -17,6 +15,7 @@ import com.sgitmanagement.expresso.security.Authorizable;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 
+import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.MultivaluedMap;

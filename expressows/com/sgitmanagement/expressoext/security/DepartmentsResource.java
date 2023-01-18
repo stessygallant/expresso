@@ -3,6 +3,10 @@ package com.sgitmanagement.expressoext.security;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.sgitmanagement.expressoext.base.BaseOptionResource;
+import com.sgitmanagement.expressoext.base.BaseOptionsResource;
+import com.sgitmanagement.expressoext.security.DepartmentsResource.DepartmentResource;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.DELETE;
@@ -13,10 +17,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
-
-import com.sgitmanagement.expressoext.base.BaseOptionResource;
-import com.sgitmanagement.expressoext.base.BaseOptionsResource;
-import com.sgitmanagement.expressoext.security.DepartmentsResource.DepartmentResource;
 
 @Path("/{department:(?i)department}")
 public class DepartmentsResource extends BaseOptionsResource<Department, DepartmentService, DepartmentResource> {

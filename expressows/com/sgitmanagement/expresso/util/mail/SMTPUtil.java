@@ -3,6 +3,8 @@ package com.sgitmanagement.expresso.util.mail;
 import java.util.Collection;
 import java.util.Properties;
 
+import com.sgitmanagement.expresso.util.SystemEnv;
+
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
 import jakarta.activation.FileDataSource;
@@ -16,8 +18,6 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
-
-import com.sgitmanagement.expresso.util.SystemEnv;
 
 public class SMTPUtil implements MailSender {
 
