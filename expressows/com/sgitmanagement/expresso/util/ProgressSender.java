@@ -5,10 +5,10 @@ import java.io.Writer;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 public class ProgressSender {
 	class Level {

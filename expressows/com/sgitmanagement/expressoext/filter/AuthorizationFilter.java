@@ -198,7 +198,7 @@ public class AuthorizationFilter implements Filter {
 				request.removeAttribute("action");
 
 				// must clear the ThreadLocal
-				AuditTrailInterceptor.clear();
+				AuditTrailInterceptor.close();
 			}
 		} catch (BaseException e) {
 			// in this case, we cannot return an exception

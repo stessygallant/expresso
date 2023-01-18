@@ -2,8 +2,6 @@ package com.sgitmanagement.expressoext.filter;
 
 import java.io.IOException;
 
-import javax.persistence.EntityManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +13,7 @@ import com.sgitmanagement.expressoext.security.AuthorizationHelper;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.util.AuthenticationService;
 
+import jakarta.persistence.EntityManager;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;

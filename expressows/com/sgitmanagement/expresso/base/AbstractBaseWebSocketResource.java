@@ -1,10 +1,10 @@
 package com.sgitmanagement.expresso.base;
 
-import javax.persistence.EntityManager;
-
 import org.slf4j.Logger;
 
 import com.sgitmanagement.expresso.exception.ForbiddenException;
+
+import jakarta.persistence.EntityManager;
 
 public abstract class AbstractBaseWebSocketResource<S extends AbstractBaseService<U>, U extends IUser> {
 	protected Logger logger;

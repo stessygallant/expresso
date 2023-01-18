@@ -1,10 +1,10 @@
 package com.sgitmanagement.expresso.util;
 
-import org.hibernate.dialect.MySQL8Dialect;
+import org.hibernate.dialect.MySQLDialect;
 
-public class MySQL8EnhancedDialect extends MySQL8Dialect {
+public class MySQLEnhancedDialect extends MySQLDialect {
 
-	public MySQL8EnhancedDialect() {
+	public MySQLEnhancedDialect() {
 		super();
 
 		registerKeyword("INTERVAL");

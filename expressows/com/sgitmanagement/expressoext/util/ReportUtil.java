@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -26,6 +24,8 @@ import org.slf4j.LoggerFactory;
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expressoext.security.User;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 public enum ReportUtil {
 	INSTANCE;

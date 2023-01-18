@@ -1,12 +1,12 @@
 package com.sgitmanagement.expressoext.security;
 
-import javax.persistence.EntityManager;
-
 import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
+
+import jakarta.persistence.EntityManager;
 
 public class CompanyService extends BaseEntityService<Company> {
 

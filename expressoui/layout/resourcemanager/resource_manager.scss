@@ -123,23 +123,6 @@
             border-left: 1px solid $themeColor;
         }
 
-        // when using the X as icon
-        .fa-stack {
-            width: 1em;
-            height: 0.9em;
-            line-height: 1;
-
-            .fa-times {
-                color: rgba(255, 0, 0, 0.61);
-                margin: 0.6em 0 0 0.6em;
-                font-size: 90%;
-            }
-
-            & + span.exp-button-label {
-                margin-left: 0.9em;
-            }
-        }
-
         //  Active Only filter
         .exp-active-only-button {
             .exp-switch {
@@ -700,7 +683,7 @@ $formPreviewHeight: 12em;
     .input-wrap {
         line-height: 1.7;
 
-        label:not(.k-checkbox-label):not(.k-radio-label) {
+        label:not(.k-checkbox-label):not(.k-radio-label):not(.exp-switch) {
             display: block;
             font-size: 95%;
             font-weight: bold;

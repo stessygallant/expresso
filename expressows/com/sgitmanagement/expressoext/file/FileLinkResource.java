@@ -1,5 +1,7 @@
 package com.sgitmanagement.expressoext.file;
 
+import com.sgitmanagement.expressoext.base.BaseResource;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.GET;
@@ -7,8 +9,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
-
-import com.sgitmanagement.expressoext.base.BaseResource;
 
 @Path("/fileLink")
 public class FileLinkResource extends BaseResource<FileLinkService> {

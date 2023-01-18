@@ -62,9 +62,9 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 		return StringUtils.uncapitalize(getTypeOfE().getSimpleName()) + File.separator + e.getId();
 	}
 
-	public void downloadFile(int id) throws Exception {
+	public void downloadFile(int id, boolean thumbnail) throws Exception {
 		E e = get(id);
-		downloadFile(getResponse(), e);
+		downloadFile(getResponse(), e, thumbnail);
 	}
 
 	/**
@@ -96,12 +96,17 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 		String filePath = getFolder(e);
 		String fileName = e.getFileName();
 		if (fileName != null && fileName.length() > 0 && !fileName.equals("/") && !fileName.equals("\\")) {
-			File file = getFile(e);
+			File file = getFile(e, false);
 			if (file.isDirectory()) {
 				throw new Exception("Cannot delete a directory: " + filePath);
 			} else {
 				logger.info("Deleting file [" + file.getCanonicalPath() + "]");
 				file.delete();
+
+				file = getFile(e, true);
+				if (file.exists()) {
+					file.delete();
+				}
 			}
 		}
 	}
@@ -251,9 +256,9 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 	 * @param filePath
 	 * @throws Exception
 	 */
-	public void downloadFile(HttpServletResponse response, E e) throws Exception {
+	public void downloadFile(HttpServletResponse response, E e, boolean thumbnail) throws Exception {
 
-		File file = getFile(e);
+		File file = getFile(e, thumbnail);
 		InputStream is = null;
 		OutputStream os = null;
 		try {
@@ -284,9 +289,23 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 	}
 
 	public File getFile(E e) {
+		return getFile(e, false);
+	}
+
+	public File getFile(E e, boolean thumbnail) {
 		String filePath = getFolder(e);
 		String fileName = e.getFileName();
-		return getFile(filePath, fileName);
+		File file = getFile(filePath, fileName);
+
+		if (thumbnail) {
+			String imageFilePath = file.getAbsolutePath();
+			String fileExtension = imageFilePath.substring(imageFilePath.lastIndexOf(".") + 1);
+			imageFilePath = imageFilePath.substring(0, imageFilePath.lastIndexOf("."));
+			File thumbnailFile = new File(imageFilePath + "-thumbnail." + fileExtension);
+			return thumbnailFile;
+		} else {
+			return file;
+		}
 	}
 
 	/**

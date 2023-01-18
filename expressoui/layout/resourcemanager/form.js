@@ -250,7 +250,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 expresso.util.UIUtil.addSearchButton($input, field.reference || field.values);
             }
         });
-        
+
         // apply the security if readOnly
         var $readOnlyDeferred = $.Deferred();
         if (!resource || !resource.id) {
@@ -493,7 +493,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     action.showButtonInForm !== false) {
                     _this.addButton($window, _this.getLabel(action.label), {
                         primary: action.primary,
-                        icon: action.icon
+                        icon: action.icon,
+                        negativeIcon: action.negativeIcon
                     }, function () {
                         expresso.util.UIUtil.showLoadingMask(_this.$window, true, {id: "formPerformAction"});
 
@@ -720,7 +721,13 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         var $button = $("<a class='k-button k-grid-button " + (options["classes"] ? options["classes"] : "") +
             (options.primary ? " k-primary pull-right" : "") + "' href='#'>" +
-            (options.icon ? "<span class='fa " + options.icon + "'></span>" : "") + label + "</a>");
+            (options.icon ?
+                (options.negativeIcon ? "<span class='fa-stack'>" : "") +
+                "<span class='fa " + options.icon + (options.negativeIcon ? " fa-stack-1x" : "") + "'></span>" +
+                (options.negativeIcon ? "<span class='fa fa-times fa-stack-1x'></span></span>" : "")
+                : "") +
+            "<span class='exp-button-label'>" + label + "</span>" +
+            "</a>");
         if (onClick) {
             $button.on("click", function (e) {
                 e.preventDefault();

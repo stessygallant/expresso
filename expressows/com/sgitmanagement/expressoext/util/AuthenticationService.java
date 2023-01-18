@@ -4,8 +4,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.RandomStringUtils;
 
 import com.sgitmanagement.expresso.dto.Query.Filter;
@@ -20,6 +18,7 @@ import com.sgitmanagement.expressoext.security.AuthorizationHelper;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
 
+import jakarta.persistence.NoResultException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
@@ -112,6 +111,11 @@ public class AuthenticationService extends BaseService {
 			if (user.getTerminationDate() != null) {
 				// cannot change password if the account is blocked
 				throw new ValidationException("accountBlocked");
+			}
+
+			if (user.isGenericAccount()) {
+				// cannot change password if it is not a local account
+				throw new ValidationException("cannotResetGenericAccountPassword");
 			}
 
 			sendForgetPasswordTokenMail(user);

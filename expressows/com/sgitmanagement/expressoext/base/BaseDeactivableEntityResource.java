@@ -1,12 +1,12 @@
 package com.sgitmanagement.expressoext.base;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.ws.rs.core.MultivaluedMap;
-
 import com.sgitmanagement.expresso.base.AbstractBaseEntityResource;
 import com.sgitmanagement.expresso.base.Deactivable;
 import com.sgitmanagement.expressoext.security.User;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 public abstract class BaseDeactivableEntityResource<E extends BaseEntity & Deactivable, S extends BaseDeactivableEntityService<E>> extends AbstractBaseEntityResource<E, S, User, Integer> {
 

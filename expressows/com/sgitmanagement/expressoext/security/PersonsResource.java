@@ -1,13 +1,13 @@
 package com.sgitmanagement.expressoext.security;
 
+import com.sgitmanagement.expressoext.base.BaseEntitiesResource;
+import com.sgitmanagement.expressoext.base.BaseEntityResource;
+import com.sgitmanagement.expressoext.security.PersonsResource.PersonResource;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
-
-import com.sgitmanagement.expressoext.base.BaseEntitiesResource;
-import com.sgitmanagement.expressoext.base.BaseEntityResource;
-import com.sgitmanagement.expressoext.security.PersonsResource.PersonResource;
 
 @Path("/person")
 public class PersonsResource extends BaseEntitiesResource<Person, PersonService, PersonResource> {

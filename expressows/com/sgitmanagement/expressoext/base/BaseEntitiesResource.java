@@ -3,6 +3,10 @@ package com.sgitmanagement.expressoext.base;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sgitmanagement.expresso.base.AbstractBaseEntitiesResource;
+import com.sgitmanagement.expresso.base.AbstractBaseEntityResource;
+import com.sgitmanagement.expressoext.security.User;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.GET;
@@ -10,10 +14,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.UriInfo;
-
-import com.sgitmanagement.expresso.base.AbstractBaseEntitiesResource;
-import com.sgitmanagement.expresso.base.AbstractBaseEntityResource;
-import com.sgitmanagement.expressoext.security.User;
 
 /**
  * Methods allowed on a resource<br>

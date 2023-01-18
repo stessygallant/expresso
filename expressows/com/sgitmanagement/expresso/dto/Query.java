@@ -482,6 +482,11 @@ public class Query {
 			super();
 		}
 
+		public Filter(Filter filter) {
+			this.logic = Logic.and;
+			addFilter(filter);
+		}
+
 		public Filter(Filter[] filters) {
 			super();
 			if (this.logic == null) {
@@ -553,10 +558,12 @@ public class Query {
 		}
 
 		public Filter addFilter(Filter filter) {
-			if (filters == null) {
-				filters = new ArrayList<>();
+			if (filter != null) {
+				if (filters == null) {
+					filters = new ArrayList<>();
+				}
+				filters.add(filter);
 			}
-			filters.add(filter);
 			return this;
 		}
 

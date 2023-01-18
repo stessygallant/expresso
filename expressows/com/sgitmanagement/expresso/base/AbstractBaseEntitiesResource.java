@@ -302,7 +302,8 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 	public List<E> search() throws Exception {
 		String queryJSONString = getRequest().getParameter("query");
 
-		String idString = getRequest().getParameter("id");
+		String idString = Util.nullifyIfNeeded(getRequest().getParameter("id"));
+		boolean retrieveIdOnly = (getRequest().getParameter("retrieveIdOnly") != null ? Boolean.parseBoolean(getRequest().getParameter("retrieveIdOnly")) : true);
 
 		String term = getRequest().getParameter("filter[filters][0][value]");
 
@@ -346,33 +347,36 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 			// logger.debug("Perform a search term[" + term + "] idString[" + idString + "] Query["
 			// + new Gson().toJson(query) + "]");
 
-			if (idString != null && idString.length() > 0) {
+			if (idString != null) {
 				// on initialization, the search is called with the id
 				// this is used by Combobox and MultiSelect
-
 				Filter idFilter = new Filter(Logic.or);
 				for (String id : idString.split(",")) {
 					idFilter.addFilter(new Filter("id", getService().convertId(id)));
 				}
+
 				list.addAll(getService().list(idFilter));
 			}
 
-			// use the standard list (limit to 50)
-			query.setSkip(0);
-			if (query.getPageSize() == null) {
-				query.setPageSize(AbstractBaseEntityService.MAX_SEARCH_RESULTS);
+			// for combobox, we only need the current ID
+			// for multiselect, we would need also to get the 50 first ones otherwise the list will be empty
+			if (idString == null || !retrieveIdOnly) {
+				// use the standard list (limit to 50)
+				query.setSkip(0);
+				if (query.getPageSize() == null) {
+					query.setPageSize(AbstractBaseEntityService.MAX_SEARCH_RESULTS);
+				}
+
+				// by default, from the UI, we want active only
+				if (!query.isActiveOnlySet()) {
+					query.setActiveOnly(true);
+				}
+
+				// logger.debug("Search query: " + new Gson().toJson(query));
+
+				// use the search query
+				list.addAll(getService().search(query, term));
 			}
-
-			// by default, from the UI, we want active only
-			if (!query.isActiveOnlySet()) {
-				query.setActiveOnly(true);
-			}
-
-			// logger.debug("Search query: " + new Gson().toJson(query));
-
-			// use the search query
-			list.addAll(getService().search(query, term));
-
 			return new ArrayList<>(list);
 		} catch (Exception e) {
 			logger.error("Cannot perform a search term[" + term + "] idString[" + idString + "]", e);

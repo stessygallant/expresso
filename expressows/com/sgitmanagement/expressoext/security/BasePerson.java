@@ -1,11 +1,11 @@
 package com.sgitmanagement.expressoext.security;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-
 import org.hibernate.annotations.Formula;
 
 import com.sgitmanagement.expressoext.base.BaseDeactivableEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public class BasePerson extends BaseDeactivableEntity {

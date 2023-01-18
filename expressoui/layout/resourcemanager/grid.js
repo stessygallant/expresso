@@ -3648,8 +3648,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                             (action.resourceCollectionAction ? " exp-always-active-button" : "") +
                             (action.supportMultipleSelections === undefined ? "" :
                                 (action.supportMultipleSelections === false ? " exp-single-selection" : " exp-multiple-selection")) +
-                            "' title='" + action.title + "'><span class='fa " + action.icon + "'>" +
-                            "<span class='exp-button-label' data-text-key='" + action.label + "'></span></span></button>"
+                            "' title='" + action.title + "'>" +
+                            (action.negativeIcon ? "<span class='fa-stack'>" : "") +
+                            "<span class='fa " + action.icon + (action.negativeIcon ? " fa-stack-1x" : "") + "'>" +
+                            "<span class='exp-button-label' data-text-key='" + action.label + "'></span></span>" +
+                            (action.negativeIcon ? "<span class='fa fa-times fa-stack-1x'></span></span>" : "") +
+                            "</button>"
                     };
                     _this.addButtonToToolbar(toolbar, buttonTemplate, action.toolbarMarker);
                     needSeparator = true;

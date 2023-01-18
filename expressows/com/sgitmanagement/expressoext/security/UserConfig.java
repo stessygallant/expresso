@@ -1,15 +1,15 @@
 package com.sgitmanagement.expressoext.security;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-
 import com.sgitmanagement.expresso.base.ParentEntity;
 import com.sgitmanagement.expresso.base.ProtectedByCreator;
 import com.sgitmanagement.expressoext.base.BaseEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "user_config")

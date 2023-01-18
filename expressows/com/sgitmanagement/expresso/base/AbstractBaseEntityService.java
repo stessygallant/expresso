@@ -26,35 +26,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EntityGraph;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.LockModeType;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.OneToOne;
-import javax.persistence.PersistenceException;
-import javax.persistence.Subgraph;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.collections4.ListUtils;
@@ -85,6 +56,34 @@ import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expresso.util.ZipUtil;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -564,7 +563,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	final public E lockNoWait(E e) {
 		Map<String, Object> properties = new HashMap<>();
-		properties.put("javax.persistence.lock.timeout", 0);
+		properties.put("jakarta.persistence.lock.timeout", 0);
 		getEntityManager().flush();
 		getEntityManager().refresh(e, LockModeType.PESSIMISTIC_WRITE, properties);
 		return e;
@@ -577,21 +576,54 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 */
 	public List<E> search(Query query, String searchString) throws Exception {
-		Filter filter;
-		if (searchString == null) {
-			filter = new Filter();
-		} else {
-			filter = getSearchFilter(searchString);
-		}
+		if (searchString != null) {
+			// if activeOnly and there is a keyField for the entity
+			// add a filter to search the keyField only
+			// if active only is requested, get the active only filter
+			if (query.activeOnly() && getKeyFields().length > 1 /* ignore ID */) {
 
-		if (filter != null) {
-			query.addFilter(filter);
-			// logger.debug("Search query: " + new Gson().toJson(query));
-			return list(query);
-		} else {
-			logger.error("getSearchFilter method not implemented for the resource [" + getResourceName() + "]");
-			return new ArrayList<>();
+				// make sure there is a filter and the logic is And
+				Filter originalFilter = new Filter(Logic.and);
+
+				// add the original query filter
+				originalFilter.addFilter(query.getFilter());
+
+				// add active only flag
+				Filter activeOnlyFilter = getActiveOnlyFilter();
+				if (activeOnlyFilter != null) {
+					originalFilter.addFilter(activeOnlyFilter);
+				} else if (Deactivable.class.isAssignableFrom(getTypeOfE())) {
+					originalFilter.addFilter(getDeactivableFilter());
+				}
+
+				// add the search Filter to the original filter
+				originalFilter.addFilter(getSearchFilter(searchString));
+
+				// create a new top filter
+				Filter newQueryFilter = new Filter(Logic.or);
+				query.setFilter(newQueryFilter);
+
+				// add previous filter
+				newQueryFilter.addFilter(originalFilter);
+
+				// now allow all (activeOnly for the original filter)
+				query.setActiveOnly(false);
+
+				// add search by keyField
+				Filter keyFieldFilter = new Filter(Logic.or);
+				newQueryFilter.addFilter(keyFieldFilter);
+				for (String keyField : getKeyFields()) {
+					if (!keyField.equals("id")) {
+						keyFieldFilter.addFilter(new Filter(keyField, formatKeyField(keyField, searchString)));
+					}
+				}
+			} else {
+				// only add the search filter
+				query.addFilter(getSearchFilter(searchString));
+			}
 		}
+		// logger.debug("Search query: " + new Gson().toJson(query));
+		return list(query);
 	}
 
 	/**
@@ -776,8 +808,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				// This is mandatory to eagerly fetch the data using CriteriaBuilder
-				EntityGraph<E> fetchGraph = getEntityManager().createEntityGraph(getTypeOfE());
-				typedQuery.setHint("javax.persistence.loadgraph", buildEntityGraph(fetchGraph, getTypeOfE(), query, null));
+				// jakarta.persistence.fetchgraph: all relationships are considered to be lazy regardless of annotation, and only the elements of the provided graph are loaded.
+				// jakarta.persistence.loadgraph: add lazy entities (eager entities are loaded as defined)
+				EntityGraph<E> entityGraph = getEntityManager().createEntityGraph(getTypeOfE());
+				buildEntityGraph(entityGraph, getTypeOfE(), query, null);
+				typedQuery.setHint("jakarta.persistence.loadgraph", entityGraph);
 
 				// then issue the SQL query
 				Date startDate = new Date();
@@ -1157,14 +1192,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					// get the path to the field
 					Field field = Util.getField(getTypeOfE(), filter.getField());
 					if (field == null) {
-						switch (filter.getField()) {
-						case "searchFilterTerm":
-							// ok
-							break;
-						default:
-							logger.warn("verifyKeyFieldReference - Cannot find field [" + filter.getField() + "]");
-							break;
-						}
+						// this can happen when this is a custom filter
+						// logger.warn("verifyKeyFieldReference - Cannot find field [" + filter.getField() + "]");
 					} else {
 
 						// at least the name must be ??No
@@ -1225,6 +1254,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 			}
 		}
+	}
+
+	final public long count(Filter filter) throws Exception {
+		return count(new Query(filter));
 	}
 
 	/**
@@ -1498,7 +1531,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	private Object buildEntityGraph(Object fetchGraph, Class<?> clazz, Query query, String filterPath) {
+	private Object buildEntityGraph(Object entityGraph, Class<?> clazz, Query query, String filterPath) {
 		do {
 			Field[] fields = clazz.getDeclaredFields();
 			for (Field field : fields) {
@@ -1514,7 +1547,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				if (!eagerRelation) {
-
 					// if the relations is lazy but there is a filter on a descendant of the field,
 					// we still need to include it in the Entity Graph
 					if (field.isAnnotationPresent(ManyToOne.class)) {
@@ -1527,10 +1559,12 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				if (eagerRelation) {
 					Subgraph subGraph = null;
-					if (fetchGraph instanceof EntityGraph) {
-						subGraph = ((EntityGraph) fetchGraph).addSubgraph(field.getName());
+					if (entityGraph instanceof EntityGraph) {
+						((EntityGraph) entityGraph).addAttributeNodes(field.getName());
+						subGraph = ((EntityGraph) entityGraph).addSubgraph(field.getName());
 					} else {
-						subGraph = ((Subgraph) fetchGraph).addSubgraph(field.getName());
+						((Subgraph) entityGraph).addAttributeNodes(field.getName());
+						subGraph = ((Subgraph) entityGraph).addSubgraph(field.getName());
 					}
 
 					// now do the same for the Object (cascading)
@@ -1541,7 +1575,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 			}
 		} while ((clazz = clazz.getSuperclass()) != null);
-		return fetchGraph;
+		return entityGraph;
 	}
 
 	/**

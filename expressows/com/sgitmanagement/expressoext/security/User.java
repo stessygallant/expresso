@@ -5,19 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-
 import com.sgitmanagement.expresso.audit.Auditable;
 import com.sgitmanagement.expresso.audit.ForbidAudit;
 import com.sgitmanagement.expresso.base.IUser;
@@ -25,6 +12,18 @@ import com.sgitmanagement.expresso.base.KeyField;
 import com.sgitmanagement.expresso.util.DeserializeOnlyStringAdapter;
 import com.sgitmanagement.expresso.util.JAXBDateAdapter;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @Entity
@@ -66,10 +65,12 @@ public class User extends Person implements IUser, Auditable {
 	@Column(name = "note")
 	private String note;
 
+	@ForbidAudit
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "last_visit_date")
 	private Date lastVisitDate;
 
+	@ForbidAudit
 	@Column(name = "nbr_failed_attempts")
 	private int nbrFailedAttempts;
 

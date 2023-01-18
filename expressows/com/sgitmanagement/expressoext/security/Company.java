@@ -1,11 +1,11 @@
 package com.sgitmanagement.expressoext.security;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-
 import com.sgitmanagement.expresso.base.ExternalEntity;
 import com.sgitmanagement.expressoext.base.BaseUpdatableDeactivableEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "company")

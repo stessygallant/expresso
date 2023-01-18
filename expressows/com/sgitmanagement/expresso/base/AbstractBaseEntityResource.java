@@ -91,7 +91,7 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 
 			getService().delete(this.id);
 			getPersistenceManager().commit(getEntityManager());
-		} catch (javax.persistence.PersistenceException | java.sql.SQLIntegrityConstraintViolationException ex) {
+		} catch (jakarta.persistence.PersistenceException | java.sql.SQLIntegrityConstraintViolationException ex) {
 			getPersistenceManager().rollback(getEntityManager());
 			throw new ValidationException("constraintViolationException");
 		} catch (Exception ex) {

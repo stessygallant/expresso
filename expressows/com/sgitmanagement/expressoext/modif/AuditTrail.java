@@ -2,11 +2,11 @@ package com.sgitmanagement.expressoext.modif;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-
 import com.sgitmanagement.expressoext.base.BaseCreatableEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "audit_trail")

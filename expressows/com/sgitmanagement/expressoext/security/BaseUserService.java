@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.time.DateUtils;
 
 import com.sgitmanagement.expresso.base.IEntity;
@@ -24,6 +22,8 @@ import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expresso.util.mail.Mailer;
 import com.sgitmanagement.expressoext.util.AuthenticationService;
 
+import jakarta.persistence.NoResultException;
+
 public class BaseUserService<U extends User> extends BasePersonService<U> {
 	static public enum PasswordRule {
 		weak, strong, strong15, secure
@@ -34,6 +34,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 
 		user.setCreationDate(new Date()); // person
 		user.setUserCreationDate(new Date()); // user
+		user.setCreationUserId(getUser().getId());
 
 		if (user.getPersonId() != null) {
 			// make sure there is no user already existing for this id
@@ -89,7 +90,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		// sync role info
 		syncRoleInfos(user);
 
-		if (user.isLocalAccount()) {
+		if (user.isLocalAccount() && !user.isGenericAccount()) {
 			sendWelcomeEmail(user);
 		}
 
@@ -456,13 +457,13 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 	}
 
 	public void sendWelcomeEmail(U user) throws Exception {
-		if (user.isLocalAccount()) {
+		if (user.isLocalAccount() && !user.isGenericAccount()) {
 			sendMail(user, "user-welcome");
 		}
 	}
 
 	public U blockAccount(U user) throws Exception {
-		if (user.getDeactivationDate() != null) {
+		if (user.getDeactivationDate() != null && !user.isGenericAccount()) {
 			logger.warn("Account blocked [" + user.getUserName() + "]");
 			user.setTerminationDate(new Date());
 			user.setNote("Deactivated because too many logins attempts on " + new Date());
@@ -475,9 +476,8 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		// unlock anything in the account
 		unlockAccount(user);
 
-		if (user.isLocalAccount()) {
+		if (user.isLocalAccount() && !user.isGenericAccount()) {
 			newService(AuthenticationService.class).sendForgetPasswordTokenMail(user);
-
 		}
 		return super.update(user);
 	}
@@ -621,7 +621,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		switch (action) {
 
 		case "send": // welcome
-			if (user != null && canUpdateUser(user) && user.isLocalAccount()) {
+			if (user != null && canUpdateUser(user) && user.isLocalAccount() && !user.isGenericAccount()) {
 				allowed = true;
 			}
 			break;
@@ -636,7 +636,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 			break;
 
 		case "unlock":
-			if (canUpdateUser(user) /* && user.isLocalAccount() */) {
+			if (canUpdateUser(user) && !user.isGenericAccount() /* && user.isLocalAccount() */) {
 				// (user.getTerminationDate() != null || user.getNbrFailedAttempts() > 0
 				// || user.getDeactivationDate() != null)
 				allowed = true;

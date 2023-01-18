@@ -1,16 +1,16 @@
 package com.sgitmanagement.expressoext.security;
 
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.Table;
-
-import org.hibernate.annotations.Immutable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "person")
 @Inheritance(strategy = InheritanceType.JOINED)
-@Immutable
+// do not use this because with Hibernate 6.1, when you login with a user with a department, it fails
+// org.hibernate.UnsupportedLockAttemptException: Lock mode not supported
+// @Immutable
 public class BasicPerson extends BasePerson {
 
 }

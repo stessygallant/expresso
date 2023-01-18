@@ -3,9 +3,6 @@ package com.sgitmanagement.expressoext.filter;
 import java.io.IOException;
 import java.security.Principal;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +13,8 @@ import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -85,8 +84,7 @@ public class BasicAuthentificationFilter implements Filter {
 						authUser = userPassDecoded.substring(0, userPassDecoded.indexOf(':'));
 						String authPass = userPassDecoded.substring(userPassDecoded.indexOf(':') + 1);
 
-						PersistenceManager persistenceManager = PersistenceManager.getInstance();
-						EntityManager em = persistenceManager.getEntityManager(false);
+						EntityManager em = PersistenceManager.getInstance().getEntityManager();
 						try {
 							UserService userService = UserService.newServiceStatic(UserService.class, User.class);
 							User user = userService.get(new Query.Filter("userName", authUser));
@@ -105,7 +103,6 @@ public class BasicAuthentificationFilter implements Filter {
 								// if there is no local password, there is no risk
 								if (user.isLocalAccount() && user.getPassword() != null && !user.isGenericAccount()) {
 									// logger.info("Found the user [" + authUser + "]:" + user.getNbrFailedAttempts());
-									persistenceManager.startTransaction(em);
 									user.setNbrFailedAttempts(user.getNbrFailedAttempts() + 1);
 								}
 								setBasicAuthFailed(response);
@@ -115,7 +112,7 @@ public class BasicAuthentificationFilter implements Filter {
 							setBasicAuthFailed(response);
 						} finally {
 							// close the connection
-							persistenceManager.commitAndClose(em);
+							PersistenceManager.getInstance().commitAndClose(em);
 						}
 					}
 				} catch (Exception e) {

@@ -2,8 +2,6 @@ package com.sgitmanagement.expressoext.filter;
 
 import java.io.IOException;
 
-import javax.persistence.NoResultException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +14,9 @@ import com.sgitmanagement.expressoext.security.AuthorizationHelper;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
 import com.sgitmanagement.expressoext.util.AuthenticationService;
+import com.sgitmanagement.termont.util.UserUtil;
 
+import jakarta.persistence.NoResultException;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -163,7 +163,14 @@ public class SessionValidationFilter implements Filter {
 				try {
 					user = userService.get(new Query.Filter("userName", authName));
 				} catch (NoResultException ex) {
-					logger.warn("Cannot find user with userName [" + authName + "]");
+					logger.info("Cannot find user with userName [" + authName + "]");
+					// if SSO and user is in Active Directory, create the user in local database
+					try {
+						user = UserUtil.createUserFromActiveDirectory(authName);
+						logger.info("Created user [" + authName + "]");
+					} catch (Exception ex1) {
+						logger.warn("Cannot create user with userName [" + authName + "]");
+					}
 				}
 			}
 

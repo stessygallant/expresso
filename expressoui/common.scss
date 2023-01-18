@@ -837,6 +837,53 @@ label input + span {
     }
 }
 
+// when using the X on icon
+@mixin negative-icon {
+    i.fa-stack, span.fa-stack {
+        width: fit-content;
+        height: 0.9em;
+        line-height: 1;
+
+        .fa-stack-1x {
+            position: relative;
+        }
+
+        .fa-times {
+            position: absolute;
+            top: 0;
+            left: 0.2em;
+            width: 1em;
+            color: rgba(255, 0, 0, 0.61);
+            margin: 0.6em 0 0 0.6em;
+            font-size: 90%;
+        }
+
+        // if there is a text after, add margin
+        &:not(:last-child) {
+            margin-right: 0.9em;
+        }
+
+        //& + span.exp-button-label, & + :not(:empty) {
+        //    margin-left: 0.9em;
+        //}
+    }
+}
+
+// when using the negative icon in the grid
+.k-grid .k-button.exp-button {
+    @include negative-icon;
+}
+
+// when using the negative icon in the form
+.k-edit-buttons .k-button {
+    @include negative-icon;
+
+    // icon are to low on the buttons
+    .fa-stack, :not(.fa-stack) .fa {
+        margin-top: -0.5em;
+    }
+}
+
 /*
  * ------------------------------------------------------------------------------------------------------------------
  * MOBILE CSS
