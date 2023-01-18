@@ -309,6 +309,14 @@
                                     $el.attr("min", "0");
                                 }
                             }
+
+                            // support for min/max
+                            if (field.min !== undefined){
+                                $el.attr("min", field.min);
+                            }
+                            if (field.max !== undefined){
+                                $el.attr("max", field.max);
+                            }
                             break;
                         case "boolean":
                             $el.attr("type", "checkbox");
