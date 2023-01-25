@@ -900,7 +900,7 @@ expresso.Main = function () {
 
         // init the chat with users
         if (expresso.Security.isAdmin()) {
-            initChat();
+            // initChat();
         }
 
         // now we can display the application

@@ -60,7 +60,7 @@ public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileSe
 		if (imgBase64 != null && imgBase64.startsWith("data:") && imgBase64.indexOf(',') != -1) {
 			// remove the header
 			// data:image/png;base64,
-			fileType = imgBase64.substring("data:".length() + 1);
+			fileType = imgBase64.substring("data:image/".length());
 			fileType = fileType.substring(0, fileType.indexOf(';'));
 
 			imgBase64 = imgBase64.substring(imgBase64.indexOf(',') + 1);

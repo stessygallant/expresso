@@ -38,6 +38,7 @@
 
         init: function (element, options) {
             Widget.fn.init.call(this, element, options);
+
             this.setOptions(options);
 
             //console.log("Options", this.options);
@@ -87,33 +88,27 @@
             var $sourceSelect = $("<select class='exp-lookup-selection exp-lookup-selection-source' multiple></select>");
             $sourceSelect.insertBefore($targetSelect);
 
-            if (!this.data) {
-                this.data = [];
+            // INPUT SEARCH
+            var $searchInput = $("<input type='search' class='exp-lookup-selection-input k-textbox' placeholder='" +
+                expresso.Common.getLabel("searchPlaceHolder") + "'>");
+            $searchInput.insertBefore($sourceSelect);
 
-                // INPUT SEARCH
-                var $searchInput = $("<input type='search' class='exp-lookup-selection-input k-textbox' placeholder='searchPlaceHolder'>");
-                $searchInput.insertBefore($sourceSelect);
-
-                //when we release 'enter' key
-                $searchInput.on("keyup search", function (e) {
-                    e.preventDefault();
-                    if (e.type == "search" || e.keyCode == 13) {
-                        var term = $(this).val();
-                        _this._search(term);
-                    }
-                });
-            }
+            //when we release 'enter' key
+            $searchInput.on("keyup search", function (e) {
+                e.preventDefault();
+                if (e.type == "search" || e.keyCode == 13) {
+                    var term = $(this).val();
+                    _this._search(term);
+                }
+            });
 
             // utility method to be called when there is a change
             var triggerChange = function () {
                 // allow the widget to apply the changes
                 window.setTimeout(function () {
                     _this._refreshValue(true);
-                    if (_this.options.change) {
-                        _this.options.change();
-                    }
                 }, 10);
-            }
+            };
 
             // create a source list box
             var sourceDefaultOptions = {
@@ -146,6 +141,7 @@
                 dataTextField: this.options.dataTextField,
                 valuePrimitive: true,
                 selectable: "multiple",
+                draggable: true,
                 add: function () {
                     triggerChange();
                 },
@@ -327,36 +323,45 @@
         setOptions: function (options) {
             $.extend(true, this.options, options);
 
-            var reference = (this.options.field ? this.options.field.values || this.options.field.reference : null) || {};
+            var reference = (this.options.field ? this.options.field.values || this.options.field.reference : {}) || {};
             this.data = (this.options.dataSource ? this.options.dataSource.data : null) || reference.data;
             this.url = (this.options.dataSource ? this.options.dataSource.url : null) || reference.resourcePath;
             this.filter = (this.options.dataSource ? this.options.dataSource.filter : null) || reference.filter;
             this.autoLoad = (reference.autoLoad !== undefined ? reference.autoLoad : this.options.autoLoad);
             this.serverSideFiltering = (reference.serverSideFiltering !== undefined ? reference.serverSideFiltering : this.options.serverSideFiltering);
+
+            // if local data, perform local search
+            if (this.data) {
+                this.serverSideFiltering = false;
+            }
         },
 
         /**
          *
-         * @param dataSource
+         * @param sourceDataSource
+         * @param [targetDataSource]
          */
-        setDataSource: function (dataSource) {
+        setDataSource: function (sourceDataSource, targetDataSource) {
             // avoid null
-            dataSource = dataSource || [];
-
-            if ($.isArray(dataSource)) {
-                dataSource = {data: dataSource};
+            sourceDataSource = sourceDataSource || [];
+            if ($.isArray(sourceDataSource)) {
+                sourceDataSource = {data: sourceDataSource};
+            }
+            targetDataSource = targetDataSource || [];
+            if ($.isArray(targetDataSource)) {
+                targetDataSource = {data: targetDataSource};
             }
 
             // set the source
             this.sourceListBox.setDataSource(
                 new kendo.data.DataSource({
-                    data: dataSource.data
+                    data: sourceDataSource.data
                 }));
 
             // set the target
             this.targetListBox.setDataSource(
                 new kendo.data.DataSource({
-                    data: []
+                    data: targetDataSource.data
                 }));
             this._refreshValue();
         },

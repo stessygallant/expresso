@@ -534,9 +534,8 @@ expresso.Common = (function () {
                 var key = $el.attr("title");
 
                 if (key) {
-                    // for backward compatibility, we do not override title for now
                     var text = getLabel(key, labels, null, true);
-                    if (text) {
+                    if (text !== undefined) {
                         $el.attr("title", text);
                     }
                 }
@@ -547,8 +546,10 @@ expresso.Common = (function () {
                 var $el = $(this);
                 var key = $el.attr("placeholder");
                 if (key) {
-                    var text = getLabel(key, labels);
-                    $el.attr("placeholder", text);
+                    var text = getLabel(key, labels, null, true);
+                    if (text !== undefined) {
+                        $el.attr("placeholder", text);
+                    }
                 }
             });
 
@@ -637,7 +638,8 @@ expresso.Common = (function () {
                     }
                 }
             }
-
+            // expresso.util.UIUtil.buildMessageWindow($window.width() + ":" + $window.height() + ":" +
+            //     $("html").hasClass("k-mobile") + ":" + sm + ($window.width() < 500) + ":" + ($window.height() < 500));
             // console.log($window.width() + "X" + $window.height() + " - " + sm + " (" + navigator.userAgent + ")");
             setScreenMode(sm);
         }

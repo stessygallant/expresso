@@ -82,6 +82,8 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		// set the new value on the resource
 		BaseEntityService service = getService(requiredApproval);
 		BaseEntity entity = getEntity(requiredApproval);
+
+		// because we can approve multiple request for the same entity at the same time
 		service.lock(entity);
 
 		Field field = getField(entity, requiredApproval);

@@ -15,13 +15,14 @@ import jakarta.servlet.annotation.WebListener;
 
 @WebListener
 public class ExpressoServletContextListener implements ServletContextListener {
-	final private static Logger logger = LoggerFactory.getLogger(ExpressoSessionListener.class);
+	private static Logger logger;
 
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		// init SystemEnv
 		SystemEnv.INSTANCE.getEnv();
 
+		logger = LoggerFactory.getLogger(ExpressoSessionListener.class);
 		logger.info("ServletContextListener started");
 	}
 

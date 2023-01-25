@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public enum SystemEnv {
 	INSTANCE;
 
-	final private Logger logger = LoggerFactory.getLogger(SystemEnv.class);
+	private Logger logger;
 
 	private Map<String, Properties> configPropertiesMap = new HashMap<>();
 
@@ -46,6 +46,9 @@ public enum SystemEnv {
 		} catch (Exception ex) {
 			logger.error("Cannot reconfigure Log4j: " + ex);
 		}
+
+		// init logger
+		logger = LoggerFactory.getLogger(SystemEnv.class);
 
 		// print the Working directory
 		logger.info("Working directory [" + (new File("").getAbsolutePath()) + "]");
