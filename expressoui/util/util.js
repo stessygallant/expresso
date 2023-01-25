@@ -390,17 +390,21 @@ expresso.util.Util = (function () {
             baseUnit = "hours";
             frequency = Math.floor(frequencyInHours);
         } else if (frequencyInHours < (24 * 7)) {
-            baseUnit = "days";
+            baseUnit = "hours";
             frequency = Math.floor(frequencyInHours / 24);
+            step = step * 24;
         } else if (frequencyInHours < (24 * 7 * 4)) {
-            baseUnit = "weeks";
+            baseUnit = "days";
             frequency = Math.floor(frequencyInHours / (24 * 7));
+            step = step * 7;
         } else if (frequencyInHours < (24 * 7 * 4 * 12)) {
-            baseUnit = "months";
+            baseUnit = "weeks";
             frequency = Math.floor(frequencyInHours / (24 * 7 * 4));
+            step = step * 4;
         } else {
-            baseUnit = "years";
+            baseUnit = "months";
             frequency = 1;
+            step = step * 12;
         }
         // console.log("baseUnit: " + baseUnit);
         // console.log("frequency: " + frequency);

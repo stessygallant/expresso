@@ -1067,6 +1067,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             e.preventDefault();
             expresso.util.UIUtil.showNotification(_this.getLabel("excelDownloadInProgress"));
             kendoGrid.saveAsExcel();
+
+            // because there is no event at the end of the load, for hierachical, we need to remove the loading mask
+            if (_this.hierarchical) {
+                window.setTimeout(function () {
+                    expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: "readDataSourceTreeList"});
+                }, 1000);
+            }
         });
 
         $grid.find(".exp-hierarchical-toogle-button").on("click.grid", function (e) {
