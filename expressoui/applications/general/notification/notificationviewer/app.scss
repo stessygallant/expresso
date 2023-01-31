@@ -1,0 +1,122 @@
+@import "../../../../../config/default";
+
+.notifications {
+    @include default-div;
+    overflow-y: auto;
+
+    $service-background: #f2f2f2;
+
+    .notification-msg {
+        font-weight: bold;
+        font-size: 14px;
+        margin: 10px 20px;
+    }
+
+    .notification-service {
+        border: 0.1em solid $service-background;
+        background-color: $service-background;
+        border-radius: 0.8em;
+        margin: 1em 1em;
+        padding: 0.3em 0.7em;
+        overflow-y: visible;
+        width: calc(100% - 3.4em); // remove padding+margin
+
+        legend {
+            font-weight: bold;
+            font-size: 110%;
+            padding: 0 0.7em;
+            background-color: white;
+            border: 1px solid $service-background;
+
+            .count {
+            }
+
+            i {
+                margin: 0.125em 0.125em 0.125em 0.7em;
+                font-weight: bold;
+                font-size: 120%;
+                padding: 0 0.2em;
+
+                &:hover {
+                    color: white;
+                    background-color: $service-background;
+                    cursor: pointer;
+                }
+            }
+        }
+
+        .notification-div {
+            .notification {
+                border: 0.1em solid #dddddd;
+                background-color: white;
+                margin: 0.8em 0.8em;
+                padding: 0.8em 0.8em;
+                position: relative;
+                border-radius: 0.8em;
+                overflow-x: hidden;
+                overflow-y: visible;
+                width: calc(100% - 3.2em); // remove padding+margin
+
+                .header {
+                    margin-bottom: 0.3em;
+                    font-weight: bold;
+                    font-size: 110%;
+
+                    .resource-no {
+                        display: inline;
+                        color: $themeColorDark;
+                        width: calc(100% - 4em);
+                        max-width: calc(100% - 4em);
+                        overflow: hidden;
+                        overflow-wrap: break-word;
+                        word-break: break-all;
+
+                        &:hover {
+                            text-decoration: underline;
+                            cursor: pointer;
+                        }
+                    }
+
+                    .buttons {
+                        float: right;
+
+                        button {
+                            font-size: 95%;
+                            margin: 0 0.1em 0.3em 0.1em;
+                            font-weight: bold;
+                            color: white;
+                            background-color: $themeColorDark;
+
+                            &.k-primary {
+                                background-color: $green;
+                            }
+                        }
+                    }
+                }
+
+                .description {
+                    font-size: 100%;
+                    overflow: hidden;
+                    margin-bottom: 0.7em;
+                    overflow-wrap: break-word;
+                    word-break: break-all;
+                }
+
+                .footer {
+                    .date {
+                        display: inline;
+                    }
+
+                    .requester {
+                        display: inline;
+                        margin-left: 1.25em;
+                    }
+
+                    .user {
+                        display: inline;
+                    }
+                }
+            }
+        }
+    }
+}

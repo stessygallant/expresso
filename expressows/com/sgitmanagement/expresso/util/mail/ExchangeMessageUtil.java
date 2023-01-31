@@ -143,7 +143,13 @@ public class ExchangeMessageUtil implements MailSender {
 	 */
 	@Override
 	public void sendMail(String fromAddress, String fromName, Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag,
-			String messageBody, Collection<String> attachments) {
+			String messageBody, Collection<String> attachments, boolean skipMaxRecipientsValidation) throws Exception {
+
+		// avoid sending an email to all because of a bug in the application logic
+		int countRecipients = (tos != null ? tos.size() : 0) + (ccs != null ? ccs.size() : 0) + (bccs != null ? bccs.size() : 0);
+		if (!skipMaxRecipientsValidation && countRecipients > 50) {
+			throw new Exception("tooManyRecipients");
+		}
 
 		try {
 			String path = "/users/" + defaultUserPrincipalName + "/sendMail";

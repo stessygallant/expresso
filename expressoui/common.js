@@ -534,9 +534,8 @@ expresso.Common = (function () {
                 var key = $el.attr("title");
 
                 if (key) {
-                    // for backward compatibility, we do not override title for now
                     var text = getLabel(key, labels, null, true);
-                    if (text) {
+                    if (text !== undefined) {
                         $el.attr("title", text);
                     }
                 }
@@ -547,8 +546,10 @@ expresso.Common = (function () {
                 var $el = $(this);
                 var key = $el.attr("placeholder");
                 if (key) {
-                    var text = getLabel(key, labels);
-                    $el.attr("placeholder", text);
+                    var text = getLabel(key, labels, null, true);
+                    if (text !== undefined) {
+                        $el.attr("placeholder", text);
+                    }
                 }
             });
 
@@ -637,7 +638,8 @@ expresso.Common = (function () {
                     }
                 }
             }
-
+            // expresso.util.UIUtil.buildMessageWindow($window.width() + ":" + $window.height() + ":" +
+            //     $("html").hasClass("k-mobile") + ":" + sm + ($window.width() < 500) + ":" + ($window.height() < 500));
             // console.log($window.width() + "X" + $window.height() + " - " + sm + " (" + navigator.userAgent + ")");
             setScreenMode(sm);
         }
@@ -1389,6 +1391,84 @@ expresso.Common = (function () {
     };
 
     /**
+     *
+     * @param title
+     * @param appDef
+     * @param options
+     * @returns {*}
+     */
+    var displayApplication = function (title, appDef, options) {
+        var _this = this;
+        var $deferred = $.Deferred();
+
+        var appInstance;
+        expresso.util.UIUtil.buildWindow("<div class='notification-application-div'></div>", {
+            // width: "max",
+            height: "max",
+            title: title,
+            saveButtonLabel: expresso.Common.getLabel("close"),
+            open: function () {
+                var $windowDiv = $(this);
+                var $div = $windowDiv.find(".notification-application-div");
+                $div.css("height", "100%");
+                expresso.Common.loadApplication(appDef, options, $div).done(function (application) {
+                    appInstance = application;
+                    appInstance.render(true);
+                });
+            },
+            close: function () {
+                if (appInstance) {
+                    appInstance.destroy();
+                    appInstance = null;
+                }
+                $deferred.resolve();
+            }
+        });
+
+        return $deferred;
+    }
+
+    /**
+     *
+     * @param url
+     * @param [title]
+     */
+    var displayUrl = function (url, title) {
+        var $deferred;
+        if (url.indexOf('#') != -1 && url.indexOf('(') != -1 && url.indexOf('-') != -1 && url.indexOf(')') != -1) {
+            // url format: baseUrl#<application>(<keyField>-<keyValue>)
+            var s = url.substring(url.indexOf('#') + 1);
+            var application = s.substring(0, s.indexOf("("));
+            var keyField = s.substring(s.indexOf("(") + 1, s.indexOf("-"));
+            var keyValue = s.substring(s.indexOf("-") + 1, s.indexOf(")"));
+            var id = s.substring(s.lastIndexOf("(") + 1, s.lastIndexOf(")"));
+
+            // display application
+            console.log("[" + application + "] [" + keyField + "] [" + keyValue + "] [" + id + "]");
+
+            if (application.endsWith("Manager")) {
+                // display Form
+                $deferred = $.Deferred();
+                loadApplication(application).done(function (resourceManager) {
+                    resourceManager.displayForm({id: id}).done(function () {
+                        $deferred.resolve();
+                    });
+                });
+            } else {
+                $deferred = displayApplication(title || "", application, {
+                    queryParameters: {
+                        id: id
+                    }
+                });
+            }
+        } else {
+            window.open(url, "_blank");
+            $deferred = $.Deferred().resolve();
+        }
+        return $deferred;
+    };
+
+    /**
      * Load the application at the path. Then instantiate the application and
      * pass the new instance to the callback
      * @param appName name of the application (or the application definition)
@@ -1513,6 +1593,7 @@ expresso.Common = (function () {
         delete customOptions.queryParameters.securityToken;
         delete customOptions.queryParameters.userName;
         delete customOptions.queryParameters.loginToken;
+        // delete customOptions.queryParameters.id;
         // delete customOptions.queryParameters.fullScreen;
 
         // add the queryParameters to the URL
@@ -2113,6 +2194,8 @@ expresso.Common = (function () {
         loadApplication: loadApplication,
         loadResourceManager: loadResourceManager,
         addApplicationToHistory: addApplicationToHistory,
+        displayApplication: displayApplication,
+        displayUrl: displayUrl,
 
         getScript: getScript,
         loadHTML: loadHTML,

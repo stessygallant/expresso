@@ -1657,15 +1657,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	/**
-	 * Give a change to subclass to define the application responsible for this entity. Use getResourceManager().
+	 * Give a change to subclass to define the application. By default, return the getResourceManager().
 	 */
-	@Deprecated
 	protected String getApplicationName() throws Exception {
-		String applicationName = "";
-		if (getParentEntityField() != null) {
-			applicationName = getParentEntityService().getApplicationName() + ".";
-		}
-		return applicationName + getTypeOfE().getSimpleName() + "Manager";
+		return getResourceManager();
 	}
 
 	/**
@@ -1738,10 +1733,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			String parentResourceName = StringUtils.uncapitalize(getParentEntityService().getTypeOfE().getSimpleName());
 			if (resourcePath.startsWith(parentResourceName)) {
 				String parentResourcePath = getParentEntityService().getResourcePath((E) null);
-				resourcePath = parentResourcePath + "/" + StringUtils.uncapitalize(resourcePath.substring(parentResourceName.length()));
+				resourcePath = parentResourcePath + "/0/" + StringUtils.uncapitalize(resourcePath.substring(parentResourceName.length()));
 			}
 		}
-		return resourcePath + "/" + (e != null ? e.getId() : 0);
+		return resourcePath + (e != null ? "/" + e.getId() : "");
 	}
 
 	/**
@@ -1763,18 +1758,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			resourceManager = getParentEntityService().getResourceManager() + "." + resourceManager;
 		}
 		return resourceManager;
-	}
-
-	/**
-	 * This method uses the following methods: <br>
-	 * protected String[] getKeyFields() (the first key returned is used by default)<br>
-	 * protected String getApplicationName() <br>
-	 *
-	 * @param keyValue
-	 * @return
-	 */
-	public String getEntityURL(Object keyValue) throws Exception {
-		return SystemEnv.INSTANCE.getDefaultProperties().getProperty("base_url") + "#" + getResourceManager() + "(" + getKeyFields()[0] + "-" + keyValue + ")";
 	}
 
 	/**
@@ -2669,9 +2652,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 	public String getLink(E e) throws Exception {
 		String keyField = getKeyFields()[0];
-
 		Object keyValue = BeanUtils.getProperty(e, keyField);
-		return getEntityURL(keyValue);
+		return SystemEnv.INSTANCE.getDefaultProperties().getProperty("base_url") + "#" + getApplicationName() + "(" + getKeyFields()[0] + "-" + keyValue + ")(" + e.getId() + ")";
 	}
 
 	/**
@@ -2721,7 +2703,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		// NOT KpiManager.KpiValueManager
 		String managerName = resourceManagerName;
 		if (getParentEntityField() != null) {
-			String parentApplicationName = getParentEntityService().getApplicationName();
+			String parentApplicationName = getParentEntityService().getResourceManager();
 
 			if (parentApplicationName.endsWith("Manager") && managerName.endsWith("Manager")) {
 				parentApplicationName = parentApplicationName.substring(0, parentApplicationName.length() - "Manager".length());

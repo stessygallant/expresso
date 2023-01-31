@@ -501,10 +501,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         var $saveDeferred;
                         if (!resource.id) {
                             // create the main resource
+                            // _this.isUserAllowed("create")
                             $saveDeferred = _this.createMainResource();
-                        } else if (action.saveBeforeAction !== false && _this.resourceManager.sections.grid.isUpdatable(resource) &&
-                            _this.isUserAllowed("update")) {
+                        } else if (action.saveBeforeAction !== false && _this.resourceManager.sections.grid.isUpdatable(resource)) {
                             // only save if the resource is updatable
+                            // _this.isUserAllowed("update")
                             $saveDeferred = _this.save();
                         } else {
                             // make sure the resource is not dirty
@@ -1250,8 +1251,9 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      *
      * @param $window
      * @param resource
+     * @param [options]
      */
-    addDocumentUploadSupport: function ($window, resource) {
+    addDocumentUploadSupport: function ($window, resource, options) {
         var _this = this;
         resource = resource || {};
 
@@ -1266,7 +1268,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             var kendoUpload;
             $window.find("[type=file]").each(function () {
                 var $input = $(this);
-                kendoUpload = expresso.util.UIUtil.buildUpload($window, $input, {
+                kendoUpload = expresso.util.UIUtil.buildUpload($window, $input, $.extend({
                     url: function () {
                         if (_this.deprecatedFileUploadSupport) {
                             return expresso.Common.getWsUploadPathURL() + "/" +
@@ -1299,7 +1301,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                             _this.resourceManager.sections.grid.reloadCurrentResource();
                         }
                     }
-                });
+                }, options));
             });
 
             // add the upload button

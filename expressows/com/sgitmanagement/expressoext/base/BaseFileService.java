@@ -346,7 +346,7 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 				// image
 				"jpg", "jpeg", "png", "bmp", "gif",
 				// office
-				"doc", "xls", "ppt", "docx", "xlsx", "pptx",
+				"doc", "xls", "ppt", "docx", "xlsx", "pptx", "vsdx",
 				// emails
 				"eml", "msg",
 				// text

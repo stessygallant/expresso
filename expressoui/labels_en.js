@@ -408,5 +408,8 @@ $.extend(expresso.Labels, {
     visualFilter: "Visual",
     sourceFilter: "Source code",
 
+    // Notifications
+    notifications: "You have {quantity} pending notification(s)",
+
     _: ""
 });

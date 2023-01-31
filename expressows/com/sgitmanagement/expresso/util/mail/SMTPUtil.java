@@ -60,7 +60,7 @@ public class SMTPUtil implements MailSender {
 
 	@Override
 	public void sendMail(String fromAddress, String fromName, Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag,
-			String messageBody, Collection<String> attachments) throws Exception {
+			String messageBody, Collection<String> attachments, boolean skipMaxRecipientsValidation) throws Exception {
 		MimeMessage message = new MimeMessage(session);
 
 		if (importantFlag) {
@@ -121,7 +121,7 @@ public class SMTPUtil implements MailSender {
 		}
 
 		// avoid sending an email to all because of a bug in the application logic
-		if (countRecipients > 50) {
+		if (!skipMaxRecipientsValidation && countRecipients > 50) {
 			throw new Exception("tooManyRecipients");
 		}
 

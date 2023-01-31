@@ -411,5 +411,8 @@ $.extend(expresso.Labels, {
     visualFilter: "Visuel",
     sourceFilter: "Code source",
 
+    // Notifications
+    notifications: "Vous avez {quantity} notification(s) en attente",
+
     _: ""
 });

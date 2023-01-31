@@ -159,6 +159,7 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
     setOptions: function (options) {
         this.options = options || {};
         this.options.queryParameters = this.options.queryParameters || {};
+        // console.log("queryParameters", this.options.queryParameters);
     },
 
     /**

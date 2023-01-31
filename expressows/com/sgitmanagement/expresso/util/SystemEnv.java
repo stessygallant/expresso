@@ -47,7 +47,7 @@ public enum SystemEnv {
 			System.err.println("Cannot reconfigure Log4j: " + ex);
 		}
 
-		// init local logger
+		// init logger
 		logger = LoggerFactory.getLogger(SystemEnv.class);
 
 		// print the Working directory
