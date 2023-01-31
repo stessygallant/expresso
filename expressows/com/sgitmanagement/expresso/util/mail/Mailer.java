@@ -172,6 +172,11 @@ public enum Mailer {
 		}
 	}
 
+	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag, String messageBody,
+			Collection<String> attachments, boolean bccSupport) {
+		sendMail(tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments, bccSupport, false);
+	}
+
 	/**
 	 * 
 	 * @param tos
@@ -185,7 +190,7 @@ public enum Mailer {
 	 * @param bccSupport
 	 */
 	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag, String messageBody,
-			Collection<String> attachments, boolean bccSupport) {
+			Collection<String> attachments, boolean bccSupport, boolean skipMaxRecipientsValidation) {
 		try {
 			if (!SystemEnv.INSTANCE.isInProduction()) {
 				messageBody += "<br>---------------------------------------------------";
@@ -225,6 +230,7 @@ public enum Mailer {
 			map.put("importantFlag", importantFlag);
 			map.put("messageBody", messageBody);
 			map.put("attachments", attachments);
+			map.put("skipMaxRecipientsValidation", skipMaxRecipientsValidation);
 
 			if (sendEmail) {
 				if (useThreads) {
@@ -289,6 +295,7 @@ public enum Mailer {
 		boolean importantFlag = (boolean) map.get("importantFlag");
 		String messageBody = (String) map.get("messageBody");
 		Collection<String> attachments = (Collection<String>) map.get("attachments");
+		boolean skipMaxRecipientsValidation = (boolean) map.get("skipMaxRecipientsValidation");
 
 		MailSender mailSender = null;
 		try {
@@ -303,7 +310,7 @@ public enum Mailer {
 			logger.debug("Sending email [" + subject + "] to [" + tos + "]");
 			long startDate = new Date().getTime();
 
-			mailSender.sendMail(fromAddress, fromName, tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments);
+			mailSender.sendMail(fromAddress, fromName, tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments, skipMaxRecipientsValidation);
 
 			long endDate = new Date().getTime();
 			logger.info("Email sent [" + subject + "] to [" + tos + "] in " + (endDate - startDate) + " ms");

@@ -123,7 +123,7 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		params.put("reason", requiredApproval.getApprobationComment());
 		params.put("date", DateUtil.formatDate(requiredApproval.getCreationDate()));
 
-		params.put("url", getEntityURL(requiredApproval.getId()));
+		params.put("url", getLink(requiredApproval));
 
 		String to = requiredApproval.getCreationUser().getEmail();
 

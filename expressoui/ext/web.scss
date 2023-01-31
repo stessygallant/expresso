@@ -484,10 +484,10 @@ div.main {
         padding: 0.7em 0.8em 0 0.8em;
 
         .settings {
-            color: $themeColor;
+            color: $themeIconColor;
             float: right;
             font-weight: normal;
-            margin-top: 0.1em;
+            margin-top: 0;
             font-size: 150%;
 
             &:hover {
@@ -553,6 +553,56 @@ div.main {
 // add a line to underline the text
 .k-autocomplete, .k-numeric-wrap, .k-dropdown-wrap, .k-picker-wrap, .k-textbox:not([role=combobox]):not(.k-combobox) {
     border-bottom: $themeInputBottomBorder;
+}
+
+.notification-bell {
+    position: absolute;
+    top: 0.35em;
+    right: 1.5em;
+    font-size: 1.7em;
+    color: $themeIconColor;
+
+    &.fa-bell {
+        color: red;
+
+        &:hover {
+            color: $themeIconColor;
+            cursor: pointer;
+        }
+
+        .badge {
+            color: white;
+            font-size: 40%;
+            min-width: 1.6em;
+            font-weight: normal;
+            width: auto;
+            height: auto;
+            text-align: center;
+            margin: 0;
+            position: absolute;
+            top: 0.8em;
+            left: 0.5em;
+        }
+    }
+}
+
+.notification-tooltip {
+    background-color: white;
+    border: 0.1em solid red;
+    border-radius: 0.33em;
+    color: red;
+    font-size: 120%;
+    font-weight: bold;
+    padding: 1.5em 2em;
+    position: absolute;
+    bottom: 4em;
+    left: 12em;
+    z-index: 999999;
+
+    &:hover {
+        cursor: pointer;
+        text-decoration: underline;
+    }
 }
 
 /*
@@ -626,5 +676,12 @@ div.main {
                 height: calc(100% - #{$mainTitleHeight});
             }
         }
+    }
+
+    .notification-tooltip {
+        bottom: 0.5em;
+        left: 0.5em;
+        padding: 1em 1em;
+        width: calc(100% - 3em);
     }
 }

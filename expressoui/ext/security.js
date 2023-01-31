@@ -153,7 +153,7 @@ expresso.Security = function () {
                 // we have the preferred language of the user, use it
                 expresso.Common.setLanguage(profile.language)
 
-                var startTime = new Date();
+                // var startTime = new Date();
                 $.when(
                     //  load the privileges
                     expresso.Common.sendRequest("user/" + profile.id + "/privilege", null, null, null, {
@@ -255,9 +255,9 @@ expresso.Security = function () {
                         internalIpAddress = result.internalIpAddress;
                     })
                 ).done(function () {
-                    var endTime = new Date();
-                    timeToLoadProfile = endTime.getTime() - startTime.getTime();
-                    console.log("Time to load profile (ms): " + timeToLoadProfile);
+                    // var endTime = new Date();
+                    // timeToLoadProfile = endTime.getTime() - startTime.getTime();
+                    // console.log("Time to load profile (ms): " + timeToLoadProfile);
 
                     // review the applications to check if they are allowed
                     if (userProfile.genericAccount) {

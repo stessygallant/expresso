@@ -8,5 +8,5 @@ public interface MailSender {
 	public void disconnect() throws Exception;
 
 	public void sendMail(String fromAddress, String fromName, Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag,
-			String messageBody, Collection<String> attachments) throws Exception;
+			String messageBody, Collection<String> attachments, boolean skipMaxRecipientsValidation) throws Exception;
 }
