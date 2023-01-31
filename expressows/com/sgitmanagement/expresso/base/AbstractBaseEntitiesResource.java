@@ -386,6 +386,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 
 	@Path("{id}")
 	public AbstractBaseEntityResource<E, S, U, I> getBaseEntityResourceById(@PathParam("id") String idString) throws Exception {
+		idString = URLDecoder.decode(idString, "UTF-8");
 		baseEntityResource.setId(getService().convertId(idString));
 		return baseEntityResource;
 	}

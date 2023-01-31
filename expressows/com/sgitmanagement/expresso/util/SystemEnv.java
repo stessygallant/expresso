@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public enum SystemEnv {
 	INSTANCE;
 
-	final private Logger logger = LoggerFactory.getLogger(SystemEnv.class);
+	private Logger logger;
 
 	private Map<String, Properties> configPropertiesMap = new HashMap<>();
 
@@ -39,13 +39,16 @@ public enum SystemEnv {
 		env = System.getProperty("SystemEnv", "local");
 
 		try {
-			// System.out.println("Configuring Log4J");
-			LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
+			// System.out.println("Configuring Log4J2");
+			LoggerContext context = (LoggerContext) LogManager.getContext(false);
 			URL url = SystemEnv.class.getClassLoader().getResource("log4j2" + "-" + env + ".xml");
 			context.setConfigLocation(url.toURI());
 		} catch (Exception ex) {
-			logger.error("Cannot reconfigure Log4j: " + ex);
+			System.err.println("Cannot reconfigure Log4j: " + ex);
 		}
+
+		// init local logger
+		logger = LoggerFactory.getLogger(SystemEnv.class);
 
 		// print the Working directory
 		logger.info("Working directory [" + (new File("").getAbsolutePath()) + "]");

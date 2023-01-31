@@ -1831,6 +1831,17 @@ expresso.Common = (function () {
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
 
+            if (typeof d !== "object") {
+                // this is a simple array
+                // [1,2,3,etc]
+                // ["A","B","C",etc]
+                d = {
+                    id: d,
+                    label: d
+                };
+                data[i] = d;
+            }
+
             if (typeof d.id === "object") {
                 // this is a fix for this problem: String{"muid"} is not equal to "muid"
                 d.id = "" + d.id;

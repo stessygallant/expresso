@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -1138,11 +1139,18 @@ public class Util {
 	 * @return
 	 */
 	public static Set<Integer> stringIdsToIntegers(String stringIds) {
-		if (stringIds != null) {
+		if (stringIds != null && stringIds.trim().length() > 0) {
+			try {
+				stringIds = URLDecoder.decode(stringIds, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				// ignore
+			}
 			String[] arrayIds = stringIds.split(",");
 			Set<Integer> ids = new HashSet<>(arrayIds.length);
 			for (String s : arrayIds) {
-				ids.add(Integer.parseInt(s));
+				if (s != null && s.trim().length() > 0) {
+					ids.add(Integer.parseInt(s.trim()));
+				}
 			}
 			return ids;
 		} else {

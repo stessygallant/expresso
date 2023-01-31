@@ -1256,6 +1256,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 	}
 
+	final public long count() throws Exception {
+		return count(new Query());
+	}
+
 	final public long count(Filter filter) throws Exception {
 		return count(new Query(filter));
 	}

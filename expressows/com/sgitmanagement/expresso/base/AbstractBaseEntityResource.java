@@ -20,6 +20,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 /**
@@ -75,7 +76,23 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public E get() throws Exception {
-		return get(this.id);
+		String action = Util.getParameterValue(getRequest(), "action");
+		E e = get(this.id);
+
+		// usually, the action will be [print|download] or anything
+		// that does not modify the entity
+		if (action != null) {
+			try {
+				// this is no body, then there is no formParams
+				Method method = this.getClass().getMethod(action);
+				method.invoke(this);
+			} catch (NoSuchMethodException ex) {
+				// but it may happen that the developer will use the signature with MultivaluedMap
+				Method method = this.getClass().getMethod(action, MultivaluedMap.class);
+				method.invoke(this, new MultivaluedHashMap<String, String>());
+			}
+		}
+		return e;
 	}
 
 	@DELETE
@@ -193,6 +210,7 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 			switch (action) {
 
 			// action with no modification
+			case "download":
 			case "print":
 			case "imprint":
 			case "customprint":

@@ -1145,6 +1145,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             _this.performPrint();
         });
 
+        $grid.find(".exp-download-button").on("click.grid", function (e) {
+            e.preventDefault();
+            _this.performDownload();
+        });
+
         $grid.find(".exp-email-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performOpenEmail();
@@ -2209,15 +2214,31 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     },
 
     performPrint: function () {
+        var _this = this;
         if (this.selectedRows.length) {
-            var ids = [];
-            for (var i = 0; i < this.selectedRows.length; i++) {
-                var dataItem = this.selectedRows[i];
-                ids.push(dataItem.id);
-            }
+            $.each(this.selectedRows, function () {
+                var resource = this;
+                _this.sendRequest(_this.resourceManager.getRelativeWebServicePath(resource.id), "print");
+            });
+        }
+    },
 
-            // send print request
-            expresso.Common.sendPrintRequest(this.resourceManager.getWebServicePath(), this.resourceManager.resourceName, ids);
+    /**
+     * Use anchor and simulate a click (do not use window.open)
+     */
+    performDownload: function () {
+        var _this = this;
+        if (this.selectedRows.length) {
+            $.each(this.selectedRows, function () {
+                var resource = this;
+                var action = "download";
+                var target = "_blank";
+                var url = _this.resourceManager.getWebServicePath(resource.id);
+                url += "?action=" + action;
+                var $href = $("<a href='" + url + "' target='" + target + "' hidden></a>");
+                $href.appendTo("body")[0].click();
+                $href.remove();
+            });
         }
     },
 
@@ -3038,7 +3059,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             } // it will be defined below
         };
 
-        // TODO if we have mandatory filter in the grid header, we need to call it
         // now take care of filters
         if (!clearFilters) {
             expresso.Common.addKendoFilter(dataSourceOptions.filter, this.getGridFilter());
@@ -3620,7 +3640,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
             // add the print button
             if (this.isUserAllowed("print")) {
-                toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-print-button" title="printRecords"><span class="fa fa-print"><span class="exp-button-label" data-text-key="printRecordsButton"></span></span></button>'});
+                toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-print-button" title="printButtonTitle"><span class="fa fa-print"><span class="exp-button-label" data-text-key="printButtonLabel"></span></span></button>'});
+                needSeparator = true;
+            }
+
+            // add the download button
+            if (this.isUserAllowed("download")) {
+                toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-download-button" title="downloadButtonTitle"><span class="fa fa-download"><span class="exp-button-label" data-text-key="downloadButtonLabel"></span></span></button>'});
                 needSeparator = true;
             }
 
@@ -3982,56 +4008,50 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // by default, if there is no filter, add the one from the grid
         var gridFilter = [];
 
-        // add only for master resource manager
-        // for sub resource and sibling resource, do not add them: it can cause issue with
-        // multiplication of the filter
-        // TODO remove this condition
-        if (this.resourceManager.displayAsMaster) {
-            var dataSourceFilter = this.dataSource.filter();
-            //console.log("dataSourceFilter 1: " + JSON.stringify(dataSourceFilter));
+        var dataSourceFilter = this.dataSource.filter();
+        //console.log("dataSourceFilter 1: " + JSON.stringify(dataSourceFilter));
 
-            if (dataSourceFilter) {
-                var screenMode = expresso.Common.getScreenMode();
-                var addColumnFilterOnly = function (filters) {
-                    var columnFilters = [];
-                    for (var i = 0, l = filters.length; i < l; i++) {
-                        var f = filters[i];
-                        if (f.field && (_this.columnMap[f.field] || (screenMode == expresso.Common.SCREEN_MODES.PHONE))) {
-                            columnFilters.push(f);
-                        } else if (f.filters && f.filters.length) {
-                            columnFilters.push(f);
-                            f.filters = addColumnFilterOnly(f.filters);
-                        } else {
-                            // do not add
-                        }
+        if (dataSourceFilter) {
+            var screenMode = expresso.Common.getScreenMode();
+            var addColumnFilterOnly = function (filters) {
+                var columnFilters = [];
+                for (var i = 0, l = filters.length; i < l; i++) {
+                    var f = filters[i];
+                    if (f.field && (_this.columnMap[f.field] || (screenMode == expresso.Common.SCREEN_MODES.PHONE))) {
+                        columnFilters.push(f);
+                    } else if (f.filters && f.filters.length) {
+                        columnFilters.push(f);
+                        f.filters = addColumnFilterOnly(f.filters);
+                    } else {
+                        // do not add
                     }
-                    return columnFilters;
-                };
-
-                // add only filter for columns
-                if (dataSourceFilter.logic == "or") {
-                    gridFilter = addColumnFilterOnly([dataSourceFilter]);
-                } else {
-                    gridFilter = addColumnFilterOnly(dataSourceFilter.filters);
                 }
+                return columnFilters;
+            };
 
-                //console.log("dataSourceFilter 2: " + JSON.stringify(gridFilter));
+            // add only filter for columns
+            if (dataSourceFilter.logic == "or") {
+                gridFilter = addColumnFilterOnly([dataSourceFilter]);
+            } else {
+                gridFilter = addColumnFilterOnly(dataSourceFilter.filters);
             }
 
-            // get the filters from the filter section if available
-            if (this.resourceManager.sections.filter) {
-                var filterParams = this.resourceManager.sections.filter.getFilters();
-                //console.log("filterParams", filterParams);
-                expresso.Common.addKendoFilter(gridFilter, filterParams);
-            }
+            //console.log("dataSourceFilter 2: " + JSON.stringify(gridFilter));
+        }
 
-            // get the filter from the overall filter if available
-            if (this.$domElement.find(".search-overall-input").length) {
-                var searchFilterTerm = this.$domElement.find(".search-overall-input").val();
-                if (searchFilterTerm) {
-                    expresso.Common.addKendoFilter(gridFilter,
-                        {field: "searchFilterTerm", operator: "eq", value: searchFilterTerm});
-                }
+        // get the filters from the filter section if available
+        if (this.resourceManager.sections.filter) {
+            var filterParams = this.resourceManager.sections.filter.getFilters();
+            //console.log("filterParams", filterParams);
+            expresso.Common.addKendoFilter(gridFilter, filterParams);
+        }
+
+        // get the filter from the overall filter if available
+        if (this.$domElement.find(".search-overall-input").length) {
+            var searchFilterTerm = this.$domElement.find(".search-overall-input").val();
+            if (searchFilterTerm) {
+                expresso.Common.addKendoFilter(gridFilter,
+                    {field: "searchFilterTerm", operator: "eq", value: searchFilterTerm});
             }
         }
 
