@@ -144,7 +144,7 @@ public class PrintUtil {
 	public static void main(String[] args) throws Exception {
 		System.out.println(getPrinterList());
 
-		final String printerName = "\\\\CAVALSRV3002VP\\CAVALMFD095";
+		final String printerName = "\\\\CAVALSRV3003VP.ANYACCESS.NET\\CAVALMFD095";
 
 		final File pdfFile = new File("C:\\Users\\sgallant-c\\Desktop\\a.pdf");
 		System.out.println("Calling " + new Date());

@@ -70,6 +70,7 @@ public class IMAPMailboxUtil {
 		props.setProperty("mail.imap.auth.ntlm.disable", "true");
 		props.setProperty("mail.imap.partialfetch", "false");
 		props.setProperty("mail.imap.ssl.trust", "*");
+		props.setProperty("mail.imap.ssl.checkserveridentity", "false");
 		props.setProperty("mail.imap.ssl.enable", mailProperties.getProperty("mail.imap.ssl.enable", "false"));
 		props.setProperty("mail.imap.starttls.enable", mailProperties.getProperty("mail.imap.starttls.enable", "false"));
 		props.setProperty("mail.imap.starttls.required", mailProperties.getProperty("mail.imap.starttls.required", "false"));

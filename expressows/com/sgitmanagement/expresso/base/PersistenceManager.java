@@ -1,5 +1,6 @@
 package com.sgitmanagement.expresso.base;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -67,7 +68,7 @@ public class PersistenceManager implements AutoCloseable {
 				entityManagerFactory = emFactoryMap.get(persistenceUnit);
 				if (entityManagerFactory == null) {
 					String persistenceUnitValue = SystemEnv.INSTANCE.getDefaultProperties().getProperty(persistenceUnit);
-					logger.info("Getting new connection to database: " + persistenceUnitValue);
+					logger.info("New factory to database: " + persistenceUnitValue);
 					entityManagerFactory = Persistence.createEntityManagerFactory(persistenceUnitValue);
 					emFactoryMap.put(persistenceUnit, entityManagerFactory);
 				}
@@ -86,7 +87,7 @@ public class PersistenceManager implements AutoCloseable {
 			entityManager = createEntityManager(entityManagerFactory);
 			entityManagerMap.put(persistenceUnit, entityManager);
 			entityManager.setProperty("expresso.persistence_unit", persistenceUnit);
-			// logger.debug("New connection to [" + persistenceUnit + "]");
+			// logger.info("New connection to [" + persistenceUnit + "]");
 		}
 
 		// Start the transaction
@@ -261,7 +262,7 @@ public class PersistenceManager implements AutoCloseable {
 	 */
 	public void commitAndClose() {
 		if (entityManagersThreadLocal.get() != null) {
-			for (EntityManager entityManager : entityManagersThreadLocal.get().values()) {
+			for (EntityManager entityManager : new ArrayList<>(entityManagersThreadLocal.get().values())) {
 				commitAndClose(entityManager);
 			}
 		}
@@ -283,10 +284,6 @@ public class PersistenceManager implements AutoCloseable {
 		} finally {
 			close(em);
 		}
-
-		// int activeConnections =
-		entityManagerCounter.decrementAndGet();
-		// logger.debug("CLOSED: Number of DB connections: " + activeConnections);
 	}
 
 	/**
@@ -295,18 +292,18 @@ public class PersistenceManager implements AutoCloseable {
 	 * @param em
 	 */
 	public void close(EntityManager em) {
+		// int remainingConnections =
+		entityManagerCounter.decrementAndGet();
+
 		// remove it from the cache
 		entityManagersThreadLocal.get().remove(em.getProperties().get("expresso.persistence_unit"));
 
+		// logger.info("CLOSED [" + em.getProperties().get("expresso.persistence_unit") + "]: Number of DB connections: " + remainingConnections);
 		try {
 			em.close();
 		} catch (Exception ex) {
-			// ignore
+			logger.warn("Cannot close entity manager: " + ex);
 		}
-	}
-
-	public int getNumberOpenConnections() {
-		return entityManagerCounter.get();
 	}
 
 	@Override
@@ -314,7 +311,7 @@ public class PersistenceManager implements AutoCloseable {
 		try {
 			commitAndClose();
 		} catch (Exception ex) {
-			// ignore
+			logger.warn("Cannot close entity manager: " + ex);
 		}
 	}
 }
