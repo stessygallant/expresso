@@ -308,7 +308,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 allPages: true
             },
             excelExport: function (e) {
-                e.workbook.fileName = _this.resourceManager.resourceName + "-" + (new Date()).getTime() + ".xlsx";
+                _this.onExportExcel(e);
             },
             change: function (e) {
                 // DO NOT CALL THIS
@@ -2639,6 +2639,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         this.lastUpdateDate = new Date();
 
         this.onRowSelected();
+    },
+
+    /**
+     * On export to Excel
+     * @param e
+     */
+    onExportExcel: function (e) {
+        e.workbook.fileName = this.resourceManager.resourceName + "-" + (new Date()).getTime() + ".xlsx";
     },
 
     /**

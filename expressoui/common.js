@@ -1571,44 +1571,34 @@ expresso.Common = (function () {
      */
     var addApplicationToHistory = function (app, appName, customOptions) {
         customOptions = customOptions || {};
-        customOptions.queryParameters = customOptions.queryParameters || {};
 
-        var data = {
-            appName: appName,
-            _: new Date().getTime()
-        };
+        var params = $.extend({}, customOptions.queryParameters);
+        params["app"] = appName;
 
-        // register this new application to the browser history
-        var url = "?app=" + appName;
         if (expresso.Common.getImpersonateUser()) {
-            url += "&impersonate=" + expresso.Common.getImpersonateUser();
-        }
-        if (expresso.util.Util.getUrlParameter("screenMode")) {
-            url += "&screenMode=" + expresso.util.Util.getUrlParameter("screenMode");
+            params["impersonate"] = expresso.Common.getImpersonateUser();
         }
 
-        delete customOptions.queryParameters.app;
-        delete customOptions.queryParameters.impersonate;
-        delete customOptions.queryParameters.screenMode;
-        delete customOptions.queryParameters.securityToken;
-        delete customOptions.queryParameters.userName;
-        delete customOptions.queryParameters.loginToken;
-        // delete customOptions.queryParameters.id;
-        // delete customOptions.queryParameters.fullScreen;
+        // delete any url parameters for login, forget password
+        delete params.loginToken;
+        delete params.securityToken;
+        delete params.userName;
+
+        // cezinc only
+        delete params.menuItemSecurityProfile;
 
         // add the queryParameters to the URL
-        var queryParameters = $.param(customOptions.queryParameters).replace(/\+/g, "%20");
+        var url = "index.html";
+        var queryParameters = $.param(params).replace(/\+/g, "%20");
         if (queryParameters) {
-            url += "&" + queryParameters;
+            url += "?" + queryParameters;
         }
-
-        // console.log("url [" + url + "]");
-        window.history.pushState(data, null, url);
+        var title = (app && app.title) ? app.title : "";
+        window.history.pushState(null, title, url);
+        // window.history.replaceState(null, title, url);
 
         // update the title
-        if (app && app.title) {
-            document.title = app.title;
-        }
+        document.title = title;
 
         // update Google Analytics
         expresso.Common.sendAnalytics({hitType: "pageview", page: appName});

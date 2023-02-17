@@ -15,21 +15,7 @@ expresso.util.Util = (function () {
      * @returns {string|boolean} value of the parameter, or true if parameter is defined but no value
      */
     var getUrlParameter = function (parameterName, href) {
-        href = href || window.location.search;
-        if (href.startsWith("&") || href.startsWith("?")) {
-            href = href.substring(1);
-        }
-        var pageURL = decodeURIComponent(href);
-        var urlVariables = pageURL.split("&");
-
-        for (var i = 0; i < urlVariables.length; i++) {
-            var param = urlVariables[i].split("=");
-
-            if (param[0] === parameterName) {
-                return param[1] === undefined ? true : param[1];
-            }
-        }
-        return undefined;
+        return getUrlParameters(href)[parameterName];
     };
 
     /**
@@ -38,7 +24,14 @@ expresso.util.Util = (function () {
      * @returns {*}
      */
     var getUrlParameters = function (href) {
-        href = href || window.location.search.substring(1);
+        href = href || window.location.search;
+        if (href.indexOf("?") != -1 && href.length > 1) {
+            href = href.substring(href.indexOf("?") + 1);
+        }
+        if (href.startsWith("&")) {
+            href = href.substring(1);
+        }
+
         var urlVariables = href.split("&");
 
         var parameters = {};
