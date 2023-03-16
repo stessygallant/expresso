@@ -2884,8 +2884,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         originalDataItem = null;
 
                         // needed? select method will trigger the change event
-                        var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
-                        _this.selectRow($row);
+                        if (_this.kendoGrid && _this.kendoGrid.tbody) {
+                            var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
+                            _this.selectRow($row);
+                        }
                     });
                 }
 

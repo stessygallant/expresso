@@ -542,10 +542,13 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
         // avoid issue with hierarchical
         this.options.autoEdit = true;
-        
+
+        // avoid modifying the current resource
+        resource = JSON.parse(JSON.stringify(resource || {}));
+
         var $deferred = $.Deferred();
         this.isReady().done(function () {
-            if (resource && !resource.id) {
+            if (!resource.id) {
 
                 // this is not a resource from the grid (this is a new resource)
                 // we need to overwrite the grid.initializeNewResource method
@@ -574,12 +577,13 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
             //console.log("resource id:" + (resource && resource.id ? resource.id : -1));
             var query = {
-                filter: {field: "id", operator: "eq", value: (resource && resource.id ? resource.id : -1)}
+                filter: {field: "id", operator: "eq", value: (resource.id ? resource.id : -1)}
             };
             _this.list(null, query, true).done(function () {
                 _this.sections.form.bindOnClose().done(function (resource) {
                     // modified and saved
-                    $deferred.resolve(resource);
+                    // return the resource but without the kendoGrid extended method
+                    $deferred.resolve(JSON.parse(JSON.stringify(resource)));
                 }).fail(function () {
                     // close with the X button
                     $deferred.reject();
