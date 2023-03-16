@@ -8,7 +8,7 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class BaseOption extends BaseDeactivableEntity implements IBaseType {
 	@Column(name = "sort_order")
-	private Integer sortOrder = 1;
+	private int sortOrder;
 
 	@Column(name = "pgm_key")
 	private String pgmKey;
@@ -47,12 +47,12 @@ public abstract class BaseOption extends BaseDeactivableEntity implements IBaseT
 	}
 
 	@Override
-	public Integer getSortOrder() {
+	public int getSortOrder() {
 		return sortOrder;
 	}
 
 	@Override
-	public void setSortOrder(Integer sortOrder) {
+	public void setSortOrder(int sortOrder) {
 		this.sortOrder = sortOrder;
 	}
 

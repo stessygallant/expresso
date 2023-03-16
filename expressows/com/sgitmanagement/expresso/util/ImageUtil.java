@@ -10,9 +10,11 @@ import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FileUtils;
+
 public class ImageUtil {
-	public static final int IMG_WIDTH = 70;
-	public static final int IMG_HEIGHT = 50;
+	public static final int THUMBNAIL_WIDTH = 70;
+	public static final int THUMBNAIL_HEIGHT = 50;
 
 	/**
 	 * Will create a thumbnail image from the image file
@@ -24,7 +26,7 @@ public class ImageUtil {
 	 */
 	public static File createThumbnailImage(File imageFile, File thumbnailFile) throws Exception {
 		try (InputStream is = new FileInputStream(imageFile)) {
-			resizeImage(is, thumbnailFile, IMG_WIDTH, IMG_HEIGHT);
+			resizeImage(is, thumbnailFile, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
 		}
 		return thumbnailFile;
 	}
@@ -38,40 +40,47 @@ public class ImageUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	public static File resizeImage(File sourceImageFile, File targetImageFile, Integer maxWidth, Integer maxHeight) throws Exception {
+	public static boolean resizeImage(File sourceImageFile, File targetImageFile, Integer maxWidth, Integer maxHeight) throws Exception {
 		try (InputStream is = new FileInputStream(sourceImageFile)) {
-			resizeImage(is, targetImageFile, maxWidth, maxHeight);
+			return resizeImage(is, targetImageFile, maxWidth, maxHeight);
 		}
-		return targetImageFile;
 	}
 
 	/**
-	 *
-	 * @param input
-	 * @param target
-	 * @param width
-	 * @param height
+	 * 
+	 * @param inputStream
+	 * @param targetFile
+	 * @param maxWidth
+	 * @param maxHeight
+	 * @return true if resized
 	 * @throws IOException
 	 */
-	private static void resizeImage(InputStream input, File targetFile, Integer maxWidth, Integer maxHeight) throws IOException {
-		BufferedImage originalImage = ImageIO.read(input);
+	private static boolean resizeImage(InputStream inputStream, File targetFile, Integer maxWidth, Integer maxHeight) throws IOException {
+		BufferedImage originalImage = ImageIO.read(inputStream);
 
 		// keep the ratio (do not stretch)
 		int width = originalImage.getWidth();
 		int height = originalImage.getHeight();
 
-		if (maxWidth != null) {
+		boolean resize = false;
+		if (maxWidth != null && width > maxWidth) {
 			height = maxWidth * height / width;
 			width = maxWidth;
-		} else if (maxHeight != null) {
+			resize = true;
+		} else if (maxHeight != null && height > maxHeight) {
 			width = maxHeight * width / height;
 			height = maxHeight;
+			resize = true;
 		}
-		Image newResizedImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-
-		String fileName = targetFile.getName();
-		String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-		ImageIO.write(convertToBufferedImage(newResizedImage), fileExtension, targetFile);
+		if (resize) {
+			Image newResizedImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+			String fileName = targetFile.getName();
+			String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+			ImageIO.write(convertToBufferedImage(newResizedImage), fileExtension, targetFile);
+		} else {
+			FileUtils.copyInputStreamToFile(inputStream, targetFile);
+		}
+		return resize;
 	}
 
 	/**
@@ -100,16 +109,15 @@ public class ImageUtil {
 	 * @throws Exception
 	 */
 	public static File createThumbnailImage(File imageFile) throws Exception {
-		File thumbnailFile = getThumbnailImageFile(imageFile);
-		ImageUtil.resizeImage(imageFile, thumbnailFile, IMG_WIDTH, IMG_HEIGHT);
-		return thumbnailFile;
+		File thumbnailFile = getImageFile(imageFile, "thumbnail");
+		return createThumbnailImage(imageFile, thumbnailFile);
 	}
 
-	public static File getThumbnailImageFile(File imageFile) {
+	public static File getImageFile(File imageFile, String fileNameSuffix) {
 		String filePath = imageFile.getAbsolutePath();
 		String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
 		filePath = filePath.substring(0, filePath.lastIndexOf("."));
-		File thumbnailFile = new File(filePath + "-thumbnail." + fileExtension);
+		File thumbnailFile = new File(filePath + "-" + fileNameSuffix + "." + fileExtension);
 		return thumbnailFile;
 	}
 }

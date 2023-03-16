@@ -150,7 +150,7 @@ public class POP3MailboxUtil {
 				}
 			}
 		} catch (MessagingException ex) {
-			// ignore
+			logger.warn("Cannot get messages: " + ex);
 		}
 		return msgList;
 	}

@@ -56,20 +56,16 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 		// this is not secure: it does not take into account the restrictions filter
 		// E e = getService().get(this.id);
 
-		if (("" + id).equals("-1")) {
-			return null;
+		Query query = new Query(new Filter("id", id));
+		query.setKeySearch(true);
+
+		// user super.getService because if getService is overwritten, you will get StackOverflowError
+		List<E> list = super.getService().list(query);
+
+		if (list.isEmpty()) {
+			throw new BaseException(HttpServletResponse.SC_NOT_FOUND, "ID [" + id + "] not found for entity [" + getTypeOfE().getSimpleName() + "]");
 		} else {
-			Query query = new Query(new Filter("id", id));
-			query.setKeySearch(true);
-
-			// user super.getService because if getService is overwritten, you will get StackOverflowError
-			List<E> list = super.getService().list(query);
-
-			if (list.isEmpty()) {
-				throw new BaseException(HttpServletResponse.SC_NOT_FOUND, "ID [" + id + "] not found for entity [" + getTypeOfE().getSimpleName() + "]");
-			} else {
-				return list.get(0);
-			}
+			return list.get(0);
 		}
 	}
 
@@ -212,7 +208,6 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 			// action with no modification
 			case "download":
 			case "print":
-			case "imprint":
 			case "customprint":
 				method = this.getClass().getMethod(action, MultivaluedMap.class);
 				e = (E) method.invoke(this, formParams);

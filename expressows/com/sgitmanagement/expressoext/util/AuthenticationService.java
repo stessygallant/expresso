@@ -3,6 +3,7 @@ package com.sgitmanagement.expressoext.util;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -23,6 +24,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 public class AuthenticationService extends BaseService {
+	private static final Map<String, Object> keyLocks = new ConcurrentHashMap<>();
 
 	/**
 	 * 
@@ -30,30 +32,33 @@ public class AuthenticationService extends BaseService {
 	 */
 	public void login(User user) throws Exception {
 		UserService userService = newService(UserService.class, User.class);
-		userService.lock(user);
 
-		// validate the password expiration date
-		if (user.getPasswordExpirationDate() != null && user.getPasswordExpirationDate().before(new Date())) {
-			// CANNOT invalidateSession();
-			throw new PasswordExpirationException();
-		}
+		String key = user.getUserName();
+		synchronized (keyLocks.computeIfAbsent(key, k -> k)) {
+			// validate the password expiration date
+			if (user.getPasswordExpirationDate() != null && user.getPasswordExpirationDate().before(new Date())) {
+				// CANNOT invalidateSession();
+				throw new PasswordExpirationException();
+			}
 
-		// is the user is terminated, do not authorize login
-		if (user.getTerminationDate() != null) {
-			invalidateSession();
-			throw new BaseException(HttpServletResponse.SC_UNAUTHORIZED, "userTerminated");
-		}
+			// is the user is terminated, do not authorize login
+			if (user.getTerminationDate() != null) {
+				invalidateSession();
+				throw new BaseException(HttpServletResponse.SC_UNAUTHORIZED, "userTerminated");
+			}
 
-		if (user.getNbrFailedAttempts() > 3) {
-			userService.blockAccount(user);
+			if (user.getNbrFailedAttempts() > 3) {
+				userService.blockAccount(user);
+				commit();
+				invalidateSession();
+				throw new BaseException(423, "accountBlocked");
+			}
+
+			// record the last visit date
+			user.setLastVisitDate(new Date());
+			user.setNbrFailedAttempts(0);
 			commit();
-			invalidateSession();
-			throw new BaseException(423, "accountBlocked");
 		}
-
-		// record the last visit date
-		user.setLastVisitDate(new Date());
-		user.setNbrFailedAttempts(0);
 	}
 
 	/**

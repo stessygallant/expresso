@@ -145,14 +145,19 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 var autoRefreshIntervalInSeconds = expresso.Common.getSiteNamespace().config.Configurations.autoRefreshIntervalInSeconds;
                 this.resourceManager.addInterval(function () {
                     if (_this.lastUpdateDate && (new Date().getTime() - _this.lastUpdateDate.getTime()) / 1000 >= autoRefreshIntervalInSeconds) {
-                        //console.log("Reloading grid [" + _this.resourceManager.resourceName + "]");
 
-                        // make sure not to display an error message
-                        expresso.Common.doNotDisplayAjaxErrorMessage(true);
-                        _this.loadResources().always(function () {
-                            // put back the error message
-                            expresso.Common.doNotDisplayAjaxErrorMessage(false);
-                        });
+                        // do not refresh if the form is opened
+                        var formOpened = !!_this.resourceManager.sections.form.$window;
+                        if (!formOpened) {
+                            console.log("Reloading grid [" + _this.resourceManager.resourceName + "]");
+
+                            // make sure not to display an error message
+                            expresso.Common.doNotDisplayAjaxErrorMessage(true);
+                            _this.loadResources().always(function () {
+                                // put back the error message
+                                expresso.Common.doNotDisplayAjaxErrorMessage(false);
+                            });
+                        }
                     }
                 }, autoRefreshIntervalInSeconds / 2);
             }
@@ -167,6 +172,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // listen to the button to perform a search in all inactives records
         $domElement.on("click", "button.exp-grid-search-inactive", function () {
             $domElement.find(".exp-active-only-button").trigger("click");
+        });
+
+        // listen for picture
+        this.$domElement.on("mouseenter", ".exp-picture img", function (e) {
+            expresso.util.UIUtil.showMaximizedPicture($(this), e);
         });
 
         // Remove some options
@@ -734,6 +744,24 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 // assign the title of the column
                 if (column.field && !column.title && column.title !== "") {
                     column.title = _this.getLabel(column.field, null, false, true);
+                }
+
+                // picture
+                if (field && field.type == "picture") {
+                    _this.objectsNeededForColumns = _this.objectsNeededForColumns || {};
+                    _this.objectsNeededForColumns[column.field] = {};
+                    field.defautValue = field.defautValue || {};
+
+                    column.filterable = false;
+                    column.width = column.width || 70;
+                    column.attributes = column.attributes || {};
+                    column.attributes.style = "text-align: center";
+                    if (!column.template) {
+                        var path = expresso.Common.getWsResourcePathURL() + "/document/#=" + column.field + ".id||-1#/file/#=" + column.field + ".fileName#";
+                        column.template = "<div class='exp-picture'>" +
+                            "<img alt='' src='" + path + "?thumbnail=true" + "' data-original-src='" + path + "'>" +
+                            "</div>";
+                    }
                 }
 
                 // handle mobile tag
@@ -2224,20 +2252,16 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     },
 
     /**
-     * Use anchor and simulate a click (do not use window.open)
+     * Use anchor and simulate a click (do not use window.open).
+     * Note: user may get a popup blocker if many download
      */
     performDownload: function () {
         var _this = this;
         if (this.selectedRows.length) {
-            $.each(this.selectedRows, function () {
+            $.each(this.selectedRows, function (index) {
                 var resource = this;
-                var action = "download";
-                var target = "_blank";
                 var url = _this.resourceManager.getWebServicePath(resource.id);
-                url += "?action=" + action;
-                var $href = $("<a href='" + url + "' target='" + target + "' hidden></a>");
-                $href.appendTo("body")[0].click();
-                $href.remove();
+                expresso.Common.sendDownloadRequest(url);
             });
         }
     },
@@ -2859,7 +2883,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
             // when validation has been done, continue
             $deferred.done(function () {
-                //console.log("GRID - " + _this.resourceManager.resourceName + " - All promises done for saving");
+                // console.log("GRID - " + _this.resourceManager.resourceName + " - All promises done for saving");
 
                 // keep a copy of the original resource (before sync)
                 var originalDataItem = dataItem ? JSON.parse(JSON.stringify(dataItem)) : null;
@@ -2870,14 +2894,17 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         originalDataItem = null;
                     });
                 } else {
-                    _this.resourceManager.currentResource = null;
                     _this.kendoGrid.dataSource.one("sync", function () {
                         _this.onSaved(dataItem, originalDataItem, _this.RM_EVENTS.RESOURCE_CREATED);
                         originalDataItem = null;
 
-                        // needed? select method will trigger the change event
-                        var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
-                        _this.selectRow($row);
+                        // select method will trigger the change event
+                        // it may happen that the grid is no longer available (inline grid after save)
+                        if (_this.kendoGrid && _this.kendoGrid.tbody) {
+                            _this.resourceManager.currentResource = null;
+                            var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + dataItem.uid + "']");
+                            _this.selectRow($row);
+                        }
                     });
                 }
 
@@ -2915,7 +2942,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // we should select the new one
             var dataItem = this.selectedRows[0];
             // console.log((this.resourceManager.currentResource ? this.resourceManager.currentResource.id : null) + " -> " +
-            //    (dataItem ? dataItem.id : null));
+            //     (dataItem ? dataItem.id : null));
 
             if (!this.resourceManager.currentResource || this.resourceManager.currentResource.uid != dataItem.uid) {
                 //console.log("  Selecting id[" + dataItem.id + "] uid[" + dataItem.uid + "]");
@@ -3071,13 +3098,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // console.log("1-dataSourceOptions.filter: " + JSON.stringify(dataSourceOptions.filter));
 
         // if there is a masterFilter defined, always use it
-        if (this.masterFilter) {
-            var f = this.masterFilter;
-            if (typeof f === "function") {
-                f = f();
+        var masterFilter = this.getMasterGridFilter();
+        if (masterFilter) {
+            if (typeof masterFilter === "function") {
+                masterFilter = masterFilter();
             }
             // console.log("MASTER filter: " + JSON.stringify(f));
-            expresso.Common.addKendoFilter(dataSourceOptions.filter, f);
+            expresso.Common.addKendoFilter(dataSourceOptions.filter, masterFilter);
         }
 
         // console.log("2-this.masterFilter: " + JSON.stringify(this.masterFilter));
@@ -3636,33 +3663,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // add a separator
         this.addSeparatorToToolbar(toolbar);
 
-        if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
-
-            // add the print button
-            if (this.isUserAllowed("print")) {
-                toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-print-button" title="printButtonTitle"><span class="fa fa-print"><span class="exp-button-label" data-text-key="printButtonLabel"></span></span></button>'});
-                needSeparator = true;
-            }
-
-            // add the download button
-            if (this.isUserAllowed("download")) {
-                toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-download-button" title="downloadButtonTitle"><span class="fa fa-download"><span class="exp-button-label" data-text-key="downloadButtonLabel"></span></span></button>'});
-                needSeparator = true;
-            }
-
-            // add the link button
-            if (this.isUserAllowed("link")) {
-                toolbar.push({template: '<button type="button" class="k-button exp-button exp-single-selection exp-link-button" title="getLink"><span class="fa fa-link"><span class="exp-button-label" data-text-key="getLinkButton"></span></span></button>'});
-                needSeparator = true;
-            }
-
-            // add the mail button
-            if (this.isUserAllowed("email")) {
-                toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-email-button" title="sendEmail"><span class="fa fa-envelope-o"><span class="exp-button-label" data-text-key="sendEmailButton"></span></span></button>'});
-                needSeparator = true;
-            }
-        }
-
         // then add the action buttons (if any)
         $.each(this.resourceManager.parseAvailableActions(), function (i, action) {
             if (action.showButtonInGridToolbar && !action.systemAction &&
@@ -3714,12 +3714,40 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // mark the end of the filter buttons
         toolbar.push({template: '<span class="exp-toolbar-marker exp-toolbar-marker-filter"></span>'});
 
+        // add a separator
+        if (needSeparator) {
+            this.addSeparatorToToolbar(toolbar);
+            needSeparator = false;
+        }
+
         if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
-            // add a separator
-            if (needSeparator) {
-                this.addSeparatorToToolbar(toolbar);
+
+            // add the link button
+            if (this.isUserAllowed("link")) {
+                toolbar.push({template: '<button type="button" class="k-button exp-button exp-single-selection exp-link-button" title="getLink"><span class="fa fa-link"><span class="exp-button-label" data-text-key="getLinkButton"></span></span></button>'});
+                needSeparator = true;
             }
 
+            // add the mail button
+            if (this.isUserAllowed("email")) {
+                toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-email-button" title="sendEmail"><span class="fa fa-envelope-o"><span class="exp-button-label" data-text-key="sendEmailButton"></span></span></button>'});
+                needSeparator = true;
+            }
+
+            // add the print button
+            if (this.isUserAllowed("print")) {
+                toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-print-button" title="printButtonTitle"><span class="fa fa-print"><span class="exp-button-label" data-text-key="printButtonLabel"></span></span></button>'});
+                needSeparator = true;
+            }
+        }
+
+        // add the download button
+        if (this.isUserAllowed("download")) {
+            toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-download-button" title="downloadButtonTitle"><span class="fa fa-file-pdf-o"><span class="exp-button-label" data-text-key="downloadButtonLabel"></span></span></button>'});
+            needSeparator = true;
+        }
+
+        if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
             // always add the excel button
             toolbar.push(this.TOOLBAR_BUTTONS.EXCEL);
         }
@@ -3995,6 +4023,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     getInitialGridFilter: function () {
         return undefined;
+    },
+
+    /**
+     * This method is used to get the master grid filter. It is always added to the query.
+     * @returns {*}
+     */
+    getMasterGridFilter: function () {
+        return this.masterFilter;
     },
 
     /**

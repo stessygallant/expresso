@@ -35,6 +35,14 @@ expresso.applications.general.notification.notificationmanager.NotificationManag
                 type: "string",
                 maxLength: 2000
             },
+            resourceStatusPgmKey: {
+                type: "string",
+                maxLength: 50
+            },
+            notes: {
+                type: "string",
+                maxLength: 200
+            },
             serviceDescription: {
                 type: "string",
                 maxLength: 100

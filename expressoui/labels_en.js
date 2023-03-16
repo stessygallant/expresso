@@ -218,7 +218,7 @@ $.extend(expresso.Labels, {
     modifyRecord: "Modify selected record",
     deleteRecords: "Delete selected records",
     printButtonTitle: "Print selected records",
-    downloadButtonTitle: "Download selected records",
+    downloadButtonTitle: "Download PDFs for selected records",
     sendEmail: "Send email with the selected record",
     uploadDocument: "Upload a document (drag&drop)",
     showActiveRecords: "Show only active records",
@@ -250,7 +250,7 @@ $.extend(expresso.Labels, {
     deleteRecordsButton: "",
     modifyRecordButton: "",
     printButtonLabel: "",
-    downloadButtonLabel: "",
+    downloadButtonLabel: "PDF",
     sendEmailButton: "",
     uploadDocumentButton: "",
     showActiveRecordsButton: "Actives only",
@@ -409,7 +409,16 @@ $.extend(expresso.Labels, {
     sourceFilter: "Source code",
 
     // Notifications
-    notifications: "You have {quantity} pending notification(s)",
+    notifications: "You have {quantity} pending notification(s).",
+    newNotifications: "You have {quantity} new notification(s).",
+
+    // photo
+    deletePictureWindowTitle: "Confirmation",
+    deletePicture: "Are you sure you want to delete this picture ?",
+
+    // document
+    deleteDocumentWindowTitle: "Confirmation",
+    deleteDocument: "Are you sure you want to delete this document ?",
 
     _: ""
 });

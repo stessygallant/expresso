@@ -15,6 +15,7 @@ expresso.applications.general.requiredapprovalmanager.Labels = {
     approbationDate: "Date d'approbation",
     approbationSection: "Approbation",
     notes: "Notes",
+    additionnalInfo: {label: "Informations supplémentaires", shortLabel: "Info. Supp."},
 
     allModifications: "Toutes",
     mineOnlyModifications: "Mes approbations",

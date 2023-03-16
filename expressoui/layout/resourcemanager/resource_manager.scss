@@ -766,8 +766,8 @@ $formPreviewHeight: 12em;
         height: auto;
         border-top: $themeFieldsetBorder;
         border-bottom: $themeFieldsetBorder;
-        padding: 5px 0 10px 0;
-        margin: 10px 0 10px 0;
+        padding: 0.5em 0 1em 0;
+        margin: 1em 0;
 
         legend {
             float: left;
@@ -1203,6 +1203,23 @@ k-widget k-window
 
     .k-action-buttons .k-button {
         width: 47%;
+    }
+}
+
+/*
+ * ------------------------------------------------------------------------------------------------------------------
+ * PICTURE
+ * ------------------------------------------------------------------------------------------------------------------
+ */
+.exp-grid {
+    .exp-picture {
+        text-align: center;
+        padding-top: 0.1em;
+
+        img {
+            max-height: 50px;
+            max-width: 70px;
+        }
     }
 }
 

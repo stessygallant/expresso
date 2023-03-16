@@ -15,7 +15,7 @@
     .notification-service {
         border: 0.1em solid $service-background;
         background-color: $service-background;
-        border-radius: 0.8em;
+        border-radius: 0.1em;
         margin: 1em 1em;
         padding: 0.3em 0.7em;
         overflow-y: visible;
@@ -52,7 +52,7 @@
                 margin: 0.8em 0.8em;
                 padding: 0.8em 0.8em;
                 position: relative;
-                border-radius: 0.8em;
+                border-radius: 0.1em;
                 overflow-x: hidden;
                 overflow-y: visible;
                 width: calc(100% - 3.2em); // remove padding+margin
@@ -94,6 +94,11 @@
                     }
                 }
 
+                .notes {
+                    font-size: 90%;
+                    color: red;
+                }
+
                 .description {
                     font-size: 100%;
                     overflow: hidden;
@@ -103,17 +108,31 @@
                 }
 
                 .footer {
-                    .date {
+                    div {
                         display: inline;
+                        margin-left: 1.25em;
+
+                        .title {
+                            &:after {
+                                content: ":"
+                            }
+                        }
+
+                        .data {
+                            font-weight: bold;
+                        }
+                    }
+
+                    .date {
                     }
 
                     .requester {
-                        display: inline;
-                        margin-left: 1.25em;
                     }
 
                     .user {
-                        display: inline;
+                    }
+
+                    .resource-status {
                     }
                 }
             }

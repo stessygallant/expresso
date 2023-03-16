@@ -325,7 +325,7 @@ public class ExchangeMessageUtil implements MailSender {
 			try {
 				deleteMessage(messageId);
 			} catch (Exception ex) {
-				// ignore
+				logger.warn("Cannot delete message: " + ex);
 			}
 		}
 		return validEmail;

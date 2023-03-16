@@ -604,6 +604,25 @@ public class Query {
 			return integerValue;
 		}
 
+		/**
+		 * Get the value of the filter as a boolean. It will throw an exception if the value is null
+		 *
+		 * @return
+		 */
+		public boolean getBooleanValue() {
+			Object value = getValue();
+			String valueType = value.getClass().getSimpleName();
+
+			boolean booleanValue;
+			if (valueType.equals("Boolean")) {
+				booleanValue = (Boolean) value;
+			} else {
+				String v = (String) value;
+				booleanValue = Boolean.parseBoolean(v);
+			}
+			return booleanValue;
+		}
+
 		public void setValue(Object value) {
 			this.value = value;
 		}

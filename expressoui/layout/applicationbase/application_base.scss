@@ -36,12 +36,13 @@
     }
 
     div.exp-mobile {
-        max-width: 40em;
-        border: 0.1em solid gray;
-        margin: 1em auto;
-        height: auto;
+        display: block;
+        overflow: auto;
+        margin: 0 auto;
+        padding: 1em 0.5em;
+        height: calc(100% - 2em);
+        width: calc(100% - 1em);
+        max-width: 50em;
     }
 }
-
-
 

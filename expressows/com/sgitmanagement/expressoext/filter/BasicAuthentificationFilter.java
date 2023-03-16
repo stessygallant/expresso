@@ -92,7 +92,8 @@ public class BasicAuthentificationFilter implements Filter {
 							// verify password
 							String hashedPassword = Util.hashPassword(authPass);
 							if (user.getPassword() != null && user.getPassword().equals(hashedPassword)) {
-								logger.info("Authenticated [" + authUser + "] from IP [" + Util.getIpAddress(request) + "]");
+								logger.info(
+										"Authenticated [" + authUser + "] from IP [" + Util.getIpAddress(request) + "] URL[" + request.getRequestURI() + "] Query[" + request.getQueryString() + "]");
 
 								// we must create a session (to store the authorization)
 								session = request.getSession(true);

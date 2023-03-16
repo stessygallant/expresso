@@ -24,9 +24,8 @@ expresso.Security = function () {
     var isUserInRole = function (role) {
         if (userProfile && userProfile.userRoles) {
             for (var i = 0; i < userProfile.userRoles.length; i++) {
-                if (userProfile.userRoles[i].pgmKey == role ||
-                    // admin has all roles
-                    userProfile.userRoles[i].pgmKey == "admin") {
+                // admin has all roles
+                if (userProfile.userRoles[i].pgmKey == role || userProfile.userRoles[i].pgmKey == "admin") {
                     return true;
                 }
             }
@@ -42,10 +41,10 @@ expresso.Security = function () {
     };
 
     /**
-     * Returns true if the user is a super user
+     * Returns true if the user is an admin
      */
     var isAdmin = function () {
-        return isUserInRole("admin");
+        return isUserInRole(expresso.Common.getSiteNamespace().config.Configurations.adminRole);
     };
 
     /**

@@ -32,7 +32,9 @@
             dataTextField: "label",
             sortable: false,
             autoLoad: false,
-            serverSideFiltering: true
+            serverSideFiltering: true,
+            showInputSearch: true,
+            titles: undefined
         },
         events: ["change"],
 
@@ -88,19 +90,29 @@
             var $sourceSelect = $("<select class='exp-lookup-selection exp-lookup-selection-source' multiple></select>");
             $sourceSelect.insertBefore($targetSelect);
 
-            // INPUT SEARCH
-            var $searchInput = $("<input type='search' class='exp-lookup-selection-input k-textbox' placeholder='" +
-                expresso.Common.getLabel("searchPlaceHolder") + "'>");
-            $searchInput.insertBefore($sourceSelect);
+            // TITLE
+            if (this.options.titles) {
+                $sourceSelect.before($("<div class='titles'>" +
+                    "<span class='source-title'>" + (this.options.titles.sourceTitle || "") + "</span>" +
+                    "<span class='target-title'>" + (this.options.titles.targetTitle || "") + "</span>" +
+                    "</div>"));
+            }
 
-            //when we release 'enter' key
-            $searchInput.on("keyup search", function (e) {
-                e.preventDefault();
-                if (e.type == "search" || e.keyCode == 13) {
-                    var term = $(this).val();
-                    _this._search(term);
-                }
-            });
+            // INPUT SEARCH
+            if (this.options.showInputSearch) {
+                var $searchInput = $("<input type='search' class='exp-lookup-selection-input k-textbox' placeholder='" +
+                    expresso.Common.getLabel("searchPlaceHolder") + "'>");
+                $searchInput.insertBefore($sourceSelect);
+
+                //when we release 'enter' key
+                $searchInput.on("keyup search", function (e) {
+                    e.preventDefault();
+                    if (e.type == "search" || e.keyCode == 13) {
+                        var term = $(this).val();
+                        _this._search(term);
+                    }
+                });
+            }
 
             // utility method to be called when there is a change
             var triggerChange = function () {
@@ -197,7 +209,7 @@
                     }));
                 });
             } else {
-                if (this.originalDataItems === undefined) {
+                if (!this.originalDataItems) {
                     this.originalDataItems = this.sourceListBox.dataItems();
                 }
 
@@ -342,6 +354,8 @@
          * @param [targetDataSource]
          */
         setDataSource: function (sourceDataSource, targetDataSource) {
+            this.originalDataItems = null;
+
             // avoid null
             sourceDataSource = sourceDataSource || [];
             if ($.isArray(sourceDataSource)) {

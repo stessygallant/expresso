@@ -193,6 +193,11 @@ expresso.util.Model = (function () {
                             }
                         }
 
+                        // a picture is always transient
+                        if (field.type == "picture") {
+                            field.transient = true;
+                        }
+
                         // when using inline grid, the master resource may not be defined yet
                         if (resourceManager.options.autoSyncGridDataSource === false) {
                             if (field.name == model.masterIdProperty) {
@@ -382,7 +387,9 @@ expresso.util.Model = (function () {
 
                     // get the appClass
                     resourceManager.invalidManager ? $.Deferred().resolve() :
-                        expresso.Common.sendRequest(resourceManager.getWebServicePath() + "/appClass", null, null, {jsonCompliance: true}).done(function (appClassFields) {
+                        expresso.Common.sendRequest(resourceManager.getWebServicePath() + "/appClass", null, null, {
+                            jsonCompliance: true
+                        }, {waitOnElement: null}).done(function (appClassFields) {
                             for (var fieldName in appClassFields) {
                                 var field = appClassFields[fieldName];
 
@@ -396,7 +403,9 @@ expresso.util.Model = (function () {
                                     }
                                 } else {
                                     // override the restrictedRole
-                                    modelField.restrictedRole = field.restrictedRole;
+                                    // pgmKey are always restricted by admin
+                                    modelField.restrictedRole = field.restrictedRole || (fieldName == "pgmKey" && modelField.nullable ?
+                                        expresso.Common.getSiteNamespace().config.Configurations.adminRole : undefined);
 
                                     // set if require approval
                                     modelField.requireApprovalRole = field.requireApprovalRole;

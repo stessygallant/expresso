@@ -1,15 +1,15 @@
 expresso.applications.general.notification.notificationmanager.Labels = {
     notification: "Notification",
-    resourceName: "Nom de la ressource",
+    resourceName: "Ressource",
     resource: "Ressource",
     resourceNo: "N°",
     resourceExtKey: "Clé externe",
     resourceUrl: "URL",
     description: "Description",
     availableActions: "Actions disponibles",
-    user: "Utilisateur",
+    user: "Responsable",
     notifiedUser: "Notifié",
-    requestedDate: "Date de la demande",
+    requestedDate: "Date",
     requesterUser: "Demandeur",
     performedAction: "Action",
     performedActionUser: "Action faite par",
@@ -17,6 +17,8 @@ expresso.applications.general.notification.notificationmanager.Labels = {
     notifiableServiceClassName: "Service (classe)",
     serviceDescription: "Service",
     adminSection: "Section administration",
+    resourceStatusPgmKey: "Statut",
+    notes: "Note",
 
     _: ""
 };

@@ -3,11 +3,17 @@ expresso.applications.general.notification.notificationmanager.Grid = expresso.l
     // @override
     getColumns: function () {
         var columns = [{
+            field: "requesterUser.fullName",
+            width: 160
+        }, {
             field: "user.fullName",
-            width: 120
+            width: 140
+        }, {
+            field: "notifiedUser.fullName",
+            width: 160
         }, {
             field: "resourceNo",
-            width: 120
+            width: 200
         }, {
             field: "requestedDate"
         }, {
@@ -15,35 +21,41 @@ expresso.applications.general.notification.notificationmanager.Grid = expresso.l
             width: 150
         }, {
             field: "description",
-            width: 500
+            width: 500,
+            hidden: true
         }];
 
         if (expresso.Common.isAdmin()) {
             columns.push.apply(columns, [{
                 field: "resourceName",
-                width: 120
+                width: 120,
+                hidden: true
             }, {
                 field: "resourceId",
-                width: 120
+                width: 120,
+                hidden: true
             }, {
                 field: "resourceExtKey",
-                width: 120
+                width: 120,
+                hidden: true
             }, {
                 field: "resourceUrl",
+                width: 200,
+                hidden: true
+            }, {
+                field: "resourceStatusPgmKey",
                 width: 200
             }, {
                 field: "availableActions",
-                width: 150
-            }, {
-                field: "notifiedUser.fullName",
-                width: 160,
+                width: 150,
                 hidden: true
             }, {
-                field: "requesterUser.fullName",
-                width: 160
+                field: "notes",
+                width: 150,
+                hidden: true
             }, {
                 field: "performedAction",
-                width: 120
+                width: 100
             }, {
                 field: "performedActionDate"
             }, {

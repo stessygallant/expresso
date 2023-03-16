@@ -430,7 +430,7 @@ expresso.Main = function () {
 
         // get the messages
         expresso.Common.sendRequest("systemMessage", null, null,
-            null, {ignoreErrors: true}).done(function (systemMessages) {
+            null, {ignoreErrors: true, waitOnElement: null}).done(function (systemMessages) {
             if (systemMessages.total > 0) {
                 // get the first one
                 var systemMessage = systemMessages.data[0].message;
@@ -449,157 +449,6 @@ expresso.Main = function () {
             }
         }).always(function () {
             window.setTimeout(verifySystemMessages, refreshDelayInSeconds * 1000);
-        });
-    };
-
-    /**
-     * Verify the tasks for the user and display a notification if needed
-     * Display new user task as soon as we can (max delay is refreshDelayInSeconds)
-     * Display all user tasks maximum once every fullScanDelayInSeconds
-     *
-     * @param [all] true if we need to get all assigned user tasks, default is false
-     */
-    var verifyTasks = function (all) {
-        var refreshDelayInSeconds = 60 * 60; // 60 minutes
-        var fullScanDelayInSeconds = 24 * 60 * 60; // 24 heures
-
-        // repeat verifyTasks when this one is done
-        var $deferred = $.Deferred();
-        $deferred.done(function () {
-            window.setTimeout(verifyTasks, refreshDelayInSeconds * 1000);
-        });
-
-        if (expresso.util.Util.getUrlParameter("app") == "UserTaskViewer") {
-            // do not display task in the Task viewer
-            $deferred.resolve();
-        } else {
-
-            // verify the last time the check has been made
-            var lastTimeFilter = [
-                {field: "key", operator: "eq", value: "UserTaskViewer"}
-            ];
-            expresso.Common.sendRequest("user/" + expresso.Security.getUserInfo().id + "/config", null, null,
-                expresso.Common.buildKendoFilter(lastTimeFilter), {ignoreErrors: true}).done(function (configs) {
-                var config;
-                var configValue;
-                if (configs.total > 0) {
-                    config = configs.data[0];
-                    configValue = JSON.parse(config.value);
-                    configValue.lastTime = configValue.lastTime ? expresso.util.Formatter.parseDateTime(configValue.lastTime) : new Date();
-                    configValue.lastFullTime = configValue.lastFullTime ? expresso.util.Formatter.parseDateTime(configValue.lastFullTime) : new Date();
-                }
-                //console.log("configValue: ", configValue);
-
-                // if the last time is after the refresh delay, it means that another browser session
-                // already got them. So skip it
-                if (!all && configValue && configValue.lastTime.getTime() > (new Date().addSeconds(-refreshDelayInSeconds)).getTime()) {
-                    // ok, skip it
-                    $deferred.resolve();
-                } else {
-
-                    var userTaskFilter = [
-                        {field: "designatedUserId", operator: "eq", value: expresso.Security.getUserInfo().id},
-                        {field: "userTaskStatus.pgmKey", operator: "eq", value: "NEW"},
-                        {field: "userTaskType.pgmKey", operator: "eq", value: "TASK"}
-                    ];
-
-                    var fullScan = false;
-                    // console.log(configValue.lastFullTime);
-                    // console.log(new Date().addSeconds(-fullScanDelayInSeconds));
-
-                    if (!config || (all && (configValue.lastFullTime.getTime() <= (new Date().addSeconds(-fullScanDelayInSeconds)).getTime()))) {
-                        // get all user tasks
-                        fullScan = true;
-                    } else {
-                        userTaskFilter.push({
-                            field: "creationDate",
-                            operator: "gte",
-                            value: expresso.util.Formatter.formatDate(configValue.lastTime, expresso.util.Formatter.DATE_FORMAT.DATE_TIME_SEC)
-                        });
-                    }
-
-                    // record the new last time
-                    var lastTimeString = expresso.util.Formatter.formatDate(new Date(), expresso.util.Formatter.DATE_FORMAT.DATE_TIME_SEC);
-                    configValue = configValue || {};
-                    configValue.lastTime = lastTimeString;
-                    configValue.lastFullTime = fullScan ? lastTimeString :
-                        expresso.util.Formatter.formatDate(configValue.lastFullTime, expresso.util.Formatter.DATE_FORMAT.DATE_TIME_SEC);
-                    if (config) {
-                        config.value = JSON.stringify(configValue);
-                        expresso.Common.sendRequest("user/" + expresso.Security.getUserInfo().id + "/config/" + config.id,
-                            "update", config, null, {ignoreErrors: true});
-                    } else {
-                        config = {
-                            type: "userConfig",
-                            userId: expresso.Security.getUserInfo().id,
-                            key: "UserTaskViewer",
-                            value: JSON.stringify(configValue)
-                        };
-                        expresso.Common.sendRequest("user/" + expresso.Security.getUserInfo().id + "/config",
-                            "create", config, null, {ignoreErrors: true});
-                    }
-
-                    // get the list of task for the user
-                    expresso.Common.sendRequest("usertask", null, null, expresso.Common.buildKendoFilter(userTaskFilter), {ignoreErrors: true}).done(function (userTasks) {
-                        try {
-                            if (!("Notification" in window)) {
-                                //alert(expresso.Common.getLabel("browserSupport"));
-                                // do not retry
-                                $deferred.reject();
-                            } else if (Notification.permission === "granted") {
-                                // display a notification for each task
-                                displayUserTasksNotification(userTasks.data);
-                                $deferred.resolve();
-                            } else if (Notification.permission !== "denied") {
-                                Notification.requestPermission().done(function (permission) {
-                                    if (permission === "granted") {
-                                        displayUserTasksNotification(userTasks.data);
-                                        $deferred.resolve();
-                                    } else {
-                                        // do not retry
-                                        $deferred.reject();
-                                    }
-                                });
-                            }
-                        } catch (e) {
-                            console.warn(e);
-                        }
-                    }).fail(function () {
-                        // retry later
-                        $deferred.resolve();
-                    });
-                }
-            }).fail(function () {
-                // retry later
-                $deferred.resolve();
-            });
-        }
-    };
-
-    /**
-     *
-     * @param userTasks
-     */
-    var displayUserTasksNotification = function (userTasks) {
-        //console.log("displayUserTasksNotification");
-        $.each(userTasks, function (index, userTask) {
-            var title = //expresso.util.Formatter.formatDate(userTask.creationDate,
-                // expresso.util.Formatter.DATE_FORMAT.DATE_TIME) + " - " +
-                userTask.creationUserFullName;
-            var options = {
-                body: userTask.description,
-                //icon: "images/logo-245x56.jpeg"
-                icon: "favicon.ico",
-                requireInteraction: true
-            };
-            var notification = new Notification(title, options);
-
-            notification.onclick = function (e) {
-                e.preventDefault();
-                var url = window.location.protocol + "//" + window.location.host + window.location.pathname + "?app=UserTaskViewer";
-                window.open(url, "portal.notification");
-                notification.close();
-            };
         });
     };
 
@@ -827,7 +676,7 @@ expresso.Main = function () {
             });
 
             // insert the notification bell
-            var $notificationBell = $("<i class='fa fa-bell-o fa-2x notification-bell'></i>").appendTo($div);
+            var $notificationBell = $("<i class='fa fa-bell-o fa-2x notification-bell'><span class='badge'></span></i>").appendTo($div);
 
             // add a listener to the bell
             $notificationBell.on("click", function () {
@@ -842,7 +691,7 @@ expresso.Main = function () {
             // then check notifications every n minutes
             window.setInterval(function () {
                 checkNotifications($div);
-            }, 10 * 60 * 1000);
+            }, (expresso.Common.isProduction() ? 10 : 1) * 60 * 1000);
         }
     };
 
@@ -855,15 +704,23 @@ expresso.Main = function () {
             // update the bell
             var $notificationBell = $div.find("> .notification-bell");
             if (notifications.length) {
-                if ($notificationBell.hasClass("fa-bell-o")) {
-                    $notificationBell.removeClass("fa-bell-o").addClass("fa-bell");
+                // if new notification, show tooltip
+                var ago15Minutes = new Date().addMinutes(-15);
+                var countNewNotifications = $.grep(notifications, function (n) {
+                    return expresso.util.Formatter.parseDateTime(n.creationDate) > ago15Minutes;
+                }).length;
+                var displayTooltip = $notificationBell.hasClass("fa-bell-o") || countNewNotifications;
 
-                    // add badge
-                    $notificationBell.append("<span class='badge'></span>");
+                if (displayTooltip) {
+                    $notificationBell.removeClass("fa-bell-o").addClass("fa-bell");
+                    $notificationBell.find(".badge").text(notifications.length);
 
                     // displayTooltip
                     var $notification = $("<div class='notification-tooltip'>" +
-                        expresso.Common.getLabel("notifications", null, {quantity: notifications.length}) +
+                        (countNewNotifications ?
+                            expresso.Common.getLabel("newNotifications", null,
+                                {quantity: countNewNotifications}) + "<br>" : "") +
+                        expresso.Common.getLabel("notifications", null, {quantity: (notifications.length - countNewNotifications)}) +
                         "</div>").appendTo($("body"));
 
                     // display the notifications for a few seconds then remove it
@@ -874,14 +731,10 @@ expresso.Main = function () {
                         }, 2 * 1000);
                     }, 5 * 1000);
                 }
-                // update badge
-                $notificationBell.find(".badge").text(notifications.length);
             } else {
                 if ($notificationBell.hasClass("fa-bell")) {
                     $notificationBell.removeClass("fa-bell").addClass("fa-bell-o");
-
-                    // remove badge
-                    $notificationBell.find(".badge").remove();
+                    $notificationBell.find(".badge").text("");
                 }
             }
         });
@@ -977,11 +830,6 @@ expresso.Main = function () {
         });
 
         if (!noMenu) {
-            // verify the user tasks periodically
-            if (expresso.Common.getSiteNamespace().config.Configurations.supportUserTasks) {
-                verifyTasks(true);
-            }
-
             if (expresso.Common.getSiteNamespace().config.Configurations.supportSystemMessage) {
                 verifySystemMessages();
             }
@@ -1199,7 +1047,7 @@ expresso.Main = function () {
                     }]
                 });
 
-                expresso.Common.sendRequest("welcomemessage", null, null,
+                expresso.Common.sendRequest("welcomeMessage", null, null,
                     expresso.Common.buildKendoFilter(filter))
                     .done(function (welcomeMessages) {
                         // when all information about the user and his profile are loaded, initialize the UI
@@ -1220,7 +1068,7 @@ expresso.Main = function () {
                                 +$div.find(".message").outerHeight(true) + 70)); // 70 is margin
 
                             if (welcomeMessage.fileName) {
-                                var imageUrl = expresso.Common.getWsResourcePathURL() + "/welcomemessage/" + welcomeMessage.id + "/file/" + welcomeMessage.fileName;
+                                var imageUrl = expresso.Common.getWsResourcePathURL() + "/welcomeMessage/" + welcomeMessage.id + "/file/" + welcomeMessage.fileName;
                                 $div.find(".message-file").append("<img src='" + imageUrl + "' alt=''>");
                             }
 

@@ -5,11 +5,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +25,7 @@ import javax.cache.spi.CachingProvider;
 import org.reflections.Reflections;
 
 import com.sgitmanagement.expresso.base.PersistenceManager;
+import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
@@ -36,11 +37,13 @@ import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
 
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
 
 public class NotificationService extends BaseEntityService<Notification> {
 	private static final Set<Class<? extends Notifiable>> notifiableServiceClasses;
+	private static final Map<String, Object> keyLocks = new ConcurrentHashMap<>();
+
 	private static final Cache<String, Object> notificationsCache;
-	private static final Map<String, String> syncKeyMap = Collections.synchronizedMap(new HashMap<>());
 	private static final boolean USE_CACHE = false;
 
 	static {
@@ -52,7 +55,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 		CachingProvider provider = Caching.getCachingProvider();
 		CacheManager cacheManager = provider.getCacheManager();
 
-		notificationsCache = cacheManager.createCache("notificationsCache",
+		notificationsCache = cacheManager.createCache("NotificationServiceCache",
 				new MutableConfiguration<String, Object>().setTypes(String.class, Object.class).setStoreByValue(false).setExpiryPolicyFactory(CreatedExpiryPolicy.factoryOf(Duration.ONE_MINUTE)));
 	}
 
@@ -135,25 +138,19 @@ public class NotificationService extends BaseEntityService<Notification> {
 	public Collection<Notification> getMyNotifications() throws Exception {
 		Collection<Notification> notifications = null;
 
+		final String key = getUser().getUserName();
 		if (USE_CACHE) {
 			// create a list with a lock because we do not want to retrieve the same notifications for
 			// the same user at the same time (this will cause a constraint error in the database)
-			String key = getUser().getUserName();
 			if (notificationsCache.get(key) == null) {
-				if (!syncKeyMap.containsKey(key)) {
-					syncKeyMap.put(key, key);
-				}
-
-				// if (SystemEnv.INSTANCE.isInProduction()) {
-				synchronized (syncKeyMap.get(key)) {
+				synchronized (keyLocks.computeIfAbsent(key, k -> k)) {
 					if (notificationsCache.get(key) == null) {
 						notifications = retrieveNotifications(getUser());
 
 						// do not keep the notifications in the cache (only the key)
-						notificationsCache.put(key, key /* notifications */);
+						notificationsCache.put(key, key);
 					}
 				}
-				// }
 			}
 
 			if (notifications == null) {
@@ -162,7 +159,9 @@ public class NotificationService extends BaseEntityService<Notification> {
 				notifications = list(new Query().setActiveOnly(true).addFilter(new Filter("notifiedUserId", getUser().getId())));
 			}
 		} else {
-			notifications = retrieveNotifications(getUser());
+			synchronized (keyLocks.computeIfAbsent(key, k -> k)) {
+				notifications = retrieveNotifications(getUser());
+			}
 		}
 
 		return notifications;
@@ -191,7 +190,6 @@ public class NotificationService extends BaseEntityService<Notification> {
 				@Override
 				public void run() {
 					// retrieve the notifications for the service
-
 					try {
 						NotificationService notificationService = newServiceStatic(NotificationService.class, Notification.class, user);
 
@@ -200,8 +198,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 						Notifiable notifiableService = notificationService.getNotifiableService(notifiableServiceClassName);
 
 						// do not use retrieveNotifications from the main thread, it needs to use the new session to
-						// avoid
-						// unsafe use of the session org.hibernate.AssertionFailure
+						// avoid unsafe use of the session org.hibernate.AssertionFailure
 						notifications.addAll(notificationService.retrieveNotifications(notifiableService, user));
 
 						// logger.debug("Got notification from [" + notifiableServiceClassName + "]");
@@ -255,12 +252,15 @@ public class NotificationService extends BaseEntityService<Notification> {
 		List<Notification> notifications = new ArrayList<>();
 
 		// get the notifications
-		List<Notification> notificationsFromService = notifiableService.getNotifications(getUser());
+		List<Notification> notificationsFromService = notifiableService.getNotifications(user);
 
 		// complete/merge notifications
 		for (Notification notification : notificationsFromService) {
 			// complete the notification
-			notification.setNotifiedUserId(getUser().getId());// notified to the current user
+			if (notification.getUserId() == null) {
+				notification.setUserId(user.getId());
+			}
+			notification.setNotifiedUserId(user.getId());// notified to the current user
 			notification.setNotifiableServiceClassName(notifiableService.getClass().getName());
 
 			// find the notification if already registered
@@ -270,6 +270,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 			filter.addFilter(new Filter("resourceExtKey", notification.getResourceExtKey()));
 			filter.addFilter(new Filter("userId", notification.getUserId()));
 			filter.addFilter(new Filter("notifiedUserId", notification.getNotifiedUserId()));
+			filter.addFilter(new Filter("resourceStatusPgmKey", notification.getResourceStatusPgmKey()));
 
 			try {
 				Notification foundNotification = get(filter);
@@ -285,6 +286,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 				foundNotification.setResourceUrl(notification.getResourceUrl());
 				foundNotification.setUserId(notification.getUserId());
 				foundNotification.setAvailableActions(notification.getAvailableActions());
+				foundNotification.setNotes(notification.getNotes());
 
 				// if deactivated, enable it
 				foundNotification.setDeactivationDate(null);
@@ -314,6 +316,33 @@ public class NotificationService extends BaseEntityService<Notification> {
 		}
 
 		return notifications;
+	}
+
+	/**
+	 * 
+	 * @param resourceName
+	 * @param resourceId
+	 * @param userId
+	 * @param action
+	 * @return
+	 * @throws Exception
+	 */
+	public Notification performAction(String resourceName, Integer resourceId, Integer userId, String action) throws Exception {
+		// find the notification
+		Query query = new Query().setActiveOnly(true);
+		query.addFilter(new Filter("resourceName", resourceName));
+		query.addFilter(new Filter("resourceId", resourceId));
+		query.addFilter(new Filter("notifiedUserId", userId));
+		try {
+			Notification notification = get(query);
+			return performAction(action, notification);
+		} catch (NoResultException ex) {
+			logger.warn("Cannot find the notifications [" + resourceName + ":" + resourceId + ":" + userId);
+			return null;
+		} catch (NonUniqueResultException ex) {
+			logger.warn("Found multiples notifications [" + resourceName + ":" + resourceId + ":" + userId);
+			return null;
+		}
 	}
 
 	/**
@@ -359,10 +388,31 @@ public class NotificationService extends BaseEntityService<Notification> {
 	}
 
 	public static void main(String[] args) throws Exception {
-		NotificationService service = newServiceStatic(NotificationService.class, Notification.class);
-		System.out.println(service.retrieveNotifications(service.newService(UserService.class, User.class).get(1)));
+		Thread[] threads = new Thread[10];
+		for (int i = 0; i < threads.length; i++) {
+			threads[i] = new Thread(new Runnable() {
 
-		PersistenceManager.getInstance().commitAndClose();
+				@Override
+				public void run() {
+					try {
+						final NotificationService service = newServiceStatic(NotificationService.class, Notification.class);
+						UserManager.getInstance().setUser(service.newService(UserService.class, User.class).get(1));
+						service.getMyNotifications();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+		}
+
+		for (int i = 0; i < threads.length; i++) {
+			threads[i].start();
+		}
+
+		for (int i = 0; i < threads.length; i++) {
+			threads[i].join();
+		}
+		// PersistenceManager.getInstance().commitAndClose();
 
 		System.out.println("Done");
 	}

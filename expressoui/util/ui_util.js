@@ -139,6 +139,12 @@ expresso.util.UIUtil = (function () {
                     case "expressodateselector":
                         widget = $element.data("kendoExpressoDateSelector");
                         break;
+                    case "expressopicturepicker":
+                        widget = $element.data("kendoExpressoPicturePicker");
+                        break;
+                    case "expressodocumentpicker":
+                        widget = $element.data("kendoExpressoDocumentPicker");
+                        break;
 
                     // Cezinc Widget (BACKWARD compatibility only)
                     case "cezincsingleselect":
@@ -1070,7 +1076,8 @@ expresso.util.UIUtil = (function () {
                     // console.log("Change DropDownTree", dataItem);
                 }
 
-                //console.log(bindNameId + " - Change value[" + value + "] data item", dataItem);
+                // console.log((bindNameId ? bindNameId + " - " : "") + "Change value[" + value + "] data item", dataItem);
+                highlightField($input, null, null, true);
 
                 var triggerChange = function (ev) {
                     if (resource && attName) {
@@ -1100,7 +1107,7 @@ expresso.util.UIUtil = (function () {
                     var _this = this;
                     var widget = getKendoWidget($input);
 
-                    //console.log(bindNameId + "We need to get the data item for the value[" + value + "]");
+                    // console.log(bindNameId + " - We need to get the data item for the value[" + value + "]");
                     expresso.Common.sendRequest(resourceURL + "/" + value, null, null, null, {
                         ignoreErrors: true,
                         waitOnElement: null
@@ -1109,6 +1116,13 @@ expresso.util.UIUtil = (function () {
                         dataItem = addDataItemToWidget(result, widget);
 
                         // then trigger the change
+                        triggerChange.call(_this, e);
+                    }).fail(function () {
+                        // not found
+                        // console.log("Id not found [" + value + "]. Setting null");
+
+                        _this.value(null);
+                        highlightField($input);
                         triggerChange.call(_this, e);
                     });
                 } else {
@@ -2017,7 +2031,7 @@ expresso.util.UIUtil = (function () {
                             expresso.Common.sendRequest(reference.resourcePath + "/verifyActionsRestrictions", null, null, {
                                 id: id,
                                 actions: "update"
-                            }).done(function (result) {
+                            }, {waitOnElement: null}).done(function (result) {
                                 if (result && result["update"]) {
                                     // keep the eye: pencil may be confusing
                                     //$icon.removeClass("fa-eye").addClass("fa-pencil");
@@ -2026,7 +2040,8 @@ expresso.util.UIUtil = (function () {
                         }
                     } else {
                         if (reference.allowCreate === true && expresso.Common.isUserAllowed(expresso.Common.getResourceSecurityPathFromPath(reference.resourcePath), "create")) {
-                            expresso.Common.sendRequest(reference.resourcePath + "/verifyCreationRestrictions").done(function (result) {
+                            expresso.Common.sendRequest(reference.resourcePath + "/verifyCreationRestrictions", null, null, null,
+                                {waitOnElement: null}).done(function (result) {
                                 if (result && result.allowed) {
                                     $icon.removeClass("fa-eye").addClass("fa-plus");
                                     $viewButton.removeClass("exp-ref-view-button").addClass("exp-ref-add-button");
@@ -2296,6 +2311,7 @@ expresso.util.UIUtil = (function () {
             $field.each(function () {
                 var el = this;
                 var $el = $(this);
+                // console.trace(el.name);
                 if (el.nodeName == "DIV" || el.nodeName == "FIELDSET") {
                     hide ? $el.hide() : $el.show();
                 } else if (supportInputWrap && $el.closest(".input-wrap").length) {
@@ -2447,6 +2463,76 @@ expresso.util.UIUtil = (function () {
                             }
                         }
                     }]
+                });
+            }
+        };
+
+        /**
+         *
+         * @param event
+         * @param $img
+         */
+        var showMaximizedPicture = function ($img, event) {
+            var $body = $("body");
+            var $window = $(window);
+            var windowHeight = $window.height();
+            var windowWidth = $window.width();
+            var margin = 16; // 1 em
+
+            var $overlay = $body.children(".exp-picture-overlay");
+            if (!$overlay.length) {
+                $overlay = $("<div class='exp-picture-overlay'><div><img class='exp-picture-full-size' src='' alt=''><span class='exp-close-button'>X</span></div></div>").appendTo($body);
+            }
+            var $imageOverlay = $overlay.find("img");
+
+            // if there is another path for full size, use it
+            var $imgParent;
+            var path = $img.data("originalSrc") ? $img.data("originalSrc") : $img.attr("src");
+            if (path.startsWith("http")) {
+                $imageOverlay.attr("src", path);
+            } else {
+                // uploaded image but not yet saved
+                // move the image to the overlay
+                $imgParent = $img.parent();
+                $imageOverlay.hide();
+                $overlay.append($img);
+            }
+
+            if (event) {
+                // display the maximized picture to the side of the cursor position
+                var x = event.clientX;
+                //var y = event.clientY;
+
+                var marginFromCursor = 50;
+                $overlay.removeClass("center");
+                $overlay.css("left", x + marginFromCursor);
+                $imageOverlay.css("max-width", windowWidth - x - marginFromCursor - margin);
+                $imageOverlay.css("max-height", windowHeight - 2 * margin);
+                $overlay.show();
+
+                // when the mouse leaves the thumbnail picture, hide the full size picture
+                $img.one("mouseleave", function () {
+                    $overlay.hide();
+                });
+
+            } else {
+                // display full screen with an X to close the overlay
+                $overlay.addClass("center");
+                $overlay.css("left", 0);
+                $imageOverlay.css("max-width", windowWidth - 2 * margin);
+                $imageOverlay.css("max-height", windowHeight - 2 * margin);
+                $overlay.css("display", "flex");
+                
+                // when the close button is click hide the full size picture
+                $overlay.find(".exp-close-button").show().one("click", function () {
+                    $(this).hide();
+                    $overlay.hide();
+
+                    if (!path.startsWith("http")) {
+                        // put back the image
+                        $imgParent.append($img);
+                        $imageOverlay.show();
+                    }
                 });
             }
         };
@@ -2760,7 +2846,9 @@ expresso.util.UIUtil = (function () {
 
             buildReportSelector: buildReportSelector,
             showNotification: showNotification,
-            showLoadingMask: showLoadingMask
+            showLoadingMask: showLoadingMask,
+
+            showMaximizedPicture: showMaximizedPicture
         };
     }()
 );

@@ -36,6 +36,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Formula;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -60,6 +61,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.LockModeType;
@@ -111,6 +113,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	private Field hierarchicalParentEntityField = null;
 
 	// for performance optimization
+	private String keyField = null;
 	private Boolean parentUpdatable = null;
 	private static final Map<Query, Object> creationQueryMap = Collections.synchronizedMap(new HashMap<>());
 
@@ -187,6 +190,16 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			// MySQL: if many thread tries to persist an object on the same table, all but one thread will persist and the others one will wait
 			getEntityManager().persist(e);
 			// logger.debug("Persisted [" + getTypeOfE().getSimpleName() + "]: " + e.getId());
+
+			// if there is a keyField and the keyField is null, set it to the ID
+			String keyField = getKeyField();
+			if (!keyField.equals("id")) {
+				Object keyValue = BeanUtils.getProperty(e, keyField);
+				if (keyValue == null) {
+					setProperty(e, keyField, formatKeyField(keyField, e.getId()));
+				}
+			}
+
 			if (refreshAfterMerge) {
 				flushAndRefresh(e);
 			}
@@ -205,7 +218,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 */
 	final public E getRef(I id) {
-		return getEntityManager().getReference(getTypeOfE(), id);
+		return getEntityManager(false).getReference(getTypeOfE(), id);
 	}
 
 	/**
@@ -216,14 +229,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	public E get(I id) {
 		if (id != null) {
-			return getEntityManager().find(getTypeOfE(), id);
+			return getEntityManager(false).find(getTypeOfE(), id);
 		} else {
 			return null;
 		}
 	}
 
 	final public E get(I id, boolean forUpdate) {
-		return getEntityManager().find(getTypeOfE(), id, LockModeType.PESSIMISTIC_WRITE);
+		return getEntityManager(false).find(getTypeOfE(), id, LockModeType.PESSIMISTIC_WRITE);
 	}
 
 	/**
@@ -672,6 +685,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		return (get(id) != null);
 	}
 
+	public E get(String keyFieldNo) throws Exception {
+		String keyField = getKeyField();
+		return get(new Filter(keyField, formatKeyField(keyField, keyFieldNo)));
+	}
+
 	final public E get(Filter filter) throws Exception {
 		return get(new Query(filter));
 	}
@@ -733,8 +751,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			query = verifyQuery(query);
 			// logger.debug("List query: " + new Gson().toJson(query));
 
+			EntityManager entityManager = getEntityManager(false);
+
 			// use the CriteriaBuilder to create the query
-			CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<E> q = cb.createQuery(getTypeOfE());
 			Root<E> root = q.from(getTypeOfE());
 			q.select(root);
@@ -742,24 +762,24 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			if (!query.hasFilters() && !query.hasSort() && query.getPageSize() == null) {
 				// use a simple query
 				// by default, sort by the id
-				q.orderBy(cb.desc(root.get(getKeyFields()[0])));
-				TypedQuery<E> typedQuery = getEntityManager().createQuery(q);
+				q.orderBy(cb.desc(root.get(getKeyField())));
+				TypedQuery<E> typedQuery = entityManager.createQuery(q);
 				return typedQuery.getResultList();
 			} else {
 				// create the query using filters, paging and sort
 
 				// this must be called first. It will set distinctNeeded
 				Map<String, Join<?, ?>> joinMap = new HashMap<>();
-				Predicate predicate = buildPredicates(cb, root, query.getFilter(), joinMap);
+				Predicate predicate = buildPredicates(cb, root, query.getFilter(), joinMap, true);
 
 				// sorts may also trigger a distinct select
 				List<Order> orders = new ArrayList<>();
 				if (query.getSort() != null && query.getSort().size() > 0 && !query.countOnly()) {
 					for (Sort sort : query.getSort()) {
 						if (sort.getDir() != null && sort.getDir().equals(Direction.asc)) {
-							orders.add(cb.asc(retrieveProperty(root, sort.getField(), joinMap)));
+							orders.add(cb.asc(retrieveProperty(root, sort.getField(), joinMap, true)));
 						} else {
-							orders.add(cb.desc(retrieveProperty(root, sort.getField(), joinMap)));
+							orders.add(cb.desc(retrieveProperty(root, sort.getField(), joinMap, true)));
 						}
 					}
 				}
@@ -797,7 +817,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// add the sort to the query
 				q.orderBy(orders);
 
-				TypedQuery<E> typedQuery = getEntityManager().createQuery(q);
+				TypedQuery<E> typedQuery = entityManager.createQuery(q);
 
 				if (query.getSkip() != null) {
 					typedQuery.setFirstResult(query.getSkip());
@@ -810,7 +830,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// This is mandatory to eagerly fetch the data using CriteriaBuilder
 				// jakarta.persistence.fetchgraph: all relationships are considered to be lazy regardless of annotation, and only the elements of the provided graph are loaded.
 				// jakarta.persistence.loadgraph: add lazy entities (eager entities are loaded as defined)
-				EntityGraph<E> entityGraph = getEntityManager().createEntityGraph(getTypeOfE());
+				EntityGraph<E> entityGraph = entityManager.createEntityGraph(getTypeOfE());
 				buildEntityGraph(entityGraph, getTypeOfE(), query, null);
 				typedQuery.setHint("jakarta.persistence.loadgraph", entityGraph);
 
@@ -1044,7 +1064,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 
 					// start transaction (if needed)
-					PersistenceManager.getInstance().startTransaction(getEntityManager());
+					PersistenceManager.getInstance().startTransaction(getEntityManager(true));
 
 					// create and commit for other process to see it
 					logger.debug("Creating on demand [" + query + "]");
@@ -1228,7 +1248,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 								// get the keyField from the other resource class
 								Class<?> entityClass = Util.findEntityClassByName(StringUtils.capitalize(resourceName));
-								keyField = Util.getField(entityClass, keyFieldName);
+								if (entityClass != null) {
+									keyField = Util.getField(entityClass, keyFieldName);
+								}
 							}
 
 							if (keyField != null) {
@@ -1276,7 +1298,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			query = verifyQuery(query);
 
 			// use the CriteriaBuilder to create the query
-			CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+			CriteriaBuilder cb = getEntityManager(false).getCriteriaBuilder();
 			CriteriaQuery<Long> q = cb.createQuery(Long.class);
 			Root<E> root = q.from(getTypeOfE());
 
@@ -1287,7 +1309,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// create the query using filters
 
 				// this must be called first. It will set distinctNeeded
-				Predicate predicate = buildPredicates(cb, root, query.getFilter(), new HashMap<String, Join<?, ?>>());
+				Predicate predicate = buildPredicates(cb, root, query.getFilter(), new HashMap<String, Join<?, ?>>(), false);
 				if (predicate != null) {
 					q.where(predicate);
 				}
@@ -1300,7 +1322,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			}
 
 			// count the total number of records
-			return getEntityManager().createQuery(q).getSingleResult();
+			return getEntityManager(false).createQuery(q).getSingleResult();
 		} catch (Exception ex) {
 			logger.error("Error executing count query[" + getResourceName() + "]: " + ex + " - " + new Gson().toJson(query));
 			throw ex;
@@ -1586,7 +1608,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * Give a change to subclass to define default sorts. Default is to sort on the first keyField
 	 */
 	protected Query.Sort[] getDefaultQuerySort() {
-		return new Query.Sort[] { new Query.Sort(getKeyFields()[0], Query.Sort.Direction.desc) };
+		return new Query.Sort[] { new Query.Sort(getKeyField(), Query.Sort.Direction.desc) };
 	}
 
 	/**
@@ -1594,7 +1616,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * the end of the order by clause
 	 */
 	protected Query.Sort[] getUniqueQuerySort() {
-		return new Query.Sort[] { new Query.Sort(getKeyFields()[0], Query.Sort.Direction.desc) };
+		return new Query.Sort[] { new Query.Sort(getKeyField(), Query.Sort.Direction.desc) };
 	}
 
 	/**
@@ -1614,6 +1636,18 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 		// if not defined, return id
 		return keyFields.toArray(new String[0]);
+	}
+
+	/**
+	 * Return the first keyField
+	 * 
+	 * @return
+	 */
+	protected String getKeyField() {
+		if (this.keyField == null) {
+			this.keyField = getKeyFields()[0];
+		}
+		return this.keyField;
 	}
 
 	/**
@@ -1683,7 +1717,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @throws Exception
 	 */
 	public String getResourceNo(E e) throws Exception {
-		return BeanUtils.getProperty(e, getKeyFields()[0]);
+		return BeanUtils.getProperty(e, getKeyField());
 	}
 
 	/**
@@ -1885,32 +1919,43 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param field
 	 * @return
 	 */
-	final private <T> Path<T> retrieveProperty(From<?, ?> join, String field, Map<String, Join<?, ?>> joinMap) {
+	final private <T> Path<T> retrieveProperty(From<?, ?> join, String field, Map<String, Join<?, ?>> joinMap, boolean fetch) {
 		Path<T> p = null;
 		if (field != null) {
 			try {
 				if (field.indexOf('.') != -1) {
 
 					String[] paths = field.split("\\.");
-					String joinString = null;
+					String joinString = "";
 					for (int i = 0; i < (paths.length - 1); i++) {
 						// s is a relation, not an attribute
 						String s = paths[i];
 
 						// verify if it is a collection
 						p = join.get(s);
-						if (Collection.class.isAssignableFrom(p.getJavaType())) {
+
+						// in Hibernate5: p.getJavaType() is Set for a OneToMany
+						// in Hibernate6: p.getJavaType() is the generic type in the Set for a OneToMany
+						if (Collection.class.isAssignableFrom(p.getJavaType()) || p instanceof SqmPluralValuedSimplePath /* || s.endsWith("s") */) {
 							distinctNeeded = true;
 						}
 
 						// verify if the join already exists
 						// reuse it if it exists
-						joinString += (joinString == null ? s : "." + s);
+						joinString += (joinString.length() == 0 ? s : "." + s);
+						// logger.debug("s [" + s + "] joinString [" + joinString + "]: " + joinMap.containsKey(joinString));
 						if (joinMap.containsKey(joinString)) {
 							join = joinMap.get(joinString);
 						} else {
 							// build the left join
-							join = join.join(s, JoinType.LEFT);
+							// fetch instead of join
+							// if we use .join(), it will create a new join instead of using the same
+							if (fetch) {
+								join = (Join<?, ?>) join.fetch(s, JoinType.LEFT);
+							} else {
+								// for count query, we use join
+								join = join.join(s, JoinType.LEFT);
+							}
 							joinMap.put(joinString, (Join<?, ?>) join);
 						}
 					}
@@ -1936,10 +1981,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		Operator op = filter.getOperator();
 		String opName = filter.getOperator().name().toLowerCase();
 
-		boolean caseSensitive = (boolean) getEntityManager().getProperties().get("expresso.case_sensitive");
-		String truncFunction = (String) getEntityManager().getProperties().get("expresso.trunc_date_function");
-		boolean emptyStringIsNull = (boolean) getEntityManager().getProperties().get("expresso.empty_string_is_null");
-		Integer inMaxValues = (Integer) getEntityManager().getProperties().get("expresso.in_max_values");
+		EntityManager entityManager = getEntityManager(false);
+		boolean caseSensitive = (boolean) entityManager.getProperties().get("expresso.case_sensitive");
+		String truncFunction = (String) entityManager.getProperties().get("expresso.trunc_date_function");
+		boolean emptyStringIsNull = (boolean) entityManager.getProperties().get("expresso.empty_string_is_null");
+		Integer inMaxValues = (Integer) entityManager.getProperties().get("expresso.in_max_values");
 
 		// handle all is [not] null cases here
 		if (filter.getValue() == null ||
@@ -2509,7 +2555,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				break;
 
 			case "Set":
-				// this is for many to many
+				// this is for many to many in Hibernate5
+				// it will not work in Hibernate6 as getJavaType will not return a Set, but the generic type
 				this.distinctNeeded = true;
 				Integer integerSetValue;
 				if (valueType.equals("Integer")) {
@@ -2597,7 +2644,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 * @throws Exception
 	 */
-	final private Predicate buildPredicates(CriteriaBuilder cb, From<?, ?> from, Filter filter, Map<String, Join<?, ?>> joinMap) throws Exception {
+	final private Predicate buildPredicates(CriteriaBuilder cb, From<?, ?> from, Filter filter, Map<String, Join<?, ?>> joinMap, boolean fetch) throws Exception {
 		Predicate predicate = null;
 
 		if (filter != null) {
@@ -2607,6 +2654,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					List<Predicate> restrictions = new ArrayList<>();
 
 					if (filter.getField() != null) {
+						logger.warn("Do we really need this special case:" + filter);
 						// this is a special case when we want to apply filters to the same join
 						from = from.join(filter.getField(), JoinType.INNER);
 						this.distinctNeeded = true;
@@ -2614,7 +2662,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 					// build predicates for each sub filters
 					for (Filter p : filter.getFilters()) {
-						Predicate subPredicate = buildPredicates(cb, from, p, joinMap);
+						Predicate subPredicate = buildPredicates(cb, from, p, joinMap, fetch);
 						if (subPredicate != null) {
 							restrictions.add(subPredicate);
 						}
@@ -2630,7 +2678,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				} else if (filter.getField() != null) {
 					// get the predicate for this field
-					predicate = getPredicate(cb, retrieveProperty(from, filter.getField(), joinMap), filter);
+					predicate = getPredicate(cb, retrieveProperty(from, filter.getField(), joinMap, fetch), filter);
 				}
 			} catch (AttributeNotFoundException ex) {
 				if (from == null || from.getJavaType() == null || filter == null || filter.getField() == null
@@ -2651,9 +2699,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	public String getLink(E e) throws Exception {
-		String keyField = getKeyFields()[0];
+		String keyField = getKeyField();
 		Object keyValue = BeanUtils.getProperty(e, keyField);
-		return SystemEnv.INSTANCE.getDefaultProperties().getProperty("base_url") + "#" + getApplicationName() + "(" + getKeyFields()[0] + "-" + keyValue + ")(" + e.getId() + ")";
+		return SystemEnv.INSTANCE.getDefaultProperties().getProperty("base_url") + "#" + getApplicationName() + "(" + getKeyField() + "-" + keyValue + ")(" + e.getId() + ")";
 	}
 
 	/**
@@ -2835,7 +2883,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			} else {
 				sb.append(",\n");
 				int width;
-				if (appClassField.getType() != null && appClassField.getType().equals("number") && appClassField.getReference() == null) {
+				if (field.equals("sortOrder")) {
+					width = 70;
+				} else if (field.equals("description")) {
+					width = 250;
+				} else if (appClassField.getType() != null && appClassField.getType().equals("number") && appClassField.getReference() == null) {
 					width = 100;
 				} else if (field.endsWith("No")) {
 					width = 80;
@@ -2862,7 +2914,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		sb.append("    // @override\n");
 		sb.append("    getMobileColumns: function () {\n");
 		sb.append("        return {\n");
-		sb.append("            mobileNumberFieldName: \"" + getKeyFields()[0] + "\",\n");
+		sb.append("            mobileNumberFieldName: \"" + getKeyField() + "\",\n");
 		sb.append("            mobileDescriptionFieldName: null,\n");
 		sb.append("            mobileTopRightFieldName: null,\n");
 		sb.append("            mobileMiddleLeftFieldName: null,\n");
@@ -2883,7 +2935,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 		// fields
 		for (String fieldName : appClassFieldMap.keySet()) {
-			if (fieldName.equals("deactivationDate")) {
+			if (fieldName.equals("deactivationDate") || fieldName.equals("sortOrder") || fieldName.equals("pgmKey") || fieldName.equals("description")) {
 				// skip
 			} else {
 				String field = fieldName;
@@ -2966,7 +3018,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		Map<String, ColumnMetaData> columnMap = new HashMap<>();
 
 		Class<?> c = getTypeOfE();
-		Connection connection = getConnection();
+		Connection connection = getConnection(false);
 		Table table = c.getAnnotation(Table.class);
 		if (table == null) {
 			// not an entity based
@@ -3440,6 +3492,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		try {
 			S service = serviceClass.getDeclaredConstructor().newInstance();
 			service.setTypeOfE(entityClass);
+
+			// always starts a transaction for a static service (usually from the main)
+			service.getEntityManager(true);
+
 			if (user == null) {
 				user = service.getSystemUser();
 			}

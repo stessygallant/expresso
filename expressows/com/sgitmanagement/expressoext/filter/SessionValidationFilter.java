@@ -167,7 +167,6 @@ public class SessionValidationFilter implements Filter {
 					// if SSO and user is in Active Directory, create the user in local database
 					try {
 						user = UserUtil.createUserFromActiveDirectory(authName);
-						logger.info("Created user [" + authName + "]");
 					} catch (Exception ex1) {
 						logger.warn("Cannot create user with userName [" + authName + "]");
 					}

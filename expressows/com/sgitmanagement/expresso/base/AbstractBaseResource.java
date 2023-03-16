@@ -75,7 +75,11 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 	}
 
 	final public EntityManager getEntityManager() {
-		return this.service.getEntityManager();
+		return getEntityManager(true);
+	}
+
+	final public EntityManager getEntityManager(boolean startTransaction) {
+		return this.service.getEntityManager(startTransaction);
 	}
 
 	final public PersistenceManager getPersistenceManager() {

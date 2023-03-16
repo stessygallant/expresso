@@ -4,13 +4,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
 public class SSHClient {
-	// static final private Logger logger = LoggerFactory.getLogger(SSHClient.class);
+	static final private Logger logger = LoggerFactory.getLogger(SSHClient.class);
 
 	static final private int COMMAND_TIMEOUT_MS = 1 * 60 * 1000; // 1 min
 	static final private int CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
@@ -219,6 +222,7 @@ public class SSHClient {
 			process.waitFor();
 			reachable = (process.exitValue() == 0);
 		} catch (Exception e) {
+			logger.warn("Cannot reach modem IP [" + ipAddress + "]");
 			throw new Exception("Cannot reach modem IP [" + ipAddress + "]: " + e.getMessage());
 		} finally {
 			if (process != null) {

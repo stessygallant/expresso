@@ -58,25 +58,25 @@ public enum ReportUtil {
 		return file;
 	}
 
-	public void executeReport(User user, String reportName, String fileName, Map<String, String> formParams, HttpServletResponse httpServletResponse, OutputStream os) {
+	public void executeReport(User user, String reportName, String fileName, Map<String, String> reportParams, HttpServletResponse httpServletResponse, OutputStream os) {
 		try {
 			if (reportName == null) {
-				reportName = formParams.get("reportName");
+				reportName = reportParams.get("reportName");
 			}
 
 			// add standard params
-			if (formParams == null) {
-				formParams = new HashMap<>();
+			if (reportParams == null) {
+				reportParams = new HashMap<>();
 			}
-			String format = getFormat(formParams);
-			formParams.put("__format", format);
-			formParams.put("__report", "report/" + BIRT_REPORT_FOLDER + "/" + reportName + ".rptdesign");
-			formParams.put("user", user.getFullName());
-			formParams.put("userId", "" + user.getId());
+			String format = getFormat(reportParams);
+			reportParams.put("__format", format);
+			reportParams.put("__report", "report/" + BIRT_REPORT_FOLDER + "/" + reportName + ".rptdesign");
+			reportParams.put("user", user.getFullName());
+			reportParams.put("userId", "" + user.getId());
 
 			// execute the report
 			URIBuilder uriBuilder = new URIBuilder(BIRT_URL);
-			for (Map.Entry<String, String> entry : formParams.entrySet()) {
+			for (Map.Entry<String, String> entry : reportParams.entrySet()) {
 				uriBuilder.addParameter(entry.getKey(), entry.getValue());
 			}
 
@@ -115,8 +115,7 @@ public enum ReportUtil {
 
 			});
 		} catch (IOException e) {
-			// Caused by: java.io.IOException: An established connection was aborted by the software in your host
-			// machine
+			// Caused by: java.io.IOException: An established connection was aborted by the software in your host machine
 			// ignore
 		} catch (Exception e) {
 			throw new BaseException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error executing report", e);

@@ -1,10 +1,14 @@
 package com.sgitmanagement.expressoext.base;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.sgitmanagement.expresso.base.AbstractBaseEntityResource;
 import com.sgitmanagement.expressoext.security.User;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 /**
  * Methods allowed on an entity<br>
@@ -16,6 +20,16 @@ import jakarta.servlet.http.HttpServletResponse;
 public abstract class BaseEntityResource<E extends BaseEntity, S extends BaseEntityService<E>> extends AbstractBaseEntityResource<E, S, User, Integer> {
 	public BaseEntityResource(Class<E> typeOfE, HttpServletRequest request, HttpServletResponse response) {
 		super(typeOfE, request, response);
+	}
 
+	public void download(MultivaluedMap<String, String> formParams) throws Exception {
+		E e = get(getId());
+		Map<String, String> reportParams = new HashMap<>();
+		getService().download(e, reportParams, getResponse());
+	}
+
+	public void print(MultivaluedMap<String, String> formParams) throws Exception {
+		E e = get(getId());
+		getService().print(e);
 	}
 }

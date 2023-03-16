@@ -52,19 +52,15 @@ public class DocumentService extends BaseFileService<Document> {
 		return rootPath + File.separator + resourceName + File.separator + resourceId;
 	}
 
-	private void verifyUserPrivileges(Document document) throws ForbiddenException {
+	private void verifyUserPrivileges(Document document, String action) throws ForbiddenException {
 		if (document == null) {
 			logger.error("Cannot validate document privileges: document is null");
 			throw new ForbiddenException();
 		} else {
 			try {
+				// verify if the user can perform this action on this resource
 				Resource resource = newService(ResourceService.class, Resource.class).get(document.getResourceName());
-
-				// the permission read must be allowed on getResourceSecurityPath/document
-				super.verifyUserPrivileges("read", resource.getSecurityPath() + "/document");
-
-				// verify if the user can read this resource
-				super.verifyUserPrivileges("read", resource.getSecurityPath(), resource.getName(), document.getResourceId());
+				super.verifyUserPrivileges(action, resource.getSecurityPath() + "/document", document.getResourceName(), document.getResourceId());
 			} catch (ForbiddenException ex) {
 				throw ex;
 			} catch (Exception ex) {
@@ -77,7 +73,7 @@ public class DocumentService extends BaseFileService<Document> {
 	@Override
 	public void downloadFile(HttpServletResponse response, Document document, boolean thumbnail) throws Exception {
 		// verify if the user has the privilege to read this resource
-		verifyUserPrivileges(document);
+		verifyUserPrivileges(document, "read");
 		super.downloadFile(response, document, thumbnail);
 	}
 
@@ -90,7 +86,7 @@ public class DocumentService extends BaseFileService<Document> {
 			Document document;
 			if (documents.size() == 1) {
 				document = documents.get(0);
-				verifyUserPrivileges(document);
+				verifyUserPrivileges(document, "read");
 				return document;
 			} else {
 				throw new NoResultException();
@@ -105,7 +101,7 @@ public class DocumentService extends BaseFileService<Document> {
 			Integer id = Integer.parseInt("" + query.getFilter("id").getValue());
 			List<Document> documents = new ArrayList<>();
 			Document document = get(id);
-			verifyUserPrivileges(document);
+			verifyUserPrivileges(document, "read");
 			documents.add(document);
 			return documents;
 		} else if (query.getFilter("resourceName") != null) {
@@ -142,24 +138,28 @@ public class DocumentService extends BaseFileService<Document> {
 	@Override
 	public void delete(Integer id) throws Exception {
 		Document document = get(id);
-		// user can only delete its own document
-		if (!getUser().getId().equals(document.getCreationUserId()) && !isUserAdmin()) {
-			throw new ForbiddenException("User [" + getUser().getUserName() + "] is not allowed to delete the document from another user for [" + document.getResourceName() + "]");
-		}
+		Resource resource = newService(ResourceService.class, Resource.class).get(document.getResourceName());
+		verifyUserPrivileges("delete", resource.getSecurityPath() + "/document");
 		super.delete(id);
 	}
 
 	@Override
 	public void verifyActionRestrictions(String action, Document document) {
 		boolean allowed = false;
-		switch (action) {
-		case "delete":
-		case "update":
-			if (document != null) {
-				verifyUserPrivileges(document);
+		if (document != null) {
+			switch (action) {
+			case "delete":
+				verifyUserPrivileges(document, "delete");
+				if (getUser().getId().equals(document.getCreationUserId()) || isUserAdmin()) {
+					allowed = true;
+				}
+				break;
+
+			case "update":
+				verifyUserPrivileges(document, "update");
 				allowed = true;
+				break;
 			}
-			break;
 		}
 
 		if (!allowed) {

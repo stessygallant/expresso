@@ -8,6 +8,11 @@ expresso.applications.general.requiredapprovalmanager.Grid = expresso.layout.res
         var resourceManagerDef;
         if (this.resourceManager.options.filter && this.resourceManager.options.filter.resourceName) {
             resourceManagerDef = this.resourceManager.options.filter.resourceName.capitalize() + "Manager";
+            var app = expresso.Common.getApplication(resourceManagerDef);
+            console.log("resourceManagerDef [" + resourceManagerDef + "]");
+            if (!(app && app.application)) {
+                resourceManagerDef = null;
+            }
         }
         var columns = [{
             field: "requiredApprovalStatusId",
@@ -22,7 +27,7 @@ expresso.applications.general.requiredapprovalmanager.Grid = expresso.layout.res
             hidden: true
         }, {
             field: "resourceNo",
-            width: 90,
+            width: 100,
             reference: {
                 fieldName: "resourceId",
                 resourceManagerDef: resourceManagerDef
@@ -39,6 +44,9 @@ expresso.applications.general.requiredapprovalmanager.Grid = expresso.layout.res
             width: 200,
             template: "#= fmtResourceFieldName #",
             filterable: false
+        }, {
+            field: "additionnalInfo",
+            width: 150
         }, {
             field: "oldValue",
             width: 150

@@ -83,18 +83,22 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		BaseEntityService service = getService(requiredApproval);
 		BaseEntity entity = getEntity(requiredApproval);
 
-		// because we can approve multiple request for the same entity at the same time
-		service.lock(entity);
+		// global synchronized on the service class
+		synchronized (service.getClass()) {
+			// because we can approve multiple request for the same entity at the same time
+			service.lock(entity);
 
-		Field field = getField(entity, requiredApproval);
-		if (requiredApproval.getNewValueReferenceId() != null) {
-			field.set(entity, requiredApproval.getNewValueReferenceId());
-		} else {
-			field.set(entity, Util.convertValue(requiredApproval.getNewValue(), field.getType().getName()));
+			Field field = getField(entity, requiredApproval);
+			if (requiredApproval.getNewValueReferenceId() != null) {
+				field.set(entity, requiredApproval.getNewValueReferenceId());
+			} else {
+				field.set(entity, Util.convertValue(requiredApproval.getNewValue(), field.getType().getName()));
+			}
+			service.update(entity);
+
+			requiredApproval = super.update(requiredApproval);
+			commit();
 		}
-		service.update(entity);
-
-		requiredApproval = super.update(requiredApproval);
 		sendEmail(requiredApproval, "ra-approved");
 		return requiredApproval;
 	}

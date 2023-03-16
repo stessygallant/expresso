@@ -41,10 +41,20 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	}
 
 	final public EntityManager getEntityManager() {
+		return getEntityManager(true);
+	}
+
+	final public EntityManager getEntityManager(boolean startTransaction) {
 		if (this.entityManager == null) {
 			// logger.debug(getClass().getSimpleName() + " Getting new EntityManager");
-			this.entityManager = getPersistenceManager().getEntityManager(getPersistenceUnit());
+			this.entityManager = getPersistenceManager().getEntityManager(getPersistenceUnit(), startTransaction);
+		} else {
+			if (startTransaction) {
+				// start the transaction if not started
+				getPersistenceManager().startTransaction(this.entityManager);
+			}
 		}
+
 		return this.entityManager;
 	}
 
@@ -126,12 +136,12 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 		process((MultivaluedMap<String, String>) null);
 	}
 
-	public void process(String section) throws Exception {
+	public void process(String operation) throws Exception {
 		// by default, do nothing
 	}
 
 	public void process(MultivaluedMap<String, String> formParams) throws Exception {
-		// if not overwritten, call the former process(section)
+		// if not overwritten, call the former process(operation)
 		process(formParams != null ? formParams.getFirst("section") : (String) null);
 	}
 
@@ -158,7 +168,11 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	 * @return
 	 */
 	public Connection getConnection() {
-		return getConnection(getEntityManager());
+		return getConnection(true);
+	}
+
+	public Connection getConnection(boolean startTransaction) {
+		return getConnection(getEntityManager(startTransaction));
 	}
 
 	/**

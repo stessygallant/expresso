@@ -1,4 +1,36 @@
-<link href="expresso/applications/general/notification/notificationviewer/app.css?ver=1" rel="stylesheet"/>
+<link href="expresso/applications/general/notification/notificationviewer/app.css?ver=4" rel="stylesheet"/>
 
 <div class="notifications">
+    <div class="notification-template hidden">
+        <div class="notification">
+            <div class="header clear">
+                <div class="resource-no">#=resourceNo#</div>
+                <div class="buttons"></div>
+                <div class="notes">#=notes#</div>
+            </div>
+
+            <div class="description">
+                #=description#
+            </div>
+
+            <div class="footer">
+                <div class="resource-status">
+                    <span class="title" data-text-key="requestedStatus"></span>
+                    <span class="data">#=resourceStatusLabel#</span>
+                </div>
+                <div class="requested-date">
+                    <span class="title" data-text-key="requestedDate"></span>
+                    <span class="data">#=requestedDate#</span>
+                </div>
+                <div class="requester-user">
+                    <span class="title" data-text-key="requesterUser"></span>
+                    <span class="data">#=requesterUser.fullName#</span>
+                </div>
+                <div class="user">
+                    <span class="title" data-text-key="user"></span>
+                    <span class="data">#=user.fullName#</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

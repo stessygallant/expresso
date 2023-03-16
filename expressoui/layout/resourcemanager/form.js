@@ -50,7 +50,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             this.previewHeightRatio = 0.3;
         }
 
-        // Kendo UI needs that the checkbox be added before it opens the form
+        // parse the form versus model
         if (this.resourceManager && this.resourceManager.model) {
             var model = this.resourceManager.model;
             $domElement.find(":input").each(function () {
@@ -58,18 +58,21 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 var name = $this.attr("name");
                 if (name) {
                     var field = model.fields[name];
+                    if (field) {
 
-                    if (field && field.type == "boolean") {
-                        if (!$this.attr("type")) {
-                            $this.attr("type", "checkbox");
+                        // Kendo UI needs that the checkbox be added before it opens the form
+                        if (field.type == "boolean") {
+                            if (!$this.attr("type")) {
+                                $this.attr("type", "checkbox");
+                            }
+
+                            // if this is a boolean, data-bind should be checked: and not value:
+                            // var dataBind = $this.attr("data-bind");
+                            // if (dataBind && dataBind.indexOf("checked:") == -1) {
+                            //     dataBind += ",checked:" + dataBind.substring("value:".length);
+                            //     $this.attr("data-bind", dataBind);
+                            // }
                         }
-
-                        // if this is a boolean, data-bind should be checked: and not value:
-                        // var dataBind = $this.attr("data-bind");
-                        // if (dataBind && dataBind.indexOf("checked:") == -1) {
-                        //     dataBind += ",checked:" + dataBind.substring("value:".length);
-                        //     $this.attr("data-bind", dataBind);
-                        // }
                     }
                 }
             });
@@ -263,7 +266,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     $readOnlyDeferred.resolve(!allowed);
                 })
                 .fail(function () {
-                    // this happen when the request is rejected because there is another request made
+                    // this happens when the request is rejected because there is another request made
                     // perform the request directly
                     _this.sendRequest(_this.resourceManager.getRelativeWebServicePath() + "/verifyActionsRestrictions", null, null,
                         {
@@ -445,9 +448,9 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             window.setTimeout(function () {
                 if (_this.$window && _this.$window.find(".exp-loading-mask[data-mask-id=formSaveAction]").length) {
                     console.warn("Missing remove loading mask!");
-                    expresso.util.UIUtil.showLoadingMask(_this.$window, false, "formSaveAction");
+                    //expresso.util.UIUtil.showLoadingMask(_this.$window, false, "formSaveAction");
                 }
-            }, 10000);
+            }, 30000);
         });
     },
 
@@ -525,8 +528,21 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                             $saveDeferred = $.Deferred().resolve(resource);
                         }
 
-                        $saveDeferred
-                            .done(function (resource) {
+                        // WAIT FOR SAVE
+                        $saveDeferred.done(function (resource) {
+                            // validate the resource for the action
+                            var $validateDeferred = _this.validateResource($window, resource, action.pgmKey);
+                            if ($validateDeferred === true || $validateDeferred === undefined) {
+                                // ok
+                                $validateDeferred = $.Deferred().resolve(null);
+                            } else if ($validateDeferred === false) {
+                                $validateDeferred = $.Deferred().reject();
+                            } else {
+                                // assume a promise
+                            }
+
+                            // WAIT FOR VALIDATE
+                            $validateDeferred.done(function () {
                                 var $windowDeferred;
                                 if (action.reasonRequested) {
                                     // display a window to enter a reason
@@ -545,59 +561,50 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                                         $windowDeferred = result;
                                     }
                                 } else {
-                                    // validate the resource for the action
-                                    var $validateDeferred = _this.validateResource($window, resource, action.pgmKey);
-                                    if ($validateDeferred === true || $validateDeferred === undefined) {
-                                        // ok
-                                        $windowDeferred = $.Deferred().resolve(null);
-                                    } else if ($validateDeferred === false) {
-                                        $windowDeferred = $.Deferred().reject();
-                                    } else {
-                                        // assume a promise
-                                        $windowDeferred = $validateDeferred;
-                                    }
+                                    // ok
+                                    $windowDeferred = $.Deferred().resolve(null);
                                 }
 
-                                $windowDeferred
-                                    .done(function (data) {
-                                        // console.log("FORM - performAction - " + _this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]:" + action.name);
+                                // WAIT FOR beforePerformAction
+                                $windowDeferred.done(function (data) {
+                                    // console.log("FORM - performAction - " + _this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]:" + action.name);
 
-                                        action.performAction.call(_this.resourceManager, resource, data)
-                                            .done(function (updatedResource) {
-                                                if (updatedResource && updatedResource.id == resource.id) {
-                                                    // refresh only the resource
-                                                    _this.resourceManager.sections.grid.updateResource(resource, updatedResource);
-                                                }
-                                                if (_this.closedDeferred) {
-                                                    _this.closedDeferred.resolve(updatedResource);
-                                                    _this.closedDeferred = null;
-                                                }
-                                                _this.close();
+                                    action.performAction.call(_this.resourceManager, resource, data)
+                                        .done(function (updatedResource) {
+                                            if (updatedResource && updatedResource.id == resource.id) {
+                                                // refresh only the resource
+                                                _this.resourceManager.sections.grid.updateResource(resource, updatedResource);
+                                            }
+                                            if (_this.closedDeferred) {
+                                                _this.closedDeferred.resolve(updatedResource);
+                                                _this.closedDeferred = null;
+                                            }
+                                            _this.close();
 
-                                                if (action.afterPerformAction) {
-                                                    action.afterPerformAction.call(_this.resourceManager, resource);
-                                                }
+                                            if (action.afterPerformAction) {
+                                                action.afterPerformAction.call(_this.resourceManager, resource);
+                                            }
 
-                                                if (_this.resourceManager.sections.preview) {
-                                                    _this.resourceManager.sections.preview.forceRefresh();
-                                                }
-                                            })
-                                            .always(function () {
-                                                expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
-                                            });
-                                    })
-                                    .fail(function () {
+                                            if (_this.resourceManager.sections.preview) {
+                                                _this.resourceManager.sections.preview.forceRefresh();
+                                            }
+                                        }).always(function () {
                                         expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
                                     });
-                            })
-                            .fail(function () {
+                                }).fail(function () {
+                                    expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
+                                });
+                            }).fail(function () {
                                 expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
-                            })
+                            });
+                        }).fail(function () {
+                            expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
+                        })
                     });
                 }
             });
 
-            // now selec by default the first one if no one is default
+            // now select by default the first one if no one is default
             window.setTimeout(function () {
                 //console.log("Primary button is [" + $window.find(".k-edit-buttons .k-button.k-primary:visible").text() + "]");
                 if (!$window.find(".k-edit-buttons .k-button.k-primary:visible").length) {
@@ -963,6 +970,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @return {boolean|promise} false if you want to cancel the save.
      */
     validateResource: function ($window, resource, action) {
+        // console.log("validateResource [" + resource + "] [" + action + "]");
+
         var valid = true;
         var _this = this;
 
@@ -971,13 +980,15 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         // verify email
         $window.find("input[data-type=email]").each(function () {
-            var email = this.value || "";
-            var re = /\S+@\S+\.\S+/;
-            if (!(re.test(email)) || email.trim() != email) {
-                $(this).addClass("exp-invalid");
-                valid = false;
-                //console.log("email: [" + email + "] is not valid");
-                expresso.util.UIUtil.buildMessageWindow(_this.getLabel("emailNotValid"));
+            var email = this.value;
+            if (email) {
+                var re = /\S+@\S+\.\S+/;
+                if (!(re.test(email)) || email.trim() != email) {
+                    $(this).addClass("exp-invalid");
+                    valid = false;
+                    //console.log("email: [" + email + "] is not valid");
+                    expresso.util.UIUtil.buildMessageWindow(_this.getLabel("emailNotValid"));
+                }
             }
         });
 
@@ -1009,7 +1020,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     })
                     .fail(function () {
                         // console.log("Some uniqueConstraintsValidated failed");
-                        // expresso.util.UIUtil.buildMessageWindow("Certains champs ont des contraintes uniques non respectées");
                     });
             }
         }
@@ -1043,23 +1053,28 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             if (this.$window) {
                 this.$window.find(".exp-grid-inline").each(function () {
                     var inlineGridResourceManager = $(this).data("resourceManager");
-                    // console.log("FORM - onSaved - inlineGrid " + inlineGridResourceManager.resourceName);
 
-                    // set the current resource
-                    inlineGridResourceManager.masterResourceManager.currentResource = resource;
+                    // it may happen than the resource manager is not yet loading when the user close the window
+                    // in this case, there can not be any change, so skip the sync
+                    if (inlineGridResourceManager) {
+                        // console.log("FORM - onSaved - inlineGrid " + inlineGridResourceManager.resourceName);
 
-                    // for each dataItem, we need to set the masterIdProperty
-                    var dataSource = $(this).children(".k-grid").data("kendoGrid").dataSource;
-                    $.each(dataSource.data(), function () {
-                        var dataItem = this;
-                        if (!dataItem[inlineGridResourceManager.model.masterIdProperty] ||
-                            dataItem[inlineGridResourceManager.model.masterIdProperty] == -1) {
-                            dataItem.set(inlineGridResourceManager.model.masterIdProperty, resource.id);
-                        }
-                    });
+                        // set the current resource
+                        inlineGridResourceManager.masterResourceManager.currentResource = resource;
 
-                    // this will automatically sync (no need for dataSource.sync())
-                    dataSource.online(true);
+                        // for each dataItem, we need to set the masterIdProperty
+                        var dataSource = $(this).children(".k-grid").data("kendoGrid").dataSource;
+                        $.each(dataSource.data(), function () {
+                            var dataItem = this;
+                            if (!dataItem[inlineGridResourceManager.model.masterIdProperty] ||
+                                dataItem[inlineGridResourceManager.model.masterIdProperty] == -1) {
+                                dataItem.set(inlineGridResourceManager.model.masterIdProperty, resource.id);
+                            }
+                        });
+
+                        // this will automatically sync (no need for dataSource.sync())
+                        dataSource.online(true);
+                    }
                 });
             }
 
@@ -1328,7 +1343,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 }
             });
         } else {
-            $window.find("[type=file]").each(function () {
+            $window.find("[type=file]:visible").each(function () {
                 var $input = $(this);
                 expresso.util.UIUtil.hideField($input);
             });

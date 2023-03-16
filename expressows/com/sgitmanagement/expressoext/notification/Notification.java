@@ -33,6 +33,9 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 	@Column(name = "resource_ext_key")
 	private String resourceExtKey;
 
+	@Column(name = "resource_status_pgm_key")
+	private String resourceStatusPgmKey;
+
 	@Column(name = "resource_url")
 	private String resourceUrl;
 
@@ -42,11 +45,14 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 	@Column(name = "description")
 	private String description;
 
+	@Column(name = "notes")
+	private String notes;
+
 	@Column(name = "avail_actions")
 	private String availableActions;
 
 	/*
-	 * The <user> is the person implied in the notification <br> The <notifiedUser> is the person who received the notification (may be the same as user or by delegation)
+	 * The <user> is the person responsible
 	 */
 	@Column(name = "user_id")
 	private Integer userId;
@@ -55,6 +61,7 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 	@JoinColumn(name = "user_id", insertable = false, updatable = false)
 	private User user;
 
+	// The <notifiedUser> is the person who received the notification (may be the same as user or by delegation)
 	@Column(name = "notified_user_id")
 	private Integer notifiedUserId;
 
@@ -250,5 +257,21 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 		return "Notification [resourceName=" + resourceName + ", resourceId=" + resourceId + ", resourceNo=" + resourceNo + ", resourceExtKey=" + resourceExtKey + ", resourceUrl=" + resourceUrl
 				+ ", serviceDescription=" + serviceDescription + ", description=" + description + ", availableActions=" + availableActions + ", userId=" + userId + ", notifiedUserId=" + notifiedUserId
 				+ ", requestedDate=" + requestedDate + ", requesterUserId=" + requesterUserId + "]";
+	}
+
+	public String getResourceStatusPgmKey() {
+		return resourceStatusPgmKey;
+	}
+
+	public void setResourceStatusPgmKey(String resourceStatusPgmKey) {
+		this.resourceStatusPgmKey = resourceStatusPgmKey;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 }

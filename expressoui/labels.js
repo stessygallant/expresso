@@ -223,7 +223,7 @@ $.extend(expresso.Labels, {
     activateRecords: "Activer les enregistrements sélectionnés",
     deactivateRecords: "Désactiver les enregistrements sélectionnés",
     printButtonTitle: "Imprimer les enregistrements sélectionnés",
-    downloadButtonTitle: "Télécharger les enregistrements sélectionnés",
+    downloadButtonTitle: "Télécharger les rapports PDFs des enregistrements sélectionnés",
     sendEmail: "Envoyer un courriel aux enregistrements sélectionnés",
     uploadDocument: "Télécharger un fichier (drag&drop)",
     showActiveRecords: "Afficher seulement les enregistrements actifs",
@@ -255,7 +255,7 @@ $.extend(expresso.Labels, {
     deactivateRecordsButton: "",
     modifyRecordButton: "",
     printButtonLabel: "",
-    downloadButtonLabel: "",
+    downloadButtonLabel: "PDF",
     sendEmailButton: "",
     uploadDocumentButton: "",
     showActiveRecordsButton: "Actifs seulement",
@@ -412,7 +412,16 @@ $.extend(expresso.Labels, {
     sourceFilter: "Code source",
 
     // Notifications
-    notifications: "Vous avez {quantity} notification(s) en attente",
+    notifications: "Vous avez {quantity} notification(s) en attente.",
+    newNotifications: "Vous avez {quantity} nouvelle(s) notification(s).",
+
+    // photo
+    deletePictureWindowTitle: "Confirmation",
+    deletePicture: "Êtes-vous sûr de vouloir effacer cette photo ?",
+
+    // document
+    deleteDocumentWindowTitle: "Confirmation",
+    deleteDocument: "Êtes-vous sûr de vouloir effacer ce document ?",
 
     _: ""
 });

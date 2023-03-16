@@ -9,8 +9,8 @@ public interface IBaseType extends IEntity<Integer>, Deactivable {
 
 	public void setPgmKey(String pgmKey);
 
-	public Integer getSortOrder();
+	public int getSortOrder();
 
-	public void setSortOrder(Integer sortOrder);
+	public void setSortOrder(int sortOrder);
 
 }

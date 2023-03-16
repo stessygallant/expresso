@@ -542,7 +542,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
         // avoid issue with hierarchical
         this.options.autoEdit = true;
-        
+
         var $deferred = $.Deferred();
         this.isReady().done(function () {
             if (resource && !resource.id) {
@@ -691,7 +691,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
      * Request the server to verify if the available actions are restricted
      */
     verifyActionsRestrictions: function () {
-        //console.log(this.getResourceSecurityPath() + " verifyActionsRestrictions");
+        // console.log(this.getResourceSecurityPath() + " verifyActionsRestrictions");
         if (this.availableActionsPromise && this.availableActionsPromise.state() == "pending") {
             // it is not pertinent anymore. A new selection has been made
             //console.log(this.getResourceSecurityPath() + " Rejecting previous promise");
@@ -859,6 +859,10 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
                     if (!action.pgmKey) {
                         action.pgmKey = action.name;
+                    }
+
+                    if (!action.securityActionPgmKey) {
+                        action.securityActionPgmKey = action.pgmKey;
                     }
 
                     // skip the action if the user is not allowed

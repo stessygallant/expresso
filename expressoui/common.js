@@ -435,22 +435,42 @@ expresso.Common = (function () {
      * @param resourceName
      * @param ids one id or comma separated list of ids
      */
+        // @Deprecated
     var sendPrintRequest = function (url, resourceName, ids) {
-        var action = "print";
+            var action = "print";
 
-        if (ids && !$.isArray(ids) && $.isNumeric(ids)) {
-            ids = [ids];
-        }
+            if (ids && !$.isArray(ids) && $.isNumeric(ids)) {
+                ids = [ids];
+            }
 
-        if (ids && ids.length > 0 && isUserAllowed(resourceName, action, true)) {
-            //console.log("Printing " + resourceName + " [" + ids.join(",") + "]");
-            var target = "_blank";
-            url += "/" + action + "?ids=" + ids.join(",");
+            if (ids && ids.length > 0 && isUserAllowed(resourceName, action, true)) {
+                //console.log("Printing " + resourceName + " [" + ids.join(",") + "]");
+                var target = "_blank";
+                url += "/" + action + "?ids=" + ids.join(",");
 
-            var $href = $("<a href='" + url + "' target='" + target + "' hidden></a>");
-            $href.appendTo("body")[0].click();
-            $href.remove();
-        }
+                var $href = $("<a href='" + url + "' target='" + target + "' hidden></a>");
+                $href.appendTo("body")[0].click();
+                $href.remove();
+            }
+        };
+
+    /**
+     *
+     * @param url web service path to the resource
+     */
+    var sendDownloadRequest = function (url) {
+        var action = "download";
+        var target = "_blank";
+        var format = "pdf";
+        url += (url.indexOf("?") == -1 ? "?" : "&") + "action=" + action;
+
+        // help the browser to guess the document format
+        url += "&_=" + new Date().getTime() + "&_format=." + format;
+
+        console.log("Download [" + url + "]");
+        var $href = $("<a href='" + url + "' target='" + target + "' hidden></a>");
+        $href.appendTo("body")[0].click();
+        $href.remove();
     };
 
     /**
@@ -941,6 +961,7 @@ expresso.Common = (function () {
         }
 
         if ($domElement) {
+            // console.log("Send request loading mask [" + path + "]");
             expresso.util.UIUtil.showLoadingMask($domElement, true);
         }
 
@@ -1392,26 +1413,25 @@ expresso.Common = (function () {
 
     /**
      *
+     * @param appName
      * @param title
-     * @param appDef
      * @param options
      * @returns {*}
      */
-    var displayApplication = function (title, appDef, options) {
-        var _this = this;
+    var displayApplication = function (appName, title, options) {
         var $deferred = $.Deferred();
 
         var appInstance;
-        expresso.util.UIUtil.buildWindow("<div class='notification-application-div'></div>", {
+        expresso.util.UIUtil.buildWindow("<div class='" + appName + "-application-div'></div>", {
             // width: "max",
             height: "max",
-            title: title,
+            title: title || "",
             saveButtonLabel: expresso.Common.getLabel("close"),
             open: function () {
                 var $windowDiv = $(this);
-                var $div = $windowDiv.find(".notification-application-div");
+                var $div = $windowDiv.find("." + appName + "-application-div");
                 $div.css("height", "100%");
-                expresso.Common.loadApplication(appDef, options, $div).done(function (application) {
+                expresso.Common.loadApplication(appName, options, $div).done(function (application) {
                     appInstance = application;
                     appInstance.render(true);
                 });
@@ -1438,24 +1458,24 @@ expresso.Common = (function () {
         if (url.indexOf('#') != -1 && url.indexOf('(') != -1 && url.indexOf('-') != -1 && url.indexOf(')') != -1) {
             // url format: baseUrl#<application>(<keyField>-<keyValue>)
             var s = url.substring(url.indexOf('#') + 1);
-            var application = s.substring(0, s.indexOf("("));
+            var appName = s.substring(0, s.indexOf("("));
             var keyField = s.substring(s.indexOf("(") + 1, s.indexOf("-"));
             var keyValue = s.substring(s.indexOf("-") + 1, s.indexOf(")"));
             var id = s.substring(s.lastIndexOf("(") + 1, s.lastIndexOf(")"));
 
             // display application
-            console.log("[" + application + "] [" + keyField + "] [" + keyValue + "] [" + id + "]");
+            console.log("[" + appName + "] [" + keyField + "] [" + keyValue + "] [" + id + "]");
 
-            if (application.endsWith("Manager")) {
+            if (appName.endsWith("Manager")) {
                 // display Form
                 $deferred = $.Deferred();
-                loadApplication(application).done(function (resourceManager) {
+                loadApplication(appName).done(function (resourceManager) {
                     resourceManager.displayForm({id: id}).done(function () {
                         $deferred.resolve();
                     });
                 });
             } else {
-                $deferred = displayApplication(title || "", application, {
+                $deferred = displayApplication(appName, title, {
                     queryParameters: {
                         id: id
                     }
@@ -1974,8 +1994,8 @@ expresso.Common = (function () {
      *
      * @param resourceSecurityPath
      * @param action
-     * @param displayMessage true is you want a message to be displayed
-     * @returns {*|boolean}
+     * @param [displayMessage] true is you want a message to be displayed
+     * @returns {boolean}
      */
     var isUserAllowed = function (resourceSecurityPath, action, displayMessage) {
         // redirect this method to the Main application
@@ -2221,7 +2241,7 @@ expresso.Common = (function () {
         displayServerValidationMessage: displayServerValidationMessage,
 
         executeReport: executeReport,
-        sendPrintRequest: sendPrintRequest,
+        sendDownloadRequest: sendDownloadRequest,
 
         getServerEnv: getServerEnv,
         getWsBasePathURL: getWsBasePathURL,

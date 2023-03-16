@@ -1,4 +1,5 @@
 expresso.applications.general.notification.notificationviewer.NotificationViewer = expresso.layout.applicationbase.ApplicationBase.extend({
+    notificationTemplate: undefined,
 
     // @override
     initDOMElement: function ($domElement) {
@@ -67,6 +68,22 @@ expresso.applications.general.notification.notificationviewer.NotificationViewer
             }
         });
 
+        // wait before building the template (form must be converted)
+        window.setTimeout(function () {
+            var $notificationTemplate = _this.$domElement.find(".notification-template");
+            _this.notificationTemplate = kendo.template($notificationTemplate.html());
+
+            _this.refreshView();
+        }, 100);
+    },
+
+    /**
+     *
+     */
+    refreshView: function () {
+        var _this = this;
+        var $div = this.$domElement.find(".notifications");
+
         // utility method the get a valid name from a description
         var purgeServiceDescription = function (serviceDescription) {
             return serviceDescription.replace(/[^a-zA-Z0-9]/g, '');
@@ -107,25 +124,27 @@ expresso.applications.general.notification.notificationviewer.NotificationViewer
                     var $service = $div.find(".notification-service[data-service='" +
                         purgeServiceDescription(notification.serviceDescription) + "'] .notification-div");
 
-                    var $notification = $(
-                        "<div class='notification'>" +
-                        "  <div class='header clear'>" +
-                        // "    <div class='service'>" + notification.serviceDescription + " - </div>" +
-                        "    <div class='resource-no'>" + notification.resourceNo + "</div>" +
-                        "    <div class='buttons'></div>" +
-                        "  </div>" +
-                        "  <div class='description'>" + notification.description + "</div>" +
-                        "  <div class='footer'>" +
-                        "     <div class='date'>" +
-                        expresso.util.Formatter.formatDate(notification.requestedDate, expresso.util.Formatter.DATE_FORMAT.DATE/*_TIME*/) +
-                        "     </div>" +
-                        "     <div class='requester'>" + _this.getLabel("requesterUser") + ": " +
-                        (notification.requesterUser ? notification.requesterUser.fullName : "") + "</div>" +
-                        (notification.user.fullName != expresso.Security.getUserInfo().fullName ?
-                            "     <div class='user'>" + _this.getLabel("user") + ": " + notification.user.fullName + "</div>" : "") +
-                        "  </div>" +
-                        "</div>").appendTo($service);
+                    // convert data
+                    notification.notes = notification.notes || "";
+                    notification.requestedDate = expresso.util.Formatter.formatDate(notification.requestedDate, expresso.util.Formatter.DATE_FORMAT.DATE/*_TIME*/);
+                    notification.resourceStatusLabel = notification.resourceStatusPgmKey ? (_this.getLabel(notification.resourceName + notification.resourceStatusPgmKey.capitalize(), null, true) ||
+                        _this.getLabel(notification.resourceStatusPgmKey, null, true) || _this.getLabel(notification.resourceName + notification.resourceStatusPgmKey.capitalize(), null, true) ||
+                        notification.resourceStatusPgmKey.capitalize()) : "";
+
+                    // build the template
+                    var $notification = $(_this.notificationTemplate(notification));
                     $notification.data("notification", notification);
+
+                    // hide elements
+                    if (!notification.resourceStatusLabel) {
+                        $notification.find(".resource-status").hide();
+                    }
+                    if (!notification.notes) {
+                        $notification.find(".notes").hide();
+                    }
+                    if (!notification.requestedDate) {
+                        $notification.find(".requested-date").hide();
+                    }
 
                     // add buttons for each available actions
                     if (notification.availableActions) {
@@ -142,6 +161,9 @@ expresso.applications.general.notification.notificationviewer.NotificationViewer
                             );
                         });
                     }
+
+                    // add the new notification
+                    $notification.appendTo($service);
                 });
 
                 // display the number of notifications in service
@@ -181,6 +203,13 @@ expresso.applications.general.notification.notificationviewer.NotificationViewer
             // then remove the loading mask
             expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: maskId});
         });
+    },
+
+    // @override
+    destroy: function () {
+        this.notificationTemplate = nulll
+
+        expresso.layout.applicationbase.ApplicationBase.fn.destroy.call(this);
     }
 });
 

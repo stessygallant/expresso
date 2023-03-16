@@ -96,16 +96,25 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 		String filePath = getFolder(e);
 		String fileName = e.getFileName();
 		if (fileName != null && fileName.length() > 0 && !fileName.equals("/") && !fileName.equals("\\")) {
-			File file = getFile(e, false);
+			File file = getFile(e);
 			if (file.isDirectory()) {
 				throw new Exception("Cannot delete a directory: " + filePath);
 			} else {
 				logger.info("Deleting file [" + file.getCanonicalPath() + "]");
 				file.delete();
 
-				file = getFile(e, true);
-				if (file.exists()) {
-					file.delete();
+				if (isImage(file.getName())) {
+					File originalFile = ImageUtil.getImageFile(file, "original");
+					logger.info("Deleting file [" + originalFile.getCanonicalPath() + "]");
+					if (originalFile.exists()) {
+						originalFile.delete();
+					}
+
+					File thumbnailFile = ImageUtil.getImageFile(file, "thumbnail");
+					logger.info("Deleting file [" + thumbnailFile.getCanonicalPath() + "]");
+					if (thumbnailFile.exists()) {
+						thumbnailFile.delete();
+					}
 				}
 			}
 		}
@@ -160,6 +169,7 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 		String filePath = getFolder(e);
 		File file = getFile(filePath, fileName);
 
+		logger.debug("File [" + file.getAbsolutePath() + "]");
 		if (file.exists()) {
 			if (fileExtension != null) {
 				fileName = fileName.substring(0, fileName.length() - fileExtension.length() - 1) + "-" + new Date().getTime() + "." + fileExtension;
@@ -175,19 +185,19 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 
 		// if file is an image an there is a maxWidth, resize it
 		if (isImage(fileName)) {
+			File originalFile = file;
 			if (params.get("maxWidth") != null) {
-				int maxWidth = Integer.parseInt(params.get("maxWidth"));
-				File targetImageFile = File.createTempFile(e.getFileNameNoSuffix(), "." + e.getSuffix());
-				ImageUtil.resizeImage(file, targetImageFile, maxWidth, null);
+				// move the original file
+				originalFile = ImageUtil.getImageFile(file, "original");
+				file.renameTo(originalFile);
 
-				// replace the file with the new shrink file
-				FileUtils.copyFile(targetImageFile, file);
-				targetImageFile.delete();
+				int maxWidth = Integer.parseInt(params.get("maxWidth"));
+				ImageUtil.resizeImage(originalFile, file, maxWidth, null);
 			}
 
 			// if the file is an image, create a thumbnail
 			try {
-				ImageUtil.createThumbnailImage(file);
+				ImageUtil.createThumbnailImage(originalFile, ImageUtil.getImageFile(file, "thumbnail"));
 			} catch (Exception ex) {
 				// if we cannot create the thumbnail, it is not dramatic
 				logger.warn("Cannot create thumbnail for file [ " + file.getAbsolutePath() + "]: " + ex);
@@ -250,6 +260,10 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 		}
 	}
 
+	public void downloadFile(HttpServletResponse response, E e) throws Exception {
+		downloadFile(response, e, false);
+	}
+
 	/**
 	 *
 	 * @param response
@@ -257,8 +271,10 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 	 * @throws Exception
 	 */
 	public void downloadFile(HttpServletResponse response, E e, boolean thumbnail) throws Exception {
-
-		File file = getFile(e, thumbnail);
+		File file = getFile(e);
+		if (thumbnail) {
+			file = ImageUtil.getImageFile(file, "thumbnail");
+		}
 		InputStream is = null;
 		OutputStream os = null;
 		try {
@@ -289,23 +305,11 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 	}
 
 	public File getFile(E e) {
-		return getFile(e, false);
-	}
 
-	public File getFile(E e, boolean thumbnail) {
 		String filePath = getFolder(e);
 		String fileName = e.getFileName();
 		File file = getFile(filePath, fileName);
-
-		if (thumbnail) {
-			String imageFilePath = file.getAbsolutePath();
-			String fileExtension = imageFilePath.substring(imageFilePath.lastIndexOf(".") + 1);
-			imageFilePath = imageFilePath.substring(0, imageFilePath.lastIndexOf("."));
-			File thumbnailFile = new File(imageFilePath + "-thumbnail." + fileExtension);
-			return thumbnailFile;
-		} else {
-			return file;
-		}
+		return file;
 	}
 
 	/**
@@ -331,9 +335,13 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 	}
 
 	public boolean isImage(String fileName) {
-		String[] allowedExtensions = new String[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
-		String extension = fileName.substring(fileName.lastIndexOf('.'));
-		return Arrays.stream(allowedExtensions).anyMatch(extension::equalsIgnoreCase);
+		if (fileName.indexOf('.') == -1) {
+			return false;
+		} else {
+			String[] allowedExtensions = new String[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
+			String extension = fileName.substring(fileName.lastIndexOf('.'));
+			return Arrays.stream(allowedExtensions).anyMatch(extension::equalsIgnoreCase);
+		}
 	}
 
 	/**
@@ -344,7 +352,7 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 	private void verifyFileExtension(String fileExtension) {
 		String[] allowedExtensions = new String[] {
 				// image
-				"jpg", "jpeg", "png", "bmp", "gif",
+				"jpg", "jpeg", "png", "bmp", "gif", "heic",
 				// office
 				"doc", "xls", "ppt", "docx", "xlsx", "pptx", "vsdx",
 				// emails

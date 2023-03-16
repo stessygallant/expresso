@@ -28,6 +28,12 @@ expresso.applications.general.requiredapprovalmanager.RequiredApprovalManager = 
                 nullable: true,
                 updatable: false
             },
+            additionnalInfo: {
+                type: "string",
+                maxLength: 2000,
+                nullable: true,
+                updatable: false
+            },
             resourceFieldName: {
                 type: "string",
                 maxLength: 50,
@@ -90,7 +96,6 @@ expresso.applications.general.requiredapprovalmanager.RequiredApprovalManager = 
         return [{
             name: "approve",
             showButtonInGridToolbar: true
-            // TODO supportMultipleSelections: false
         }, {
             name: "reject",
             reasonRequested: true,

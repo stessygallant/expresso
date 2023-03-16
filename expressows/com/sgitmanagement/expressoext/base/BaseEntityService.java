@@ -12,7 +12,7 @@ import com.sgitmanagement.expresso.base.AbstractBaseEntityService;
 import com.sgitmanagement.expresso.base.Creatable;
 import com.sgitmanagement.expresso.base.RequireApproval;
 import com.sgitmanagement.expresso.base.Updatable;
-import com.sgitmanagement.expresso.dto.Query.Filter;
+import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.util.DateUtil;
 import com.sgitmanagement.expresso.util.Util;
@@ -94,51 +94,8 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 		}
 	}
 
-	/**
-	 * 
-	 * @param action
-	 * @param resourceSecurityPath
-	 * @param resourceName
-	 * @param resourceId
-	 * @throws Exception
-	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	final protected void verifyUserPrivileges(String action, String resourceSecurityPath, String resourceName, Integer resourceId) throws ForbiddenException {
-		if (isUserAdmin()) {
-			// ok
-		} else {
-			// verify if the user is allowed to execute the action on the resource
-			verifyUserPrivileges(action, resourceSecurityPath);
-
-			// if the action is authorized, verify if it can read THIS resource
-			if (resourceId != null && resourceId != 0 && resourceId != -1)
-				try {
-					AbstractBaseEntityService service = newService(resourceName);
-					service.get(new Filter("id", resourceId));
-				} catch (Exception ex) {
-					throw new ForbiddenException(
-							"User [" + getUser().getUserName() + "] is not allowed to [" + action + "] the resourceSecurityPath [" + resourceSecurityPath + "] resourceId [" + resourceId + "]");
-				}
-		}
-	}
-
-	/**
-	 * 
-	 * @param action
-	 * @param resourceName
-	 * @param resourceId
-	 * @throws ForbiddenException
-	 */
-	final protected void verifyUserPrivileges(String action, String resourceName, Integer resourceId) throws ForbiddenException {
-		try {
-			Resource resource = newService(ResourceService.class, Resource.class).get(resourceName);
-			verifyUserPrivileges(action, resource.getSecurityPath(), resource.getName(), resourceId);
-		} catch (ForbiddenException ex) {
-			throw ex;
-		} catch (Exception ex) {
-			logger.error("Cannot validate privileges", ex);
-			throw new ForbiddenException();
-		}
+	public void print(E e) throws Exception {
+		// must be implemented by the subclass
 	}
 
 	/**
@@ -147,18 +104,28 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 	 * @param response
 	 * @throws Exception
 	 */
-	public void print(Map<String, String> paramMap, HttpServletResponse response) throws Exception {
+	public void download(E e, Map<String, String> reportParams, HttpServletResponse httpServletResponse) throws Exception {
 		String reportName = this.getTypeOfE().getSimpleName().toLowerCase();
 		String fileName = this.getTypeOfE().getSimpleName();
-		ReportUtil.INSTANCE.executeReport(getUser(), reportName, fileName, paramMap, response, response.getOutputStream());
+		String resourceName = this.getResourceName();
+
+		reportParams.put("id", "" + e.getId());
+
+		// backward compatibility
+		reportParams.put(resourceName + "Id", "" + e.getId());
+		reportParams.put(resourceName + "Ids", "" + e.getId());
+		reportParams.put(resourceName.toLowerCase() + "Id", "" + e.getId());
+		reportParams.put(resourceName.toLowerCase() + "Ids", "" + e.getId());
+
+		ReportUtil.INSTANCE.executeReport(getUser(), reportName, fileName, reportParams, httpServletResponse, httpServletResponse.getOutputStream());
 	}
 
 	@Override
-	public Integer convertId(String id) {
+	public Integer convertId(String id) throws Exception {
 		try {
 			return Integer.parseInt(id);
 		} catch (NumberFormatException e) {
-			return -1;
+			throw new BaseException(HttpServletResponse.SC_NOT_FOUND, "ID [" + id + "] is not a valid id for entity [" + getTypeOfE().getSimpleName() + "]");
 		}
 	}
 
@@ -235,8 +202,13 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 
 		// create the modification
 		String resourceDescription = BeanUtils.getProperty(e, e.getClass().getAnnotation(RequireApproval.class).descriptionFieldName());
-		newService(RequiredApprovalService.class, RequiredApproval.class)
-				.create(new RequiredApproval(getResourceName(), e.getId(), getResourceNo(e), resourceDescription, field.getName(), currentStringValue, newStringValue, newValueReferenceId));
+		String additionnalInfo = null;
+		String additionalInfoFieldName = Util.nullifyIfNeeded(e.getClass().getAnnotation(RequireApproval.class).additionalInfoFieldName());
+		if (additionalInfoFieldName != null) {
+			additionnalInfo = BeanUtils.getProperty(e, additionalInfoFieldName);
+		}
+		newService(RequiredApprovalService.class, RequiredApproval.class).create(
+				new RequiredApproval(getResourceName(), e.getId(), getResourceNo(e), resourceDescription, field.getName(), currentStringValue, newStringValue, newValueReferenceId, additionnalInfo));
 	}
 
 	/**

@@ -36,6 +36,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.sgitmanagement.expresso.base.KeyField;
@@ -48,6 +50,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 public class Util {
+	private static final Logger logger = LoggerFactory.getLogger(Util.class);
 	public static final String[] internalSubnets;
 
 	static {
@@ -241,13 +244,7 @@ public class Util {
 
 			return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 		} finally {
-			try {
-				if (inputStream != null) {
-					inputStream.close();
-				}
-			} catch (IOException e) {
-				// ignore
-			}
+			IOUtils.closeQuietly(inputStream);
 		}
 	}
 
@@ -327,45 +324,47 @@ public class Util {
 			try {
 				KeyField keyFieldAnnotation = field.getAnnotation(KeyField.class);
 
-				// format if needed
-				if (keyFieldAnnotation.format().length() > 0) {
-					key = Util.formatKey(keyFieldAnnotation.format(), key);
-				}
+				if (keyFieldAnnotation != null) {
+					// format if needed
+					if (keyFieldAnnotation.format().length() > 0) {
+						key = Util.formatKey(keyFieldAnnotation.format(), key);
+					}
 
-				// add padding
-				if (keyFieldAnnotation.padding() > 0) {
-					// key = String.format("%1$" + keyFieldAnnotation.padding() + "s",
-					// key).replace(' ', '0');
-					key = StringUtils.leftPad(key, keyFieldAnnotation.padding(), '0');
-				}
+					// add padding
+					if (keyFieldAnnotation.padding() > 0) {
+						// key = String.format("%1$" + keyFieldAnnotation.padding() + "s",
+						// key).replace(' ', '0');
+						key = StringUtils.leftPad(key, keyFieldAnnotation.padding(), '0');
+					}
 
-				// add a space padding
-				if (keyFieldAnnotation.rightSpacePadding()) {
-					key = StringUtils.rightPad(key, keyFieldAnnotation.length());
-				}
+					// add a space padding
+					if (keyFieldAnnotation.rightSpacePadding()) {
+						key = StringUtils.rightPad(key, keyFieldAnnotation.length());
+					}
 
-				// add prefix
-				if (keyFieldAnnotation.prefix().length() > 0) {
-					if (!key.startsWith(keyFieldAnnotation.prefix())) {
+					// add prefix
+					if (keyFieldAnnotation.prefix().length() > 0) {
+						if (!key.startsWith(keyFieldAnnotation.prefix())) {
 
-						// add the prefix only if the key is complete
-						if (keyFieldAnnotation.length() != 0 && (key.length() + keyFieldAnnotation.prefix().length()) != keyFieldAnnotation.length()) {
-							// this means the key is not complete, do not add the prefix
-						} else {
-							key = keyFieldAnnotation.prefix() + key;
+							// add the prefix only if the key is complete
+							if (keyFieldAnnotation.length() != 0 && (key.length() + keyFieldAnnotation.prefix().length()) != keyFieldAnnotation.length()) {
+								// this means the key is not complete, do not add the prefix
+							} else {
+								key = keyFieldAnnotation.prefix() + key;
+							}
+						}
+					}
+
+					// verify the key total length
+					if (keyFieldAnnotation.length() != 0) {
+						if (key.length() != keyFieldAnnotation.length()) {
+							// this means the key is not complete, we cannot search by EQUALS
+							// should we search by CONTAINS?
 						}
 					}
 				}
-
-				// verify the key total length
-				if (keyFieldAnnotation.length() != 0) {
-					if (key.length() != keyFieldAnnotation.length()) {
-						// this means the key is not complete, we cannot search by EQUALS
-						// should we search by CONTAINS?
-					}
-				}
-			} catch (Exception e) {
-				// ignore
+			} catch (Exception ex) {
+				logger.warn("Cannot format keyfield: " + ex);
 			}
 			return key;
 		}
@@ -977,11 +976,7 @@ public class Util {
 		try {
 			return Util.parseCSVContent(IOUtils.toString(inputStream, charset), separator, skipHeader);
 		} finally {
-			try {
-				inputStream.close();
-			} catch (Exception ex) {
-				// ignore
-			}
+			IOUtils.closeQuietly(inputStream);
 		}
 	}
 

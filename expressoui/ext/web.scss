@@ -97,18 +97,27 @@ $scrollbarSize: 0.9em;
     top: 0;
     left: 0;
     z-index: 999;
+    overflow-y: auto;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     $width: 20em;
 
     .logo {
-        padding-top: 0.625em;
-        width: $width;
+        padding-top: 0.4em;
+        width: calc(100% - 2em);
+        max-width: $width;
     }
 
     .splash {
         @include default-div;
-        margin: 0 auto;
         background-color: $loginBackground;
+
+        height: 80%;
+        width: 90%;
+        max-width: 50em;
 
         .title {
             width: $width;
@@ -143,7 +152,7 @@ $scrollbarSize: 0.9em;
 
     .login {
         @include default-div;
-        margin: 10% auto 0 auto;
+        margin: -5% auto 0 auto;
         width: 90%;
         max-width: 27em;
         height: auto;
@@ -159,10 +168,13 @@ $scrollbarSize: 0.9em;
         }
 
         .login-form {
-            margin-top: 3em;
+            margin-top: 10%;
             color: $loginLabelColor;
 
             .authentication-mechanism {
+                display: flex;
+                justify-content: center;
+
                 .input-wrap {
                     display: inline-block;
 
@@ -176,7 +188,8 @@ $scrollbarSize: 0.9em;
 
             .authentication-info {
                 margin: 0 auto;
-                width: $infoWidth;
+                width: calc(100% - 2em);
+                max-width: $infoWidth;
                 text-align: left;
 
                 & > div {
@@ -188,7 +201,8 @@ $scrollbarSize: 0.9em;
                 }
 
                 input {
-                    width: $infoWidth;
+                    width: calc(100%);
+                    max-width: $infoWidth;
                 }
 
                 div.username {
@@ -201,7 +215,8 @@ $scrollbarSize: 0.9em;
 
             div.forgot-password, div.change-password {
                 margin: 0 auto;
-                width: $infoWidth;
+                width: calc(100% - 2em);
+                max-width: $infoWidth;
                 text-align: right;
                 color: $loginLabelColor;
 
@@ -217,7 +232,8 @@ $scrollbarSize: 0.9em;
                     border-radius: 4.5em;
                     background-color: $loginButtonBackground;
                     border-color: $loginButtonBackground;
-                    width: calc(#{$infoWidth} - 6.2em);
+                    width: calc(60%);
+                    max-width: $infoWidth;
                     color: $loginTextColor;
                     text-transform: uppercase;
                     font-weight: bold;

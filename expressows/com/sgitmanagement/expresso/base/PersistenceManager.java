@@ -58,8 +58,8 @@ public class PersistenceManager implements AutoCloseable {
 	 * @param startTransaction
 	 * @return
 	 */
-	public EntityManager getEntityManager(String persistenceUnit, boolean startTransaction) {
-		persistenceUnit = "persistence_unit" + (persistenceUnit == null ? "" : "_" + persistenceUnit);
+	public EntityManager getEntityManager(String persistenceUnitName, boolean startTransaction) {
+		String persistenceUnit = "persistence_unit" + (persistenceUnitName == null ? "" : "_" + persistenceUnitName);
 		EntityManagerFactory entityManagerFactory = emFactoryMap.get(persistenceUnit);
 		if (entityManagerFactory == null) {
 			// create the factory (only one)
@@ -86,8 +86,11 @@ public class PersistenceManager implements AutoCloseable {
 			// Create the entity manager
 			entityManager = createEntityManager(entityManagerFactory);
 			entityManagerMap.put(persistenceUnit, entityManager);
-			entityManager.setProperty("expresso.persistence_unit", persistenceUnit);
-			// logger.info("New connection to [" + persistenceUnit + "]");
+			persistenceUnitName = (persistenceUnitName == null ? "default" : persistenceUnitName);
+			entityManager.setProperty("expresso.persistence_unit", persistenceUnitName);
+			// logger.info("NEW connection to [" + persistenceUnitName + "] startTransaction [" + startTransaction + "]");
+		} else {
+			// logger.info("GOT connection to [" + persistenceUnitName + "] startTransaction [" + startTransaction + "]");
 		}
 
 		// Start the transaction
@@ -181,9 +184,9 @@ public class PersistenceManager implements AutoCloseable {
 					} else {
 						try {
 							tx.commit();
-						} catch (Exception e) {
-							thrownException = e;
-							// logger.error("Error while committing the transaction: " + e);
+						} catch (Exception ex) {
+							thrownException = ex;
+							logger.warn("Error while committing the transaction: " + ex);
 							try {
 								tx.rollback();
 							} catch (Exception e3) {
@@ -192,10 +195,10 @@ public class PersistenceManager implements AutoCloseable {
 						}
 					}
 				}
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				// cannot do much at this point
-				thrownException = e;
-				// logger.error("Unexpected error", e);
+				thrownException = ex;
+				logger.warn("Unexpected error", ex);
 			}
 
 			if (startNewTransaction) {
@@ -207,7 +210,7 @@ public class PersistenceManager implements AutoCloseable {
 			}
 		} catch (Exception ex) {
 			thrownException = ex;
-			// logger.error("Unexpected error", ex);
+			logger.warn("Unexpected error", ex);
 		}
 
 		if (thrownException != null) {
@@ -280,7 +283,7 @@ public class PersistenceManager implements AutoCloseable {
 		try {
 			commit(em, false);
 		} catch (Exception ex) {
-			// ignore
+			logger.warn("Cannot commitAndClose entity manager: " + ex);
 		} finally {
 			close(em);
 		}
@@ -292,13 +295,12 @@ public class PersistenceManager implements AutoCloseable {
 	 * @param em
 	 */
 	public void close(EntityManager em) {
-		// int remainingConnections =
 		entityManagerCounter.decrementAndGet();
 
 		// remove it from the cache
 		entityManagersThreadLocal.get().remove(em.getProperties().get("expresso.persistence_unit"));
 
-		// logger.info("CLOSED [" + em.getProperties().get("expresso.persistence_unit") + "]: Number of DB connections: " + remainingConnections);
+		// logger.info("CLOSED [" + em.getProperties().get("expresso.persistence_unit") + "]: Number of DB connections: " + entityManagerCounter.get());
 		try {
 			em.close();
 		} catch (Exception ex) {

@@ -30,7 +30,7 @@
             if (this.readyPromises.length == 0) {
                 expresso.util.UIUtil.showLoadingMask($form, false);
 
-                // return a already resolved promise
+                // return an already resolved promise
                 return $.Deferred().resolve().promise();
             } else {
                 //console.log("readyPromises: " + this.readyPromises.length);
@@ -311,10 +311,10 @@
                             }
 
                             // support for min/max
-                            if (field.min !== undefined){
+                            if (field.min !== undefined) {
                                 $el.attr("min", field.min);
                             }
-                            if (field.max !== undefined){
+                            if (field.max !== undefined) {
                                 $el.attr("max", field.max);
                             }
                             break;
@@ -327,6 +327,12 @@
                                     $el.data("mask", field.mask);
                                 }
                             }
+                            break;
+                        case "picture":
+                            $el.attr("type", "picture");
+                            break;
+                        case "document":
+                            $el.attr("type", "document");
                             break;
                         default:
                             break;
@@ -475,7 +481,7 @@
                             // we must localize the option before
                             expresso.Common.localizePage($el, labels);
 
-                            // then build a drop down list based on the options
+                            // then build a dropdown list based on the options
                             $el.kendoDropDownList();
 
                             // trigger the change event
@@ -483,6 +489,30 @@
                                 $el.data("kendoDropDownList").trigger("change");
                             }, 10);
                         }
+                        break;
+
+                    case "picture":
+                        // convert to <input type="file" accept="image/*" capture="environment">
+                        $el.attr("type", "file");
+                        $el.attr("accept", "image/*");
+                        $el.attr("capture", "environment");
+                        $el.kendoExpressoPicturePicker({
+                            resourceName: field && field.picture && field.picture.resourceName ? field.picture.resourceName : (resource && resource.type ? resource.type : $el.data("resourceName")),
+                            resourceSecurityPath: field && field.picture && field.picture.resourceSecurityPath ? field.picture.resourceSecurityPath : $el.data("resourceSecurityPath"),
+                            documentTypePgmKey: field && field.picture && field.picture.documentTypePgmKey ? field.picture.documentTypePgmKey : $el.data("documentTypePgmKey"),
+                            maxWidth: field && field.picture && field.picture.maxWidth ? field.picture.maxWidth : $el.data("maxWidth"),
+                            value: resource && field && resource[field.name] ? resource[field.name] : null
+                        });
+                        break;
+
+                    case "document":
+                        // convert to <input type="file">
+                        $el.attr("type", "file");
+                        $el.kendoExpressoDocumentPicker({
+                            resourceName: field && field.document && field.document.resourceName ? field.document.resourceName : (resource && resource.type ? resource.type : $el.data("resourceName")),
+                            resourceSecurityPath: field && field.document && field.document.resourceSecurityPath ? field.document.resourceSecurityPath : $el.data("resourceSecurityPath"),
+                            documentTypePgmKey: field && field.document && field.document.documentTypePgmKey ? field.document.documentTypePgmKey : $el.data("documentTypePgmKey")
+                        });
                         break;
 
                     case "email":
@@ -522,10 +552,10 @@
                 }
 
                 // wrap the input in a DIV
-                //if (!$input.parent().hasClass("input-wrap")) {
                 if (!$input.closest(".input-wrap").length) {
                     $input.wrap("<div class='input-wrap " +
-                        ($input.hasClass("full-length") || ($input.is("textarea") && !$input.hasClass("half-length")) ? "full-length" : "") + "'></div>");
+                        ($input.hasClass("full-length") || ($input.is("textarea") && !$input.hasClass("half-length")) ? "full-length" : "") +
+                        "'></div>");
                 }
 
                 // add a label if not defined
