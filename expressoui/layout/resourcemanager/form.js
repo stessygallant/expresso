@@ -351,7 +351,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         this.addValidationAttributes($form, model, resource);
 
         // add support if needed
-        if ($window.find("[type=file]").length || this.deprecatedFileUploadSupport) {
+        if ($window.find("[type=file][name]").length || this.deprecatedFileUploadSupport) {
             this.addDocumentUploadSupport($window, resource);
         }
 
@@ -1281,7 +1281,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
             // TO DO support multiple files in form
             var kendoUpload;
-            $window.find("[type=file]").each(function () {
+            $window.find("[type=file][name]").each(function () {
                 var $input = $(this);
                 kendoUpload = expresso.util.UIUtil.buildUpload($window, $input, $.extend({
                     url: function () {
@@ -1343,7 +1343,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 }
             });
         } else {
-            $window.find("[type=file]:visible").each(function () {
+            // $window.find("[type=file]:visible").each(function () {
+            $window.find("[type=file][name]").each(function () {
                 var $input = $(this);
                 expresso.util.UIUtil.hideField($input);
             });

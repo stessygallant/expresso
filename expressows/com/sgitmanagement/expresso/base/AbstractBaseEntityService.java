@@ -2230,6 +2230,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					dateValue = (Date) filter.getValue();
 				} else if (valueType.equals("Timestamp")) {
 					dateValue = (Date) filter.getValue();
+				} else if (valueType.equals("Calendar") || valueType.equals("GregorianCalendar")) {
+					dateValue = ((Calendar) filter.getValue()).getTime();
 				} else {
 
 					String dateString = (String) filter.getValue();

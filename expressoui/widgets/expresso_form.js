@@ -134,6 +134,9 @@
                     case "timepicker":
                         $el.kendoExpressoTimePicker();
                         break;
+                    case "datepicker":
+                        $el.kendoExpressoDatePicker();
+                        break;
                     case "maskedtimepicker":
                         $el.kendoExpressoMaskedTimePicker();
                         break;
@@ -459,7 +462,10 @@
                     case "date":
                         // Kendo will remove the type=date.
                         $el.addClass("date");
-                        $el.kendoDatePicker();
+                        $el.kendoExpressoDatePicker({
+                            min: (field ? field.min : undefined),
+                            max: (field ? field.max : undefined)
+                        });
                         break;
                     case "datetime":
                         // put a real type

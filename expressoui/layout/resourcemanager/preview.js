@@ -118,7 +118,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                     _this.addPromise($contentElement.kendoExpressoForm({labels: _this.resourceManager.labels}).data("kendoExpressoForm").ready());
 
                     // then get the script
-                    var tabScriptPath = _this.resourceManager.applicationPath + "/preview_tab_" + tabName + ".js";
+                    var tabScriptPath = _this.resourceManager.applicationPath + "/preview_tab_" + tabName.toLowerCase() + ".js";
                     expresso.Common.getScript(tabScriptPath).done(function () {
 
                         // get the object-class and instantiate the object

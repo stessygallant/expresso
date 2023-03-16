@@ -28,6 +28,8 @@ public enum Mailer {
 
 	private String support;
 	private boolean sendEmail;
+	private boolean saveEmailOnDisk;
+	private String saveEmailOnDiskPath;
 	private boolean bccSupport;
 	private String fromAddress;
 	private String fromName;
@@ -43,6 +45,8 @@ public enum Mailer {
 		Properties props = SystemEnv.INSTANCE.getProperties("mail");
 		support = props.getProperty("mail.smtp.support");
 		sendEmail = Boolean.parseBoolean(props.getProperty("mail.smtp.send_email", "true"));
+		saveEmailOnDisk = Boolean.parseBoolean(props.getProperty("mail.smtp.save_email_on_disk", "false"));
+		saveEmailOnDiskPath = props.getProperty("mail.smtp.save_email_on_disk_path");
 
 		fromAddress = props.getProperty("mail.smtp.from");
 		fromName = props.getProperty("mail.smtp.from_name");
@@ -280,6 +284,12 @@ public enum Mailer {
 				}
 			}
 
+			if (saveEmailOnDisk) {
+				File file = new File(saveEmailOnDiskPath + "\\" + subject + "-" + System.currentTimeMillis() + ".html");
+				FileUtils.write(file, messageBody, StandardCharsets.UTF_8);
+				logger.warn("mail.smtp.save_email_on_disk is enbaled, saving email to : " + file.getPath());
+			}
+
 		} catch (Exception ex) {
 			logger.error("Exception sending email", ex);
 		}
@@ -340,7 +350,7 @@ public enum Mailer {
 	public static void main(String[] args) throws Exception {
 		System.out.println("Start");
 
-		String to = "stessy.gallant@gmail.com";
+		String to = "maxime.lemieux@glencore.ca";
 		String cc = null;
 		String bcc = null;
 		String replyTo = "isabelleegirard@hotmail.com";

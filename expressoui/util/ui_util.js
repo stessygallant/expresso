@@ -112,6 +112,9 @@ expresso.util.UIUtil = (function () {
                     case "expressotimepicker":
                         widget = $element.data("kendoExpressoTimePicker");
                         break;
+                    case "expressodatepicker":
+                        widget = $element.data("kendoExpressoDatePicker");
+                        break;
                     case "expressomaskedtimepicker":
                         widget = $element.data("kendoExpressoMaskedTimePicker");
                         break;
