@@ -12,7 +12,7 @@ expresso.applications.general.notification.notificationmanager.Grid = expresso.l
             field: "notifiedUser.fullName",
             width: 160
         }, {
-            field: "resourceNo",
+            field: "resourceTitle",
             width: 200
         }, {
             field: "requestedDate"

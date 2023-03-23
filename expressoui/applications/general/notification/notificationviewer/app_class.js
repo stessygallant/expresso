@@ -41,7 +41,7 @@ expresso.applications.general.notification.notificationviewer.NotificationViewer
         });
 
         // add listener for resource number
-        $div.on("click", ".resource-no", function () {
+        $div.on("click", ".resource-title", function () {
             var $notification = $(this).closest(".notification");
             var notification = $notification.data("notification");
 

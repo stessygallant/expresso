@@ -16,9 +16,9 @@ expresso.applications.general.notification.notificationmanager.NotificationManag
                 type: "number",
                 nullable: true
             },
-            resourceNo: {
+            resourceTitle: {
                 type: "string",
-                maxLength: 30
+                maxLength: 200
             },
             resourceExtKey: {
                 type: "string",

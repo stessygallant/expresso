@@ -1608,7 +1608,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * Give a change to subclass to define default sorts. Default is to sort on the first keyField
 	 */
 	protected Query.Sort[] getDefaultQuerySort() {
-		return new Query.Sort[] { new Query.Sort(getKeyField(), Query.Sort.Direction.desc) };
+		return new Query.Sort[] { new Query.Sort("id", Query.Sort.Direction.desc) };
 	}
 
 	/**
@@ -1616,7 +1616,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * the end of the order by clause
 	 */
 	protected Query.Sort[] getUniqueQuerySort() {
-		return new Query.Sort[] { new Query.Sort(getKeyField(), Query.Sort.Direction.desc) };
+		return new Query.Sort[] { new Query.Sort("id", Query.Sort.Direction.desc) };
 	}
 
 	/**

@@ -2,7 +2,7 @@ expresso.applications.general.notification.notificationmanager.Labels = {
     notification: "Notification",
     resourceName: "Ressource",
     resource: "Ressource",
-    resourceNo: "N°",
+    resourceTitle: "Titre",
     resourceExtKey: "Clé externe",
     resourceUrl: "URL",
     description: "Description",

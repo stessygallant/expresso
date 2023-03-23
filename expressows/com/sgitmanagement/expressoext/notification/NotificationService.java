@@ -64,7 +64,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 		Filter filter = new Filter(Logic.or);
 		filter.addFilter(new Filter("resourceName", Operator.contains, term));
 		filter.addFilter(new Filter("resourceExtKey", Operator.contains, term));
-		filter.addFilter(new Filter("resourceNo", Operator.contains, term));
+		filter.addFilter(new Filter("resourceTitle", Operator.contains, term));
 		filter.addFilter(new Filter("description", Operator.contains, term));
 		return filter;
 	}
@@ -89,7 +89,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 
 	@Override
 	protected Sort[] getDefaultQuerySort() {
-		return new Query.Sort[] { new Query.Sort("resourceNo", Query.Sort.Direction.asc) };
+		return new Query.Sort[] { new Query.Sort("resourceTitle", Query.Sort.Direction.asc) };
 	}
 
 	@Override
@@ -276,7 +276,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 				Notification foundNotification = get(filter);
 
 				// update the foundNotification with the notification
-				foundNotification.setResourceNo(notification.getResourceNo());
+				foundNotification.setResourceTitle(notification.getResourceTitle());
 				foundNotification.setServiceDescription(notification.getServiceDescription());
 				foundNotification.setDescription(notification.getDescription());
 				foundNotification.setLastModifiedDate(notification.getLastModifiedDate());
@@ -301,8 +301,8 @@ public class NotificationService extends BaseEntityService<Notification> {
 				notification.setDescription(notification.getDescription().substring(0, 2000));
 			}
 
-			if (notification.getResourceNo() != null && notification.getResourceNo().length() > 255) {
-				notification.setResourceNo(notification.getResourceNo().substring(0, 255));
+			if (notification.getResourceTitle() != null && notification.getResourceTitle().length() > 255) {
+				notification.setResourceTitle(notification.getResourceTitle().substring(0, 255));
 			}
 			if (notification.getResourceName() != null && notification.getResourceName().length() > 200) {
 				notification.setResourceName(notification.getResourceName().substring(0, 200));
@@ -337,7 +337,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 			Notification notification = get(query);
 			return performAction(action, notification);
 		} catch (NoResultException ex) {
-			logger.warn("Cannot find the notifications [" + resourceName + ":" + resourceId + ":" + userId);
+			logger.warn("Cannot find the notifications [" + resourceName + ":" + resourceId + ":" + userId + "]");
 			return null;
 		} catch (NonUniqueResultException ex) {
 			logger.warn("Found multiples notifications [" + resourceName + ":" + resourceId + ":" + userId);

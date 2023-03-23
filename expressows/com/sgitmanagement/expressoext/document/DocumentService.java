@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
+
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
@@ -164,6 +166,36 @@ public class DocumentService extends BaseFileService<Document> {
 
 		if (!allowed) {
 			throw new ForbiddenException();
+		}
+	}
+
+	/**
+	 * 
+	 * @param sourceResourceName
+	 * @param sourceResourceId
+	 * @param targetResourceName
+	 * @param targetResourceId
+	 * @throws Exception
+	 */
+	public void copyDocuments(String sourceResourceName, Integer sourceResourceId, String targetResourceName, Integer targetResourceId) throws Exception {
+		DocumentService documentService = newService(DocumentService.class, Document.class);
+		Filter filter = new Filter();
+		filter.addFilter(new Filter("resourceName", sourceResourceName));
+		filter.addFilter(new Filter("resourceId", sourceResourceId));
+		List<Document> documents = documentService.list(filter);
+		if (!documents.isEmpty()) {
+			for (Document document : documents) {
+				// create the record
+				getEntityManager().detach(document);
+				document.setId(null);
+				document.setResourceName(targetResourceName);
+				document.setResourceId(targetResourceId);
+				documentService.create(document);
+			}
+
+			// then copy the documents from the directory
+			FileUtils.copyDirectory(new File(documentService.getAbsoluteFolder(sourceResourceName, sourceResourceId)),
+					new File(documentService.getAbsoluteFolder(targetResourceName, targetResourceId)));
 		}
 	}
 }

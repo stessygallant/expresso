@@ -422,7 +422,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
             // focus on the first input
             try {
-                var $input = $window.find(":input.focus");
+                var $input = $window.find(":input.focus,:input.exp-focus");
                 if (!$input.length) {
                     $input = $window.find(":input:visible:not([readonly]):enabled:first");
                 }
@@ -575,14 +575,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                                                 // refresh only the resource
                                                 _this.resourceManager.sections.grid.updateResource(resource, updatedResource);
                                             }
-                                            if (_this.closedDeferred) {
-                                                _this.closedDeferred.resolve(updatedResource);
-                                                _this.closedDeferred = null;
-                                            }
+                                            _this.savedResource = updatedResource;
                                             _this.close();
 
                                             if (action.afterPerformAction) {
-                                                action.afterPerformAction.call(_this.resourceManager, resource);
+                                                action.afterPerformAction.call(_this.resourceManager, updatedResource);
                                             }
 
                                             if (_this.resourceManager.sections.preview) {

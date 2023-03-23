@@ -1414,29 +1414,83 @@ expresso.Common = (function () {
     /**
      *
      * @param appName
-     * @param title
-     * @param options
+     * @param [resource] {id:?} if you want to open a resource. No id means a new resource
+     * @returns {{}|jQuery}
+     */
+    var displayForm = function (appName, resource) {
+        var $deferred = $.Deferred();
+        loadApplication(appName).done(function (resourceManager) {
+            if (resourceManager) {
+                resourceManager.displayForm(resource)
+                    .done(function (updatedResource) {
+                        $deferred.resolve(updatedResource);
+                    })
+                    .fail(function () {
+                        $deferred.reject();
+                    })
+                    .always(function () {
+                        // wait for the form to be closed and destroyed
+                        window.setTimeout(function () {
+                            if (resourceManager) {
+                                resourceManager.destroy();
+                                resourceManager = null;
+                            }
+                        }, 2000);
+                    });
+            } else {
+                $deferred.reject();
+            }
+        });
+        return $deferred;
+    };
+
+    /**
+     *
+     * @param appName
+     * @param title title of the window
+     * @param [appOptions] options for the applications
+     * @param [windowOptions] options for the Expresso window
      * @returns {*}
      */
-    var displayApplication = function (appName, title, options) {
+    var displayApplication = function (appName, title, appOptions, windowOptions) {
         var $deferred = $.Deferred();
 
+        // avoid null pointer
+        appOptions = appOptions || {};
+        windowOptions = windowOptions || {};
+        var className = appName.replace(".", "-") + "-application-div";
+
         var appInstance;
-        expresso.util.UIUtil.buildWindow("<div class='" + appName + "-application-div'></div>", {
-            // width: "max",
-            height: "max",
-            title: title || "",
-            saveButtonLabel: expresso.Common.getLabel("close"),
+        expresso.util.UIUtil.buildWindow("<div class='" + className + "'></div>", {
+            width: windowOptions.width,
+            height: windowOptions.height || "max",
+            title: title || windowOptions.title || "",
+            saveButtonLabel: windowOptions.saveButtonLabel || expresso.Common.getLabel("close"),
             open: function () {
                 var $windowDiv = $(this);
-                var $div = $windowDiv.find("." + appName + "-application-div");
+                var $div = $windowDiv.find("." + className);
                 $div.css("height", "100%");
-                expresso.Common.loadApplication(appName, options, $div).done(function (application) {
+                expresso.Common.loadApplication(appName, appOptions, $div).done(function (application) {
                     appInstance = application;
-                    appInstance.render(true);
+                    appInstance.render(true).done(function () {
+                        $div.children(".exp-application-base").css("overflow", "auto");
+                        if (windowOptions.open) {
+                            windowOptions.open.call($windowDiv, appInstance);
+                        }
+                    });
                 });
             },
+            save: function () {
+                var $windowDiv = $(this);
+                if (windowOptions.save) {
+                    return windowOptions.save.call($windowDiv, appInstance);
+                }
+            },
             close: function () {
+                var $windowDiv = $(this);
+                if (windowOptions.close) {
+                    windowOptions.close.call($windowDiv, appInstance);
+                }
                 if (appInstance) {
                     appInstance.destroy();
                     appInstance = null;
@@ -1500,6 +1554,8 @@ expresso.Common = (function () {
      */
     var loadApplication = function (appName, options, $containerDiv, masterResourceManager, siblingResourceManager) {
         var $deferred = $.Deferred();
+
+        expresso.util.UIUtil.showLoadingMask($("body"), true, {id: "loadApplication" + appName});
 
         var appDef = getApplication(appName);
         // console.log("loadApplication: " + appDef.appClass + " parent:" + appDef.parent + " masterResourceManager:" + masterResourceManager);
@@ -1580,6 +1636,11 @@ expresso.Common = (function () {
             $deferred.reject();
         }
 
+        // always remove the loading mask
+        $deferred.always(function () {
+            expresso.util.UIUtil.showLoadingMask($("body"), false, {id: "loadApplication" + appName});
+        });
+
         return $deferred;
     };
 
@@ -1608,7 +1669,7 @@ expresso.Common = (function () {
         delete params.menuItemSecurityProfile;
 
         // add the queryParameters to the URL
-        var url = "index.html";
+        var url = window.location.pathname;
         var queryParameters = $.param(params).replace(/\+/g, "%20");
         if (queryParameters) {
             url += "?" + queryParameters;
@@ -2206,6 +2267,7 @@ expresso.Common = (function () {
         addApplicationToHistory: addApplicationToHistory,
         displayApplication: displayApplication,
         displayUrl: displayUrl,
+        displayForm: displayForm,
 
         getScript: getScript,
         loadHTML: loadHTML,

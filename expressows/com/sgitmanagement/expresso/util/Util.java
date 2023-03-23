@@ -729,29 +729,18 @@ public class Util {
 		InputStream is = null;
 		OutputStream os = null;
 		try {
-			is = new FileInputStream(file);
-
-			response.setHeader("Content-disposition", "inline; filename=" + file.getName());
+			response.setHeader("Content-disposition", "inline; filename=\"" + file.getName() + "\"");
 			// response.setContentType(contentType.getMimeType());
 
+			is = new FileInputStream(file);
 			os = response.getOutputStream();
-			byte[] buffer = new byte[1024];
-			int bytesRead;
-			while ((bytesRead = is.read(buffer)) != -1) {
-				os.write(buffer, 0, bytesRead);
-			}
+			IOUtils.copy(is, os);
 			os.flush();
 		} catch (Exception ex) {
 			throw new BaseException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error reading file [" + file.getAbsolutePath(), ex);
 		} finally {
-			try {
-				is.close();
-			} catch (Exception ex) {
-			}
-			try {
-				os.close();
-			} catch (Exception ex) {
-			}
+			IOUtils.closeQuietly(os);
+			IOUtils.closeQuietly(is);
 		}
 	}
 

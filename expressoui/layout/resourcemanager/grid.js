@@ -112,7 +112,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
 
         // options could contains configuration
-        if (this.resourceManager.options.activeOnly !== undefined) {
+        if (this.activeOnly === undefined && this.resourceManager.options.activeOnly !== undefined) {
             this.activeOnly = this.resourceManager.options.activeOnly;
         }
 
@@ -3749,16 +3749,19 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             }
         }
 
+        if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
+            // always add the excel button
+            toolbar.push(this.TOOLBAR_BUTTONS.EXCEL);
+        }
+
         // add the download button
         if (this.isUserAllowed("download")) {
             toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-download-button" title="downloadButtonTitle"><span class="fa fa-file-pdf-o"><span class="exp-button-label" data-text-key="downloadButtonLabel"></span></span></button>'});
             needSeparator = true;
         }
 
-        if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
-            // always add the excel button
-            toolbar.push(this.TOOLBAR_BUTTONS.EXCEL);
-        }
+        // mark the end of the report buttons
+        toolbar.push({template: '<span class="exp-toolbar-marker exp-toolbar-marker-report"></span>'});
 
         // build the report selector button if needed (not for sibling resource)
         if (this.getReports() && this.resourceManager.displayAsMaster) {

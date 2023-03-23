@@ -779,7 +779,11 @@ expresso.Main = function () {
         // " [" + expresso.Security.getTimeToLoadProfile() + "]");
 
         // initialize the user profile section
-        $userDiv.find(".username").text(expresso.Security.getUserInfo().firstName + " " + expresso.Security.getUserInfo().lastName);
+        var userName = expresso.Security.getUserInfo().firstName + " " + expresso.Security.getUserInfo().lastName;
+        if (userName.length > 18) {
+            userName = userName.substring(0, 18);
+        }
+        $userDiv.find(".username").text(userName);
 
 
         // // display the logs file on demand

@@ -452,8 +452,8 @@
                         break;
                     case "textarea":
                         $el.addClass("k-textbox");
-                        if (!$el.hasClass("half-length")) {
-                            $el.addClass("full-length");
+                        if (!$el.hasClass("half-length") && !$el.hasClass("exp-half-length")) {
+                            $el.addClass("exp-full-length");
                         }
                         if (!$el.attr("rows")) {
                             $el.attr("rows", "3");
@@ -559,8 +559,9 @@
 
                 // wrap the input in a DIV
                 if (!$input.closest(".input-wrap").length) {
-                    $input.wrap("<div class='input-wrap " +
-                        ($input.hasClass("full-length") || ($input.is("textarea") && !$input.hasClass("half-length")) ? "full-length" : "") +
+                    $input.wrap("<div class='exp-input-wrap input-wrap " +
+                        ($input.hasClass("exp-full-length") || $input.hasClass("full-length") || ($input.is("textarea") &&
+                            !$input.hasClass("exp-half-length") && !$input.hasClass("half-length")) ? "exp-full-length" : "") +
                         "'></div>");
                 }
 

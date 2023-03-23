@@ -28,7 +28,7 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 	private Integer resourceId;
 
 	@Column(name = "resource_no")
-	private String resourceNo;
+	private String resourceTitle;
 
 	@Column(name = "resource_ext_key")
 	private String resourceExtKey;
@@ -202,12 +202,15 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 		return performedActionUser;
 	}
 
+	// TODO to be removed
+	@Deprecated
 	public String getResourceNo() {
-		return resourceNo;
+		return resourceTitle;
 	}
 
+	@Deprecated
 	public void setResourceNo(String resourceNo) {
-		this.resourceNo = resourceNo;
+		this.resourceTitle = resourceNo;
 	}
 
 	public Integer getUserId() {
@@ -254,7 +257,7 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 
 	@Override
 	public String toString() {
-		return "Notification [resourceName=" + resourceName + ", resourceId=" + resourceId + ", resourceNo=" + resourceNo + ", resourceExtKey=" + resourceExtKey + ", resourceUrl=" + resourceUrl
+		return "Notification [resourceName=" + resourceName + ", resourceId=" + resourceId + ", resourceTitle=" + resourceTitle + ", resourceExtKey=" + resourceExtKey + ", resourceUrl=" + resourceUrl
 				+ ", serviceDescription=" + serviceDescription + ", description=" + description + ", availableActions=" + availableActions + ", userId=" + userId + ", notifiedUserId=" + notifiedUserId
 				+ ", requestedDate=" + requestedDate + ", requesterUserId=" + requesterUserId + "]";
 	}
@@ -273,5 +276,13 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 
 	public void setNotes(String notes) {
 		this.notes = notes;
+	}
+
+	public String getResourceTitle() {
+		return resourceTitle;
+	}
+
+	public void setResourceTitle(String resourceTitle) {
+		this.resourceTitle = resourceTitle;
 	}
 }
