@@ -4,8 +4,6 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
-import com.sgitmanagement.expresso.base.PersistenceManager;
-
 public class UserService extends BaseUserService<User> {
 
 	public void printRoles() throws Exception {
@@ -28,7 +26,7 @@ public class UserService extends BaseUserService<User> {
 		UserService service = newServiceStatic(UserService.class, User.class);
 		service.list();
 
-		PersistenceManager.getInstance().commitAndClose();
+		service.closeServices();
 
 		System.out.println("Done");
 	}

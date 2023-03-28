@@ -26,16 +26,8 @@ public class NotificationsResource extends BaseEntitiesResource<Notification, No
 	@Produces(MediaType.APPLICATION_JSON)
 	public Collection<Notification> getMyNotifications() throws Exception {
 		// because notification are cached, we need a transaction
-		try {
-			getPersistenceManager().startTransaction(getEntityManager());
-
-			return getService().getMyNotifications();
-		} catch (Exception ex) {
-			getPersistenceManager().rollback(getEntityManager());
-			throw ex;
-		} finally {
-			getPersistenceManager().commit(getEntityManager());
-		}
+		getService().startTransaction();
+		return getService().getMyNotifications();
 	}
 
 	@GET

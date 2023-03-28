@@ -94,22 +94,17 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 	@DELETE
 	public void delete() throws Exception {
 		try {
-			getPersistenceManager().startTransaction(getEntityManager());
-
 			// get the entity
 			E e = get(this.id);
 
 			// verify if the user can update this resource
 			getService().verifyActionRestrictions("delete", e);
 
+			getService().startTransaction();
 			getService().delete(this.id);
-			getPersistenceManager().commit(getEntityManager());
+			getService().commit();
 		} catch (jakarta.persistence.PersistenceException | java.sql.SQLIntegrityConstraintViolationException ex) {
-			getPersistenceManager().rollback(getEntityManager());
 			throw new ValidationException("constraintViolationException");
-		} catch (Exception ex) {
-			getPersistenceManager().rollback(getEntityManager());
-			throw ex;
 		}
 	}
 
@@ -124,22 +119,14 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public E update(E v) throws Exception {
-		try {
-			getPersistenceManager().startTransaction(getEntityManager());
+		// get the entity
+		E e = get(this.id);
 
-			// get the entity
-			E e = get(this.id);
+		// verify if the user can update this resource
+		getService().verifyActionRestrictions("update", e);
 
-			// verify if the user can update this resource
-			getService().verifyActionRestrictions("update", e);
-
-			return getService().update(v);
-		} catch (Exception ex) {
-			getPersistenceManager().rollback(getEntityManager());
-			throw ex;
-		} finally {
-			getPersistenceManager().commit(getEntityManager());
-		}
+		getService().startTransaction();
+		return getService().update(v);
 	}
 
 	/**
@@ -152,30 +139,24 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.APPLICATION_JSON)
 	public E updateField(MultivaluedMap<String, String> formParams) throws Exception {
-		try {
-			getPersistenceManager().startTransaction(getEntityManager());
+		// get the entity
+		E e = get(this.id);
 
-			// get the entity
-			E e = get(this.id);
-
+		if (formParams != null) {
 			// verify if the user can update this resource
 			getService().verifyActionRestrictions("update", e);
 
-			if (formParams != null) {
-				// only get the first value (multiple values not supported for now)
-				for (Map.Entry<String, List<String>> entry : formParams.entrySet()) {
-					String fieldName = entry.getKey();
-					String stringValue = entry.getValue().get(0);
-					getService().updateField(e, fieldName, stringValue);
-				}
-			}
+			getService().startTransaction();
 
+			// only get the first value (multiple values not supported for now)
+			for (Map.Entry<String, List<String>> entry : formParams.entrySet()) {
+				String fieldName = entry.getKey();
+				String stringValue = entry.getValue().get(0);
+				getService().updateField(e, fieldName, stringValue);
+			}
 			return getService().update(e);
-		} catch (Exception ex) {
-			getPersistenceManager().rollback(getEntityManager());
-			throw ex;
-		} finally {
-			getPersistenceManager().commit(getEntityManager());
+		} else {
+			return e;
 		}
 	}
 
@@ -197,8 +178,6 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 		// with " + formParams);
 
 		try {
-			getPersistenceManager().startTransaction(getEntityManager());
-
 			// verify if the user can get this resource
 			E e = get(this.id);
 
@@ -218,27 +197,24 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 				getService().verifyActionRestrictions(action, e);
 
 				method = this.getClass().getMethod(action, MultivaluedMap.class);
+
+				getService().startTransaction();
 				e = (E) method.invoke(this, formParams);
 				break;
 			}
 
 			return e;
 		} catch (NoSuchMethodException ex) {
-			getPersistenceManager().rollback(getEntityManager());
 			logger.error("No such method [" + action + "] exists");
 			throw new BaseException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "No method defined for the action [" + action + "]");
 		} catch (BaseException ex) {
-			getPersistenceManager().rollback(getEntityManager());
 			throw ex;
 		} catch (Exception ex) {
-			getPersistenceManager().rollback(getEntityManager());
 			if (ex instanceof InvocationTargetException && ex.getCause() != null && ex.getCause() instanceof BaseException) {
 				throw (BaseException) ex.getCause();
 			} else {
 				throw new BaseException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot call the method for the action [" + action + "]", ex);
 			}
-		} finally {
-			getPersistenceManager().commit(getEntityManager());
 		}
 	}
 

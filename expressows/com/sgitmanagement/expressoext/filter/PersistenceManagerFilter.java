@@ -14,8 +14,6 @@ import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 public class PersistenceManagerFilter implements Filter {
 	final private static Logger logger = LoggerFactory.getLogger(PersistenceManagerFilter.class);
@@ -31,19 +29,15 @@ public class PersistenceManagerFilter implements Filter {
 
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
-		HttpServletRequest request = (HttpServletRequest) req;
-		HttpServletResponse response = (HttpServletResponse) resp;
-
 		try {
-			// continue
-			chain.doFilter(request, response);
+			chain.doFilter(req, resp);
+			PersistenceManager.getInstance().commit();
+		} catch (Exception ex) {
+			logger.error("Error committing", ex);
+			PersistenceManager.getInstance().rollback();
 		} finally {
-
 			// close all services
-			AbstractBaseService.closeServices();
-
-			// close the connection
-			PersistenceManager.getInstance().commitAndClose();
+			AbstractBaseService.staticCloseServices();
 		}
 	}
 }

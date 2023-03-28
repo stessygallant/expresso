@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.base.RequireApproval;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
@@ -202,7 +201,7 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		RequiredApprovalService service = newServiceStatic(RequiredApprovalService.class, RequiredApproval.class);
 		service.list();
 
-		PersistenceManager.getInstance().commitAndClose();
+		service.closeServices();
 
 		System.out.println("Done");
 	}

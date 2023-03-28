@@ -14,7 +14,6 @@ import org.apache.directory.api.ldap.model.entry.ModificationOperation;
 import org.apache.directory.api.ldap.model.entry.Value;
 import org.apache.directory.api.ldap.model.message.SearchScope;
 
-import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expressoext.base.BaseService;
@@ -591,9 +590,7 @@ public class ActiveDirectoryUserService extends BaseService {
 			System.out.println(activeDirectoryUser);
 		}
 
-		ActiveDirectoryLDAPClient.INSTANCE.close();
-
-		PersistenceManager.getInstance().commitAndClose();
+		service.closeServices();
 		System.out.println("Done");
 	}
 }

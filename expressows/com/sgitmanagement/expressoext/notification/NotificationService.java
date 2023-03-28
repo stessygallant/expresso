@@ -24,7 +24,6 @@ import javax.cache.spi.CachingProvider;
 
 import org.reflections.Reflections;
 
-import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
@@ -190,8 +189,8 @@ public class NotificationService extends BaseEntityService<Notification> {
 				@Override
 				public void run() {
 					// retrieve the notifications for the service
+					NotificationService notificationService = newServiceStatic(NotificationService.class, Notification.class, user);
 					try {
-						NotificationService notificationService = newServiceStatic(NotificationService.class, Notification.class, user);
 
 						// logger.debug("Getting notification from [" + notifiableServiceClassName + "]");
 						// get the service with a new EntityManager (EntityManager are not thread safe)
@@ -208,7 +207,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 						logger.debug("Closing [" + notifiableServiceClassName + "]");
 
 						// must close the connection for the thread
-						PersistenceManager.getInstance().commitAndClose();
+						notificationService.closeServices();
 					}
 				}
 			});
@@ -412,7 +411,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 		for (int i = 0; i < threads.length; i++) {
 			threads[i].join();
 		}
-		// PersistenceManager.getInstance().commitAndClose();
+		// service.closeServices();
 
 		System.out.println("Done");
 	}

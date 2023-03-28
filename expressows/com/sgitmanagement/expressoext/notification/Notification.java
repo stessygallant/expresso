@@ -202,17 +202,6 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 		return performedActionUser;
 	}
 
-	// TODO to be removed
-	@Deprecated
-	public String getResourceNo() {
-		return resourceTitle;
-	}
-
-	@Deprecated
-	public void setResourceNo(String resourceNo) {
-		this.resourceTitle = resourceNo;
-	}
-
 	public Integer getUserId() {
 		return userId;
 	}

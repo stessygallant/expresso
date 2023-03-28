@@ -46,29 +46,15 @@ public class JobTitlesResource extends BaseOptionsResource<JobTitle, JobTitleSer
 		@POST
 		@Path("role/{roleId}")
 		public void addRole(@PathParam("roleId") int roleId) throws Exception {
-			try {
-				getPersistenceManager().startTransaction(getEntityManager());
-				getService().addRole(getId(), roleId);
-			} catch (Exception ex) {
-				getPersistenceManager().rollback(getEntityManager());
-				throw ex;
-			} finally {
-				getPersistenceManager().commit(getEntityManager());
-			}
+			getService().startTransaction();
+			getService().addRole(getId(), roleId);
 		}
 
 		@DELETE
 		@Path("role/{roleId}")
 		public void removeRole(@PathParam("roleId") int roleId) throws Exception {
-			try {
-				getPersistenceManager().startTransaction(getEntityManager());
-				getService().removeRole(getId(), roleId);
-			} catch (Exception ex) {
-				getPersistenceManager().rollback(getEntityManager());
-				throw ex;
-			} finally {
-				getPersistenceManager().commit(getEntityManager());
-			}
+			getService().startTransaction();
+			getService().removeRole(getId(), roleId);
 		}
 
 		@Path("{approbationamount:(?i)approbationamount}")

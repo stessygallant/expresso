@@ -2525,7 +2525,7 @@ expresso.util.UIUtil = (function () {
                 $imageOverlay.css("max-width", windowWidth - 2 * margin);
                 $imageOverlay.css("max-height", windowHeight - 2 * margin);
                 $overlay.css("display", "flex");
-                
+
                 // when the close button is click hide the full size picture
                 $overlay.find(".exp-close-button").show().one("click", function () {
                     $(this).hide();
@@ -2606,6 +2606,19 @@ expresso.util.UIUtil = (function () {
                         }
                     });
                 }
+            }
+        };
+
+        /**
+         *
+         * @param $input
+         */
+        var triggerChange = function ($input) {
+            var widget = expresso.util.UIUtil.getKendoWidget($input);
+            if (widget) {
+                widget.trigger("change");
+            } else {
+                $input.trigger("change");
             }
         };
 
@@ -2812,6 +2825,7 @@ expresso.util.UIUtil = (function () {
             initializeForm: initializeForm,
             resetForm: resetForm,
             bindOnChange: bindOnChange,
+            triggerChange: triggerChange,
             setFormReadOnly: setFormReadOnly,
             setFieldReadOnly: setFieldReadOnly,
             hideField: hideField,

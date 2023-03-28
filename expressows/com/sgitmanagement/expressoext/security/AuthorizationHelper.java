@@ -66,8 +66,6 @@ public class AuthorizationHelper {
 	}
 
 	public static User getUser(String userName) {
-		// this will only select the attributes on the user class
-		// then it will send request to load the EAGER ManytoOne relation
 		return getDefaultEntityManager().createQuery("SELECT s FROM User s WHERE s.userName = :userName", User.class).setParameter("userName", userName.toLowerCase()).getSingleResult();
 	}
 
