@@ -22,6 +22,7 @@ import jakarta.ws.rs.core.MultivaluedMap;
 
 abstract public class AbstractBaseService<U extends IUser> implements AutoCloseable, Authorizable<U> {
 	private static ThreadLocal<List<AbstractBaseService<?>>> servicesThreadLocal = new ThreadLocal<>();
+	public static Logger staticLogger = LoggerFactory.getLogger(AbstractBaseService.class);
 
 	protected Logger logger;
 	private HttpServletRequest request;
@@ -56,11 +57,6 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 		}
 
 		return this.entityManager;
-	}
-
-	@Override
-	public void close() throws Exception {
-		// noop
 	}
 
 	final public Integer getParentId() {
@@ -109,6 +105,15 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 		flush();
 		getEntityManager().clear();
 		getEntityManager().getEntityManagerFactory().getCache().evictAll();
+	}
+
+	/**
+	 * 
+	 *
+	 * @throws Exception
+	 */
+	final public void startTransaction() throws Exception {
+		getPersistenceManager().startTransaction(getEntityManager(true));
 	}
 
 	/**
@@ -316,19 +321,37 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	}
 
 	/**
-	 * Close all service for the thread
+	 * Close all services for the thread
 	 */
-	static public void closeServices() {
+	final public void closeServices() {
+		staticCloseServices();
+	}
+
+	/**
+	 * Close all services for the thread
+	 */
+	static public void staticCloseServices() {
 		List<AbstractBaseService<?>> services = servicesThreadLocal.get();
 		if (services != null) {
 			for (AbstractBaseService<?> service : services) {
 				try {
 					service.close();
 				} catch (Exception ex) {
-					ex.printStackTrace();
+					staticLogger.error("Cannot close service [" + service.getClass().getSimpleName() + "]", ex);
 				}
 			}
 		}
 		servicesThreadLocal.remove();
+
+		// close all connections
+		PersistenceManager.getInstance().commitAndClose();
+
+		// close the User
+		UserManager.getInstance().close();
+	}
+
+	@Override
+	public void close() throws Exception {
+		// noop
 	}
 }

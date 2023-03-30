@@ -163,6 +163,17 @@ public class PersistenceManager implements AutoCloseable {
 		return tx;
 	}
 
+	/**
+	 * Utility method to commit all opened connection for this thread
+	 */
+	public void commit() throws Exception {
+		if (entityManagersThreadLocal.get() != null) {
+			for (EntityManager entityManager : entityManagersThreadLocal.get().values()) {
+				commit(entityManager);
+			}
+		}
+	}
+
 	public void commit(EntityManager em) throws Exception {
 		commit(em, false);
 	}
@@ -179,6 +190,8 @@ public class PersistenceManager implements AutoCloseable {
 			EntityTransaction tx = em.getTransaction();
 			try {
 				if (tx.isActive()) {
+					// logger.debug("Committing");
+
 					if (tx.getRollbackOnly()) {
 						tx.rollback();
 					} else {
@@ -227,7 +240,6 @@ public class PersistenceManager implements AutoCloseable {
 				rollback(entityManager);
 			}
 		}
-		entityManagersThreadLocal.set(null);
 	}
 
 	public void rollback(EntityManager em) {
@@ -270,8 +282,6 @@ public class PersistenceManager implements AutoCloseable {
 			}
 		}
 		entityManagersThreadLocal.remove();
-
-		UserManager.getInstance().close();
 	}
 
 	/**
@@ -310,10 +320,6 @@ public class PersistenceManager implements AutoCloseable {
 
 	@Override
 	public void close() throws Exception {
-		try {
-			commitAndClose();
-		} catch (Exception ex) {
-			logger.warn("Cannot close entity manager: " + ex);
-		}
+		commitAndClose();
 	}
 }

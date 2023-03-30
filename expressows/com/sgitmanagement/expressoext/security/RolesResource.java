@@ -51,29 +51,15 @@ public class RolesResource extends BaseOptionsResource<Role, RoleService, RoleRe
 		@POST
 		@Path("privilege/{privilegeId}")
 		public void addPrivilege(@PathParam("privilegeId") int privilegeId) throws Exception {
-			try {
-				getPersistenceManager().startTransaction(getEntityManager());
-				getService().addPrivilege(getId(), privilegeId);
-			} catch (Exception ex) {
-				getPersistenceManager().rollback(getEntityManager());
-				throw ex;
-			} finally {
-				getPersistenceManager().commit(getEntityManager());
-			}
+			getService().startTransaction();
+			getService().addPrivilege(getId(), privilegeId);
 		}
 
 		@DELETE
 		@Path("privilege/{privilegeId}")
 		public void removePrivilege(@PathParam("privilegeId") int privilegeId) throws Exception {
-			try {
-				getPersistenceManager().startTransaction(getEntityManager());
-				getService().removePrivilege(getId(), privilegeId);
-			} catch (Exception ex) {
-				getPersistenceManager().rollback(getEntityManager());
-				throw ex;
-			} finally {
-				getPersistenceManager().commit(getEntityManager());
-			}
+			getService().startTransaction();
+			getService().removePrivilege(getId(), privilegeId);
 		}
 	}
 }

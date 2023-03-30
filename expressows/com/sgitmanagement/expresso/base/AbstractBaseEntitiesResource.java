@@ -281,19 +281,12 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public E create(E e) throws Exception {
-		try {
-			getService().getPersistenceManager().startTransaction(getEntityManager());
+		// verify creation restrictions
+		verifyCreationRestrictions();
 
-			// verify creation restrictions
-			verifyCreationRestrictions();
-
-			return getService().create(e);
-		} catch (Exception ex) {
-			getService().getPersistenceManager().rollback(getEntityManager());
-			throw ex;
-		} finally {
-			getService().getPersistenceManager().commit(getEntityManager());
-		}
+		// startTransaction
+		getService().startTransaction();
+		return getService().create(e);
 	}
 
 	@GET
@@ -630,25 +623,20 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 
 		logger.debug("PerformING entity collection action [" + action + "] on [" + this.getClass().getSimpleName() + "]");
 		try {
-			getService().getPersistenceManager().startTransaction(getEntityManager());
+			getService().startTransaction();
 			Method method = this.getClass().getMethod(action, MultivaluedMap.class);
 			return (E) method.invoke(this, formParams);
 		} catch (NoSuchMethodException e) {
-			getService().getPersistenceManager().rollback(getEntityManager());
 			logger.error("No such method [" + action + "] exists");
 			throw new BaseException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "No method defined for the action [" + action + "]");
 		} catch (BaseException e) {
-			getService().getPersistenceManager().rollback(getEntityManager());
 			throw e;
 		} catch (Exception e) {
-			getService().getPersistenceManager().rollback(getEntityManager());
 			if (e instanceof InvocationTargetException && e.getCause() != null && e.getCause() instanceof BaseException) {
 				throw (BaseException) e.getCause();
 			} else {
 				throw e;
 			}
-		} finally {
-			getService().getPersistenceManager().commit(getEntityManager());
 		}
 		// logger.info("PerformED action [" + action + "] on [" + this.getClass().getSimpleName() + "]");
 	}
@@ -662,7 +650,6 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 	public void sync(MultivaluedMap<String, String> formParams) throws Exception {
 		// only 1 sync at the same time per class
 		synchronized (this.getClass()) {
-			this.getService().commit(); // we need to start a new transaction to refresh the database session
 			String section = Util.getParameterValue(getRequest(), "section");
 			String useProgressSender = Util.getParameterValue(getRequest(), "useProgressSender");
 			if (formParams != null && section == null) {
@@ -675,7 +662,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 				this.getService().sync(formParams, new ProgressSender(useProgressSender != null ? getResponse() : null));
 			}
 
-			this.getService().commit(); // we need to commit before the end of the synchronized to let the other session get our modifications
+			getService().commit(); // we need to commit before the end of the synchronized to let the other session get our modifications
 		}
 	}
 

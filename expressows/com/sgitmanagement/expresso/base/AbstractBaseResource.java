@@ -44,18 +44,15 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 		logger.debug("PerformING action [" + action + "] on [" + this.getClass().getSimpleName() + "]"); // + Util.getMemoryStats());
 		// with " + formParams);
 		try {
-			getService().getPersistenceManager().startTransaction(getEntityManager());
+			getService().startTransaction();
 			Method method = this.getClass().getMethod(action, MultivaluedMap.class);
 			method.invoke(this, formParams);
 		} catch (NoSuchMethodException e) {
-			getService().getPersistenceManager().rollback(getEntityManager());
 			logger.error("No such method [" + action + "] exists");
 			throw new BaseException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "No method defined for the action [" + action + "]");
 		} catch (BaseException e) {
-			getService().getPersistenceManager().rollback(getEntityManager());
 			throw e;
 		} catch (Exception e) {
-			getService().getPersistenceManager().rollback(getEntityManager());
 			if (e instanceof InvocationTargetException && e.getCause() != null && e.getCause() instanceof BaseException) {
 				throw (BaseException) e.getCause();
 			} else {
@@ -63,8 +60,6 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 				// "Cannot call the method for the action [" + action + "]", e);
 				throw e;
 			}
-		} finally {
-			getService().getPersistenceManager().commit(getEntityManager());
 		}
 		// logger.info("PerformED action [" + action + "] on [" + this.getClass().getSimpleName() + "] " + Util.getMemoryStats());
 	}
@@ -74,14 +69,17 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 		return (U) UserManager.getInstance().getUser();
 	}
 
+	@Deprecated
 	final public EntityManager getEntityManager() {
 		return getEntityManager(true);
 	}
 
+	@Deprecated
 	final public EntityManager getEntityManager(boolean startTransaction) {
 		return this.service.getEntityManager(startTransaction);
 	}
 
+	@Deprecated
 	final public PersistenceManager getPersistenceManager() {
 		return this.service.getPersistenceManager();
 	}
@@ -131,7 +129,6 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 	 */
 	public void process(MultivaluedMap<String, String> formParams) throws Exception {
 		synchronized (this.getClass()) {
-			this.getService().commit(); // we need to start a new transaction to refresh the database session
 			String section = Util.getParameterValue(getRequest(), "section");
 			if (section != null) {
 				// backward compatible when section is on query string
@@ -140,7 +137,7 @@ public abstract class AbstractBaseResource<S extends AbstractBaseService<U>, U e
 			} else {
 				this.getService().process(formParams);
 			}
-			this.getService().commit(); // we need to commit before the end of the synchronized to let the other session get our modifications
+			getService().commit(); // we need to commit before the end of the synchronized to let the other session get our modifications
 		}
 	}
 }

@@ -6,14 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.base.UserManager;
-import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.exception.InvalidCredentialsException;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.security.AuthorizationHelper;
 import com.sgitmanagement.expressoext.security.User;
-import com.sgitmanagement.expressoext.security.UserService;
-import com.sgitmanagement.expressoext.util.AuthenticationService;
 import com.sgitmanagement.termont.util.UserUtil;
 
 import jakarta.persistence.NoResultException;
@@ -55,49 +52,44 @@ public class SessionValidationFilter implements Filter {
 			chain.doFilter(request, response);
 		} else {
 			// user is authenticated
-			try {
-				User user;
-				if (session.getAttribute("userId") != null) {
-					user = getUser(session, request, response);
+			User user;
+			if (session.getAttribute("userName") != null) {
+				user = getUser(session, request, response);
 
+				// store the user in the request
+				UserManager.getInstance().setUser(user);
+
+				// validate the session (NOT for PROD for now)
+				if (SystemEnv.INSTANCE.isInProduction() || isSessionValid(session, request, response, user)) {
+					chain.doFilter(request, response);
+				} else {
+					try {
+						session.invalidate();
+						request.logout();
+					} catch (Exception ex) {
+						// ignore
+					}
+					response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalidSession");
+				}
+
+			} else {
+				// first time only
+				user = storeUserInfoInSession(session, request, response);
+
+				if (user == null) {
+					try {
+						session.invalidate();
+					} catch (Exception ex) {
+						// ignore
+					}
+					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				} else {
 					// store the user in the request
 					UserManager.getInstance().setUser(user);
 
-					// validate the session (NOT for PROD for now)
-					if (SystemEnv.INSTANCE.isInProduction() || isSessionValid(session, request, response, user)) {
-						chain.doFilter(request, response);
-					} else {
-						try {
-							AuthenticationService.newServiceStatic(AuthenticationService.class).logout();
-						} catch (Exception ex) {
-							// ignore
-						}
-						response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalidSession");
-					}
-
-				} else {
-					// first time only
-					user = storeUserInfoInSession(session, request, response);
-
-					if (user == null) {
-						try {
-							session.invalidate();
-						} catch (Exception ex) {
-							// ignore
-						}
-						response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-					} else {
-						// store the user in the request
-						UserManager.getInstance().setUser(user);
-
-						// continue
-						chain.doFilter(request, response);
-					}
+					// continue
+					chain.doFilter(request, response);
 				}
-
-			} finally {
-				// remove the user
-				UserManager.getInstance().close();
 			}
 		}
 	}
@@ -117,15 +109,14 @@ public class SessionValidationFilter implements Filter {
 
 		try {
 			// get the user from the session
-			UserService userService = UserService.newServiceStatic(UserService.class, User.class);
-			user = userService.get((Integer) session.getAttribute("userId"));
+			user = AuthorizationHelper.getUser((String) session.getAttribute("userName"));
 
 			// if a user is impersonating another user. Only admin user can do it
 			User impersonatedUser = null;
 			if (AuthorizationHelper.isUserAdmin(user) && request.getHeader(HEADER_IMPERSONATE) != null) {
 				String impersonatedUserName = request.getHeader(HEADER_IMPERSONATE);
 				try {
-					impersonatedUser = userService.get(new Query.Filter("userName", impersonatedUserName));
+					impersonatedUser = AuthorizationHelper.getUser(impersonatedUserName);
 				} catch (NoResultException e) {
 					logger.warn("User [" + impersonatedUserName + "] not found in database");
 				}
@@ -150,8 +141,6 @@ public class SessionValidationFilter implements Filter {
 		User user = null;
 
 		try {
-			UserService userService = UserService.newServiceStatic(UserService.class, User.class);
-
 			// first retrieve the user
 			String authName = request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : null;
 			if (authName != null && authName.contains("@")) {
@@ -161,7 +150,7 @@ public class SessionValidationFilter implements Filter {
 			if (authName != null) {
 				// load the user
 				try {
-					user = userService.get(new Query.Filter("userName", authName));
+					user = AuthorizationHelper.getUser(authName);
 				} catch (NoResultException ex) {
 					logger.info("Cannot find user with userName [" + authName + "]");
 					// if SSO and user is in Active Directory, create the user in local database
@@ -176,7 +165,6 @@ public class SessionValidationFilter implements Filter {
 			if (user != null) {
 				logger.debug("Storing user [" + user.getUserName() + "] in session [" + session.getId() + "] IP[" + Util.getIpAddress(request) + "]");
 
-				session.setAttribute("userId", user.getId());
 				session.setAttribute("userName", user.getUserName());
 				session.setAttribute("ipAddress", Util.getIpAddress(request));
 
@@ -205,7 +193,6 @@ public class SessionValidationFilter implements Filter {
 		boolean valid = true;
 
 		// verify if the info in the session is the same
-		// Integer userId = (Integer) session.getAttribute("userId");
 		// String userName = (String) session.getAttribute("userName");
 		String ipAddress = (String) session.getAttribute("ipAddress");
 		String sessionToken = (String) session.getAttribute("sessionToken");

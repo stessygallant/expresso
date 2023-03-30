@@ -276,6 +276,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param stringValue
 	 */
 	public void updateField(E e, String fieldName, String stringValue) throws Exception {
+		// because many call to update a field from the same resource may be called,
+		// we need to get a lock for the resource
+		lock(e);
+
 		Field field = Util.getField(e, fieldName);
 		if (field != null) {
 			// need to convert the type
@@ -283,7 +287,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			Object value = Util.convertValue(stringValue, fieldTypeClassName);
 			field.set(e, value);
 		}
-		flushAndRefresh(e);
+		// flushAndRefresh(e);
 	}
 
 	/**
@@ -459,7 +463,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				} else {
 
 					if (!Util.equals(newValue, oldValue)) {
-						// System.out.println("Setting [" + field.getName() + "]: [" + oldValue + " -> "
+						// logger.debug("Setting [" + field.getName() + "]: [" + oldValue + " -> "
 						// + newValue +
 						// "]");
 						updated = true;
@@ -564,9 +568,16 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param e
 	 */
 	final public E lock(E e) {
-		getEntityManager().flush();
-		getEntityManager().refresh(e, LockModeType.PESSIMISTIC_WRITE);
-		return e;
+		logger.debug("Waiting lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
+
+		// do NOT perform this locking refresh directly because it will lock all resources (with MySQL at least)
+		// getEntityManager().refresh(e, LockModeType.PESSIMISTIC_WRITE);
+		getEntityManager().lock(e, LockModeType.PESSIMISTIC_WRITE);
+
+		logger.debug("Got lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
+
+		// we must get the latest committed version of the entity (while waiting on the lock, the entity may have been changed by the owner of the lock
+		return flushAndRefresh(e);
 	}
 
 	/**
@@ -577,9 +588,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	final public E lockNoWait(E e) {
 		Map<String, Object> properties = new HashMap<>();
 		properties.put("jakarta.persistence.lock.timeout", 0);
-		getEntityManager().flush();
-		getEntityManager().refresh(e, LockModeType.PESSIMISTIC_WRITE, properties);
-		return e;
+		getEntityManager().lock(e, LockModeType.PESSIMISTIC_WRITE, properties);
+
+		// we must get the latest committed version of the entity (while waiting on the lock, the entity may have been changed by the owner of the lock
+		return flushAndRefresh(e);
 	}
 
 	/**
@@ -635,7 +647,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				query.addFilter(getSearchFilter(searchString));
 			}
 		}
-		// logger.debug("Search query: " + new Gson().toJson(query));
+		// logger.debug("Search query: " + query);
 		return list(query);
 	}
 
@@ -1009,15 +1021,17 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	/**
+	 * This method will only work if the isolation level is READ_COMMITTED
 	 * 
 	 * @param filter
 	 * @return
 	 * @throws Exception
 	 */
 	private E createEntityFromUniqueConstraints(Query query) throws Exception {
+		logger.debug("createEntityFromUniqueConstraints resource [" + getResourceName() + "] query: " + new Gson().toJson(query));
+
 		UniqueFieldConstraints constraintsAnnotation = getTypeOfE().getAnnotation(UniqueFieldConstraints.class);
 		if (constraintsAnnotation != null) {
-
 			Object lock;
 			synchronized (this.getClass()) {
 				if (creationQueryMap.containsKey(query)) {
@@ -1030,9 +1044,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 			E e = null;
 			synchronized (lock) {
-				// we need to start a new transaction
-				commit();
-
 				// first try to get it
 				try {
 					e = get(query.setCreateIfNotFound(false));
@@ -1058,7 +1069,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 								throw new Exception("Cannot create entity. Field value missing [" + fieldName + "]");
 							}
 
-							// System.out.println("Setting " + fieldName + " to [" + value + "]");
+							// logger.debug("Setting " + fieldName + " to [" + value + "]");
 							field.set(e, Util.convertValue(value, field.getType().getSimpleName()));
 						}
 					}
@@ -1069,7 +1080,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					// create and commit for other process to see it
 					logger.debug("Creating on demand [" + query + "]");
 					e = create(e);
-					commit();
 
 					// clean the map
 					creationQueryMap.remove(query);
@@ -1093,7 +1103,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		if (query == null) {
 			query = new Query();
 		}
-		// System.out.println("**** activeOnly" + query.activeOnly() + "
+		// logger.debug("**** activeOnly" + query.activeOnly() + "
 		// isAssignableFrom:"
 		// + Deactivable.class.isAssignableFrom(getTypeOfE()) + " getTypeOfE():" +
 		// getTypeOfE().getName());
@@ -1605,15 +1615,15 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	/**
-	 * Give a change to subclass to define default sorts. Default is to sort on the first keyField
+	 * Give a change to subclass to define default sorts.
 	 */
 	protected Query.Sort[] getDefaultQuerySort() {
-		return new Query.Sort[] { new Query.Sort("id", Query.Sort.Direction.desc) };
+		return getUniqueQuerySort();
 	}
 
 	/**
-	 * Give a change to subclass to define the unique sorts. This is mandatory because when sorting by a non unique value, the result set is not stable. Expresso will always add this unique sort at
-	 * the end of the order by clause
+	 * Give a change to subclass to define the unique sorts. This is mandatory because when sorting by a non unique value, the result set is not stable.<br>
+	 * Expresso will always add this unique sort at the end of the order by clause
 	 */
 	protected Query.Sort[] getUniqueQuerySort() {
 		return new Query.Sort[] { new Query.Sort("id", Query.Sort.Direction.desc) };
@@ -3134,7 +3144,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				ColumnMetaData columnMetaData = null;
 				if (column != null) {
 					columnMetaData = columnMap.get(column.name().toLowerCase());
-					// System.out.println(column.name().toLowerCase() + ":" + columnMetaData);
+					// logger.debug(column.name().toLowerCase() + ":" + columnMetaData);
 				}
 
 				String appClassFieldType = getAppClassFieldType(type);
@@ -3504,7 +3514,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			UserManager.getInstance().setUser(user);
 			return service;
 		} catch (Exception ex) {
-			ex.printStackTrace(); // cannot user logger.error
+			staticLogger.error("Cannot create new service", ex);
 			return null;
 		}
 	}

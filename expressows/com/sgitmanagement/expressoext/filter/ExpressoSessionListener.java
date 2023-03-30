@@ -15,7 +15,7 @@ public class ExpressoSessionListener implements HttpSessionListener {
 	@Override
 	public void sessionCreated(HttpSessionEvent sessionEvent) {
 		HttpSession httpSession = sessionEvent.getSession();
-		logger.debug("Creating new session: " + httpSession.getId() + (httpSession.getAttribute("userId") != null ? " (" + httpSession.getAttribute("userId") + ")" : ""));
+		logger.debug("Creating new session: " + httpSession.getId() + (httpSession.getAttribute("userName") != null ? " (" + httpSession.getAttribute("userName") + ")" : ""));
 	}
 
 	@Override

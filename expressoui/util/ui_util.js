@@ -2615,6 +2615,19 @@ expresso.util.UIUtil = (function () {
         };
 
         /**
+         *
+         * @param $input
+         */
+        var triggerChange = function ($input) {
+            var widget = expresso.util.UIUtil.getKendoWidget($input);
+            if (widget) {
+                widget.trigger("change");
+            } else {
+                $input.trigger("change");
+            }
+        };
+
+        /**
          * Bind the widget on the "change" event or bind the $input if not a widget
          * @param $input
          * @param onChangeCallback
@@ -2817,6 +2830,7 @@ expresso.util.UIUtil = (function () {
             initializeForm: initializeForm,
             resetForm: resetForm,
             bindOnChange: bindOnChange,
+            triggerChange: triggerChange,
             setFormReadOnly: setFormReadOnly,
             setFieldReadOnly: setFieldReadOnly,
             hideField: hideField,

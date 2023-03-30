@@ -23,7 +23,6 @@ import org.apache.directory.ldap.client.api.LdapNetworkConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.util.SystemEnv;
 
 public class ActiveDirectoryLDAPClient {
@@ -262,9 +261,6 @@ public class ActiveDirectoryLDAPClient {
 		ActiveDirectoryLDAPClient.INSTANCE.getLdapConnection();
 
 		ActiveDirectoryLDAPClient.INSTANCE.close();
-
-		PersistenceManager.getInstance().commitAndClose();
-
 		System.out.println("Done");
 	}
 }

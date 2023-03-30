@@ -66,7 +66,7 @@ public enum FieldRestrictionUtil {
 			String resourceName = StringUtils.uncapitalize(fieldRestrictionEntityClass.getSimpleName());
 			String entityRestrictedRole = fieldRestrictionEntityClass.getAnnotation(FieldRestriction.class).role();
 
-			logger.info("FieldRestricted entity [" + resourceName + "] role[" + entityRestrictedRole + "]");
+			// logger.info("FieldRestricted entity [" + resourceName + "] role[" + entityRestrictedRole + "]");
 
 			// get all restricted fields in the entity
 			Map<String, String> fieldMap = new HashMap<>();
@@ -76,7 +76,7 @@ public enum FieldRestrictionUtil {
 				if (role == null || role.trim().length() == 0) {
 					role = entityRestrictedRole;
 				}
-				logger.debug("  FieldRestricted field [" + field.getName() + "] role[" + role + "]");
+				// logger.debug(" FieldRestricted field [" + field.getName() + "] role[" + role + "]");
 				fieldMap.put(field.getName(), role);
 			}
 

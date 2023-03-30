@@ -844,7 +844,9 @@ expresso.Main = function () {
             }
 
             if (expresso.Common.getSiteNamespace().config.Configurations.supportNotifications) {
-                initNotifications();
+                if (expresso.Common.isProduction()) {
+                    initNotifications();
+                }
             }
         }
 

@@ -13,7 +13,6 @@ import org.apache.directory.api.ldap.model.entry.ModificationOperation;
 import org.apache.directory.api.ldap.model.entry.Value;
 import org.apache.directory.api.ldap.model.message.SearchScope;
 
-import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expressoext.base.BaseService;
@@ -438,6 +437,11 @@ public class ActiveDirectoryGroupService extends BaseService {
 		return (name.startsWith("G-") || name.startsWith("#") || name.startsWith("CN=G-") || name.startsWith("CN=\\#"));
 	}
 
+	@Override
+	public void close() throws Exception {
+		ActiveDirectoryLDAPClient.INSTANCE.close();
+	}
+
 	public static void main(String[] args) throws Exception {
 		ActiveDirectoryGroupService service = newServiceStatic(ActiveDirectoryGroupService.class);
 
@@ -446,10 +450,7 @@ public class ActiveDirectoryGroupService extends BaseService {
 			System.out.println(activeDirectoryGroup);
 		}
 
-		ActiveDirectoryLDAPClient.INSTANCE.close();
-
-		PersistenceManager.getInstance().commitAndClose();
-
+		service.closeServices();
 		System.out.println("Done");
 	}
 }

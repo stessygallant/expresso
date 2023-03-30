@@ -316,6 +316,11 @@ public class Query {
 
 	@Override
 	public String toString() {
+		return new Gson().toJson(this);
+	}
+
+	// @Override
+	public String toString2() {
 		String s = "Query [";
 		if (activeOnly != null) {
 			s += "activeOnly=" + activeOnly + ";";

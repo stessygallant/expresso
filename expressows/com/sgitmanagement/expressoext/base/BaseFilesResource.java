@@ -81,6 +81,7 @@ public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileSe
 			params.put(key, formParams.getFirst(key));
 		}
 
+		getService().startTransaction();
 		return uploadFile(fileInputStream, fileName, params);
 	}
 
@@ -116,6 +117,7 @@ public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileSe
 				}
 			}
 		}
+		getService().startTransaction();
 		return uploadFile(fileInputStream, fileName, params);
 	}
 
@@ -137,14 +139,6 @@ public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileSe
 			params.put(getParentName() + "Id", "" + getParentId());
 		}
 
-		try {
-			getService().getPersistenceManager().startTransaction(getEntityManager());
-			return getService().uploadFile(null, fileInputStream, fileName, params);
-		} catch (Exception ex) {
-			getService().getPersistenceManager().rollback(getEntityManager());
-			throw ex;
-		} finally {
-			getService().getPersistenceManager().commit(getEntityManager());
-		}
+		return getService().uploadFile(null, fileInputStream, fileName, params);
 	}
 }
