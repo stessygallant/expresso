@@ -1269,7 +1269,7 @@ expresso.util.UIUtil = (function () {
             var widget = getKendoWidget($input);
             data = convertList(data, labels);
 
-            //console.log("Setting new datasource on [" + $input[0].name + "]", dataSource);
+            // console.log("Setting new datasource on [" + $input[0].name + "]", data);
             widget.value(null);
             widget.setDataSource(new kendo.data.DataSource({data: data}));
             if (defaultValue !== undefined) {
@@ -1494,8 +1494,9 @@ expresso.util.UIUtil = (function () {
             var defaultOptions = {
                 dataValueField: customOptions.dataValueField || "id",
                 dataTextField: customOptions.dataTextField || "label",
+                placeholder: customOptions.optionLabel,
                 valuePrimitive: true,
-                filter: "contains",
+                filter: customOptions.showSearch !== false ? customOptions.showSearch || "contains" : undefined,
                 height: 500,
                 //checkboxes: true,
                 // tagMode: "single",
@@ -1700,6 +1701,10 @@ expresso.util.UIUtil = (function () {
          */
         var buildMultiSelect = function ($select, wsListPathOrData, customOptions) {
             var $deferred = $.Deferred();
+
+            // because we cannot apply the max-height directly on the multiselect (scroll does not work when readonly)
+            // we need to wrap the select element
+            $select.wrap("<div class='exp-multiselect-wrap'></div>");
 
             // deal with undefined customOptions
             customOptions = customOptions || {};
@@ -2525,7 +2530,7 @@ expresso.util.UIUtil = (function () {
                 $imageOverlay.css("max-width", windowWidth - 2 * margin);
                 $imageOverlay.css("max-height", windowHeight - 2 * margin);
                 $overlay.css("display", "flex");
-                
+
                 // when the close button is click hide the full size picture
                 $overlay.find(".exp-close-button").show().one("click", function () {
                     $(this).hide();

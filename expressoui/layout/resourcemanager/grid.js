@@ -2258,7 +2258,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     performDownload: function () {
         var _this = this;
         if (this.selectedRows.length) {
-            $.each(this.selectedRows, function (index) {
+            $.each(this.selectedRows, function () {
                 var resource = this;
                 var url = _this.resourceManager.getWebServicePath(resource.id);
                 expresso.Common.sendDownloadRequest(url);

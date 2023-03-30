@@ -199,13 +199,6 @@
     border-color: $themeColorDark;
 }
 
-.k-multiselect-wrap {
-    max-height: 140px;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-
 //
 // ------------------------------------------------------------------------------------------------------------------
 // LOOKUP SELECTION CSS
@@ -649,6 +642,13 @@
 
 .k-numeric-wrap .k-select {
     // border-right-width: 1px;  DO NOT it double the line for CEZinc
+}
+
+// do not apply the max-height direcly on k-multiselect-wrap (scroll do not work when readonly)
+.exp-multiselect-wrap {
+    max-height: 140px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 // for multiselect, allow only 1 selection per line
