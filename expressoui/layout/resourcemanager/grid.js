@@ -1616,11 +1616,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 target: "#" + guid,  // target the button savefilters
                 select: function (e) {
                     e.preventDefault();
-                    //console.log("Menu item selected", e);
+                    // console.log("Menu item selected", e);
 
                     var $menuItem = $(e.item);
                     var action = $menuItem.find("span[data-action]").data("action");
-                    //console.log("Action: " + action);
+                    // console.log("Action: " + action);
                     if (action == "save") {
                         var gridFilter = _this.dataSource.filter();
                         var gridSort = _this.dataSource.sort();
@@ -1826,28 +1826,32 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             }
         });
 
-        // reorder columns
+        if (this.hierarchical) {
+            // TreeList is VERY slow to reorder columns. DO NOT PERFORM IT
+        } else {
+            // reorder columns
         var columnIndex = this.multipleSelectionEnabled ? 1 : 0; // 0 is for "select all" checkbox
-        //console.log("selectedGridPreference.gridColumns", selectedGridPreference.gridColumns);
-        $.each(selectedGridPreference.gridColumns, function () {
-            var field = this.field;
-            var column = _this.columnMap[field];
-            if (column) {
-                if (columnIndexMap[field] != columnIndex) {
-                    //console.log("Moving " + field + " from " + columnIndexMap[field] + " to " + columnIndex);
-                    _this.kendoGrid.reorderColumn(columnIndex, column);
-                }
+            //console.log("selectedGridPreference.gridColumns", selectedGridPreference.gridColumns);
+            $.each(selectedGridPreference.gridColumns, function () {
+                var field = this.field;
+                var column = _this.columnMap[field];
+                if (column) {
+                    if (columnIndexMap[field] != columnIndex) {
+                        // console.log("Moving " + field + " from " + columnIndexMap[field] + " to " + columnIndex);
+                        _this.kendoGrid.reorderColumn(columnIndex, column);
+                    }
 
-                // TreeList does not have resizeColumn method
-                if (_this.kendoGrid.resizeColumn) {
-                    // set the column width
-                    _this.kendoGrid.resizeColumn(column, this.width);
+                    // TreeList does not have resizeColumn method
+                    if (_this.kendoGrid.resizeColumn) {
+                        // set the column width
+                        _this.kendoGrid.resizeColumn(column, this.width);
+                    }
+                    columnIndex++;
+                } else {
+                    // this column does not exist anymore
                 }
-                columnIndex++;
-            } else {
-                // this column does not exist anymore
-            }
-        });
+            });
+        }
 
         // need to set the filter to the filter
         if (this.resourceManager.sections.filter) {

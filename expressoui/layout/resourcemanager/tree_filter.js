@@ -105,12 +105,21 @@ expresso.layout.resourcemanager.TreeFilter = expresso.layout.resourcemanager.Fil
             });
 
             // now we need to set indeterminate when not all children in the group are selected
-            $treeView.find(".k-group").each(function () {
-                var $kgroup = $(this);
-                var $parentLi = $kgroup.closest("li.k-item");
-                var $parentCheckbox = $parentLi.find("> :not(.k-group) [type=checkbox]");
-                if ($parentCheckbox.is(":checked") && $kgroup.find("[type=checkbox]:not(:checked)").length) {
-                    $parentCheckbox.prop("checked", false).prop("indeterminate", true);
+            $treeView.find("[type=checkbox]:checked").each(function () {
+                var $checkbox = $(this);
+                var $parentLi = $checkbox.closest("li.k-item");
+                var $parentUl = $parentLi.closest("ul.k-group");
+                if ($parentUl.length) {
+                    $checkbox.parents("li.k-item").each(function () {
+                        var $li = $(this);
+                        $li.find("> div [type=checkbox]").each(function () {
+                            var $parentCheckbox = $(this);
+                            // console.log("checkbox: " + $parentCheckbox.is(":checked") + ":" + $parentCheckbox.prop("indeterminate"));
+                            if (!$parentCheckbox.is(":checked")) {
+                                $parentCheckbox.prop("indeterminate", true);
+                            }
+                        });
+                    });
                 }
             });
         }
