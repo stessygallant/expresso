@@ -287,7 +287,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			Object value = Util.convertValue(stringValue, fieldTypeClassName);
 			field.set(e, value);
 		}
-		flushAndRefresh(e);
+		// flushAndRefresh(e);
 	}
 
 	/**
@@ -1028,7 +1028,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @throws Exception
 	 */
 	private E createEntityFromUniqueConstraints(Query query) throws Exception {
-		logger.debug("createEntityFromUniqueConstraints query: " + new Gson().toJson(query));
+		logger.debug("createEntityFromUniqueConstraints resource [" + getResourceName() + "] query: " + new Gson().toJson(query));
 
 		UniqueFieldConstraints constraintsAnnotation = getTypeOfE().getAnnotation(UniqueFieldConstraints.class);
 		if (constraintsAnnotation != null) {
