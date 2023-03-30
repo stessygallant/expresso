@@ -111,8 +111,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             }
         }
 
-        // options could contains configuration
-        if (this.activeOnly === undefined && this.resourceManager.options.activeOnly !== undefined) {
+        // ALWAYS override activeOnly with resource manager options
+        if (this.resourceManager.options.activeOnly !== undefined) {
+            console.log(this.resourceManager.getResourceSecurityPath() + " - Grid activeOnly (RM override): " +
+                this.activeOnly + " -> " + this.resourceManager.options.activeOnly);
+        } else {
+            // console.log(this.resourceManager.getResourceSecurityPath() + " - Grid activeOnly: " + this.activeOnly);
+        }
+        if (this.resourceManager.options.activeOnly !== undefined) {
             this.activeOnly = this.resourceManager.options.activeOnly;
         }
 
