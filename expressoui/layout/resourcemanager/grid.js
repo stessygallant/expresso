@@ -1830,7 +1830,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // TreeList is VERY slow to reorder columns. DO NOT PERFORM IT
         } else {
             // reorder columns
-        var columnIndex = this.multipleSelectionEnabled ? 1 : 0; // 0 is for "select all" checkbox
+            var columnIndex = this.multipleSelectionEnabled ? 1 : 0; // 0 is for "select all" checkbox
             //console.log("selectedGridPreference.gridColumns", selectedGridPreference.gridColumns);
             $.each(selectedGridPreference.gridColumns, function () {
                 var field = this.field;
@@ -3113,7 +3113,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // if filter is defined on the method, add it
             expresso.Common.addKendoFilter(dataSourceOptions.filter, query.filter);
         }
-        // console.log("1-dataSourceOptions.filter: " + JSON.stringify(dataSourceOptions.filter));
+        // console.log("1-Query filter: " + JSON.stringify(dataSourceOptions.filter));
 
         // if there is a masterFilter defined, always use it
         var masterFilter = this.getMasterGridFilter();
@@ -3121,15 +3121,13 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             if (typeof masterFilter === "function") {
                 masterFilter = masterFilter();
             }
-            // console.log("MASTER filter: " + JSON.stringify(f));
-            expresso.Common.addKendoFilter(dataSourceOptions.filter, masterFilter);
+            expresso.Common.addKendoFilter(dataSourceOptions.filter, masterFilter, true);
         }
-
-        // console.log("2-this.masterFilter: " + JSON.stringify(this.masterFilter));
+        // console.log("2-After masterFilter: " + JSON.stringify(dataSourceOptions.filter));
 
         // because Kendo will modify the filter and sort, we need to clone it first
         dataSourceOptions = $.extend(true, {}, dataSourceOptions);
-        // console.log("********** " + this.resourceManager.resourceName + " v:" + this.virtualScroll + ": " + JSON.stringify(dataSourceOptions));
+        // console.log(this.resourceManager.resourceName + ": " + JSON.stringify(dataSourceOptions));
 
         // the first time, we must call the query method.
         // then upon refresh, if localData, we need to call the read method (query method will not go to the server)
@@ -4038,7 +4036,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
     /**
      * This method is used to get the initial grid filter. It is used only at the initGrid.
-     * It must be used only for Grid header filter.
+     * It must be used only for Grid column filter.
      * If you have custom filters, you should use getGridFilter
      * @returns {*}
      */
@@ -4057,16 +4055,17 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     /**
      * Return the filters for the grid. This method is called on every loadResources.
      * It could be used to add custom filters (not a filter in the Grid Header)
+     * ATTENTION:
+     * if the grid contains columns with the same name as the custom filter, it will duplicate the filter
      */
     getGridFilter: function () {
         var _this = this;
+        var gridFilter = [];
 
         // same with the filter from the GUI (be careful as it already contains previous filters from the latest query)
         // by default, if there is no filter, add the one from the grid
-        var gridFilter = [];
-
         var dataSourceFilter = this.dataSource.filter();
-        //console.log("dataSourceFilter 1: " + JSON.stringify(dataSourceFilter));
+        // console.log("dataSourceFilter 1: " + JSON.stringify(dataSourceFilter));
 
         if (dataSourceFilter) {
             var screenMode = expresso.Common.getScreenMode();
@@ -4074,9 +4073,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 var columnFilters = [];
                 for (var i = 0, l = filters.length; i < l; i++) {
                     var f = filters[i];
-                    if (f.field && (_this.columnMap[f.field] || (screenMode == expresso.Common.SCREEN_MODES.PHONE))) {
+                    if (f.customFilterFlag) {
+                        // filters added by masterFilter or custom getGridFilter
+                        // do not add
+                    } else if (f.field && _this.columnMap[f.field]) {
+                        // this is a filter from the Kendo Grid column filter
                         columnFilters.push(f);
                     } else if (f.filters && f.filters.length) {
+                        // recursively
                         columnFilters.push(f);
                         f.filters = addColumnFilterOnly(f.filters);
                     } else {
@@ -4093,14 +4097,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 gridFilter = addColumnFilterOnly(dataSourceFilter.filters);
             }
 
-            //console.log("dataSourceFilter 2: " + JSON.stringify(gridFilter));
+            // console.log("dataSourceFilter 2: " + JSON.stringify(gridFilter));
         }
 
         // get the filters from the filter section if available
         if (this.resourceManager.sections.filter) {
             var filterParams = this.resourceManager.sections.filter.getFilters();
             //console.log("filterParams", filterParams);
-            expresso.Common.addKendoFilter(gridFilter, filterParams);
+            expresso.Common.addKendoFilter(gridFilter, filterParams, true);
         }
 
         // get the filter from the overall filter if available
@@ -4108,11 +4112,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             var searchFilterTerm = this.$domElement.find(".search-overall-input").val();
             if (searchFilterTerm) {
                 expresso.Common.addKendoFilter(gridFilter,
-                    {field: "searchFilterTerm", operator: "eq", value: searchFilterTerm});
+                    {field: "searchFilterTerm", operator: "eq", value: searchFilterTerm}, true);
             }
         }
 
-        //console.log("gridFilter: " + JSON.stringify(gridFilter));
+        // console.log("gridFilter: " + JSON.stringify(gridFilter));
         if (gridFilter.length == 1 && gridFilter[0].logic && gridFilter[0].filters && gridFilter[0].filters.length == 0) {
             // remove empty filter [{"logic":"and","filters":[]}]
             gridFilter = [];

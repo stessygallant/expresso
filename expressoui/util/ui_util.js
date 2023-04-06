@@ -919,6 +919,19 @@ expresso.util.UIUtil = (function () {
                     }
                 },
                 resize: function () {
+                    // console.log("Window was resized");
+                    if (options.resizeDebonced) {
+                        options.resizeDebonced();
+                    }
+                },
+                maximize: function () {
+                    // console.log("Window was maximized");
+                    if (options.resizeDebonced) {
+                        options.resizeDebonced();
+                    }
+                },
+                restore: function () {
+                    // console.log("Window was restored");
                     if (options.resizeDebonced) {
                         options.resizeDebonced();
                     }

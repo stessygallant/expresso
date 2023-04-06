@@ -131,10 +131,10 @@ expresso.Common = (function () {
      * Utility method to add a filter to the
      * @param filter the filter parent
      * @param f the new filter to be added to filter
+     * @param [customFilterFlag] flag to indicate if the filter is custom (master, etc). Default is false
      */
-    var addKendoFilter = function (filter, f) {
+    var addKendoFilter = function (filter, f, customFilterFlag) {
         if (f) {
-
             // make sure filter is a complete filter
             if ($.isArray(filter)) {
                 filter = {logic: "and", filters: filter};
@@ -171,7 +171,26 @@ expresso.Common = (function () {
             }
         }
 
+        if (customFilterFlag) {
+            setCustomFilterFlag(filter);
+        }
         return filter;
+    };
+
+    /**
+     *
+     * @param filter
+     */
+    var setCustomFilterFlag = function (filter) {
+        if (filter) {
+            if (filter.field) {
+                filter.customFilterFlag = true;
+            } else if (filter.filters) {
+                for (var i = 0; i < filter.filters.length; i++) {
+                    setCustomFilterFlag(filter.filters[i]);
+                }
+            }
+        }
     };
 
     /**

@@ -389,6 +389,17 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             _this.onClose(e);
         });
 
+        // Handle Window Event
+        var formSplitter = $window.find(".exp-form-wrapper.k-splitter").data("kendoSplitter");
+        if (formSplitter) {
+            // handle issue with maximise
+            kendoWindow.bind("maximize", function () {
+                formSplitter.resize();
+            }).bind("restore", function () {
+                formSplitter.resize();
+            });
+        }
+
         // auto select the text on focus for combobox
         $window.find("input[role=combobox]").on("focus", function () {
             $(this).select();
