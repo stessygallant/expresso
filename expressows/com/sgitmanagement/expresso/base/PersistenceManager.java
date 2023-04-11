@@ -190,13 +190,13 @@ public class PersistenceManager implements AutoCloseable {
 			EntityTransaction tx = em.getTransaction();
 			try {
 				if (tx.isActive()) {
-					// logger.debug("Committing");
-
 					if (tx.getRollbackOnly()) {
+						// logger.debug("Rollbacking");
 						tx.rollback();
 					} else {
 						try {
 							tx.commit();
+							// logger.debug("Committed");
 						} catch (Exception ex) {
 							thrownException = ex;
 							logger.warn("Error while committing the transaction: " + ex);
@@ -259,9 +259,9 @@ public class PersistenceManager implements AutoCloseable {
 				if (tx.isActive()) {
 					tx.rollback();
 				}
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				// cannot do much at this point
-				logger.error("Cannot rollback", e);
+				logger.error("Cannot rollback", ex);
 			}
 
 			if (startNewTransaction) {

@@ -1,12 +1,9 @@
 package com.sgitmanagement.expressoext.security;
 
-import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
-
-import jakarta.persistence.EntityManager;
 
 public class CompanyService extends BaseEntityService<Company> {
 
@@ -19,12 +16,9 @@ public class CompanyService extends BaseEntityService<Company> {
 	}
 
 	public static void main(String[] args) throws Exception {
-		EntityManager em = PersistenceManager.getInstance().getEntityManager();
-
 		CompanyService service = newServiceStatic(CompanyService.class, Company.class);
 		service.sync();
-
-		PersistenceManager.getInstance().commitAndClose(em);
+		service.closeServices();
 
 		System.out.println("Done");
 	}

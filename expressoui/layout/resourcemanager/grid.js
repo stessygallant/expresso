@@ -113,12 +113,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // ALWAYS override activeOnly with resource manager options
         if (this.resourceManager.options.activeOnly !== undefined) {
-            console.log(this.resourceManager.getResourceSecurityPath() + " - Grid activeOnly (RM override): " +
-                this.activeOnly + " -> " + this.resourceManager.options.activeOnly);
-        } else {
-            // console.log(this.resourceManager.getResourceSecurityPath() + " - Grid activeOnly: " + this.activeOnly);
-        }
-        if (this.resourceManager.options.activeOnly !== undefined) {
+            // console.log(this.resourceManager.getResourceSecurityPath() + " - Grid activeOnly (RM override): " +
+            //     this.activeOnly + " -> " + this.resourceManager.options.activeOnly);
             this.activeOnly = this.resourceManager.options.activeOnly;
         }
 
@@ -378,15 +374,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // listen to error
         this.kendoGrid.dataSource.bind("error", function (e) {
+            _this.onSaved(null);
+
             // if the error is a PRECONDITION_FAILED, refresh the data item
             if (e && e.xhr && e.xhr.status == expresso.Common.HTTP_CODES.PRECONDITION_FAILED) {
                 e.xhr.alreadyProcessed = true;
                 expresso.util.UIUtil.buildMessageWindow(_this.getLabel("wrongEntityVersion")).done(function () {
                     _this.reloadCurrentResource();
                 });
-            } else {
-                //console.warn(e);
-                _this.onSaved(null);
             }
         });
 
@@ -4068,7 +4063,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // console.log("dataSourceFilter 1: " + JSON.stringify(dataSourceFilter));
 
         if (dataSourceFilter) {
-            var screenMode = expresso.Common.getScreenMode();
             var addColumnFilterOnly = function (filters) {
                 var columnFilters = [];
                 for (var i = 0, l = filters.length; i < l; i++) {

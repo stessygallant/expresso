@@ -33,6 +33,9 @@ public class PersistenceManagerFilter implements Filter {
 			chain.doFilter(req, resp);
 			PersistenceManager.getInstance().commit();
 		} catch (Exception ex) {
+			// Application exception are not caught here
+			// Jersey catch them and write it in the response
+			// the only error here are from the commit
 			logger.error("Error committing", ex);
 			PersistenceManager.getInstance().rollback();
 		} finally {

@@ -1471,6 +1471,57 @@ expresso.Common = (function () {
      * @param [windowOptions] options for the Expresso window
      * @returns {*}
      */
+    var displayResourceManager = function (appName, title, appOptions, windowOptions) {
+        var $deferred = $.Deferred();
+
+        appOptions = appOptions || {};
+        windowOptions = windowOptions || {};
+
+        var className = appName.replace(".", "-") + "-resource-manager-div";
+
+        var resourceManager;
+        expresso.util.UIUtil.buildWindow("<div class='" + className + "'></div>", {
+            top: windowOptions.top || undefined,
+            height: windowOptions.height || "max",
+            width: windowOptions.width || "max",
+            title: title || windowOptions.title || "",
+            saveButtonLabel: windowOptions.saveButtonLabel || expresso.Common.getLabel("close"),
+            open: function () {
+                var $windowDiv = $(this);
+                var $div = $windowDiv.find("." + className);
+                $div.css("height", "100%");
+                expresso.Common.loadApplication(appName, appOptions).done(function (rm) {
+                    resourceManager = rm;
+                    if (appOptions.labels) {
+                        resourceManager.labels = $.extend({}, resourceManager.labels, appOptions.labels);
+                    }
+                    resourceManager.list($div, {});
+                });
+            },
+            close: function () {
+                var $windowDiv = $(this);
+                if (windowOptions.close) {
+                    windowOptions.close.call($windowDiv, resourceManager);
+                }
+                if (resourceManager) {
+                    resourceManager.destroy();
+                    resourceManager = null;
+                }
+                $deferred.resolve();
+            }
+        });
+
+        return $deferred;
+    };
+
+    /**
+     *
+     * @param appName
+     * @param title title of the window
+     * @param [appOptions] options for the applications
+     * @param [windowOptions] options for the Expresso window
+     * @returns {*}
+     */
     var displayApplication = function (appName, title, appOptions, windowOptions) {
         var $deferred = $.Deferred();
 
@@ -1481,8 +1532,9 @@ expresso.Common = (function () {
 
         var appInstance;
         expresso.util.UIUtil.buildWindow("<div class='" + className + "'></div>", {
-            width: windowOptions.width,
+            top: windowOptions.top || undefined,
             height: windowOptions.height || "max",
+            width: windowOptions.width,
             title: title || windowOptions.title || "",
             saveButtonLabel: windowOptions.saveButtonLabel || expresso.Common.getLabel("close"),
             open: function () {
@@ -2287,6 +2339,7 @@ expresso.Common = (function () {
         displayApplication: displayApplication,
         displayUrl: displayUrl,
         displayForm: displayForm,
+        displayResourceManager: displayResourceManager,
 
         getScript: getScript,
         loadHTML: loadHTML,

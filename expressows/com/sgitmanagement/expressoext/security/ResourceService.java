@@ -2,13 +2,10 @@ package com.sgitmanagement.expressoext.security;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
-
-import jakarta.persistence.EntityManager;
 
 public class ResourceService extends BaseEntityService<Resource> {
 	@Override
@@ -26,13 +23,12 @@ public class ResourceService extends BaseEntityService<Resource> {
 	 * @return
 	 * @throws Exception
 	 */
+	@Override
 	public Resource get(String name) throws Exception {
 		return get(new Filter("name", name));
 	}
 
 	public static void main(String[] args) throws Exception {
-		EntityManager em = PersistenceManager.getInstance().getEntityManager();
-
 		ResourceService service = newServiceStatic(ResourceService.class, Resource.class);
 
 		// System.out.println(service.list());
@@ -51,7 +47,7 @@ public class ResourceService extends BaseEntityService<Resource> {
 			resource.setName(name);
 		}
 
-		PersistenceManager.getInstance().commitAndClose(em);
+		service.closeServices();
 		System.out.println("Done");
 	}
 }

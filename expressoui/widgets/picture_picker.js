@@ -62,7 +62,6 @@
             var $trash = $pictureDiv.find(".fa-trash");
             var $add = $pictureDiv.find(".fa-plus");
             var $img = $pictureDiv.find("img");
-            var img = $img[0];
 
             // listen on ADD
             $add.on("click", function () {

@@ -179,6 +179,7 @@ public class Person extends BasePerson implements Updatable, Creatable {
 		return creationUser;
 	}
 
+	@Override
 	@XmlElement
 	public String getCreationUserFullName() {
 		return creationUserFullName;

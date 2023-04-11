@@ -68,7 +68,7 @@ public class EmailAuthentificationFilter implements Filter {
 					String emailToken = request.getParameter("emailToken");
 					if (emailToken != null) {
 						// validate the token
-						authenticationService.validateSecurityToken(user, emailToken.trim());
+						authenticationService.validateSecurityToken(user, emailToken.trim(), false);
 						session.setAttribute(EMAIL_TOKEN_VALIDATED, true);
 						valid = true;
 					} else {

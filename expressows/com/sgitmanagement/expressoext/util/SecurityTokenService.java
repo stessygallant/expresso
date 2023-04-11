@@ -39,7 +39,7 @@ public class SecurityTokenService extends BaseEntityService<SecurityToken> {
 	 * @return
 	 * @throws Exception
 	 */
-	public boolean isValid(String userName, String securityTokenNo) throws Exception {
+	public SecurityToken get(String userName, String securityTokenNo) throws Exception {
 		Calendar calendar = Calendar.getInstance();
 		calendar.add(Calendar.HOUR_OF_DAY, -2);
 		Date threasholdDate = calendar.getTime();
@@ -50,12 +50,14 @@ public class SecurityTokenService extends BaseEntityService<SecurityToken> {
 		filter.addFilter(new Filter("securityTokenNo", securityTokenNo));
 		filter.addFilter(new Filter("creationDate", Operator.gt, threasholdDate));
 		try {
-			// SecurityToken securityToken =
-			get(filter);
-			return true;
+			return get(filter);
 		} catch (NoResultException ex) {
 			logger.warn("Security token is not valid userName[" + userName + "] securityTokenNo[" + securityTokenNo + "] threasholdDate[" + threasholdDate + "]");
-			return false;
+			return null;
 		}
+	}
+
+	public boolean isValid(String userName, String securityTokenNo) throws Exception {
+		return get(userName, securityTokenNo) != null;
 	}
 }

@@ -454,14 +454,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         this.$window.find(".k-edit-buttons").on("click", "button,a", function () {
             // console.log("click: " + this.name + ":" + this.className);
             expresso.util.UIUtil.showLoadingMask(_this.$window, true, "formSaveAction");
-
-            // patch: if after n seconds, the loading mask is still there, remove it
-            window.setTimeout(function () {
-                if (_this.$window && _this.$window.find(".exp-loading-mask[data-mask-id=formSaveAction]").length) {
-                    console.warn("Missing remove loading mask!");
-                    //expresso.util.UIUtil.showLoadingMask(_this.$window, false, "formSaveAction");
-                }
-            }, 30000);
         });
     },
 
@@ -1053,7 +1045,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param originalResource resource before the save (which refresh the resource)
      */
     onSaved: function (resource, originalResource) {
-        // console.log("FORM - onSaved - " + this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "] preventWindowClosing:" + this.preventWindowClosing);
+        // console.log("FORM - onSaved - " + this.resourceManager.resourceName + " [" + (resource ? resource.id : null) +
+        //    "] preventWindowClosing:" + this.preventWindowClosing);
 
         // if it is a validation problem, the resource will be null
         if (resource) {
@@ -1351,8 +1344,9 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 }
             });
         } else {
+            // TODO to be removed
             // $window.find("[type=file]:visible").each(function () {
-            $window.find("[type=file][name]").each(function () {
+            $window.find("[type=file][name]:not([data-role])").each(function () {
                 var $input = $(this);
                 expresso.util.UIUtil.hideField($input);
             });

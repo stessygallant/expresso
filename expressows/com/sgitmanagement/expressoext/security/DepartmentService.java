@@ -7,6 +7,13 @@ import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expressoext.base.BaseOptionService;
 
 public class DepartmentService extends BaseOptionService<Department> {
+	public static void main(String[] args) throws Exception {
+		DepartmentService service = newServiceStatic(DepartmentService.class, Department.class);
+		service.list();
+
+		service.closeServices();
+		System.out.println("Done");
+	}
 
 	public void addRole(int id, int roleId) throws Exception {
 		Department department = get(id);

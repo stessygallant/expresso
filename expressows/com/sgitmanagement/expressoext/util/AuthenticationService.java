@@ -90,9 +90,14 @@ public class AuthenticationService extends BaseService {
 	 * @param securityTokenNo
 	 * @throws Exception
 	 */
-	public void validateSecurityToken(User user, String securityTokenNo) throws Exception {
+	public void validateSecurityToken(User user, String securityTokenNo, boolean deleteWhenValid) throws Exception {
 		SecurityTokenService securityTokenService = newService(SecurityTokenService.class, SecurityToken.class);
-		if (!securityTokenService.isValid(user.getUserName(), securityTokenNo)) {
+		SecurityToken securityToken = securityTokenService.get(user.getUserName(), securityTokenNo);
+		if (securityToken != null) {
+			if (deleteWhenValid) {
+				securityTokenService.delete(securityToken.getId());
+			}
+		} else {
 			throw new BaseException(HttpServletResponse.SC_UNAUTHORIZED, "invalidSecurityToken");
 		}
 	}
@@ -152,10 +157,10 @@ public class AuthenticationService extends BaseService {
 
 				// first, make sure the token is valid
 				try {
-					validateSecurityToken(user, securityTokenNo);
+					// then delete the token
+					validateSecurityToken(user, securityTokenNo, true);
 				} catch (Exception ex) {
 					throw new BaseException(424, "invalidSecurityToken");// Failed Dependency
-
 				}
 			} else {
 				// reset is done because the password is expired
