@@ -420,5 +420,7 @@ $.extend(expresso.Labels, {
     deleteDocumentWindowTitle: "Confirmation",
     deleteDocument: "Are you sure you want to delete this document ?",
 
+    versionWarning: "A new version is available. Click here to update your application",
+
     _: ""
 });
