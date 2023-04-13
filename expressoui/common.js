@@ -2283,6 +2283,44 @@ expresso.Common = (function () {
         });
     };
 
+
+    /**
+     * Notify the user when there is a newer version available
+     */
+    var initCheckVersion = function () {
+        if (expresso.Common.isProduction()) {
+            // TODO check if the main application if fullScreen (Expresso)
+            if (!expresso.util.Util.getUrlParameter("nomenu")) {
+                // get the configuration file on the server
+                var currentVersion = expresso.Common.getSiteNamespace().config.Configurations.version;
+                $.ajax({
+                    url: "config/configurations.js"
+                }).done(function () {
+                    var serverVersion = expresso.Common.getSiteNamespace().config.Configurations.version;
+                    if (currentVersion != serverVersion) {
+                        console.log("Version: " + currentVersion + " -> " + serverVersion);
+                        var $notification = $("<span class='exp-version-update-notification'></span>").appendTo($("body"));
+                        $notification.kendoNotification({
+                            autoHideAfter: 0,
+                            position: {
+                                top: 5,
+                                right: 5
+                            },
+                            hide: function () {
+                                window.location.reload();
+                            }
+                        }).data("kendoNotification").show(expresso.Common.getLabel("versionWarning"), "warning");
+                    } else {
+                        // verify again in n seconds
+                        window.setTimeout(initCheckVersion, (expresso.Common.isProduction() ? 60 : 10) * 1000);
+                    }
+                }).fail(function () {
+                    console.error("Unable to check version on server");
+                });
+            }
+        }
+    };
+
     /**
      * Method called when the DOM is ready
      * @param name name of the site. To be used to find configuration and menu file.
@@ -2302,6 +2340,9 @@ expresso.Common = (function () {
 
         // set the default for Ajax calls
         initAjax();
+
+        // if the user does not have the latest version, notify it
+        initCheckVersion();
 
         // resize section on window resize
         var $window = $(window);
