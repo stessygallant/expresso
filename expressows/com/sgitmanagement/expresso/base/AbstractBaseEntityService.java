@@ -36,7 +36,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Formula;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -695,11 +694,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 	final public boolean exists(I id) {
 		return (get(id) != null);
-	}
-
-	public E get(String keyFieldNo) throws Exception {
-		String keyField = getKeyField();
-		return get(new Filter(keyField, formatKeyField(keyField, keyFieldNo)));
 	}
 
 	final public E get(Filter filter) throws Exception {
@@ -1946,7 +1940,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 						// in Hibernate5: p.getJavaType() is Set for a OneToMany
 						// in Hibernate6: p.getJavaType() is the generic type in the Set for a OneToMany
-						if (Collection.class.isAssignableFrom(p.getJavaType()) || p instanceof SqmPluralValuedSimplePath /* || s.endsWith("s") */) {
+						if (Collection.class.isAssignableFrom(p.getJavaType()) /* || p instanceof SqmPluralValuedSimplePath || s.endsWith("s") */) {
 							distinctNeeded = true;
 						}
 
@@ -3487,7 +3481,13 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 	@SuppressWarnings("unchecked")
 	static public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newServiceStatic(Class<S> serviceClass, Class<T> entityClass) {
-		return newServiceStatic(serviceClass, entityClass, (V) UserManager.getInstance().getUser());
+		// always starts a transaction for a static service (usually from the main)
+		return newServiceStatic(serviceClass, entityClass, (V) UserManager.getInstance().getUser(), true);
+	}
+
+	@SuppressWarnings("unchecked")
+	static public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newServiceStatic(Class<S> serviceClass, Class<T> entityClass, boolean startTransaction) {
+		return newServiceStatic(serviceClass, entityClass, (V) UserManager.getInstance().getUser(), startTransaction);
 	}
 
 	/**
@@ -3500,13 +3500,12 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @throws Exception
 	 * @throws InstantiationException
 	 */
-	static public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newServiceStatic(Class<S> serviceClass, Class<T> entityClass, V user) {
+	static public <S extends AbstractBaseEntityService<T, V, J>, T extends IEntity<J>, V extends IUser, J> S newServiceStatic(Class<S> serviceClass, Class<T> entityClass, V user,
+			boolean startTransaction) {
 		try {
 			S service = serviceClass.getDeclaredConstructor().newInstance();
 			service.setTypeOfE(entityClass);
-
-			// always starts a transaction for a static service (usually from the main)
-			service.getEntityManager(true);
+			service.getEntityManager(startTransaction);
 
 			if (user == null) {
 				user = service.getSystemUser();

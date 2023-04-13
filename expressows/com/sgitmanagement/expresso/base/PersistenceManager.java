@@ -158,6 +158,7 @@ public class PersistenceManager implements AutoCloseable {
 	public EntityTransaction startTransaction(EntityManager em) {
 		EntityTransaction tx = em.getTransaction();
 		if (!tx.isActive()) {
+			logger.debug("Start transaction [" + em.getProperties().get("expresso.persistence_unit") + "]");
 			tx.begin();
 		}
 		return tx;

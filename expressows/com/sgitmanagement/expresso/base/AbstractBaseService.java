@@ -11,7 +11,6 @@ import org.hibernate.jdbc.Work;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sgitmanagement.expresso.audit.AbstractAuditTrailInterceptor;
 import com.sgitmanagement.expresso.security.Authorizable;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
@@ -343,15 +342,6 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 			}
 		}
 		servicesThreadLocal.remove();
-
-		// close all connections
-		PersistenceManager.getInstance().commitAndClose();
-
-		// close the User
-		UserManager.getInstance().close();
-
-		// Close the audit trail
-		AbstractAuditTrailInterceptor.close();
 	}
 
 	@Override
