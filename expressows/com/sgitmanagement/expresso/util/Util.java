@@ -40,8 +40,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import com.sgitmanagement.expresso.audit.AbstractAuditTrailInterceptor;
+import com.sgitmanagement.expresso.base.AbstractBaseService;
 import com.sgitmanagement.expresso.base.KeyField;
+import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.base.Sortable;
+import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.exception.BaseException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -1276,6 +1280,23 @@ public class Util {
 			}
 			return null;
 		}
+	}
+
+	/**
+	 * Close all services and clean all thread caches.
+	 */
+	public static void closeCurrentThreadInfo() {
+		// close all services
+		AbstractBaseService.staticCloseServices();
+
+		// close all connections
+		PersistenceManager.getInstance().commitAndClose();
+
+		// close the User
+		UserManager.getInstance().close();
+
+		// Close the audit trail
+		AbstractAuditTrailInterceptor.close();
 	}
 
 	static public void main(String[] args) throws Exception {
