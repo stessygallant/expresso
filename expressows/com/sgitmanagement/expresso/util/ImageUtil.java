@@ -25,25 +25,8 @@ public class ImageUtil {
 	 * @throws Exception
 	 */
 	public static File createThumbnailImage(File imageFile, File thumbnailFile) throws Exception {
-		try (InputStream is = new FileInputStream(imageFile)) {
-			resizeImage(is, thumbnailFile, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
-		}
+		resizeImage(imageFile, thumbnailFile, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
 		return thumbnailFile;
-	}
-
-	/**
-	 * 
-	 * @param sourceImageFile
-	 * @param targetImageFile
-	 * @param width
-	 * @param height
-	 * @return
-	 * @throws Exception
-	 */
-	public static boolean resizeImage(File sourceImageFile, File targetImageFile, Integer maxWidth, Integer maxHeight) throws Exception {
-		try (InputStream is = new FileInputStream(sourceImageFile)) {
-			return resizeImage(is, targetImageFile, maxWidth, maxHeight);
-		}
 	}
 
 	/**
@@ -55,30 +38,32 @@ public class ImageUtil {
 	 * @return true if resized
 	 * @throws IOException
 	 */
-	private static boolean resizeImage(InputStream inputStream, File targetFile, Integer maxWidth, Integer maxHeight) throws IOException {
-		BufferedImage originalImage = ImageIO.read(inputStream);
-
-		// keep the ratio (do not stretch)
-		int width = originalImage.getWidth();
-		int height = originalImage.getHeight();
-
+	public static boolean resizeImage(File sourceImageFile, File targetImageFile, Integer maxWidth, Integer maxHeight) throws IOException {
 		boolean resize = false;
-		if (maxWidth != null && width > maxWidth) {
-			height = maxWidth * height / width;
-			width = maxWidth;
-			resize = true;
-		} else if (maxHeight != null && height > maxHeight) {
-			width = maxHeight * width / height;
-			height = maxHeight;
-			resize = true;
-		}
-		if (resize) {
-			Image newResizedImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-			String fileName = targetFile.getName();
-			String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-			ImageIO.write(convertToBufferedImage(newResizedImage), fileExtension, targetFile);
-		} else {
-			FileUtils.copyInputStreamToFile(inputStream, targetFile);
+		try (InputStream inputStream = new FileInputStream(sourceImageFile)) {
+			BufferedImage originalImage = ImageIO.read(inputStream);
+
+			// keep the ratio (do not stretch)
+			int width = originalImage.getWidth();
+			int height = originalImage.getHeight();
+
+			if (maxWidth != null && width > maxWidth) {
+				height = maxWidth * height / width;
+				width = maxWidth;
+				resize = true;
+			} else if (maxHeight != null && height > maxHeight) {
+				width = maxHeight * width / height;
+				height = maxHeight;
+				resize = true;
+			}
+			if (resize) {
+				Image newResizedImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+				String fileName = targetImageFile.getName();
+				String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+				ImageIO.write(convertToBufferedImage(newResizedImage), fileExtension, targetImageFile);
+			} else {
+				FileUtils.copyFile(sourceImageFile, targetImageFile);
+			}
 		}
 		return resize;
 	}
