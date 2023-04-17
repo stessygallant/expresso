@@ -509,7 +509,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                             // create the main resource
                             // _this.isUserAllowed("create")
                             $saveDeferred = _this.createMainResource();
-                        } else if (action.saveBeforeAction !== false && _this.resourceManager.sections.grid.isUpdatable(resource)) {
+                        } else if (action.saveBeforeAction !== false && !_this.readOnly &&
+                            _this.resourceManager.sections.grid.isUpdatable(resource)) {
                             // only save if the resource is updatable
                             // _this.isUserAllowed("update")
                             $saveDeferred = _this.save();
@@ -534,14 +535,19 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         // WAIT FOR SAVE
                         $saveDeferred.done(function (resource) {
                             // validate the resource for the action
-                            var $validateDeferred = _this.validateResource($window, resource, action.pgmKey);
-                            if ($validateDeferred === true || $validateDeferred === undefined) {
-                                // ok
+                            var $validateDeferred;
+                            if (action.saveBeforeAction === false) {
                                 $validateDeferred = $.Deferred().resolve(null);
-                            } else if ($validateDeferred === false) {
-                                $validateDeferred = $.Deferred().reject();
                             } else {
-                                // assume a promise
+                                $validateDeferred = _this.validateResource($window, resource, action.pgmKey);
+                                if ($validateDeferred === true || $validateDeferred === undefined) {
+                                    // ok
+                                    $validateDeferred = $.Deferred().resolve(null);
+                                } else if ($validateDeferred === false) {
+                                    $validateDeferred = $.Deferred().reject();
+                                } else {
+                                    // assume a promise
+                                }
                             }
 
                             // WAIT FOR VALIDATE

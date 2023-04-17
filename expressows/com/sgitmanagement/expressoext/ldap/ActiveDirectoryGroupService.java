@@ -16,6 +16,7 @@ import org.apache.directory.api.ldap.model.message.SearchScope;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expressoext.base.BaseService;
+import com.sgitmanagement.expressoext.util.MainUtil;
 
 public class ActiveDirectoryGroupService extends BaseService {
 	private final static String[] LDAP_ATTRIBUTES = new String[] { "name", "description", "info", "managedBy", "extensionAttribute1", "member" };
@@ -450,7 +451,6 @@ public class ActiveDirectoryGroupService extends BaseService {
 			System.out.println(activeDirectoryGroup);
 		}
 
-		service.closeServices();
-		System.out.println("Done");
+		MainUtil.close();
 	}
 }

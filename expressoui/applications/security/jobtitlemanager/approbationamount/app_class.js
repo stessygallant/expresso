@@ -1,6 +1,4 @@
-﻿expresso.applications.security.jobtitlemanager.approbationamount = expresso.applications.security.jobtitlemanager.approbationamount || {};
-
-expresso.applications.security.jobtitlemanager.approbationamount.ApprobationAmountManager = expresso.layout.resourcemanager.ResourceManager.extend({
+﻿expresso.applications.security.jobtitlemanager.approbationamount.ApprobationAmountManager = expresso.layout.resourcemanager.ResourceManager.extend({
 
     // @override
     init: function (applicationPath) {
@@ -19,7 +17,6 @@ expresso.applications.security.jobtitlemanager.approbationamount.ApprobationAmou
             },
             resourceId: {
                 type: "number",
-
                 reference: true
             }
         };

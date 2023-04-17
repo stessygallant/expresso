@@ -6,6 +6,7 @@ import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
+import com.sgitmanagement.expressoext.util.MainUtil;
 
 public class ResourceService extends BaseEntityService<Resource> {
 	@Override
@@ -47,7 +48,6 @@ public class ResourceService extends BaseEntityService<Resource> {
 			resource.setName(name);
 		}
 
-		service.closeServices();
-		System.out.println("Done");
+		MainUtil.close();
 	}
 }

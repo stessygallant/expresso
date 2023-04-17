@@ -17,6 +17,7 @@ import org.apache.directory.api.ldap.model.message.SearchScope;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expressoext.base.BaseService;
+import com.sgitmanagement.expressoext.util.MainUtil;
 
 public class ActiveDirectoryUserService extends BaseService {
 	private final static String[] LDAP_ATTRIBUTES = new String[] { "mail", "telephoneNumber", "Department", "Manager", "Title", "Name", "sAMAccountName", "description", "givenName", "sn",
@@ -590,7 +591,6 @@ public class ActiveDirectoryUserService extends BaseService {
 			System.out.println(activeDirectoryUser);
 		}
 
-		service.closeServices();
-		System.out.println("Done");
+		MainUtil.close();
 	}
 }

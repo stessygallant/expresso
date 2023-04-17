@@ -4,6 +4,8 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
+import com.sgitmanagement.expressoext.util.MainUtil;
+
 public class UserService extends BaseUserService<User> {
 
 	public void printRoles() throws Exception {
@@ -26,8 +28,6 @@ public class UserService extends BaseUserService<User> {
 		UserService service = newServiceStatic(UserService.class, User.class);
 		service.list();
 
-		service.closeServices();
-
-		System.out.println("Done");
+		MainUtil.close();
 	}
 }

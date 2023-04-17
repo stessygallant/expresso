@@ -5,14 +5,14 @@ import java.util.List;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expressoext.base.BaseOptionService;
+import com.sgitmanagement.expressoext.util.MainUtil;
 
 public class DepartmentService extends BaseOptionService<Department> {
 	public static void main(String[] args) throws Exception {
 		DepartmentService service = newServiceStatic(DepartmentService.class, Department.class);
 		service.list();
 
-		service.closeServices();
-		System.out.println("Done");
+		MainUtil.close();
 	}
 
 	public void addRole(int id, int roleId) throws Exception {

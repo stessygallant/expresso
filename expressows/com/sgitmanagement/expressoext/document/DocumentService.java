@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 
+import com.sgitmanagement.expresso.base.AbstractBaseEntityService;
+import com.sgitmanagement.expresso.base.DocumentUploadNotification;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
@@ -134,7 +136,20 @@ public class DocumentService extends BaseFileService<Document> {
 	public Document create(Document document) throws Exception {
 		Resource resource = newService(ResourceService.class, Resource.class).get(document.getResourceName());
 		verifyUserPrivileges("create", resource.getSecurityPath() + "/document");
-		return super.create(document);
+		document = super.create(document);
+
+		// notify the resource that there is a new document
+		try {
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			AbstractBaseEntityService service = newService(document.getResourceName());
+			if (service != null && service instanceof DocumentUploadNotification) {
+				((DocumentUploadNotification) service).documentUploaded(document.getResourceId(), document.getId());
+			}
+		} catch (Exception ex) {
+			logger.warn("Cannot notify for new document", ex);
+		}
+
+		return document;
 	}
 
 	@Override

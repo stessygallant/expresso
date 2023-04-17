@@ -268,7 +268,7 @@ public class Role extends BaseOption {
 		this.userIds.addAll(userIds);
 	}
 
-	public Set<User> getUser() {
+	public Set<User> getUsers() {
 		return users;
 	}
 
@@ -287,10 +287,6 @@ public class Role extends BaseOption {
 	public void setApplicationIds(Set<Integer> applicationIds) {
 		this.applicationIds.clear();
 		this.applicationIds.addAll(applicationIds);
-	}
-
-	public Set<Application> getApplication() {
-		return applications;
 	}
 
 	@XmlElement

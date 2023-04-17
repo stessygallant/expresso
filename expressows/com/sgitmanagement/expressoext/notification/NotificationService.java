@@ -31,9 +31,11 @@ import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expresso.dto.Query.Sort;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
+import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
+import com.sgitmanagement.expressoext.util.MainUtil;
 
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.NonUniqueResultException;
@@ -205,9 +207,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 						logger.error("Cannot get the notifications from [" + notifiableServiceClassName + "]", ex);
 					} finally {
 						logger.debug("Closing [" + notifiableServiceClassName + "]");
-
-						// must close the connection for the thread
-						notificationService.closeServices();
+						Util.closeCurrentThreadInfo();
 					}
 				}
 			});
@@ -399,6 +399,8 @@ public class NotificationService extends BaseEntityService<Notification> {
 						service.getMyNotifications();
 					} catch (Exception e) {
 						e.printStackTrace();
+					} finally {
+						Util.closeCurrentThreadInfo();
 					}
 				}
 			});
@@ -411,9 +413,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 		for (int i = 0; i < threads.length; i++) {
 			threads[i].join();
 		}
-		// service.closeServices();
-
-		System.out.println("Done");
+		MainUtil.close();
 	}
 
 }
