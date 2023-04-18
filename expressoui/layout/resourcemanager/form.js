@@ -256,9 +256,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         // apply the security if readOnly
         var $readOnlyDeferred = $.Deferred();
-        if (!resource || !resource.id) {
+        if(this.readOnly !== undefined) {
+            $readOnlyDeferred.resolve(this.readOnly);
+        } else if (!resource || !resource.id) {
             // new resource are always editable
-            $readOnlyDeferred = $readOnlyDeferred.resolve(false);
+            $readOnlyDeferred.resolve(false);
         } else {
             // verify if the user is allowed update on the resource
             this.resourceManager.isActionAllowed("update")

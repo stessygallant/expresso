@@ -22,6 +22,7 @@ import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Chromaticity;
 import javax.print.attribute.standard.MediaSizeName;
+import javax.print.attribute.standard.OrientationRequested;
 import javax.print.attribute.standard.PrintQuality;
 import javax.print.attribute.standard.Sides;
 import javax.print.event.PrintJobAdapter;
@@ -74,12 +75,12 @@ public class PrintUtil {
 	}
 
 	public static void printPdf(String printerName, File pdfFile, PrintUserListener listener) throws Exception {
-		printPdf(printerName, pdfFile, listener, true, false);
+		printPdf(printerName, pdfFile, listener, true, false, false);
 	}
 
-	public static void printPdf(String printerName, File pdfFile, PrintUserListener listener, boolean blackAndWhite, boolean duplex) throws Exception {
+	public static void printPdf(String printerName, File pdfFile, PrintUserListener listener, boolean blackAndWhite, boolean duplex, boolean landscape) throws Exception {
 		FileInputStream pdfInputStream = new FileInputStream(pdfFile);
-		printPdf(printerName, pdfInputStream, listener, true, false);
+		printPdf(printerName, pdfInputStream, listener, blackAndWhite, duplex, landscape);
 		pdfInputStream.close();
 	}
 
@@ -93,7 +94,7 @@ public class PrintUtil {
 	 * @param blackAndWhite
 	 * @throws Exception
 	 */
-	public static void printPdf(String printerName, InputStream pdfInputStream, PrintUserListener listener, boolean blackAndWhite, boolean duplex) throws Exception {
+	public static void printPdf(String printerName, InputStream pdfInputStream, PrintUserListener listener, boolean blackAndWhite, boolean duplex, boolean landscape) throws Exception {
 		final String fPrinterName = (SystemEnv.INSTANCE.isInProduction() ? printerName : SystemEnv.INSTANCE.getDefaultProperties().getProperty("default_printer"));
 
 		ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -115,6 +116,7 @@ public class PrintUtil {
 						pras.add(MediaSizeName.NA_LETTER);
 						pras.add(blackAndWhite ? Chromaticity.MONOCHROME : Chromaticity.COLOR);
 						pras.add(PrintQuality.HIGH);
+						pras.add(landscape ? OrientationRequested.LANDSCAPE : OrientationRequested.PORTRAIT);
 						DocPrintJob pjob = printService.createPrintJob();
 						PrintJobWatcher pjDone = new PrintJobWatcher(pjob);
 

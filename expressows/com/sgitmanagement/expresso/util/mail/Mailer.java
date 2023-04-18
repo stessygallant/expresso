@@ -86,6 +86,10 @@ public enum Mailer {
 		sendMail(Arrays.asList(to), Arrays.asList(cc), null, null, false, emailTemplate, params, null);
 	}
 
+	public void sendMail(String to, String cc, String emailTemplate, Map<String, String> params, String attachement) {
+		sendMail(Arrays.asList(to), Arrays.asList(cc), null, null, false, emailTemplate, params, Arrays.asList(attachement));
+	}
+
 	public void sendMail(Collection<String> tos, Collection<String> ccs, String emailTemplate, Map<String, String> params) {
 		sendMail(tos, ccs, null, null, false, emailTemplate, params, null);
 	}
