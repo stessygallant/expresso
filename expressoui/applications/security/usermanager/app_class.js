@@ -1,9 +1,4 @@
-﻿var expresso = expresso || {};
-expresso.applications = expresso.applications || {};
-expresso.applications.security = expresso.applications.security || {};
-expresso.applications.security.usermanager = expresso.applications.security.usermanager || {};
-
-expresso.applications.security.usermanager.UserManager = expresso.layout.resourcemanager.ResourceManager.extend({
+﻿expresso.applications.security.usermanager.UserManager = expresso.layout.resourcemanager.ResourceManager.extend({
     // @override
     init: function (applicationPath) {
         var fields = expresso.Security.getUserFields();

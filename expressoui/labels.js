@@ -423,7 +423,7 @@ $.extend(expresso.Labels, {
     deleteDocumentWindowTitle: "Confirmation",
     deleteDocument: "Êtes-vous sûr de vouloir effacer ce document ?",
 
-    versionWarning: "Votre l'application n'est plus à jour. Cliquez ici pour rafraîchir votre page.",
+    versionWarning: "Une nouvelle version est disponible. Cliquez ici pour mettre à jour votre application.",
 
     _: ""
 });

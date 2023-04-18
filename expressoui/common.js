@@ -373,13 +373,8 @@ expresso.Common = (function () {
                             displayServerValidationMessage(jqxhr);
                         } else if (jqxhr.status == HTTP_CODES.UNAUTHORIZED || jqxhr.status == HTTP_CODES.CUSTOM_UNAUTHORIZED) {
                             // 401 Unauthorized - When no or invalid authentication details are provided
-                            // goto login page
                             expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("expiredSession")).done(function () {
-                                if (expresso.Security) {
-                                    expresso.Security.displayLoginPage();
-                                } else {
-                                    siteNamespace.Main.displayLoginPage();
-                                }
+                                window.location.reload();
                             });
                         } else if (jqxhr.status == HTTP_CODES.FORBIDDEN) {
                             // 403 Forbidden - When authenticated user doesn't have access to the resource.
@@ -447,31 +442,6 @@ expresso.Common = (function () {
         description = expresso.Common.getLabel(description, currentRequestLabels, params, true) || description;
         return expresso.util.UIUtil.buildMessageWindow(description, {type: "error"});
     };
-
-    /**
-     * Send a print request to the server
-     * @param url the print url of the resource
-     * @param resourceName
-     * @param ids one id or comma separated list of ids
-     */
-        // @Deprecated
-    var sendPrintRequest = function (url, resourceName, ids) {
-            var action = "print";
-
-            if (ids && !$.isArray(ids) && $.isNumeric(ids)) {
-                ids = [ids];
-            }
-
-            if (ids && ids.length > 0 && isUserAllowed(resourceName, action, true)) {
-                //console.log("Printing " + resourceName + " [" + ids.join(",") + "]");
-                var target = "_blank";
-                url += "/" + action + "?ids=" + ids.join(",");
-
-                var $href = $("<a href='" + url + "' target='" + target + "' hidden></a>");
-                $href.appendTo("body")[0].click();
-                $href.remove();
-            }
-        };
 
     /**
      *
@@ -2288,19 +2258,21 @@ expresso.Common = (function () {
      * Notify the user when there is a newer version available
      */
     var initCheckVersion = function () {
+        // only for production environment
         if (expresso.Common.isProduction()) {
-            // TODO check if the main application if fullScreen (Expresso)
-            if (!expresso.util.Util.getUrlParameter("nomenu")) {
+            // if the main application if fullScreen, message cannot be displayed
+            if (!doNotDisplayAjaxErrorMessageFlag && !expresso.util.Util.getUrlParameter("nomenu")) {
                 // get the configuration file on the server
                 var currentVersion = expresso.Common.getSiteNamespace().config.Configurations.version;
                 $.ajax({
-                    url: "config/configurations.js"
+                    url: "config/configurations.js",
+                    cache: false
                 }).done(function () {
                     var serverVersion = expresso.Common.getSiteNamespace().config.Configurations.version;
                     if (currentVersion != serverVersion) {
                         console.log("Version: " + currentVersion + " -> " + serverVersion);
                         var $notification = $("<span class='exp-version-update-notification'></span>").appendTo($("body"));
-                        $notification.kendoNotification({
+                        var kendoNotification = $notification.kendoNotification({
                             autoHideAfter: 0,
                             position: {
                                 top: 5,
@@ -2309,13 +2281,23 @@ expresso.Common = (function () {
                             hide: function () {
                                 window.location.reload();
                             }
-                        }).data("kendoNotification").show(expresso.Common.getLabel("versionWarning"), "warning");
+                        }).data("kendoNotification");
+                        kendoNotification.show(expresso.Common.getLabel("versionWarning"), "warning");
+
+                        // add the class
+                        kendoNotification.getNotifications().addClass("exp-version-update-notification");
+
+                        // once displayed, no need to verify again the version
                     } else {
                         // verify again in n seconds
-                        window.setTimeout(initCheckVersion, (expresso.Common.isProduction() ? 60 : 10) * 1000);
+                        window.setTimeout(initCheckVersion, (expresso.Common.isProduction() ? 2 * 60 : 10) * 1000);
                     }
-                }).fail(function () {
+                }).fail(function (jqXHR) {
+                    jqXHR.alreadyProcessed = true;
                     console.error("Unable to check version on server");
+
+                    // verify again in 5 minutes
+                    window.setTimeout(initCheckVersion, 5 * 60 * 1000);
                 });
             }
         }
@@ -2341,9 +2323,6 @@ expresso.Common = (function () {
         // set the default for Ajax calls
         initAjax();
 
-        // if the user does not have the latest version, notify it
-        initCheckVersion();
-
         // resize section on window resize
         var $window = $(window);
         $window.on('orientationchange', function () {
@@ -2362,6 +2341,9 @@ expresso.Common = (function () {
                     // parse the application list and build maps for faster access
                     processApplicationList();
                 }
+
+                // if the user does not have the latest version, notify it
+                initCheckVersion();
             })
         );
     };

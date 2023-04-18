@@ -4,6 +4,7 @@ import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
+import com.sgitmanagement.expressoext.util.MainUtil;
 
 public class CompanyService extends BaseEntityService<Company> {
 
@@ -18,8 +19,6 @@ public class CompanyService extends BaseEntityService<Company> {
 	public static void main(String[] args) throws Exception {
 		CompanyService service = newServiceStatic(CompanyService.class, Company.class);
 		service.sync();
-		service.closeServices();
-
-		System.out.println("Done");
+		MainUtil.close();
 	}
 }

@@ -3,7 +3,7 @@
     initForm: function ($window, resource) {
         expresso.layout.resourcemanager.Form.fn.initForm.call(this, $window, resource);
 
-        //var _this = this;
+        var _this = this;
 
         if (resource.id) {
             if (!expresso.Common.isUserInRole("admin")) {
@@ -13,17 +13,11 @@
 
         if (!expresso.Common.isUserInRole("admin")) {
             expresso.util.UIUtil.hideField($window.find(".admin-only"));
-            expresso.util.UIUtil.hideField($window.find("[name=password]"));
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=nbrFailedAttempts]"));
         }
 
         if (!expresso.Common.isUserInRole("UserManager.admin")) {
-            expresso.util.UIUtil.setFieldReadOnly($window.find("[name=companyId]"));
-            expresso.util.UIUtil.setFieldReadOnly($window.find("[name=departmentId]"));
-            expresso.util.UIUtil.setFieldReadOnly($window.find("[name=jobTitleId]"));
-            expresso.util.UIUtil.setFieldReadOnly($window.find("[name=managerId]"));
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=username]"));
-
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=extKey]"));
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=nbrFailedAttempts]"));
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=passwordExpirationDate]"));
@@ -33,6 +27,26 @@
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=creationDate]"));
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=lastVisitDate]"));
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=localAccount]"));
+
+            var managedJobTitleIds = expresso.Security.getUserInfo().jobTitle.managedJobTitleIds || [];
+            if (!resource.id) {
+                // new user: this user is allowed to create only certain user job titles
+                _this.sendRequest("jobTitle", null, null, expresso.Common.buildKendoFilter({
+                    field: "id",
+                    operator: "in",
+                    value: managedJobTitleIds.join(",")
+                })).done(function (jobTitles) {
+                    expresso.util.UIUtil.setDataSource($window.find("[name=jobTitleId]"), jobTitles, resource.jobTitleId);
+                });
+            } else {
+                if (!resource.jobTitleId || !managedJobTitleIds.includes(resource.jobTitleId)) {
+                    expresso.util.UIUtil.setFieldReadOnly($window.find("[name=jobTitleId]"));
+                    expresso.util.UIUtil.setFieldReadOnly($window.find("[name=managerId]"));
+                    expresso.util.UIUtil.setFieldReadOnly($window.find("[name=companyId]"));
+                    expresso.util.UIUtil.setFieldReadOnly($window.find("[name=departmentId]"));
+                    expresso.util.UIUtil.hideField($window.find("[name=password]"));
+                }
+            }
         }
 
         if (!expresso.Common.getSiteNamespace().config.Configurations.localAccount) {

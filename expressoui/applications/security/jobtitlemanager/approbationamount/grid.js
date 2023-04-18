@@ -3,7 +3,7 @@
     // @override
     getColumns: function () {
         return [{
-            field: "resource.description",
+            field: "resource.name",
             width: 200
         }, {
             field: "approbationAmount",

@@ -323,13 +323,6 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	/**
 	 * Close all services for the thread
 	 */
-	final public void closeServices() {
-		staticCloseServices();
-	}
-
-	/**
-	 * Close all services for the thread
-	 */
 	static public void staticCloseServices() {
 		List<AbstractBaseService<?>> services = servicesThreadLocal.get();
 		if (services != null) {

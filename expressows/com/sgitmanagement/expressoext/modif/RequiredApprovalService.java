@@ -17,6 +17,7 @@ import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expresso.util.mail.Mailer;
 import com.sgitmanagement.expressoext.base.BaseEntity;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
+import com.sgitmanagement.expressoext.util.MainUtil;
 
 public class RequiredApprovalService extends BaseEntityService<RequiredApproval> {
 	@Override
@@ -201,9 +202,7 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		RequiredApprovalService service = newServiceStatic(RequiredApprovalService.class, RequiredApproval.class);
 		service.list();
 
-		service.closeServices();
-
-		System.out.println("Done");
+		MainUtil.close();
 	}
 
 }

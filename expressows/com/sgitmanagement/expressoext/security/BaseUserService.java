@@ -58,9 +58,10 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 				newUser.setJobTitleId(user.getJobTitleId());
 				newUser.setDepartmentId(user.getDepartmentId());
 				newUser.setCompanyId(user.getCompanyId());
+				newUser.setManagerId(user.getManagerId());
+
 				newUser.setExtKey(user.getExtKey());
 				newUser.setLanguage(user.getLanguage());
-				newUser.setManagerId(user.getManagerId());
 				newUser.setNote(user.getNote());
 				newUser.setPhoneNumber(user.getPhoneNumber());
 				newUser.setEmail(user.getEmail());
@@ -90,10 +91,13 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		// sync role info
 		syncRoleInfos(user);
 
-		if (user.isLocalAccount() && !user.isGenericAccount()) {
-			sendWelcomeEmail(user);
+		if (user.getPassword() == null || user.getPassword().length() == 0) {
+			if (user.isLocalAccount() && !user.isGenericAccount()) {
+				sendWelcomeEmail(user);
+			}
+		} else {
+			setNewPassword(user, user.getPassword(), false);
 		}
-
 		return user;
 	}
 
@@ -626,6 +630,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 			}
 			break;
 
+		case "duplicate":
 		case "update":
 		case "delete":
 			allowed = canUpdateUser(user);
@@ -653,8 +658,15 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 	public void verifyCreationRestrictions(U user, IEntity<?> parentEntity) throws Exception {
 		super.verifyCreationRestrictions(user, parentEntity);
 
-		if (!isUserInRole("UserManager.admin")) {
-			throw new ForbiddenException();
+		if (isUserInRole("UserManager.admin")) {
+			// ok
+		} else {
+			// only if its role manage other role
+			if (getUser().getJobTitle() != null && getUser().getJobTitle().getManagedJobTitles() != null) {
+				// ok
+			} else {
+				throw new ForbiddenException();
+			}
 		}
 	}
 }

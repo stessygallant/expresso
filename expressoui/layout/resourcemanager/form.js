@@ -46,7 +46,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         this.originalShowTabs = this.showTabs;
 
-        if (!this.previewHeightRatio) {
+        if (this.previewHeightRatio === undefined) {
             this.previewHeightRatio = 0.3;
         }
 
@@ -165,15 +165,16 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             var $formWrapper = $form.wrap("<div class='exp-form-wrapper'></div>").parent();
             var $previewTabs = $("<div class='exp-form-preview'></div>").appendTo($formWrapper);
 
-            var previewHeight = Math.max(200, Math.round(
+            // console.log("window:" + $(window).height());
+            // console.log("$form.height():" + $form.height());
+            // console.log("$form.outerHeight(true):" + $form.outerHeight(true));
+            var previewHeight = Math.max(300, Math.round(
                 Math.min($(window).height(), $form.height()) * this.previewHeightRatio));
-            //console.log("previewHeight: " + previewHeight);
+            // console.log("previewHeight: " + previewHeight);
 
             // set the height of the form wrapper
             var formHeight = previewHeight + $form.outerHeight(true) + 35;
             $formWrapper.height(formHeight);
-
-            // console.log("$form.outerHeight(true):" + $form.outerHeight(true));
             // console.log("$previewTabs.outerHeight(true):" + $previewTabs.outerHeight(true));
             // console.log("$formWrapper.height:" + $formWrapper.height());
 
@@ -511,7 +512,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                             // create the main resource
                             // _this.isUserAllowed("create")
                             $saveDeferred = _this.createMainResource();
-                        } else if (action.saveBeforeAction !== false && _this.resourceManager.sections.grid.isUpdatable(resource)) {
+                        } else if (action.saveBeforeAction !== false && !_this.readOnly &&
+                            _this.resourceManager.sections.grid.isUpdatable(resource)) {
                             // only save if the resource is updatable
                             // _this.isUserAllowed("update")
                             $saveDeferred = _this.save();
@@ -536,14 +538,19 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         // WAIT FOR SAVE
                         $saveDeferred.done(function (resource) {
                             // validate the resource for the action
-                            var $validateDeferred = _this.validateResource($window, resource, action.pgmKey);
-                            if ($validateDeferred === true || $validateDeferred === undefined) {
-                                // ok
+                            var $validateDeferred;
+                            if (action.saveBeforeAction === false) {
                                 $validateDeferred = $.Deferred().resolve(null);
-                            } else if ($validateDeferred === false) {
-                                $validateDeferred = $.Deferred().reject();
                             } else {
-                                // assume a promise
+                                $validateDeferred = _this.validateResource($window, resource, action.pgmKey);
+                                if ($validateDeferred === true || $validateDeferred === undefined) {
+                                    // ok
+                                    $validateDeferred = $.Deferred().resolve(null);
+                                } else if ($validateDeferred === false) {
+                                    $validateDeferred = $.Deferred().reject();
+                                } else {
+                                    // assume a promise
+                                }
                             }
 
                             // WAIT FOR VALIDATE

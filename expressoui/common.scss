@@ -201,6 +201,15 @@
 
 .exp-version-update-notification {
     cursor: pointer;
+    color: white;
+    background-color: $red;
+    border-color: $red;
+
+    &:hover {
+        color: $themeTextColor;
+        background-color: white;
+        border-color: $themeColorDark;
+    }
 }
 
 //

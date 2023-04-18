@@ -1,4 +1,5 @@
 ﻿expresso.applications.security.usermanager.Grid = expresso.layout.resourcemanager.Grid.extend({
+    serverSideDuplicate: false,
 
     // @override
     getMobileColumns: function () {
@@ -80,6 +81,22 @@
             field: "userCreationDate",
             dir: "desc"
         };
+    },
+
+    // @override
+    initializeDuplicatedResource: function (duplicatedResource) {
+        duplicatedResource.firstName = null;
+        duplicatedResource.lastName = null;
+        duplicatedResource.userName = null;
+        duplicatedResource.password = null;
+
+        duplicatedResource.extKey = null;
+        duplicatedResource.nbrFailedAttempts = 0;
+        duplicatedResource.passwordExpirationDate = null;
+        duplicatedResource.terminationDate = null;
+        duplicatedResource.deactivationDate = null;
+        duplicatedResource.userCreationDate = null;
+        duplicatedResource.lastVisitDate = null;
     }
 });
 
