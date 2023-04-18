@@ -46,7 +46,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         this.originalShowTabs = this.showTabs;
 
-        if (!this.previewHeightRatio) {
+        if (this.previewHeightRatio === undefined) {
             this.previewHeightRatio = 0.3;
         }
 
@@ -165,15 +165,16 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             var $formWrapper = $form.wrap("<div class='exp-form-wrapper'></div>").parent();
             var $previewTabs = $("<div class='exp-form-preview'></div>").appendTo($formWrapper);
 
-            var previewHeight = Math.max(200, Math.round(
+            // console.log("window:" + $(window).height());
+            // console.log("$form.height():" + $form.height());
+            // console.log("$form.outerHeight(true):" + $form.outerHeight(true));
+            var previewHeight = Math.max(300, Math.round(
                 Math.min($(window).height(), $form.height()) * this.previewHeightRatio));
-            //console.log("previewHeight: " + previewHeight);
+            // console.log("previewHeight: " + previewHeight);
 
             // set the height of the form wrapper
             var formHeight = previewHeight + $form.outerHeight(true) + 35;
             $formWrapper.height(formHeight);
-
-            // console.log("$form.outerHeight(true):" + $form.outerHeight(true));
             // console.log("$previewTabs.outerHeight(true):" + $previewTabs.outerHeight(true));
             // console.log("$formWrapper.height:" + $formWrapper.height());
 
