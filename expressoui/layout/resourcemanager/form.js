@@ -257,7 +257,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         // apply the security if readOnly
         var $readOnlyDeferred = $.Deferred();
-        if(this.readOnly !== undefined) {
+        if (this.readOnly !== undefined) {
             $readOnlyDeferred.resolve(this.readOnly);
         } else if (!resource || !resource.id) {
             // new resource are always editable
@@ -708,6 +708,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         this.preventWindowClosing = false;
         this.$window = null;
         this.savedResource = null;
+        this.readOnly = undefined;
     },
 
     // @override
