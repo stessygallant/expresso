@@ -42,6 +42,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 			if (u != null) {
 				// throw new ValidationException("userAlreadyExist");
 				// return the user but do not overwrite anything
+				logger.debug("User [" + u.getFullLabel() + "] already exists");
 				return u;
 			} else {
 				PersonService personService = newService(PersonService.class, Person.class);
@@ -58,13 +59,14 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 				newUser.setJobTitleId(user.getJobTitleId());
 				newUser.setDepartmentId(user.getDepartmentId());
 				newUser.setCompanyId(user.getCompanyId());
-				newUser.setManagerId(user.getManagerId());
+				newUser.setManagerPersonId(user.getManagerPersonId());
+				newUser.setPhoneNumber(user.getPhoneNumber());
+				newUser.setEmail(user.getEmail());
 
+				// set new fields
 				newUser.setExtKey(user.getExtKey());
 				newUser.setLanguage(user.getLanguage());
 				newUser.setNote(user.getNote());
-				newUser.setPhoneNumber(user.getPhoneNumber());
-				newUser.setEmail(user.getEmail());
 				newUser.setLocalAccount(user.isLocalAccount());
 
 				user = newUser;
@@ -162,7 +164,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 			user.setCompanyId(prevUser.getCompanyId());
 			user.setDepartmentId(prevUser.getDepartmentId());
 			user.setJobTitleId(prevUser.getJobTitleId());
-			user.setManagerId(prevUser.getManagerId());
+			user.setManagerPersonId(prevUser.getManagerPersonId());
 			user.setUserName(prevUser.getUserName());
 
 			user.setLocalAccount(prevUser.isLocalAccount());

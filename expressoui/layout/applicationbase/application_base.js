@@ -241,7 +241,7 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
         // add path
         report.path = report.path || (this.applicationPath + "/report-" + report.name + ".html");
 
-        // TODO modify method params expresso.Common.executeReport(report, params, report.type == "custom");
+        // to do: modify method params expresso.Common.executeReport(report, params, report.type == "custom");
     },
 
     /**

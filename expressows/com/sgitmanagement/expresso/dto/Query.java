@@ -21,6 +21,8 @@ public class Query {
 	private Boolean countOnly;
 	private Boolean createIfNotFound;
 	private Boolean hierarchical;
+	private Boolean appendHierarchicalParents;
+	private Boolean appendHierarchicalChildren;
 
 	private String searchFilterTerm;
 	private Boolean keySearch;
@@ -149,6 +151,30 @@ public class Query {
 
 	public boolean hierarchical() {
 		return this.hierarchical != null && this.hierarchical.booleanValue();
+	}
+
+	public Boolean getAppendHierarchicalParents() {
+		return appendHierarchicalParents;
+	}
+
+	public void setAppendHierarchicalParents(Boolean appendHierarchicalParents) {
+		this.appendHierarchicalParents = appendHierarchicalParents;
+	}
+
+	public boolean appendHierarchicalParents() {
+		return this.appendHierarchicalParents == null || this.appendHierarchicalParents.booleanValue();
+	}
+
+	public Boolean getAppendHierarchicalChildren() {
+		return appendHierarchicalChildren;
+	}
+
+	public void setAppendHierarchicalChildren(Boolean appendHierarchicalChildren) {
+		this.appendHierarchicalChildren = appendHierarchicalChildren;
+	}
+
+	public boolean appendHierarchicalChildren() {
+		return this.appendHierarchicalChildren == null || this.appendHierarchicalChildren.booleanValue();
 	}
 
 	/**

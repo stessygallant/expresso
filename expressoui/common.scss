@@ -364,7 +364,6 @@
 
         .fa-plus {
             position: absolute;
-            // TODO
         }
     }
 }
@@ -887,6 +886,22 @@ label input + span {
 
         .k-datepicker {
             width: 8.5em;
+        }
+    }
+}
+
+.k-button-group {
+    border-radius: 0;
+    margin: 0;
+    background-color: transparent;
+
+    .k-button {
+        background-color: transparent;
+        color: $themeTextColor;
+
+        &.k-state-active {
+            color: white;
+            background-color: $themeColorDark;
         }
     }
 }

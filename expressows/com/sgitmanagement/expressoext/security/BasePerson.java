@@ -67,6 +67,6 @@ public class BasePerson extends BaseDeactivableEntity {
 
 	@Override
 	public String toString() {
-		return "BasePerson [email=" + email + ", fullName=" + fullName + "]";
+		return "[email=" + email + ", fullName=" + fullName + "]";
 	}
 }

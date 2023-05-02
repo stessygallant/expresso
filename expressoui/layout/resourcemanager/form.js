@@ -1354,7 +1354,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 }
             });
         } else {
-            // TODO to be removed
+            // to be removed
             // $window.find("[type=file]:visible").each(function () {
             $window.find("[type=file][name]:not([data-role])").each(function () {
                 var $input = $(this);

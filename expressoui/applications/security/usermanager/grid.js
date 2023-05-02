@@ -50,7 +50,7 @@
             field: "department.description",
             width: 120
         }, {
-            field: "managerId",
+            field: "managerPersonFullName",
             width: 150,
             hidden: true
         }, {

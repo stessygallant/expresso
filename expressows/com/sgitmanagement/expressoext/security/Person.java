@@ -5,6 +5,7 @@ import java.util.Date;
 import org.hibernate.annotations.Formula;
 
 import com.sgitmanagement.expresso.base.Creatable;
+import com.sgitmanagement.expresso.base.HierarchicalParentEntity;
 import com.sgitmanagement.expresso.base.Updatable;
 import com.sgitmanagement.expresso.util.JAXBDateAdapter;
 
@@ -50,7 +51,6 @@ public class Person extends BasePerson implements Updatable, Creatable {
 	@Formula(value = "(SELECT CONCAT(p.first_name, \" \", p.last_name) FROM person p WHERE p.id = last_modified_user_id)")
 	private String lastModifiedUserFullName;
 
-	// @Version
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "last_modified_date")
 	private Date lastModifiedDate;
@@ -59,11 +59,15 @@ public class Person extends BasePerson implements Updatable, Creatable {
 	private String phoneNumber;
 
 	@Column(name = "manager_id")
-	private Integer managerId;
+	private Integer managerPersonId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "manager_id", insertable = false, updatable = false)
-	private BasicPerson manager;
+	@HierarchicalParentEntity
+	private Person managerPerson;
+
+	@Formula(value = "(SELECT CONCAT(p.first_name, \" \", p.last_name) FROM person p WHERE p.id = manager_id)")
+	private String managerPersonFullName;
 
 	@Column(name = "department_id")
 	private Integer departmentId;
@@ -102,6 +106,11 @@ public class Person extends BasePerson implements Updatable, Creatable {
 		return getFullName();
 	}
 
+	@XmlElement
+	public String getFullLabel() {
+		return getFullName() + (getCompany() != null ? " (" + getCompany().getName() + ")" : "");
+	}
+
 	public Integer getDepartmentId() {
 		return departmentId;
 	}
@@ -110,12 +119,12 @@ public class Person extends BasePerson implements Updatable, Creatable {
 		this.departmentId = departmentId;
 	}
 
-	public Integer getManagerId() {
-		return managerId;
+	public Integer getManagerPersonId() {
+		return managerPersonId;
 	}
 
-	public void setManagerId(Integer managerId) {
-		this.managerId = managerId;
+	public void setManagerPersonId(Integer managerPersonId) {
+		this.managerPersonId = managerPersonId;
 	}
 
 	public Integer getJobTitleId() {
@@ -126,8 +135,8 @@ public class Person extends BasePerson implements Updatable, Creatable {
 		this.jobTitleId = jobTitleId;
 	}
 
-	public BasicPerson getManager() {
-		return manager;
+	public Person getManagerPerson() {
+		return managerPerson;
 	}
 
 	@XmlElement
@@ -217,9 +226,8 @@ public class Person extends BasePerson implements Updatable, Creatable {
 		return lastModifiedUserFullName;
 	}
 
-	@Override
-	public String toString() {
-		return "Person [phoneNumber=" + phoneNumber + ", managerId=" + managerId + ", manager=" + manager + ", departmentId=" + departmentId + ", department=" + department + ", companyId=" + companyId
-				+ ", company=" + company + ", jobTitleId=" + jobTitleId + ", jobTitle=" + jobTitle + ", toString()=" + super.toString() + "]";
+	@XmlElement
+	public String getManagerPersonFullName() {
+		return managerPersonFullName;
 	}
 }

@@ -1,9 +1,8 @@
 ﻿expresso.applications.security.usermanager.UserManager = expresso.layout.resourcemanager.ResourceManager.extend({
     // @override
     init: function (applicationPath) {
-        var fields = expresso.Security.getUserFields();
-
-        expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "user", fields);
+        expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "user",
+            "expresso.applications.security.usermanager.Model");
     },
 
     // @override

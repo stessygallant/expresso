@@ -2,10 +2,9 @@ expresso.applications.general.personmanager.PersonManager = expresso.layout.reso
 
     // @override
     init: function (applicationPath) {
-        var fields = expresso.Security.getPersonFields();
-
-        expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "person", fields, {
-            preview: false
-        });
+        expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "person",
+            "expresso.applications.general.personmanager.Model", {
+                preview: false
+            });
     }
 });

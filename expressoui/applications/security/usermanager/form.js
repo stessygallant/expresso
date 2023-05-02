@@ -9,6 +9,12 @@
             if (!expresso.Common.isUserInRole("admin")) {
                 expresso.util.UIUtil.setFieldReadOnly($window.find("[name=localAccount]"));
             }
+
+            if (!resource.language) {
+                var defaultLanguage = "fr";
+                $window.find("[name=language]").setval(defaultLanguage);
+                resource.set("language", defaultLanguage);
+            }
         }
 
         if (!expresso.Common.isUserInRole("admin")) {
@@ -41,7 +47,7 @@
             } else {
                 if (!resource.jobTitleId || !managedJobTitleIds.includes(resource.jobTitleId)) {
                     expresso.util.UIUtil.setFieldReadOnly($window.find("[name=jobTitleId]"));
-                    expresso.util.UIUtil.setFieldReadOnly($window.find("[name=managerId]"));
+                    expresso.util.UIUtil.setFieldReadOnly($window.find("[name=managerPersonId]"));
                     expresso.util.UIUtil.setFieldReadOnly($window.find("[name=companyId]"));
                     expresso.util.UIUtil.setFieldReadOnly($window.find("[name=departmentId]"));
                     expresso.util.UIUtil.hideField($window.find("[name=password]"));
@@ -53,25 +59,86 @@
             expresso.util.UIUtil.hideField($window.find("[name=localAccount]"));
         }
 
-        // create the username based on first and last name
-        $window.find(":input[name]").on("change", function () {
-            var userName = $window.find("[name=userName]").val();
-            if (!userName) {
-                var firstName = $window.find("[name=firstName]").val();
-                var lastName = $window.find("[name=lastName]").val();
-                if (firstName && lastName) {
-                    userName = firstName.substring(0, 1).toLowerCase() + lastName.toLowerCase();
+        // if the database already contains the list of persons, we must simply create the user
+        if (expresso.Common.getSiteNamespace().config.Configurations.supportPersonImportation) {
+            // we must specify the person for the user
+            if (resource.id) {
+                expresso.util.UIUtil.hideField($window.find("[name=personId]"));
+            } else {
+                expresso.util.UIUtil.hideField($window.find("[name=firstName]"));
+                expresso.util.UIUtil.hideField($window.find("[name=lastName]"));
 
-                    // remove accent
-                    userName = userName.latinise();
+                this.bindOnChange($window.find("[name=personId]"), function () {
+                    var person = this.dataItem();
+                    if (person) {
+                        $window.find("[name=firstName]").setval(person.firstName);
+                        resource.set("firstName", person.firstName);
 
-                    // exclude all invalid characters
-                    userName = userName.replace(/[^a-z0-9]/ig, '');
+                        $window.find("[name=lastName]").setval(person.lastName);
+                        resource.set("lastName", person.lastName);
+                        _this.setUserName(resource);
 
-                    $window.find("[name=userName]").setval(userName);
-                    resource.set("userName", userName);
-                }
+                        // pull back some fields
+                        $window.find("[name=companyId]").setval(person.companyId);
+                        resource.set("companyId", person.companyId);
+
+                        $window.find("[name=jobTitleId]").setval(person.jobTitleId);
+                        resource.set("jobTitleId", person.jobTitleId);
+
+                        $window.find("[name=departmentId]").setval(person.departmentId);
+                        resource.set("departmentId", person.departmentId);
+
+                        $window.find("[name=managerPersonId]").setval(person.managerPersonId);
+                        resource.set("managerPersonId", person.managerPersonId);
+
+                        $window.find("[name=email]").setval(person.email);
+                        resource.set("email", person.email);
+
+                        $window.find("[name=phoneNumber]").setval(person.phoneNumber);
+                        resource.set("phoneNumber", person.phoneNumber);
+                    }
+                });
             }
-        });
+        } else {
+            expresso.util.UIUtil.hideField($window.find("[name=personId]"));
+            if (!resource.id) {
+                // create the username based on first and last name
+                $window.find("[name=lastName],[name=firstName]").on("change", function () {
+                    if (!resource.userName) {
+                        _this.setUserName(resource);
+                    }
+                });
+            }
+        }
+    },
+
+    /**
+     *
+     * @param resource
+     */
+    setUserName: function (resource) {
+        if (resource && resource.firstName && resource.lastName) {
+            var userName = resource.firstName.substring(0, 1).toLowerCase() + resource.lastName.toLowerCase();
+
+            // remove accent
+            userName = userName.latinise();
+
+            // exclude all invalid characters
+            userName = userName.replace(/[^a-z0-9]/ig, '');
+
+            this.$window.find("[name=userName]").setval(userName);
+            resource.set("userName", userName);
+        }
+    },
+
+    // @override
+    getAdditionalRequiredFieldNames: function ($window, resource, action) {
+        var requiredFieldNames = [];
+        requiredFieldNames.push("email");
+        requiredFieldNames.push("userName");
+        if (!resource.id && expresso.Common.getSiteNamespace().config.Configurations.supportPersonImportation) {
+            requiredFieldNames.push("personId");
+        }
+        return requiredFieldNames;
     }
 });
