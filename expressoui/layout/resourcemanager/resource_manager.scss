@@ -197,22 +197,6 @@
             }
         }
 
-        .k-button-group {
-            border-radius: 0;
-            margin: 0;
-            background-color: transparent;
-
-            .k-button {
-                background-color: transparent;
-                color: $themeTextColor;
-
-                &.k-state-active {
-                    color: white;
-                    background-color: $themeColorDark;
-                }
-            }
-        }
-
         // hide the upload by default in the toolbar
         .k-upload {
             display: none;

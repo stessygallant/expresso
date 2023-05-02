@@ -861,7 +861,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// if the query is for an hierarchical list, we need to include all parents and children
 				if (query.hierarchical()) {
 					int beforeDataSize = data.size();
-					int sqlQueryCount = appendHierarchicalEntities(data, query.activeOnly()) + 1;
+					int sqlQueryCount = appendHierarchicalEntities(data, query) + 1;
 					logger.debug("Number of SQL Queries for hierarchical: " + sqlQueryCount + " Total entities: " + data.size() + " (before: " + beforeDataSize + ")");
 				}
 
@@ -894,19 +894,22 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * 
 	 * @param data
 	 */
-	private int appendHierarchicalEntities(List<E> data, boolean activeOnly) throws Exception {
+	private int appendHierarchicalEntities(List<E> data, Query query) throws Exception {
 		// build a map with the key
 		Set<I> ids = new HashSet<>();
 		data.forEach(e -> ids.add(e.getId()));
 
 		int sqlQueryCount = 0;
 
-		// append children
-		sqlQueryCount += appendHierarchicalChildEntities(data, data, ids, activeOnly);
+		if (query.appendHierarchicalChildren()) {
+			// append children
+			sqlQueryCount += appendHierarchicalChildEntities(data, data, ids, query.activeOnly());
+		}
 
-		// append parents
-		sqlQueryCount += appendHierarchicalParentEntities(data, data, ids);
-
+		if (query.appendHierarchicalParents()) {
+			// append parents
+			sqlQueryCount += appendHierarchicalParentEntities(data, data, ids);
+		}
 		return sqlQueryCount;
 	}
 
@@ -1669,6 +1672,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	public void formatKeyField(Filter filter, Field keyField) {
 		String formattedKey = formatKeyField(keyField, "" + filter.getValue());
 		filter.setValue(formattedKey);
+	}
+
+	final public String formatKeyField(Object keyValue) {
+		return formatKeyField(getKeyField(), keyValue);
 	}
 
 	final public String formatKeyField(String keyFieldName, Object keyValue) {
@@ -3123,7 +3130,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					continue;
 				}
 
-				boolean exported = true;
 				appClassField = null;
 
 				// if the field is an Id, try to get the Object appClassField
@@ -3221,10 +3227,17 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							// remove the "s" and add "Ids"
 							fieldName = fieldName.substring(0, fieldName.length() - 1) + "Ids";
 						}
+
+						// if there is no getter/setter, do not export
+						if (Util.getField(getTypeOfE(), fieldName) == null) {
+							// this could happen when using a Formula or JoinFormula to an transient object
+							continue;
+						}
+
 					} else {
 						// logger.warn(String.format("Type [%s] not supported",
 						// type.getCanonicalName()));
-						exported = false;
+						continue;
 					}
 				} else {
 					appClassField.setType(appClassFieldType);
@@ -3345,9 +3358,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					appClassField.setRequireApprovalRole(requireApprovalRole);
 				}
 
-				if (exported) {
-					appClassFieldMap.put(fieldName, appClassField);
-				}
+				// add the new field to the map
+				appClassFieldMap.put(fieldName, appClassField);
 			}
 
 			// then get all method with @XmlElement that are primitive

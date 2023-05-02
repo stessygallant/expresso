@@ -19,6 +19,8 @@ expresso.applications.security.usermanager.Labels = {
     loginInfo: "Connection information",
     statusInfo: "Status information",
     jobInfo: "Job information",
+    managerPersonFullName: "Manager",
+    managerPerson: "Manager",
 
     // person
     creationDate: {label: "Creation date (person)", shortLabel: "Creation date"},

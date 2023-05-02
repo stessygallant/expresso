@@ -26,24 +26,7 @@ expresso.util.Model = (function () {
             var $deferredModel;
             if (typeof resourceManager.model === "string") {
                 var modelPath = resourceManager.model;
-                modelPath += (modelPath.indexOf("?") != -1 ? "&" : "?") + "ver=" + expresso.Common.getSiteNamespace().config.Configurations.version;
-
-                // console.log("MODEL PATH [" + modelPath + "]");
-                $deferredModel = $.get(modelPath).then(function (model) {
-                    // backward compatibility: model could use _this to refer to resourceManager
-                    var _this = resourceManager; // DO NOT TOUCH _this
-                    if (model.startsWith("(") || model.startsWith("{")) {
-                        // backward compatibility: model could be defined directly without namespace
-                        model = eval(model);
-                    } else {
-                        // model is assigned to the namespace .Model
-                        // sherpa.applications.operation.gatetransactionmanager.Model
-                        var modelNamespace = expresso.Common.getApplicationNamespace(modelPath) + ".Model";
-                        // console.log("modelNamespace [" + modelNamespace + "]");
-                        model = eval(modelNamespace);
-                    }
-                    return model;
-                });
+                $deferredModel = loadModel(modelPath, resourceManager);
             } else {
                 $deferredModel = $.Deferred().resolve(resourceManager.model);
             }
@@ -431,6 +414,65 @@ expresso.util.Model = (function () {
 
         /**
          *
+         * @param modelPath
+         * @param [resourceManager]
+         * @returns {*}
+         */
+        var loadModel = function (modelPath, resourceManager) {
+            if (modelPath.endsWith(".Model")) {
+                // this is a namespace. Get the model path
+                if (modelPath.startsWith("expresso")) {
+                    // remove only the application name (last)
+                    modelPath = modelPath.split(".").slice(0, -1).join('/');
+                } else {
+                    // remove first namespace and the application name (last)
+                    modelPath = modelPath.split(".").slice(1, -1).join('/');
+                }
+                modelPath += "/model.js";
+            }
+
+            modelPath += (modelPath.indexOf("?") != -1 ? "&" : "?") + "ver=" + expresso.Common.getSiteNamespace().config.Configurations.version;
+
+            // model is assigned to the namespace .Model
+            var modelNamespace = expresso.Common.getApplicationNamespace(modelPath) + ".Model";
+
+            // create namespace
+            expresso.Common.createApplicationNamespace(modelNamespace);
+
+            // console.log("MODEL PATH [" + modelPath + "]");
+            var $deferred = $.Deferred();
+            $.get(modelPath).done(function (model) {
+                // backward compatibility: model could use _this to refer to resourceManager
+                var _this = resourceManager; // DO NOT TOUCH _this
+                if (model.startsWith("(") || model.startsWith("{")) {
+                    // backward compatibility: model could be defined directly without namespace
+                    console.warn("Model file is not standard: missing namespace");
+                    model = eval(model);
+                    $deferred.resolve(model);
+                } else {
+                    // console.log("modelNamespace [" + modelNamespace + "]");
+                    model = eval(modelNamespace);
+
+                    // if extends -> load the extended model
+                    if (model.extendsModel) {
+                        expresso.util.Model.loadModel(model.extendsModel.model).done(function () {
+                            $.extend(true, model, eval(model.extendsModel.model), {
+                                type: {
+                                    defaultValue: model.type.defaultValue
+                                }
+                            });
+                            $deferred.resolve(model);
+                        });
+                    } else {
+                        $deferred.resolve(model);
+                    }
+                }
+            });
+            return $deferred;
+        };
+
+        /**
+         *
          * @param model
          * @param labels
          * @returns {jQuery|{}}
@@ -507,7 +549,8 @@ expresso.util.Model = (function () {
 
         // return public properties and methods
         return {
-            initModel: initModel
+            initModel: initModel,
+            loadModel: loadModel
         };
     }()
 );

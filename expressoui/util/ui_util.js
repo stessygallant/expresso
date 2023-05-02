@@ -1979,7 +1979,8 @@ expresso.util.UIUtil = (function () {
             var $searchButton = $("<button class='exp-ref-button exp-ref-search-button'><i class='fa fa-search'></i></button>");
             $input.closest(".k-widget").after($searchButton);
 
-            if (reference.allowView === false || reference.resourceName == "user" || reference.resourceName == "person") {
+            if (reference.allowView === false ||
+                (reference.allowCreate !== true && (reference.resourceName == "user" || reference.resourceName == "person"))) {
                 // only 1 button
                 $parent.addClass("exp-ref-no-view");
             } else {

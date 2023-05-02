@@ -19,7 +19,7 @@ expresso.applications.general.personmanager.Grid = expresso.layout.resourcemanag
             field: "email",
             width: 200
         }, {
-            field: "managerId",
+            field: "managerPersonId",
             width: 150,
             hidden: true
         }, {
