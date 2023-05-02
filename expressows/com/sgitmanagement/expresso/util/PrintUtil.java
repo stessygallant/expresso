@@ -28,6 +28,7 @@ import javax.print.attribute.standard.Sides;
 import javax.print.event.PrintJobAdapter;
 import javax.print.event.PrintJobEvent;
 
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPrintable;
 import org.apache.pdfbox.printing.Scaling;
@@ -106,7 +107,7 @@ public class PrintUtil {
 					PrintService printService = getPrintService(fPrinterName);
 
 					// Create the document to be printed
-					try (PDDocument document = PDDocument.load(pdfInputStream)) {
+					try (PDDocument document = PDDocument.load(pdfInputStream, MemoryUsageSetting.setupTempFileOnly())) {
 						Doc doc = new SimpleDoc(new PDFPrintable(document, Scaling.SHRINK_TO_FIT), DocFlavor.SERVICE_FORMATTED.PRINTABLE, null);
 
 						// Print it

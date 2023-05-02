@@ -29,6 +29,7 @@ import javax.print.attribute.standard.OrientationRequested;
 import javax.print.attribute.standard.PrintQuality;
 import javax.print.attribute.standard.PrinterResolution;
 
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -150,7 +151,7 @@ public enum ZebraUtil {
 			// Convert PDF to PNG
 			int dpi = 203;// Zebra ZD420 DPI
 			pngFile = File.createTempFile(resourceName, ".png");
-			try (PDDocument document = PDDocument.load(pdfFile)) {
+			try (PDDocument document = PDDocument.load(pdfFile, MemoryUsageSetting.setupTempFileOnly())) {
 				PDFRenderer pdfRenderer = new PDFRenderer(document);
 				// only first page
 				int page = 0;
