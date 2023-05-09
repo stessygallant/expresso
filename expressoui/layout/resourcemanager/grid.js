@@ -84,11 +84,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     // maximum length for the name of a grid preference
     maxGridFilterNameLength: 15,
 
-    // getInitialGridFilter -> initial only (should only be grid filters as the user may remove them)
-    // masterFilter -> permanent (cannot be erased) this filter is always applied
-    // masterFilter may come from this.resourceManager.options.filter or this.resourceManager.options.queryParameters.filter
-    masterFilter: undefined,
-
     // reference to the context menu for preferences
     $preferencesMenu: undefined,
 

@@ -122,7 +122,16 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	 * @throws Exception
 	 */
 	final public void commit() throws Exception {
-		getPersistenceManager().commit(getEntityManager(), true);
+		commit(true);
+	}
+
+	/**
+	 * Commit the current transaction (only if there is one active). It automatically starts a new one
+	 *
+	 * @throws Exception
+	 */
+	final public void commit(boolean startNewTransaction) throws Exception {
+		getPersistenceManager().commit(getEntityManager(), startNewTransaction);
 	}
 
 	/**

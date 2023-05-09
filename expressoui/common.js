@@ -175,7 +175,7 @@ expresso.Common = (function () {
         }
 
         if (customFilterFlag) {
-            setCustomFilterFlag(filter);
+            setCustomFilterFlag(f);
         }
         return filter;
     };
@@ -448,10 +448,11 @@ expresso.Common = (function () {
 
     /**
      *
-     * @param url web service path to the resource
+     * @param url
+     * @param [action]
      */
-    var sendDownloadRequest = function (url) {
-        var action = "download";
+    var sendDownloadRequest = function (url, action) {
+        action = action || "download";
         var target = "_blank";
         var format = "pdf";
         url += (url.indexOf("?") == -1 ? "?" : "&") + "action=" + action;
