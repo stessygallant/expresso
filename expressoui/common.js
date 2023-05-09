@@ -54,6 +54,9 @@ expresso.Common = (function () {
     // script cache
     var scriptsCache = {};
 
+    // application cache
+    var applicationsCache = {};
+
     /**
      * Helper method to create a filter
      * @param criteria  list of criteria for the filter (object or array)
@@ -1404,20 +1407,38 @@ expresso.Common = (function () {
      *
      * @param appName
      * @param [resource] {id:?} if you want to open a resource. No id means a new resource
+     * @param [cacheApplication] by default, false. If true, application will not be destroyed
      * @returns {{}|jQuery}
      */
-    var displayForm = function (appName, resource) {
+    var displayForm = function (appName, resource, cacheApplication) {
         var $deferred = $.Deferred();
-        loadApplication(appName).done(function (resourceManager) {
-            if (resourceManager) {
-                resourceManager.displayForm(resource)
-                    .done(function (updatedResource) {
-                        $deferred.resolve(updatedResource);
-                    })
-                    .fail(function () {
-                        $deferred.reject();
-                    })
-                    .always(function () {
+        var $applicationDeferred = $.Deferred();
+
+        if (cacheApplication && applicationsCache[appName]) {
+            $applicationDeferred.resolve(applicationsCache[appName]);
+        } else {
+            loadApplication(appName).done(function (resourceManager) {
+                if (resourceManager) {
+                    if (cacheApplication) {
+                        applicationsCache[appName] = resourceManager;
+                    }
+                    $applicationDeferred.resolve(resourceManager);
+                } else {
+                    $applicationDeferred.reject();
+                }
+            });
+        }
+
+        $applicationDeferred.done(function (resourceManager) {
+            resourceManager.displayForm(resource)
+                .done(function (updatedResource) {
+                    $deferred.resolve(updatedResource);
+                })
+                .fail(function () {
+                    $deferred.reject();
+                })
+                .always(function () {
+                    if (!cacheApplication) {
                         // wait for the form to be closed and destroyed
                         window.setTimeout(function () {
                             if (resourceManager) {
@@ -1425,10 +1446,10 @@ expresso.Common = (function () {
                                 resourceManager = null;
                             }
                         }, 2000);
-                    });
-            } else {
-                $deferred.reject();
-            }
+                    }
+                });
+        }).fail(function () {
+            $deferred.reject();
         });
         return $deferred;
     };

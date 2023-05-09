@@ -100,10 +100,11 @@ public class NotificationService extends BaseEntityService<Notification> {
 			switch (action) {
 			case "update":
 			case "delete":
+			case "execute":
 			default:
-				if (notification != null && (notification.getPerformedAction() == null || isUserAdmin())) {
-					allowed = true;
-				}
+				// if (notification.getPerformedAction() == null || isUserAdmin()) {
+				allowed = true;
+				// }
 				break;
 			}
 		}

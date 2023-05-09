@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtils;
 
@@ -12,6 +14,8 @@ import com.sgitmanagement.expresso.base.AbstractBaseEntityService;
 import com.sgitmanagement.expresso.base.Creatable;
 import com.sgitmanagement.expresso.base.RequireApproval;
 import com.sgitmanagement.expresso.base.Updatable;
+import com.sgitmanagement.expresso.dto.Query;
+import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.util.DateUtil;
@@ -22,6 +26,7 @@ import com.sgitmanagement.expressoext.security.AuthorizationHelper;
 import com.sgitmanagement.expressoext.security.Resource;
 import com.sgitmanagement.expressoext.security.ResourceService;
 import com.sgitmanagement.expressoext.security.User;
+import com.sgitmanagement.expressoext.security.UserService;
 import com.sgitmanagement.expressoext.util.ReportUtil;
 
 import jakarta.persistence.Temporal;
@@ -229,5 +234,10 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 			// creatable only
 			return creatable.getCreationUser().getUserName().equals(AuthorizationHelper.SYSTEM_USERNAME);
 		}
+	}
+
+	public Set<String> getEmailsForJobTitle(String jobTitlePgmKey) throws Exception {
+		return newService(UserService.class, User.class).list(new Query().setActiveOnly(true).addFilter(new Filter("jobTitle.pgmKey", jobTitlePgmKey))).stream().map(User::getEmail)
+				.collect(Collectors.toSet());
 	}
 }

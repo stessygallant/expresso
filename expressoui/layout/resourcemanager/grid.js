@@ -1265,7 +1265,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                                         }
                                     }));
                                 } else {
-                                    $.each(_this.selectedRows, function (index, resource) {
+                                    $.each(_this.selectedRows, function () {
+                                        var resource = this;
                                         actionPromises.push(action.performAction.call(_this.resourceManager, resource, data).done(function (updatedResource) {
                                             if (updatedResource && updatedResource.id == resource.id) {
                                                 _this.updateResource(resource, updatedResource);

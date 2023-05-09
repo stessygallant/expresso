@@ -205,7 +205,7 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 
 			return e;
 		} catch (NoSuchMethodException ex) {
-			logger.error("No such method [" + action + "] exists");
+			logger.error("Error performing action [" + action + "] on single [" + this.getClass().getSimpleName() + "]: No such method exists. " + formParams);
 			throw new BaseException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "No method defined for the action [" + action + "]");
 		} catch (BaseException ex) {
 			throw ex;

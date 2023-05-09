@@ -627,7 +627,7 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 			Method method = this.getClass().getMethod(action, MultivaluedMap.class);
 			return (E) method.invoke(this, formParams);
 		} catch (NoSuchMethodException e) {
-			logger.error("No such method [" + action + "] exists");
+			logger.error("Error performing entity collection action [" + action + "] on [" + this.getClass().getSimpleName() + "]: No such method exists." + formParams);
 			throw new BaseException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "No method defined for the action [" + action + "]");
 		} catch (BaseException e) {
 			throw e;
