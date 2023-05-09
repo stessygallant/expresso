@@ -260,7 +260,8 @@
                                 sortField: field.values.sortField,
                                 cascadeFrom: field.values.cascadeFromId,
                                 cascadeFromField: field.values.cascadeFromField,
-                                fieldValues: field.values
+                                fieldValues: field.values,
+                                optionLabel: field.values.optionLabel
                             }));
                         } else {
                             this.readyPromises.push(expresso.util.UIUtil.buildDropDownList($el, field.values.data, {
