@@ -499,12 +499,10 @@
                         break;
 
                     case "picture":
-                        // convert to <input type="file" accept="image/*" capture="environment">
-                        $el.attr("type", "file");
-                        $el.attr("accept", "image/*");
-                        $el.attr("capture", "environment");
+                        $el.attr("type", "text");
                         $el.kendoExpressoPicturePicker({
                             resourceName: field && field.picture && field.picture.resourceName ? field.picture.resourceName : (resource && resource.type ? resource.type : $el.data("resourceName")),
+                            resourceId: (resource && resource.id ? resource.id : null),
                             resourceSecurityPath: field && field.picture && field.picture.resourceSecurityPath ? field.picture.resourceSecurityPath : $el.data("resourceSecurityPath"),
                             documentTypePgmKey: field && field.picture && field.picture.documentTypePgmKey ? field.picture.documentTypePgmKey : $el.data("documentTypePgmKey"),
                             maxWidth: field && field.picture && field.picture.maxWidth ? field.picture.maxWidth : $el.data("maxWidth"),
@@ -513,10 +511,10 @@
                         break;
 
                     case "document":
-                        // convert to <input type="file">
-                        $el.attr("type", "file");
+                        $el.attr("type", "text");
                         $el.kendoExpressoDocumentPicker({
                             resourceName: field && field.document && field.document.resourceName ? field.document.resourceName : (resource && resource.type ? resource.type : $el.data("resourceName")),
+                            resourceId: (resource && resource.id ? resource.id : null),
                             resourceSecurityPath: field && field.document && field.document.resourceSecurityPath ? field.document.resourceSecurityPath : $el.data("resourceSecurityPath"),
                             documentTypePgmKey: field && field.document && field.document.documentTypePgmKey ? field.document.documentTypePgmKey : $el.data("documentTypePgmKey")
                         });

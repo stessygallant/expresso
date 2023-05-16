@@ -6,23 +6,31 @@
     var ExpressoPicturePicker = Widget.extend({
         $element: undefined,
         $wrapper: undefined,
+        $pictureFile: undefined,
         readOnly: false,
 
         // these options are mandatory
-        resourceSecurityPath: undefined,
-        resourceName: undefined,
-        resourceId: undefined,
-        documentTypePgmKey: "PICTURE",
-        maxWidth: 800,
+        options: {
+            name: "ExpressoPicturePicker",
+            readonly: false,
+
+            // custom options
+            resourceSecurityPath: undefined,
+            resourceName: undefined,
+            resourceId: undefined,
+            documentTypePgmKey: "PICTURE",
+            maxWidth: 800
+        },
 
         init: function (element, options) {
             Widget.fn.init.call(this, element, options);
 
-            //console.log("Options", this.options);
+            // console.log("Options", this.options);
             this.$element = $(element);
 
-            if (!this.resourceSecurityPath) {
-                this.resourceSecurityPath = this.resourceName;
+            this.setOptions(options);
+            if (!this.options.resourceSecurityPath) {
+                this.options.resourceSecurityPath = this.options.resourceName;
             }
 
             // convert
@@ -35,7 +43,7 @@
             } else if (this.$element.val()) {
                 initialValue = this.$element.val();
             }
-            if (initialValue !== undefined) {
+            if (initialValue && initialValue.id) {
                 this.value(initialValue);
             }
         },
@@ -51,13 +59,16 @@
             this.$wrapper = this.$element.parent();
             this.$element.hide();
 
+            // convert to <input type="file" accept="image/*" capture="environment">
+            this.$pictureFile = $("<input type='file' accept='image/*' capture='environment'>").appendTo(this.$wrapper);
+            this.$pictureFile.hide();
+
             this.$wrapper.append("<div class='exp-picture'>" +
                 "<img src='' alt=''>" +
                 "<span class='fa fa-trash'></span>" +
                 "<span class='fa fa-plus fa-2x'></span>" +
                 "</div>");
 
-            var $pictureFile = this.$element;
             var $pictureDiv = this.$wrapper.find(".exp-picture");
             var $trash = $pictureDiv.find(".fa-trash");
             var $add = $pictureDiv.find(".fa-plus");
@@ -65,17 +76,17 @@
 
             // listen on ADD
             $add.on("click", function () {
-                $pictureFile.trigger("click");
+                _this.$pictureFile.trigger("click");
             });
 
             // load the picture
-            $pictureFile.on("change", function () {
-                var file = $pictureFile[0].files[0];
+            this.$pictureFile.on("change", function () {
+                var file = _this.$pictureFile[0].files[0];
                 var imgURL = URL.createObjectURL(file);
                 _this._displayPicture(imgURL);
 
                 // save picture
-                _this.savePicture(file, imgURL);
+                _this.savePicture(imgURL, file);
             });
 
             // listen on DELETE
@@ -101,6 +112,7 @@
         _displayPicture: function (imgURL, pictureDocument) {
             var $pictureDiv = this.$wrapper.find(".exp-picture");
             var $trash = $pictureDiv.find(".fa-trash");
+            var $add = $pictureDiv.find(".fa-plus");
             var $img = $pictureDiv.find("img");
             var img = $img[0];
 
@@ -115,6 +127,10 @@
                 }
                 img.src = imgURL;
                 $trash.show();
+                $add.hide();
+            } else {
+                $trash.hide();
+                $add.show();
             }
 
             if (pictureDocument !== undefined) {
@@ -132,6 +148,8 @@
             var $pictureDiv = this.$wrapper.find(".exp-picture");
             var $img = $pictureDiv.find("img");
             var img = $img[0];
+            var $trash = $pictureDiv.find(".fa-trash");
+            var $add = $pictureDiv.find(".fa-plus");
 
             // delete picture
             var pictureDocument = $img.data("pictureDocument");
@@ -142,37 +160,56 @@
             }
             img.src = "";
             $trash.hide();
+            $add.show();
         },
 
         /**
          *
          * @param imgURL
-         * @param resourceId
-         * @returns {*|Promise<string[] | null>}
+         * @param [file]
+         * @param [resourceId]
+         * @returns {Promise}
          */
-        savePicture: function (imgURL, resourceId) {
+        savePicture: function (imgURL, file, resourceId) {
             var $pictureDiv = this.$wrapper.find(".exp-picture");
             var $img = $pictureDiv.find("img");
             var img = $img[0];
 
+            var pictureDocument = $img.data("pictureDocument");
+
+            // if resourceId is specified, this means it has been saved later
             if (resourceId) {
-                this.resourceId = resourceId;
+                this.options.resourceId = resourceId;
             }
+
+            if (!imgURL) {
+                imgURL = this.imgURL;
+                file = this.file;
+            }
+
             if (imgURL.startsWith("http")) {
                 // if it is a URL, already saved
                 return $.Deferred().resolve();
+            } else if (pictureDocument) {
+                // if there is a pictureDocument, it is already saved
+                return $.Deferred().resolve();
+            } else if (!this.options.resourceId) {
+                //  console.log("Need to be saved later");
+                this.imgURL = imgURL;
+                this.file = file;
+                return $.Deferred().reject();
             } else {
                 var formData = new FormData();
                 formData.append("type", "document");
-                formData.append("resourceSecurityPath", this.resourceSecurityPath);
-                formData.append("resourceName", this.resourceName);
-                formData.append("resourceId", this.resourceId);
-                formData.append("documentTypePgmKey", this.documentTypePgmKey);
+                formData.append("resourceSecurityPath", this.options.resourceSecurityPath);
+                formData.append("resourceName", this.options.resourceName);
+                formData.append("resourceId", this.options.resourceId);
+                formData.append("documentTypePgmKey", this.options.documentTypePgmKey);
                 formData.append("description", "Picture");
                 formData.append("creationUserId", expresso.Security.getUserInfo().id);
                 formData.append("fileName", "picture_" + new Date().getTime());
-                formData.append("maxWidth", this.maxWidth);
-                formData.append("file", img);
+                formData.append("maxWidth", this.options.maxWidth);
+                formData.append("file", file);
 
                 var url = expresso.Common.getWsUploadPathURL() + "/document" +
                     "?creationUserName=" + expresso.Common.getUserInfo().userName;
@@ -227,11 +264,12 @@
             }
         },
 
-        options: {
-            // the name is what it will appear in the kendo namespace (kendo.ui.ExpressoPicturePicker).
-            // The jQuery plugin would be jQuery.fn.kendoExpressoPicturePicker
-            name: "ExpressoPicturePicker",
-            readonly: false
+        /**
+         *
+         * @param options
+         */
+        setOptions: function (options) {
+            $.extend(true, this.options, options);
         }
     });
 

@@ -422,7 +422,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     /**
      * if the column references an object, make sure the object is not null
      * this will be used in parseResponseItem to complete the object
-     * if the column has a template and the template does not contains the column, there is no need
+     * if the column has a template and the template does not contain the column, there is no need
      * to add a default object (and doing this will cause a problem for list object in the grid as
      * "transportRoutes.description" with a template to display the list
      * @param fieldName
@@ -746,7 +746,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (field && field.type == "picture") {
                     _this.objectsNeededForColumns = _this.objectsNeededForColumns || {};
                     _this.objectsNeededForColumns[column.field] = {};
-                    field.defautValue = field.defautValue || {};
+                    field.defaultValue = field.defaultValue || {};
 
                     column.filterable = false;
                     column.width = column.width || 70;
@@ -2714,6 +2714,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         //console.log("EVENT edit");
         var dataItem = e.model;
+
+        // console.log("****** " + JSON.stringify(dataItem));
 
         // ***************************************** START patch for _pristineData
         // there is a bug in KendoUI with Virtual scrolling and Editing

@@ -2506,7 +2506,17 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					predicate = cb.notLike(stringPath, "%" + stringValue + "%");
 					break;
 				case contains:
-					predicate = cb.like(stringPath, "%" + stringValue.trim() + "%");
+					// if the string contains space search for each term separately
+					if (stringValue.trim().contains(" ")) {
+						List<Predicate> predicates = new ArrayList<>();
+						for (String s : stringValue.trim().split(" ")) {
+							predicates.add(cb.like(stringPath, "%" + s + "%"));
+						}
+						predicate = cb.or(predicates.toArray(new Predicate[0]));
+
+					} else {
+						predicate = cb.like(stringPath, "%" + stringValue.trim() + "%");
+					}
 					break;
 
 				case trimCompare:

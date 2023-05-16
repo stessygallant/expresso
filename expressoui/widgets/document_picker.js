@@ -45,6 +45,9 @@
         _convertElementToWidget: function () {
             var _this = this;
 
+            // TODO convert to <input type="file">
+            // $el.attr("type", "file");
+
             // wrap the input
             this.$element.hide();
             this.$element.wrap("<div class='k-widget exp-document-picker'></div>");

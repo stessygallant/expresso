@@ -176,11 +176,6 @@ expresso.util.Model = (function () {
                             }
                         }
 
-                        // a picture is always transient
-                        if (field.type == "picture") {
-                            field.transient = true;
-                        }
-
                         // when using inline grid, the master resource may not be defined yet
                         if (resourceManager.options.autoSyncGridDataSource === false) {
                             if (field.name == model.masterIdProperty) {

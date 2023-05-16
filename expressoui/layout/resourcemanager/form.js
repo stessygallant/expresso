@@ -354,7 +354,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         this.addValidationAttributes($form, model, resource);
 
         // add support if needed
-        if ($window.find("[type=file][name]").length || this.deprecatedFileUploadSupport) {
+        if ($window.find("[type=file][name]:not([data-type=picture]):not([data-type=document])").length || this.deprecatedFileUploadSupport) {
             this.addDocumentUploadSupport($window, resource);
         }
 
@@ -1089,6 +1089,14 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         dataSource.online(true);
                     }
                 });
+
+                // save picture for new resource
+                if (!originalResource.id) {
+                    this.$window.find(".exp-picture-picker [data-type=picture]").each(function () {
+                        var picturePicker = $(this).data("kendoExpressoPicturePicker");
+                        picturePicker.savePicture(null, null, resource.id);
+                    });
+                }
             }
 
             this.savedResource = resource;
