@@ -1091,7 +1091,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 });
 
                 // save picture for new resource
-                if (!originalResource.id) {
+                if (!originalResource || !originalResource.id) {
                     this.$window.find(".exp-picture-picker [data-type=picture]").each(function () {
                         var picturePicker = $(this).data("kendoExpressoPicturePicker");
                         picturePicker.savePicture(null, null, resource.id);
