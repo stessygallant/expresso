@@ -1418,7 +1418,7 @@ expresso.util.UIUtil = (function () {
                 dataSource: dataSource,
                 enable: customOptions.enable,
                 value: initValue,
-                height: 400,
+                height: customOptions.height || 400,
                 filter: (customOptions.grouping && customOptions.grouping.filter !== false ? "contains" : customOptions.inplaceFilter),
                 change: onChangeEvent($input, customOptions),
                 dataBound: function (/*e*/) {
