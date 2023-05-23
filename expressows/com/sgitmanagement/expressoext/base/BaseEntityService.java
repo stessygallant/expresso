@@ -240,4 +240,8 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 		return newService(UserService.class, User.class).list(new Query().setActiveOnly(true).addFilter(new Filter("jobTitle.pgmKey", jobTitlePgmKey))).stream().map(User::getEmail)
 				.collect(Collectors.toSet());
 	}
+
+	public Set<String> getEmailsForRole(String rolePgmKey) throws Exception {
+		return AuthorizationHelper.getUsersInRole(rolePgmKey).stream().map(User::getEmail).collect(Collectors.toSet());
+	}
 }

@@ -21,6 +21,7 @@
             documentTypePgmKey: "PICTURE",
             maxWidth: 800
         },
+        events: ["change"],
 
         init: function (element, options) {
             Widget.fn.init.call(this, element, options);
@@ -86,7 +87,11 @@
                 _this._displayPicture(imgURL);
 
                 // save picture
-                _this.savePicture(imgURL, file);
+                _this.savePicture(imgURL, file).done(function () {
+                    // trigger resource has changed
+                    _this.$element.trigger("change");
+                    _this.trigger("change", {userTriggered: true});
+                });
             });
 
             // listen on DELETE
@@ -171,6 +176,7 @@
          * @returns {Promise}
          */
         savePicture: function (imgURL, file, resourceId) {
+
             var $pictureDiv = this.$wrapper.find(".exp-picture");
             var $img = $pictureDiv.find("img");
             var img = $img[0];
@@ -187,7 +193,7 @@
                 file = this.file;
             }
 
-            if (imgURL.startsWith("http")) {
+            if (imgURL && imgURL.startsWith("http")) {
                 // if it is a URL, already saved
                 return $.Deferred().resolve();
             } else if (pictureDocument) {
@@ -198,7 +204,7 @@
                 this.imgURL = imgURL;
                 this.file = file;
                 return $.Deferred().reject();
-            } else {
+            } else if (file) {
                 var formData = new FormData();
                 formData.append("type", "document");
                 formData.append("resourceSecurityPath", this.options.resourceSecurityPath);
@@ -225,6 +231,8 @@
                         $img.data("pictureDocument", data);
                     }
                 });
+            } else {
+                return $.Deferred().reject();
             }
         },
 

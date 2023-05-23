@@ -32,7 +32,6 @@ public class BasicAuthentificationFilter implements Filter {
 	private static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
 	private static final String AUTHORIZATION_HEADER = "Authorization";
 	private static final String BASIC_PREFIX = "Basic ";
-	private static final String LOGIN_TOKEN = "X-Login-Token";
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
@@ -62,21 +61,16 @@ public class BasicAuthentificationFilter implements Filter {
 
 			// get username and password from the Authorization header
 			String authHeader = request.getHeader(AUTHORIZATION_HEADER);
-			String loginToken = request.getHeader(LOGIN_TOKEN);
-			if (loginToken == null && (authHeader == null || !authHeader.startsWith(BASIC_PREFIX))) {
+
+			if (authHeader == null || !authHeader.startsWith(BASIC_PREFIX)) {
 				// this will prompt the basic auth dialog on the browser
 				// setBasicAuthRequired(response);
 				setBasicAuthFailed(response);
 			} else {
 				try {
-					String userPassBase64;
-					if (loginToken != null) {
-						userPassBase64 = loginToken;
-					} else {
-						userPassBase64 = authHeader.substring(BASIC_PREFIX.length());
-					}
-
+					String userPassBase64 = authHeader.substring(BASIC_PREFIX.length());
 					String userPassDecoded = new String(Base64.decodeBase64(userPassBase64));
+
 					// Finally userPassDecoded must contain readable "username:password"
 					if (!userPassDecoded.contains(":")) {
 						setBasicAuthRequired(response);

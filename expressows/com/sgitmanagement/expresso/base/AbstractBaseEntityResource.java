@@ -2,6 +2,7 @@ package com.sgitmanagement.expresso.base;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.ValidationException;
 import com.sgitmanagement.expresso.util.Util;
 
+import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.Consumes;
@@ -103,8 +105,19 @@ public abstract class AbstractBaseEntityResource<E extends IEntity<I>, S extends
 			getService().startTransaction();
 			getService().delete(this.id);
 			getService().commit();
-		} catch (jakarta.persistence.PersistenceException | java.sql.SQLIntegrityConstraintViolationException ex) {
-			throw new ValidationException("constraintViolationException");
+		} catch (PersistenceException ex) {
+
+			// find if SQLIntegrityConstraintViolationException
+			Throwable t = ex;
+			while (t != null) {
+				if (t instanceof SQLIntegrityConstraintViolationException) {
+					throw new ValidationException("constraintViolationException", "constraint", t.getMessage());
+				}
+				t = t.getCause();
+			}
+
+			// if not a SQLIntegrityConstraintViolationException, rethrow the exception
+			throw ex;
 		}
 	}
 

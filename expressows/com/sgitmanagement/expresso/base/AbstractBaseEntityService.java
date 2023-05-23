@@ -2512,7 +2512,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						for (String s : stringValue.trim().split(" ")) {
 							predicates.add(cb.like(stringPath, "%" + s + "%"));
 						}
-						predicate = cb.or(predicates.toArray(new Predicate[0]));
+						predicate = cb.and(predicates.toArray(new Predicate[0]));
 
 					} else {
 						predicate = cb.like(stringPath, "%" + stringValue.trim() + "%");
@@ -2728,9 +2728,21 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	public String getLink(E e) throws Exception {
+		return getLink(e, null);
+	}
+
+	public String getLink(E e, Map<String, String> params) throws Exception {
 		String keyField = getKeyField();
 		Object keyValue = BeanUtils.getProperty(e, keyField);
-		return SystemEnv.INSTANCE.getDefaultProperties().getProperty("base_url") + "#" + getApplicationName() + "(" + getKeyField() + "-" + keyValue + ")(" + e.getId() + ")";
+		String url = SystemEnv.INSTANCE.getDefaultProperties().getProperty("base_url");
+		if (params != null) {
+			for (String name : params.keySet()) {
+				String value = params.get(name);
+				url += (url.contains("?") ? "&" : "?") + (name + "=" + value);
+			}
+		}
+
+		return url + "#" + getApplicationName() + "(" + getKeyField() + "-" + keyValue + ")(" + e.getId() + ")";
 	}
 
 	/**

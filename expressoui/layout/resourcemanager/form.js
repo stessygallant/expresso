@@ -512,12 +512,10 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         var $saveDeferred;
                         if (!resource.id) {
                             // create the main resource
-                            // _this.isUserAllowed("create")
                             $saveDeferred = _this.createMainResource();
                         } else if (action.saveBeforeAction !== false && !_this.readOnly &&
-                            _this.resourceManager.sections.grid.isUpdatable(resource)) {
+                            _this.resourceManager.sections.grid.isUpdatable(resource) && _this.isUserAllowed("update")) {
                             // only save if the resource is updatable
-                            // _this.isUserAllowed("update")
                             $saveDeferred = _this.save();
                         } else {
                             // make sure the resource is not dirty
@@ -1094,7 +1092,9 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 if (!originalResource || !originalResource.id) {
                     this.$window.find(".exp-picture-picker [data-type=picture]").each(function () {
                         var picturePicker = $(this).data("kendoExpressoPicturePicker");
-                        picturePicker.savePicture(null, null, resource.id);
+                        picturePicker.savePicture(null, null, resource.id).done(function () {
+                            _this.resourceManager.sections.grid.reloadCurrentResource();
+                        });
                     });
                 }
             }

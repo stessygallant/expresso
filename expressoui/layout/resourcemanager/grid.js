@@ -1429,19 +1429,18 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 }
 
                 // disable buttons if needed
-                _this.isCreatable().done(function (allowed) {
+                _this.isCreatable(resource).done(function (allowed) {
                     if (!allowed) {
                         $toolbar.find(".exp-creation-button").prop("disabled", true);
                     }
                 });
-
                 _this.isDeletable(resource).done(function (allowed) {
                     if (!allowed) {
                         $toolbar.find(".exp-delete-button").prop("disabled", true);
                     }
                 });
 
-                // if the user does not have the right to update it, the button update does not exists. Keep the view
+                // if the user does not have the right to update it, the button update does not exist. Keep the view
                 if (_this.isUserAllowed("update")) {
                     _this.isUpdatable(resource).done(function (allowed) {
                         //console.log(_this.resourceManager.getResourceSecurityPath() + " isUpdatable DONE");
@@ -1461,18 +1460,16 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 //  disable action buttons if needed
                 _this.resourceManager.getAvailableActionsWithRestrictions()
                     .done(function (actions) {
-                        //console.log(_this.resourceManager.getResourceSecurityPath() + " getAvailableActionsWithRestrictions DONE");
-                        $.each(actions, function (index, action) {
-                            //console.log(_this.resourceManager.getResourceSecurityPath() + " " + action.name + ":" + action.allowed);
+                        $.each(actions, function () {
+                            var action = this;
+
                             var $button = $toolbar.find(".exp-" + action.name + "-button");
-                            if (!$button.hasClass("exp-always-active-button")) {
-                                if (_this.selectedRows.length > 1 && $button.hasClass("exp-single-selection")) {
-                                    // this button is already disabled, we cannot enable it
-                                } else if (_this.selectedRows.length > 1 && $button.hasClass("exp-multiple-selection")) {
-                                    // multiple selection buttons must remain active if there is multiple selections.
-                                    $button.prop("disabled", false);
-                                } else {
-                                    $button.prop("disabled", !action.allowed);
+                            if ($button.hasClass("exp-always-active-button") ||
+                                (_this.selectedRows.length > 1 && $button.hasClass("exp-multiple-selection"))) {
+                                // remains active
+                            } else {
+                                if (!action.allowed) {
+                                    $button.prop("disabled", true);
                                 }
                             }
                         });

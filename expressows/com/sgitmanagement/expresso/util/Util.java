@@ -777,22 +777,22 @@ public class Util {
 	}
 
 	static public boolean isInternalIpAddress(String ipAddress) {
-		boolean internal = false;
-		if (ipAddress != null && ipAddress.equals("0:0:0:0:0:0:0:1")) {
+		if (ipAddress == null || ipAddress.equals("127.0.0.1") || ipAddress.equals("localhost")) {
+			return true;
+		} else if (ipAddress.equals("0:0:0:0:0:0:0:1")) {
 			// SubnetUtils does not support IPV6 for now
-			ipAddress = "127.0.0.1";
-		}
-		if (ipAddress != null && internalSubnets != null) {
+			return true;
+		} else if (ipAddress != null && internalSubnets != null) {
 			for (String internalSubnet : internalSubnets) {
 				SubnetInfo subnet = (new SubnetUtils(internalSubnet)).getInfo();
-				internal = subnet.isInRange(ipAddress);
+				boolean internal = subnet.isInRange(ipAddress);
 				if (internal) {
-					break;
+					return true;
 				}
 			}
 		}
 
-		return internal;
+		return false;
 	}
 
 	static public String getIpAddress(HttpServletRequest req) {

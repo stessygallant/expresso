@@ -750,7 +750,6 @@ expresso.Security = function () {
      * @return {*}
      */
     var login = function (options) {
-
         // first try with SSO if available
         var $ssoDeferred;
         if (expresso.Common.getSiteNamespace().config.Configurations.supportSSO &&
