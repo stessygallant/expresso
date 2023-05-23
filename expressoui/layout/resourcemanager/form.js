@@ -477,11 +477,10 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             for (var f in model.fields) {
                 if (f) {
                     var field = model.fields[f];
-                    if (field && field.type === "date" && field.defaultValue === undefined &&
-                        field.nullable !== true) {
+                    if (field && field.type === "date" && !field.defaultValue && field.nullable !== true) {
+                        // console.log(f + ": " + resource[f]);
                         if (!resource[f]) {
                             resource.set(f, new Date());
-                            //console.log(f + ": " + resource[f]);
                         }
                     }
                 }

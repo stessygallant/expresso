@@ -184,6 +184,11 @@ expresso.util.Model = (function () {
                             }
                         }
 
+                        // patch for date when defaultValue are "stalled" when the application is opened for a long time
+                        if (field.type == "date" && field.defaultValue === undefined && field.nullable !== true) {
+                            field.defaultValue = null;
+                        }
+
                         // if nullable is true, the defaultValue is ignored
                         if (field.nullable && field.defaultValue !== undefined && field.defaultValue !== null) {
                             console.warn("When field [" + f + "] is nullable, default value [" + field.defaultValue + "] is ignored. Setting nullable=false");

@@ -45,7 +45,7 @@
         _convertElementToWidget: function () {
             var _this = this;
 
-            // TODO convert to <input type="file">
+            // TO DO convert to <input type="file">
             // $el.attr("type", "file");
 
             // wrap the input
