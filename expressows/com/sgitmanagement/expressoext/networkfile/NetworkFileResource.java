@@ -23,6 +23,7 @@ import com.sgitmanagement.expressoext.base.BaseResource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
@@ -154,7 +155,7 @@ public abstract class NetworkFileResource<S extends NetworkFileService> extends 
 
 		String path = params.computeIfAbsent("path", x -> ".");
 		fileName = uploadFile(fileInputStream, path, fileName, params);
-		return "{\"fileName\"=\"" + fileName + "\"}";
+		return "{\"fileName\":\"" + fileName + "\"}";
 	}
 
 	private String uploadFile(InputStream fileInputStream, String path, String fileName, Map<String, String> params) throws Exception {
@@ -172,4 +173,15 @@ public abstract class NetworkFileResource<S extends NetworkFileService> extends 
 
 		return getService().uploadFile(fileInputStream, path, fileName, params);
 	}
+
+	@DELETE
+	public void deleteFile(@QueryParam("filePath") String filePath) throws Exception {
+		if (filePath != null && filePath.length() > 0) {
+			filePath = java.net.URLDecoder.decode(filePath, StandardCharsets.UTF_8.name());
+			getService().deleteFile(filePath);
+		} else {
+			// do nothing
+		}
+	}
+
 }

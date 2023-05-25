@@ -83,6 +83,15 @@ public abstract class NetworkFileService extends BaseService {
 		return networkFiles;
 	}
 
+	public void deleteFile(String filePath) throws Exception {
+		File filePathFile = getPathFile(filePath);
+
+		// make sure that the user can read the file
+		verifyPermission(filePathFile);
+
+		filePathFile.delete();
+	}
+
 	public void downloadFile(String filePath) throws Exception {
 		File filePathFile = getPathFile(filePath);
 

@@ -270,6 +270,8 @@ expresso.util.UIUtil = (function () {
                 autoSearch = false;
             }
 
+            var fieldName = $input.attr("name");
+
             // create the combo box
             //console.log("Creating kendoComboBox for [" + resourceURL + "]");
             var initialized;
@@ -363,27 +365,47 @@ expresso.util.UIUtil = (function () {
             // on enter, stop the search and get the only "expected" result
             if (!autoSearch) {
                 cb.input.keydown(function (e) {
-                    if (e.which == 13 /*ENTER*/) {
-                        e.stopPropagation();
-                        e.preventDefault();
+                    if (e.which == 13 /*ENTER*/ || e.which == 9 /*TAB*/) {
+                        // e.preventDefault();
+                        // e.stopPropagation();
+
+                        if (e.which == 9 && !cb.hasDirtyValue) {
+                            // this is ok as the user is only tabling between input
+                            return;
+                        }
 
                         var text = cb.input.val();
-                        //console.log("CB input Enter/Tab [" + text + "]");
+                        // console.log("CB input Enter/Tab [" + text + "]");
+
+                        // PATCH: we need to remove the value otherwise kendo will try to call the dataItem using
+                        // the "term" as an id
+                        cb.value(null);
 
                         // get the resource
                         expresso.Common.sendRequest(url, null, null, {term: text}, {
                             ignoreErrors: true,
                             waitOnElement: null
                         }).done(function (result) {
-                            //console.log("GOT result");
+                            cb.hasDirtyValue = false;
+                            // console.log("GOT result");
                             if (result && result.length == 1) {
-                                //console.log("GOT 1 result", result);
-                                var resource = result[0];
-                                addDataItemToWidget(resource, cb);
+                                highlightField(cb.input, null, null, true);
+                                var dataItem = result[0];
+                                addDataItemToWidget(dataItem, cb);
+                                cb.value(dataItem.id);
+                                customOptions.resource && customOptions.resource.set(fieldName, dataItem.id);
+                            } else {
+                                // clear input
+                                highlightField(cb.input);
+                                cb.value(null);
+                                customOptions.resource && customOptions.resource.set(fieldName, null);
                             }
                         });
+                    } else {
+                        cb.hasDirtyValue = true;
                     }
                 });
+
                 // make sure to be the first listener for ENTER
                 // otherwise KendoUI will stop the event propagation
                 var eventList = $._data(cb.input[0], "events");
@@ -1026,22 +1048,22 @@ expresso.util.UIUtil = (function () {
          * @returns {*} the newly added dataItem
          */
         var addDataItemToWidget = function (dataItem, widget) {
-            if (widget && widget.data && widget.data("kendoComboBox")) {
-                // we got the jQuery object
-                widget = widget.data("kendoComboBox");
-            } else if (widget && widget.data && widget.data("kendoDropDownList")) {
-                // we got the jQuery object
-                widget = widget.data("kendoComboBox");
-            }
+                if (widget && widget.data && widget.data("kendoComboBox")) {
+                    // we got the jQuery object
+                    widget = widget.data("kendoComboBox");
+                } else if (widget && widget.data && widget.data("kendoDropDownList")) {
+                    // we got the jQuery object
+                    widget = widget.data("kendoDropDownList");
+                }
 
-            // add the new dataItem in the datasource
-            dataItem = widget.dataSource.add(dataItem);
+                // add the new dataItem in the datasource
+                dataItem = widget.dataSource.add(dataItem);
 
-            // then select it
-            widget.select(widget.dataSource.view().length - 1);
+                // then select it
+                widget.select(widget.dataSource.view().length - 1);
 
-            return dataItem;
-        };
+                return dataItem;
+            };
 
         /**
          * Standard definition for on change event for Editor: Combobox, DropDownList, DropDownTree
@@ -1160,7 +1182,7 @@ expresso.util.UIUtil = (function () {
                 if ($form.length && $form.data("formReadyPromise")) {
                     var $formReadyPromise = $form.data("formReadyPromise");
                     $formReadyPromise.done(function () {
-                        //console.log($input.attr("name") + " - Trigger change");
+                        // console.log($input.attr("name") + " - Trigger change");
                         widget.trigger("change", {expressoTriggered: true});
                     });
                 } else {
