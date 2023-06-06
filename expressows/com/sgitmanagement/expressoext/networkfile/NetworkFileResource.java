@@ -52,10 +52,11 @@ public abstract class NetworkFileResource<S extends NetworkFileService> extends 
 
 	@GET
 	@Path("file")
-	public void downloadFile(@QueryParam("filePath") String filePath) throws Exception {
+	public void downloadFile(@QueryParam("filePath") String filePath, @DefaultValue("false") @QueryParam("download") boolean download,
+			@DefaultValue("false") @QueryParam("thumbnail") boolean thumbnail) throws Exception {
 		if (filePath != null && filePath.length() > 0) {
 			filePath = java.net.URLDecoder.decode(filePath, StandardCharsets.UTF_8.name());
-			getService().downloadFile(filePath);
+			getService().downloadFile(filePath, download, thumbnail);
 		} else {
 			// do nothing
 		}
@@ -72,6 +73,20 @@ public abstract class NetworkFileResource<S extends NetworkFileService> extends 
 			logger.debug("stream closed!" + ex);
 			return null;
 		}
+	}
+
+	/**
+	 * Create new directory
+	 *
+	 * @throws Exception
+	 */
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Path("folder")
+	public void createFolder(MultivaluedMap<String, String> formParams) throws Exception {
+		String folderName = formParams.getFirst("folderName");
+		String path = formParams.getFirst("path");
+		getService().createFolder(path, folderName);
 	}
 
 	/**

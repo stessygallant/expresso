@@ -1404,6 +1404,17 @@ expresso.Common = (function () {
         return siteNamespace.config.Applications.appNameMap;
     };
 
+    var clearApplicationCache = function () {
+        try {
+            Object.keys().forEach(function (key) {
+                applicationsCache[key].destroy();
+            });
+        } catch (err) {
+            // ignore
+        }
+        applicationsCache = {};
+    };
+
     /**
      *
      * @param appName
@@ -2424,6 +2435,7 @@ expresso.Common = (function () {
 
         getSiteName: getSiteName,
         getSiteNamespace: getSiteNamespace,
+        clearApplicationCache: clearApplicationCache,
         createApplicationNamespace: createApplicationNamespace,
         getApplicationNamespace: getApplicationNamespace,
         getApplicationPath: getApplicationPath,

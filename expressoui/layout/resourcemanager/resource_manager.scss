@@ -105,6 +105,25 @@
         padding-bottom: 0;
     }
 
+    // all checkbox for selection must be as large as possible
+    th.k-header:first-child, .k-grid-content td:first-child {
+        padding: 1px 2px 0 2px;
+        margin: 0;
+
+        .k-checkbox {
+            width: 100%;
+            height: 20px;
+        }
+    }
+
+    th.k-header:first-child {
+        padding: 0 0 0 2px;
+
+        .k-checkbox {
+            margin-top: -8px;
+        }
+    }
+
     .k-grid-toolbar {
         background: $backgroundAfterApplicationTitle;
         border-bottom: 1px solid #ceced2;
@@ -357,7 +376,6 @@
         }
 
         th.k-header:first-child {
-
             text-overflow: clip;
         }
     }

@@ -566,8 +566,13 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 						// search by username
 						user = this.get(new Filter("userName", Operator.eq, userString));
 					} catch (NoResultException e) {
-						// search by contains username
-						user = this.get(new Filter("userName", Operator.contains, userString));
+						try {
+							// search by contains ext_key
+							user = this.get(new Filter("extKey", Operator.eq, userString));
+						} catch (NoResultException e2) {
+							// search by username
+							user = this.get(new Filter("userName", Operator.contains, userString));
+						}
 					}
 				}
 			} catch (Exception e) {
