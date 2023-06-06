@@ -14,9 +14,10 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public class NetworkFile {
 	private String path;
-	private String label;
+	private String name;
 	private String format;
 	private boolean directory;
+	private boolean image;
 	private List<NetworkFile> networkFiles;
 
 	public NetworkFile() {
@@ -27,13 +28,10 @@ public class NetworkFile {
 		super();
 		this.path = (Util.nullifyIfNeeded(parentPath) == null ? "" : parentPath + File.separator) + name;
 		this.directory = directory;
-		this.label = name;
+		this.name = name;
 
-		if (!directory) {
-			if (name.indexOf('.') != -1) {
-				this.label = name.substring(0, name.lastIndexOf('.'));
-				this.format = name.substring(name.lastIndexOf('.') + 1);
-			}
+		if (!directory && name.indexOf('.') != -1) {
+			this.format = name.substring(name.lastIndexOf('.') + 1);
 		}
 	}
 
@@ -43,14 +41,6 @@ public class NetworkFile {
 
 	public void setPath(String path) {
 		this.path = path;
-	}
-
-	public String getLabel() {
-		return label;
-	}
-
-	public void setLabel(String label) {
-		this.label = label;
 	}
 
 	public String getFormat() {
@@ -86,7 +76,23 @@ public class NetworkFile {
 
 	@Override
 	public String toString() {
-		return "NetworkFile [path=" + path + ", label=" + label + ", format=" + format + ", directory=" + directory + "]";
+		return "NetworkFile [path=" + path + ", name=" + name + ", format=" + format + ", directory=" + directory + "]";
+	}
+
+	public boolean isImage() {
+		return image;
+	}
+
+	public void setImage(boolean image) {
+		this.image = image;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

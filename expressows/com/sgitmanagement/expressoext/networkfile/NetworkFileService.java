@@ -2,6 +2,7 @@ package com.sgitmanagement.expressoext.networkfile;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
@@ -72,6 +73,7 @@ public abstract class NetworkFileService extends BaseService {
 		if (files != null) {
 			for (File file : files) {
 				NetworkFile networkFile = new NetworkFile(folderPath, file.getName(), file.isDirectory());
+				networkFile.setImage(isImage(file.getName()));
 				networkFiles.add(networkFile);
 
 				if (file.isDirectory() && recursive) {
@@ -92,7 +94,7 @@ public abstract class NetworkFileService extends BaseService {
 		filePathFile.delete();
 	}
 
-	public void downloadFile(String filePath) throws Exception {
+	public void downloadFile(String filePath, boolean download, boolean thumbnail) throws Exception {
 		File filePathFile = getPathFile(filePath);
 
 		// make sure that the user can read the file
@@ -109,7 +111,7 @@ public abstract class NetworkFileService extends BaseService {
 			fileName = fileName.substring(fileName.lastIndexOf('/') + 1);
 		}
 		try {
-			if (fileName.endsWith("pdf") || fileName.endsWith("txt") || fileName.endsWith("jpg") || fileName.endsWith("jpeg") || fileName.endsWith("png") || fileName.endsWith("bmp")) {
+			if (!download && (fileName.endsWith("pdf") || fileName.endsWith("txt") || fileName.endsWith("jpg") || fileName.endsWith("jpeg") || fileName.endsWith("png") || fileName.endsWith("bmp"))) {
 				response.setHeader("Content-disposition", "inline; filename=" + fileName);
 			} else {
 				response.setHeader("Content-disposition", "attachment; filename=" + fileName);
@@ -117,6 +119,9 @@ public abstract class NetworkFileService extends BaseService {
 
 			os = response.getOutputStream();
 			IOUtils.copy(is, os);
+		} catch (IOException ex) {
+			// org.apache.catalina.connector.ClientAbortException: java.io.IOException: Broken pipe
+			// ignore
 		} catch (Exception ex) {
 			throw new BaseException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error reading file [" + filePath + "]", ex);
 		} finally {
@@ -230,6 +235,8 @@ public abstract class NetworkFileService extends BaseService {
 				"eml", "msg",
 				// text
 				"pdf", "txt", "csv",
+				// video
+				"mp4",
 				// others
 				"zip" };
 
@@ -274,4 +281,11 @@ public abstract class NetworkFileService extends BaseService {
 			return Arrays.stream(allowedExtensions).anyMatch(extension::equalsIgnoreCase);
 		}
 	}
+
+	protected void createFolder(String path, String folderName) throws Exception {
+		logger.info("Creating [" + folderName + "] in [" + path + "]");
+		File folderfile = getPathFile(path + File.separator + folderName);
+		folderfile.mkdir();
+	}
+
 }

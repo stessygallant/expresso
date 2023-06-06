@@ -362,24 +362,36 @@ expresso.util.UIUtil = (function () {
                 change: onChangeEvent($input, customOptions, resourceURL)
             }).data("kendoComboBox");
 
-            // on enter, stop the search and get the only "expected" result
-            if (!autoSearch) {
-                cb.input.keydown(function (e) {
-                    if (e.which == 13 /*ENTER*/ || e.which == 9 /*TAB*/) {
-                        // e.preventDefault();
-                        // e.stopPropagation();
+            if (autoSearch) {
+                // on enter, avoid the default action (the result may not yet have been received and
+                // the value would be the "term" instead of the id of the dataItem
+                cb.input[0].addEventListener("keydown", function (e) {
+                    if (e.which == 13 /*ENTER*/) {
+                        // console.log("Set dirty");
+                        cb.hasDirtyValue = true;
 
-                        if (e.which == 9 && !cb.hasDirtyValue) {
-                            // this is ok as the user is only tabling between input
+                        // TODO forget the search and get the result
+
+                    }
+                }, true); // call first
+                cb.input[0].addEventListener("keydown", function (e) {
+                    if (e.which == 13 /*ENTER*/) {
+                        // console.log("Clear dirty");
+                        cb.hasDirtyValue = false;
+                    }
+                }); // call last
+            } else {
+                // on enter, stop the search and get the only "expected" result
+                cb.input[0].addEventListener("keydown", function (e) {
+                    if (e.which == 13 /*ENTER*/ || e.which == 9 /*TAB*/) {
+                        if (!cb.hasDirtyValue) {
                             return;
                         }
+                        e.preventDefault();
+                        e.stopPropagation();
 
                         var text = cb.input.val();
                         // console.log("CB input Enter/Tab [" + text + "]");
-
-                        // PATCH: we need to remove the value otherwise kendo will try to call the dataItem using
-                        // the "term" as an id
-                        cb.value(null);
 
                         // get the resource
                         expresso.Common.sendRequest(url, null, null, {term: text}, {
@@ -400,16 +412,12 @@ expresso.util.UIUtil = (function () {
                                 cb.value(null);
                                 customOptions.resource && customOptions.resource.set(fieldName, null);
                             }
+                            cb.trigger("change");
                         });
                     } else {
                         cb.hasDirtyValue = true;
                     }
-                });
-
-                // make sure to be the first listener for ENTER
-                // otherwise KendoUI will stop the event propagation
-                var eventList = $._data(cb.input[0], "events");
-                eventList.keydown.unshift(eventList.keydown.pop());
+                }, true);
             }
 
             // on focus, select the text
@@ -1048,22 +1056,22 @@ expresso.util.UIUtil = (function () {
          * @returns {*} the newly added dataItem
          */
         var addDataItemToWidget = function (dataItem, widget) {
-                if (widget && widget.data && widget.data("kendoComboBox")) {
-                    // we got the jQuery object
-                    widget = widget.data("kendoComboBox");
-                } else if (widget && widget.data && widget.data("kendoDropDownList")) {
-                    // we got the jQuery object
-                    widget = widget.data("kendoDropDownList");
-                }
+            if (widget && widget.data && widget.data("kendoComboBox")) {
+                // we got the jQuery object
+                widget = widget.data("kendoComboBox");
+            } else if (widget && widget.data && widget.data("kendoDropDownList")) {
+                // we got the jQuery object
+                widget = widget.data("kendoDropDownList");
+            }
 
-                // add the new dataItem in the datasource
-                dataItem = widget.dataSource.add(dataItem);
+            // add the new dataItem in the datasource
+            dataItem = widget.dataSource.add(dataItem);
 
-                // then select it
-                widget.select(widget.dataSource.view().length - 1);
+            // then select it
+            widget.select(widget.dataSource.view().length - 1);
 
-                return dataItem;
-            };
+            return dataItem;
+        };
 
         /**
          * Standard definition for on change event for Editor: Combobox, DropDownList, DropDownTree
@@ -1139,32 +1147,35 @@ expresso.util.UIUtil = (function () {
                             customOptions.change.call(this, ev);
                         }
                     }
-                }
+                };
 
-                if (value && !dataItem && resourceURL) {
-                    var _this = this;
-                    var widget = getKendoWidget($input);
+                var widget = getKendoWidget($input);
+                // console.log(bindNameId + ": " + value + " datatem: " + !!dataItem + " dirty: " + widget.hasDirtyValue);
+                if (!widget.hasDirtyValue) {
+                    if (value && !dataItem && resourceURL) {
+                        var _this = this;
 
-                    // console.log(bindNameId + " - We need to get the data item for the value[" + value + "]");
-                    expresso.Common.sendRequest(resourceURL + "/" + value, null, null, null, {
-                        ignoreErrors: true,
-                        waitOnElement: null
-                    }).done(function (result) {
-                        // add the new dataItem in the datasource
-                        dataItem = addDataItemToWidget(result, widget);
+                        // console.trace(bindNameId + " - We need to get the data item for the value[" + value + "]");
+                        expresso.Common.sendRequest(resourceURL + "/" + value, null, null, null, {
+                            ignoreErrors: true,
+                            waitOnElement: null
+                        }).done(function (result) {
+                            // add the new dataItem in the datasource
+                            dataItem = addDataItemToWidget(result, widget);
 
-                        // then trigger the change
-                        triggerChange.call(_this, e);
-                    }).fail(function () {
-                        // not found
-                        // console.log("Id not found [" + value + "]. Setting null");
+                            // then trigger the change
+                            triggerChange.call(_this, e);
+                        }).fail(function () {
+                            // not found
+                            // console.log("Id not found [" + value + "]. Setting null");
 
-                        _this.value(null);
-                        highlightField($input);
-                        triggerChange.call(_this, e);
-                    });
-                } else {
-                    triggerChange.call(this, e);
+                            _this.value(null);
+                            highlightField($input);
+                            triggerChange.call(_this, e);
+                        });
+                    } else {
+                        triggerChange.call(this, e);
+                    }
                 }
             };
         };
@@ -2071,17 +2082,17 @@ expresso.util.UIUtil = (function () {
                     // verify if the user can create the resource
                     if (id && id !== "0") {
                         // console.log("ID[" + id + "]", id);
-                        if (expresso.Common.isUserAllowed(expresso.Common.getResourceSecurityPathFromPath(reference.resourcePath), "update")) {
-                            expresso.Common.sendRequest(reference.resourcePath + "/verifyActionsRestrictions", null, null, {
-                                id: id,
-                                actions: "update"
-                            }, {waitOnElement: null}).done(function (result) {
-                                if (result && result["update"]) {
-                                    // keep the eye: pencil may be confusing
-                                    //$icon.removeClass("fa-eye").addClass("fa-pencil");
-                                }
-                            });
-                        }
+                        // if (expresso.Common.isUserAllowed(expresso.Common.getResourceSecurityPathFromPath(reference.resourcePath), "update")) {
+                        //     expresso.Common.sendRequest(reference.resourcePath + "/verifyActionsRestrictions", null, null, {
+                        //         id: id,
+                        //         actions: "update"
+                        //     }, {waitOnElement: null}).done(function (result) {
+                        //         if (result && result["update"]) {
+                        //             // keep the eye: pencil may be confusing
+                        //             //$icon.removeClass("fa-eye").addClass("fa-pencil");
+                        //         }
+                        //     });
+                        // }
                     } else {
                         if (reference.allowCreate === true && expresso.Common.isUserAllowed(expresso.Common.getResourceSecurityPathFromPath(reference.resourcePath), "create")) {
                             expresso.Common.sendRequest(reference.resourcePath + "/verifyCreationRestrictions", null, null, null,

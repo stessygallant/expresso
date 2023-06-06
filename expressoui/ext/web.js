@@ -1182,6 +1182,7 @@ expresso.Main = function () {
 
         // clean the memory
         expresso.Common.getSiteNamespace().applications = undefined;
+        expresso.Common.clearApplicationCache();
 
         // empty the content
         $contentDiv.empty();

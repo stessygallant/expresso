@@ -3026,7 +3026,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // console.log(this.resourceManager.getResourceSecurityPath() + " - clearSelection");
         this.selectedRows = [];
 
-        if (this.kendoGrid) {
+        if (this.kendoGrid && this.kendoGrid.tbody) {
             this.kendoGrid.tbody.find("tr").removeClass("k-state-selected");
             // this.kendoGrid.clearSelection(); //this will trigger on change
 
@@ -3038,6 +3038,16 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 this.onChange();
             }
         }
+    },
+
+    /**
+     * remove it from the list (but it does not delete it)
+     * @param resource
+     */
+    removeResourceFromGrid: function (resource) {
+        this.kendoGrid.dataSource.pushDestroy(resource);
+        this.kendoGrid.refresh();
+        this.clearSelection();
     },
 
     /**
