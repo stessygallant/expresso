@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Interceptor;
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.annotations.Formula;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
@@ -28,7 +28,7 @@ import jakarta.persistence.Transient;
 
 //  extends EmptyInterceptor 
 //  implements Interceptor
-abstract public class AbstractAuditTrailInterceptor implements Interceptor, Serializable {
+abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
 	final static protected Logger logger = LoggerFactory.getLogger(AbstractAuditTrailInterceptor.class);
 	private static ThreadLocal<Set<String>> auditThreadLocal = new ThreadLocal<>();
 
@@ -84,6 +84,10 @@ abstract public class AbstractAuditTrailInterceptor implements Interceptor, Seri
 		String entityClassName = e.getClass().getSimpleName();
 		if (entityClassName.indexOf('_') != -1) {
 			entityClassName = entityClassName.substring(0, entityClassName.indexOf('_'));
+		}
+
+		if (((Auditable) e).getAuditResourceName() != null) {
+			entityClassName = ((Auditable) e).getAuditResourceName();
 		}
 
 		if (auditThreadLocal.get() == null) {
