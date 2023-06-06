@@ -21,6 +21,12 @@ public class DateUtil {
 			return new SimpleDateFormat("yyyy-MM-dd");
 		}
 	};
+	public static final ThreadLocal<DateFormat> DATE_FORMAT_NO_DASH_TL = new ThreadLocal<DateFormat>() {
+		@Override
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("yyyyMMdd");
+		}
+	};
 	public static final ThreadLocal<DateFormat> TIME_FORMAT_TL = new ThreadLocal<DateFormat>() {
 		@Override
 		protected DateFormat initialValue() {
@@ -198,6 +204,8 @@ public class DateUtil {
 					date = TIME_NOSEC_FORMAT_TL.get().parse(dateString);
 				} else if (dateString.length() == 8 && dateString.contains(":")) {
 					date = TIME_FORMAT_TL.get().parse(dateString);
+				} else if (dateString.length() == 8 && !dateString.contains(":")) {
+					date = DATE_FORMAT_NO_DASH_TL.get().parse(dateString);
 				} else if (dateString.length() == 8 && dateString.contains("-")) {
 					date = DATE_FORMAT_SHORT_YEAR_TL.get().parse(dateString);
 				} else if (dateString.length() == 10 && dateString.contains("-")) {

@@ -717,12 +717,11 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
     },
 
     /**
-     * Set the window readonly
-     * @param $window
+     * Set the form readonly
+     * @param $form
      */
-    setFormReadOnly: function ($window) {
-        expresso.util.UIUtil.setFormReadOnly($window);
-        $window.find(".k-grid-update,k-grid-button").hide();
+    setFormReadOnly: function ($form) {
+        expresso.util.UIUtil.setFormReadOnly($form);
     },
 
     /**
