@@ -14,6 +14,7 @@ public class PersistenceResponseServerFilter implements ContainerResponseFilter 
 	@Override
 	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
 		try {
+			// commit before writing response (marshaling)
 			PersistenceManager.getInstance().commit();
 		} catch (Exception ex) {
 			throw new IOException("Cannot commit", ex);
