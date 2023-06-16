@@ -311,7 +311,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                 });
 
                 // replace the {id} with the current id
-                filter = filter.replaceAll("{id}", resource.id);
+                filter = filter.replaceAll("%7Bid%7D", resource.id); // {id} encoded
             }
 
             // get the count from the server

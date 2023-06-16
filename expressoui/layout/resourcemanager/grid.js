@@ -1082,7 +1082,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // add the double click event only if we can update
             $grid.on("dblclick.grid", "tbody>tr", function () {
                 if (!$(this).hasClass('k-grid-edit-row')) {
-                    _this.performEdit();
+                    _this.performDoubleClick();
                 }
             });
         }
@@ -2156,6 +2156,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         if ($row && $row.length) {
             this.kendoGrid.editRow($row);
         }
+    },
+
+    performDoubleClick: function () {
+        this.performEdit();
     },
 
     performDelete: function () {

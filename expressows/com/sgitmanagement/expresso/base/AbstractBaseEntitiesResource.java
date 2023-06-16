@@ -510,9 +510,6 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 		String idString = getRequest().getParameter("id");
 		String actions = getRequest().getParameter("actions");
 
-		// actions could have comma and still be encoded
-		actions = URLDecoder.decode(actions, "UTF-8");
-
 		Map<String, Boolean> actionMap = verifyActionsRestrictions(getRequest().getRequestURI(), new LinkedList<>(uriInfo.getMatchedResources()), idString, actions);
 
 		// JAXB cannot map Map<String, Boolean>

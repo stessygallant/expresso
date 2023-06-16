@@ -847,177 +847,10 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
             this.availableActions = [];
             var availableActions = this.getAvailableActions();
             if (availableActions && availableActions.length) {
-                $.each(availableActions, function (index, action) {
-                    // complete the action if not completed
-                    if (typeof action === "string") {
-                        // standard action
-                        action = {
-                            name: action,
-                            pgmKey: action
-                        };
-                    }
-
-                    if (action.securityActionPgmKey) {
-                        action.pgmKey = action.securityActionPgmKey;
-                    }
-
-                    if (!action.pgmKey) {
-                        action.pgmKey = action.name;
-                    }
-
-                    if (!action.securityActionPgmKey) {
-                        action.securityActionPgmKey = action.pgmKey;
-                    }
-
-                    // skip the action if the user is not allowed
-                    if (_this.isUserAllowed(action.pgmKey)) {
-
-                        // add the icon if needed
-                        if (!action.icon) {
-                            var icon;
-                            switch (action.pgmKey) {
-                                // system actions should not be used for application purpose
-                                case "read":
-                                case "create":
-                                case "update":
-                                case "delete":
-                                case "sync":
-                                case "print":
-                                case "duplicate":
-                                case "deactivate":
-                                case "email":
-                                case "link":
-                                    icon = "";
-                                    break;
-
-                                // predefined actions
-                                case "cancel":
-                                    icon = "fa-times";
-                                    break;
-                                case "complete":
-                                case "terminate":
-                                    icon = "fa-check";
-                                    break;
-
-                                case "approve":
-                                    icon = "fa-thumbs-o-up";
-                                    break;
-                                case "reject":
-                                    icon = "fa-thumbs-down";
-                                    break;
-
-                                case "open":
-                                    icon = "fa-folder-o";
-                                    break;
-                                case "close":
-                                    icon = "fa-folder";
-                                    break;
-
-                                // supported but not defined actions
-                                case "lock":
-                                    icon = "fa-lock";
-                                    break;
-                                case "unlock":
-                                    icon = "fa-unlock";
-                                    break;
-
-                                case "accept":
-                                    icon = "fa-check";
-                                    break;
-                                case "refuse":
-                                    icon = "fa-ban";
-                                    break;
-
-                                case "import":
-                                    icon = "fa-download";
-                                    break;
-                                case "export":
-                                    icon = "fa-upload";
-                                    break;
-
-                                case "send":
-                                    icon = "fa-paper-plane";
-                                    break;
-                                case "receive":
-                                    icon = "fa-inbox";
-                                    break;
-
-                                case "start":
-                                    icon = "fa-play";
-                                    break;
-                                case "stop":
-                                    icon = "fa-stop";
-                                    break;
-                                case "hold":
-                                    icon = "fa-hand-paper-o";
-                                    break;
-
-                                case "submit":
-                                    icon = "fa-paper-plane-o";
-                                    break;
-                                case "process":
-                                    icon = "fa-cogs";
-                                    break;
-
-                                case "init":
-                                case "reset":
-                                case "execute":
-                                case "expedite":
-                                case "validate":
-                                case "revise":
-                                default:
-                                    icon = "";
-                                    break;
-                            }
-                            action.icon = icon;
-                        }
-
-                        // define default label
-                        if (!action.label) {
-                            action.label = action.name + "ButtonLabel";
-                        }
-
-                        // define default title
-                        if (!action.title) {
-                            action.title = action.name + "ButtonTitle";
-                        }
-
-                        // if the action is applicable for collection, it is only
-                        // available in the grid and not the form
-                        if (action.resourceCollectionAction) {
-                            action.showButtonInGridToolbar = true;
-                            action.showButtonInForm = false;
-                        } else {
-                            if (action.supportMultipleSelections === undefined) {
-                                action.supportMultipleSelections = true;
-                            }
-                        }
-
-                        // add the performAction method if needed
-                        if (!action.performAction) {
-                            action.performAction = function (resource, data) {
-                                return _this.sendRequest(_this.getRelativeWebServicePath(
-                                    action.resourceCollectionAction ? undefined : resource.id), action.pgmKey, data);
-                            };
-                        }
-
-                        if (!action.beforePerformAction) {
-                            // none by default
-                        }
-
-                        if (!action.afterPerformAction) {
-                            // none by default
-                        }
-
-                        if (action.showButtonInGridToolbar === undefined) {
-                            action.showButtonInGridToolbar =
-                                expresso.Common.getSiteNamespace().config.Configurations.showButtonInGridToolbar;
-                        }
-
-                        if (action.showButtonOnMobile === undefined) {
-                            action.showButtonOnMobile = true;
-                        }
-
+                $.each(availableActions, function () {
+                    var action = this;
+                    action = _this.completeAction(action);
+                    if (action) {
                         _this.availableActions.push(action);
                     }
                 });
@@ -1031,6 +864,188 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
             });
         }
         return _this.availableActions;
+    },
+
+    /**
+     *
+     * @param action
+     */
+    completeAction: function (action) {
+        var _this = this;
+
+        // complete the action if not completed
+        if (typeof action === "string") {
+            // standard action
+            action = {
+                name: action,
+                pgmKey: action
+            };
+        }
+
+        if (action.securityActionPgmKey) {
+            action.pgmKey = action.securityActionPgmKey;
+        }
+
+        if (!action.pgmKey) {
+            action.pgmKey = action.name;
+        }
+
+        if (!action.securityActionPgmKey) {
+            action.securityActionPgmKey = action.pgmKey;
+        }
+
+        // skip the action if the user is not allowed
+        if (this.isUserAllowed(action.pgmKey)) {
+
+            // add the icon if needed
+            if (!action.icon) {
+                var icon;
+                switch (action.pgmKey) {
+                    // system actions should not be used for application purpose
+                    case "read":
+                    case "create":
+                    case "update":
+                    case "delete":
+                    case "sync":
+                    case "print":
+                    case "duplicate":
+                    case "deactivate":
+                    case "email":
+                    case "link":
+                        icon = "";
+                        break;
+
+                    // predefined actions
+                    case "cancel":
+                        icon = "fa-times";
+                        break;
+                    case "complete":
+                    case "terminate":
+                        icon = "fa-check";
+                        break;
+
+                    case "approve":
+                        icon = "fa-thumbs-o-up";
+                        break;
+                    case "reject":
+                        icon = "fa-thumbs-down";
+                        break;
+
+                    case "open":
+                        icon = "fa-folder-o";
+                        break;
+                    case "close":
+                        icon = "fa-folder";
+                        break;
+
+                    // supported but not defined actions
+                    case "lock":
+                        icon = "fa-lock";
+                        break;
+                    case "unlock":
+                        icon = "fa-unlock";
+                        break;
+
+                    case "accept":
+                        icon = "fa-check";
+                        break;
+                    case "refuse":
+                        icon = "fa-ban";
+                        break;
+
+                    case "import":
+                        icon = "fa-download";
+                        break;
+                    case "export":
+                        icon = "fa-upload";
+                        break;
+
+                    case "send":
+                        icon = "fa-paper-plane";
+                        break;
+                    case "receive":
+                        icon = "fa-inbox";
+                        break;
+
+                    case "start":
+                        icon = "fa-play";
+                        break;
+                    case "stop":
+                        icon = "fa-stop";
+                        break;
+                    case "hold":
+                        icon = "fa-hand-paper-o";
+                        break;
+
+                    case "submit":
+                        icon = "fa-paper-plane-o";
+                        break;
+                    case "process":
+                        icon = "fa-cogs";
+                        break;
+
+                    case "init":
+                    case "reset":
+                    case "execute":
+                    case "expedite":
+                    case "validate":
+                    case "revise":
+                    default:
+                        icon = "";
+                        break;
+                }
+                action.icon = icon;
+            }
+
+            // define default label
+            if (!action.label) {
+                action.label = action.name + "ButtonLabel";
+            }
+
+            // define default title
+            if (!action.title) {
+                action.title = action.name + "ButtonTitle";
+            }
+
+            // if the action is applicable for collection, it is only
+            // available in the grid and not the form
+            if (action.resourceCollectionAction) {
+                action.showButtonInGridToolbar = true;
+                action.showButtonInForm = false;
+            } else {
+                if (action.supportMultipleSelections === undefined) {
+                    action.supportMultipleSelections = true;
+                }
+            }
+
+            // add the performAction method if needed
+            if (!action.performAction) {
+                action.performAction = function (resource, data) {
+                    return _this.sendRequest(_this.getRelativeWebServicePath(
+                        action.resourceCollectionAction ? undefined : resource.id), action.pgmKey, data);
+                };
+            }
+
+            if (!action.beforePerformAction) {
+                // none by default
+            }
+
+            if (!action.afterPerformAction) {
+                // none by default
+            }
+
+            if (action.showButtonInGridToolbar === undefined) {
+                action.showButtonInGridToolbar =
+                    expresso.Common.getSiteNamespace().config.Configurations.showButtonInGridToolbar;
+            }
+
+            if (action.showButtonOnMobile === undefined) {
+                action.showButtonOnMobile = true;
+            }
+            return action;
+        } else {
+            return null;
+        }
     },
 
     /**

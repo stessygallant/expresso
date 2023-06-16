@@ -125,7 +125,7 @@ expresso.Common = (function () {
         if (returnObject) {
             return {query: JSON.stringify(kendoQuery)};
         } else {
-            return "query=" + JSON.stringify(kendoQuery);
+            return "query=" + encodeURIComponent(JSON.stringify(kendoQuery));
         }
     };
 
@@ -1047,13 +1047,18 @@ expresso.Common = (function () {
         if (path.startsWith("http") || path.startsWith("//") || path.startsWith("mailto")) {
             options.skipUserAllowed = true;
             url = path;
-            url += (queryString ? (url.indexOf("?") == -1 ? "?" : "&") + queryString : "");
         } else {
             url += (path.startsWith("/") ? path : "/" + path);
-            url += (queryString ? "?" + queryString : "");
-            url = encodeURI(url);
         }
-        //console.log(method + " URL: [" + url + "]  contentType [" + contentType + "]");
+
+        // WARNING
+        // queryString may have been encoded by $.param which uses encodeURIComponent
+        // if we encode the URI using encodeURI, it will double encode the %
+        // if the user is manually creating the queryString, it has the responsibility to encode it
+        // console.log("queryString: [" + queryString + "]");
+
+        url += (queryString ? (url.indexOf("?") == -1 ? "?" : "&") + queryString : "");
+        // console.log(method + " URL: [" + url + "]  contentType [" + contentType + "]");
 
         var $kendoProgressBarDiv;
         var kendoProgressBar;

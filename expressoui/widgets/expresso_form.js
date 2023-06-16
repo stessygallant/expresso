@@ -472,8 +472,10 @@
                         // put a real type
                         $el.attr("type", "date");
                         $el.addClass("date");
+                        var dateFormat = $el.data("format");
                         $el.kendoDateTimePicker({
-                            interval: (field ? field.interval : undefined)
+                            interval: (field ? field.interval : undefined),
+                            format: dateFormat
                         });
                         break;
                     case "time":
