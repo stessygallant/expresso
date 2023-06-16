@@ -6,6 +6,11 @@ import com.sgitmanagement.expresso.dto.Query.Sort;
 import com.sgitmanagement.expressoext.base.BaseOptionService;
 
 public class RoleService extends BaseOptionService<Role> {
+	public static void main(String[] args) throws Exception {
+		RoleService service = newServiceStatic(RoleService.class, Role.class);
+		service.list().forEach(r -> System.out.println(r.getPgmKey()));
+		System.out.println("Done");
+	}
 
 	@Override
 	public void delete(Integer id) throws Exception {
@@ -24,9 +29,7 @@ public class RoleService extends BaseOptionService<Role> {
 			return null;
 		} else {
 			// otherwise they cannot see reserved role
-			Filter filter = new Filter();
-			filter.addFilter(new Filter("systemRole", false));
-			return filter;
+			return new Filter("systemRole", false);
 		}
 	}
 
@@ -48,11 +51,5 @@ public class RoleService extends BaseOptionService<Role> {
 		PrivilegeService privilegeService = newService(PrivilegeService.class, Privilege.class);
 		Privilege privilege = privilegeService.getRef(privilegeId);
 		role.getPrivileges().remove(privilege);
-	}
-
-	public static void main(String[] args) throws Exception {
-		RoleService service = newServiceStatic(RoleService.class, Role.class);
-		service.list().forEach(r -> System.out.println(r.getPgmKey()));
-		System.out.println("Done");
 	}
 }

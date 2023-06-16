@@ -11,7 +11,7 @@ expresso.applications.security.applicationmanager.PreviewTabRoles = expresso.lay
         this.addPromise(expresso.Common.sendRequest("role").done(function (roles) {
             // create a new input checkbox for each roles
             $.each(roles.data, function (index, value) {
-                $rolesDiv.append(expresso.util.UIUtil.buildCheckBox("roles", value.description, value.id));
+                $rolesDiv.append(expresso.util.UIUtil.buildCheckBox("roles", value.label, value.id));
             });
 
             // save on select
@@ -42,8 +42,7 @@ expresso.applications.security.applicationmanager.PreviewTabRoles = expresso.lay
                     $form.find("input[value=" + value.id + "]").prop("checked", true);
                 });
             });
-        }
-        else {
+        } else {
             expresso.util.UIUtil.setFormReadOnly($form);
         }
     }

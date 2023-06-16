@@ -17,7 +17,7 @@ expresso.applications.security.departmentmanager.PreviewTabRoles = expresso.layo
         // show only role matching
         $domElement.find(".search").keyup(function () {
             var text = $(this).val().toLowerCase().latinise();
-            $domElement.find("fieldset").filter(function() {
+            $domElement.find("fieldset").filter(function () {
                 $(this).toggle($(this).find("legend").text().toLowerCase().latinise().indexOf(text) > -1)
             });
         });
@@ -27,7 +27,7 @@ expresso.applications.security.departmentmanager.PreviewTabRoles = expresso.layo
             var $currentFieldSet = null;
             var currentApplicationName = null;
             $.each(roles.data, function (index, role) {
-                var applicationName = role.description;
+                var applicationName = role.label;
                 if (applicationName.indexOf('.') != -1) {
                     applicationName = applicationName.substring(0, applicationName.indexOf('.'));
                 }
@@ -40,7 +40,7 @@ expresso.applications.security.departmentmanager.PreviewTabRoles = expresso.layo
                     applicationLabel = applicationLabel ? " (" + applicationLabel + ")" : "";
                     $currentFieldSet = $("<fieldset><legend>" + applicationName + applicationLabel + "</legend></fieldset>").appendTo($rolesDiv);
                 }
-                $currentFieldSet.append(expresso.util.UIUtil.buildCheckBox("roles", role.description, role.id));
+                $currentFieldSet.append(expresso.util.UIUtil.buildCheckBox("roles", role.label, role.id));
             });
 
 
@@ -71,8 +71,7 @@ expresso.applications.security.departmentmanager.PreviewTabRoles = expresso.layo
                     $form.find("input[value=" + value.id + "]").prop("checked", true);
                 });
             });
-        }
-        else {
+        } else {
             expresso.util.UIUtil.setFormReadOnly($form);
         }
     }

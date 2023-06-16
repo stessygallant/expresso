@@ -23,6 +23,9 @@
         }, {
             field: "applicationLabels",
             width: 200
+        }, {
+            field: "description",
+            width: 300
         }, {}
         ];
     },

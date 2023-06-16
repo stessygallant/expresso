@@ -5,17 +5,23 @@ expresso.applications.security.rolemanager.PreviewTabPriv = expresso.layout.reso
     // @override
     initDOMElement: function ($domElement) {
         expresso.layout.resourcemanager.PreviewTab.fn.initDOMElement.call(this, $domElement);
-
         var _this = this;
+
+        // save on select
+        this.$domElement.on("click", ":checkbox[name]", function () {
+            var action = $(this).is(":checked") ? "create" : "delete";
+            _this.sendRequest("role/" + _this.resourceManager.currentResource.id + "/privilege/" + $(this).val(), action);
+        });
+
         this.addPromise($.when(
             // get all applications
-            expresso.Common.sendRequest("application"),
+            _this.sendRequest("application"),
 
             // get all resources
-            expresso.Common.sendRequest("resource"),
+            _this.sendRequest("resource"),
 
             // get all privileges (functions)
-            expresso.Common.sendRequest("privilege")
+            _this.sendRequest("privilege")
         ).done(function (applications, resources, privileges) {
             // console.log(applications);
             // console.log(resources);
@@ -94,12 +100,6 @@ expresso.applications.security.rolemanager.PreviewTabPriv = expresso.layout.reso
                         var $cb = expresso.util.UIUtil.buildCheckBox("priv", priv.action.pgmKey, priv.id);
                         $resDiv.append($cb);
                     });
-
-                    // save on select
-                    $resDiv.find(":checkbox[name]").on("click", function () {
-                        var action = $(this).is(":checked") ? "create" : "delete";
-                        expresso.Common.sendRequest("role/" + _this.resourceManager.currentResource.id + "/privilege/" + $(this).val(), action);
-                    });
                 });
             });
         }));
@@ -108,6 +108,7 @@ expresso.applications.security.rolemanager.PreviewTabPriv = expresso.layout.reso
     // @override
     refresh: function (role) {
         expresso.layout.resourcemanager.PreviewTab.fn.refresh.call(this, role);
+        var _this = this;
         var $form = this.$domElement;
 
         // if user not allowed, disable button
@@ -120,22 +121,26 @@ expresso.applications.security.rolemanager.PreviewTabPriv = expresso.layout.reso
             if (role.pgmKey == "public") {
                 // public role does not inherit from user
                 // get all priv for this role
-                expresso.Common.sendRequest("role/" + role.id + "/privilege").done(function (privs) {
+                _this.sendRequest("role/" + role.id + "/privilege").done(function (privs) {
                     $.each(privs, function (index, priv) {
                         $form.find("input[value=" + priv.id + "]").prop("checked", true).prop("disabled", !allowed);
                     });
                 });
             } else {
-                expresso.Common.sendRequest("role/" + this.resourceManager.ROLE_USER_ID + "/privilege").done(function (privs) {
+                _this.sendRequest("role/" + this.resourceManager.ROLE_USER_ID + "/privilege").done(function (privs) {
                     $.each(privs, function (index, priv) {
                         $form.find("input[value=" + priv.id + "]").prop("checked", true).prop("disabled", true);
                     });
+                });
 
-                    // get all priv for this role
-                    expresso.Common.sendRequest("role/" + role.id + "/privilege").done(function (privs) {
-                        $.each(privs, function (index, priv) {
-                            $form.find("input[value=" + priv.id + "]").prop("checked", true).prop("disabled", !allowed);
-                        });
+                // get all priv for this role
+                _this.sendRequest("role/" + role.id + "/privilege").done(function (privs) {
+                    $.each(privs, function (index, priv) {
+                        var $checkbox = $form.find("input[value=" + priv.id + "]");
+                        $checkbox.prop("checked", true);
+                        if (!allowed) {
+                            $checkbox.prop("disabled", true);
+                        }
                     });
                 });
             }

@@ -294,6 +294,11 @@ public class Role extends BaseOption {
 		return applicationLabels;
 	}
 
+	@Override
+	public String getLabel() {
+		return getPgmKey();
+	}
+
 	/*
 	 * Privilege
 	 * 
@@ -308,4 +313,5 @@ public class Role extends BaseOption {
 	// public String getPrivilegeLabels() {
 	// return privilegeLabels;
 	// }
+
 }

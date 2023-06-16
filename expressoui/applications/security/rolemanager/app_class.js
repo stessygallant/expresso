@@ -29,8 +29,8 @@ expresso.applications.security.rolemanager.RoleManager = expresso.layout.resourc
             },
             description: {
                 type: "string",
-                transient: true,
-                maxLength: 100
+                nullable: true,
+                maxLength: 1000
             },
             deactivationDate: {
                 type: "date",

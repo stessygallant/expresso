@@ -507,7 +507,7 @@ expresso.Main = function () {
                         // build the UI
                         for (var i = 0; i < roleInfos.length; i++) {
                             var ri = roleInfos[i];
-                            var $fieldset = $("<fieldset class='" + ri.role.pgmKey + "'><legend>" + ri.role.description + "</legend></fieldset>").appendTo($form);
+                            var $fieldset = $("<fieldset class='" + ri.role.pgmKey + "'><legend>" + ri.role.label + "</legend></fieldset>").appendTo($form);
 
                             for (var j = 0; j < ri.info.length; j++) {
                                 var rj = ri.info[j];
@@ -1155,7 +1155,9 @@ expresso.Main = function () {
 
                     // render the application to the content div
                     appInstance.render(true).done(function () {
-                        if (options && options.queryParameters && options.queryParameters["fullscreen"] !== undefined) {
+                        if (options && options.queryParameters && (
+                            options.queryParameters["fullscreen"] !== undefined || // deprecated
+                            options.queryParameters["fullScreen"] !== undefined)) {
                             appInstance.setFullScreenMode(true);
                         }
                     });
