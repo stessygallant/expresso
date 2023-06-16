@@ -847,6 +847,13 @@ public class Util {
 				}
 			}
 		}
+		if (value != null) {
+			try {
+				value = URLDecoder.decode(value, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				// ignore
+			}
+		}
 		return value;
 	}
 
@@ -864,6 +871,13 @@ public class Util {
 				String value = null;
 				if (v.length > 1) {
 					value = v[1];
+				}
+				if (value != null) {
+					try {
+						value = URLDecoder.decode(value, "UTF-8");
+					} catch (UnsupportedEncodingException e) {
+						// ignore
+					}
 				}
 				params.put(param, value);
 			}

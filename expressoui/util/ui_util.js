@@ -254,10 +254,13 @@ expresso.util.UIUtil = (function () {
             // by default, we use autoBind.
             // but sometimes we may want to avoid it (but you will lose the onchange event on load)
             var autoBind = customOptions.autoBind !== undefined ? customOptions.autoBind :
-                (customOptions.field && customOptions.field.autoBind !== undefined ? customOptions.field.autoBind : true);
+                (customOptions.field.autoBind !== undefined ? customOptions.field.autoBind :
+                        (customOptions.field.reference.autoBind !== undefined ? customOptions.field.reference.autoBind : true)
+                );
 
             // custom label
             var dataTextField = customOptions.dataTextField || customOptions.fieldReference.dataTextField ||
+                customOptions.field.reference.dataTextField ||
                 customOptions.field.reference.label /*deprecated*/ || "label";
 
             if (typeof dataTextField === "function") {
@@ -273,7 +276,7 @@ expresso.util.UIUtil = (function () {
             var fieldName = $input.attr("name");
 
             // create the combo box
-            //console.log("Creating kendoComboBox for [" + resourceURL + "]");
+            // console.log("Creating kendoComboBox for [" + resourceURL + "]: " + autoBind);
             var initialized;
             cb = $input.kendoComboBox({
                 autoBind: autoBind,

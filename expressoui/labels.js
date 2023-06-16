@@ -17,8 +17,8 @@ $.extend(expresso.Labels, {
     priority: "Priorité",
 
     creationDate: "Date de création",
-    lastModifiedDate: "Dernière modification",
-    deactivationDate: "Date de désactivation",
+    lastModifiedDate: {label: "Dernière modification", shortLabel: "Modifié(e) le"},
+    deactivationDate: {label: "Date de désactivation", shortLabel: "Désactivé(e) le"},
     approveDate: "Date d'approbation",
     fromDate: "Date de début",
     toDate: "Date de fin",
@@ -38,6 +38,8 @@ $.extend(expresso.Labels, {
     lastModifiedUser: "Modifié(e) par",
     requestedByUser: "Demandé(e) par",
     approveUser: "Approuvé(e) par",
+    creationUserFullName: "Créé(e) par",
+    lastModifiedUserFullName: "Modifié(e) par",
 
     application: "Application",
     resource: "Ressource",
@@ -171,10 +173,7 @@ $.extend(expresso.Labels, {
     createdByLabel: "Créé(e) par",
     lastModificationLabel: "Dernière modification par",
     createdByDateLabel: "le",
-
-    creationUserFullName: "Créé(e) par",
-    lastModifiedUserFullName: "Modifié(e) par",
-
+ 
     // filters
     filterFromDate: "À partir du",
     filterToDate: "Jusqu'au",

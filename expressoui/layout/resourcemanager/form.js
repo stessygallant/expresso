@@ -414,7 +414,20 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         });
 
         // add the actions buttons for the applications
-        this.addActionButtons($window, resource);
+        this.resourceManager.getAvailableActionsWithRestrictions().done(function (actions) {
+            $.each(actions, function () {
+                _this.addActionButton($window, resource, this);
+            });
+
+            // now select by default the first one if no one is default
+            window.setTimeout(function () {
+                //console.log("Primary button is [" + $window.find(".k-edit-buttons .k-button.k-primary:visible").text() + "]");
+                if (!$window.find(".k-edit-buttons .k-button.k-primary:visible").length) {
+                    //console.log("Primary button not found. Adding primary to [" + $window.find(".k-edit-buttons .k-button:visible:last").text() + "]");
+                    $window.find(".k-edit-buttons .k-button:visible:last").addClass("k-primary");
+                }
+            }, 100);
+        });
 
         // once everything is added to the form, set the dimension
         if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.PHONE) {
@@ -492,135 +505,122 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      *
      * @param $window
      * @param resource
+     * @param action
      */
-    addActionButtons: function ($window, resource) {
+    addActionButton: function ($window, resource, action) {
         var _this = this;
+        if (action.allowed && !action.systemAction && !action.resourceCollectionAction &&
+            action.showButtonInForm !== false) {
+            _this.addButton($window, _this.getLabel(action.label), {
+                primary: action.primary,
+                icon: action.icon,
+                negativeIcon: action.negativeIcon
+            }, function () {
+                expresso.util.UIUtil.showLoadingMask(_this.$window, true, {id: "formPerformAction"});
 
-        // add action buttons
-        _this.resourceManager.getAvailableActionsWithRestrictions().done(function (actions) {
-            $.each(actions, function (index, action) {
-                if (action.allowed && !action.systemAction && !action.resourceCollectionAction &&
-                    action.showButtonInForm !== false) {
-                    _this.addButton($window, _this.getLabel(action.label), {
-                        primary: action.primary,
-                        icon: action.icon,
-                        negativeIcon: action.negativeIcon
-                    }, function () {
-                        expresso.util.UIUtil.showLoadingMask(_this.$window, true, {id: "formPerformAction"});
-
-                        var $saveDeferred;
-                        if (!resource.id) {
-                            // create the main resource
-                            $saveDeferred = _this.createMainResource();
-                        } else if (action.saveBeforeAction !== false && !_this.readOnly &&
-                            _this.resourceManager.sections.grid.isUpdatable(resource) && _this.isUserAllowed("update")) {
-                            // only save if the resource is updatable
-                            $saveDeferred = _this.save();
-                        } else {
-                            // make sure the resource is not dirty
-                            if (resource.dirtyFields) {
-                                var model = _this.resourceManager.model;
-                                for (var dirtyField in resource.dirtyFields) {
-                                    if (model.fields[dirtyField] && !model.fields[dirtyField].transient) {
-                                        console.warn("This field is dirty but will NOT be saved: " +
-                                            dirtyField + "= " + resource.dirtyFields[dirtyField]);
-                                    }
-                                }
-                                resource.dirtyFields = {};
+                var $saveDeferred;
+                if (!resource.id) {
+                    // create the main resource
+                    $saveDeferred = _this.createMainResource();
+                } else if (action.saveBeforeAction !== false && !_this.readOnly &&
+                    _this.resourceManager.sections.grid.isUpdatable(resource) && _this.isUserAllowed("update")) {
+                    // only save if the resource is updatable
+                    $saveDeferred = _this.save();
+                } else {
+                    // make sure the resource is not dirty
+                    if (resource.dirtyFields) {
+                        var model = _this.resourceManager.model;
+                        for (var dirtyField in resource.dirtyFields) {
+                            if (model.fields[dirtyField] && !model.fields[dirtyField].transient) {
+                                console.warn("This field is dirty but will NOT be saved: " +
+                                    dirtyField + "= " + resource.dirtyFields[dirtyField]);
                             }
-                            resource.dirty = false;
+                        }
+                        resource.dirtyFields = {};
+                    }
+                    resource.dirty = false;
 
-                            // no need to save
-                            $saveDeferred = $.Deferred().resolve(resource);
+                    // no need to save
+                    $saveDeferred = $.Deferred().resolve(resource);
+                }
+
+                // WAIT FOR SAVE
+                $saveDeferred.done(function (resource) {
+                    // validate the resource for the action
+                    var $validateDeferred;
+                    if (action.saveBeforeAction === false) {
+                        $validateDeferred = $.Deferred().resolve(null);
+                    } else {
+                        // console.log("Action: " + action.name + ":" + action.pgmKey);
+                        $validateDeferred = _this.validateResource($window, resource, action.pgmKey);
+                        if ($validateDeferred === true || $validateDeferred === undefined) {
+                            // ok
+                            $validateDeferred = $.Deferred().resolve(null);
+                        } else if ($validateDeferred === false) {
+                            $validateDeferred = $.Deferred().reject();
+                        } else {
+                            // assume a promise
+                        }
+                    }
+
+                    // WAIT FOR VALIDATE
+                    $validateDeferred.done(function () {
+                        var $windowDeferred;
+                        if (action.reasonRequested) {
+                            // display a window to enter a reason
+                            $windowDeferred = expresso.util.UIUtil.buildPromptWindow(_this.getLabel("enterReason")).then(function (comment) {
+                                return {comment: comment};
+                            });
+                        } else if (action.beforePerformAction) {
+                            var result = action.beforePerformAction.call(_this.resourceManager, resource);
+                            if (result === true || result === undefined) {
+                                // ok
+                                $windowDeferred = $.Deferred().resolve(null);
+                            } else if (result === false) {
+                                $windowDeferred = $.Deferred().reject();
+                            } else {
+                                // assume a promise
+                                $windowDeferred = result;
+                            }
+                        } else {
+                            // ok
+                            $windowDeferred = $.Deferred().resolve(null);
                         }
 
-                        // WAIT FOR SAVE
-                        $saveDeferred.done(function (resource) {
-                            // validate the resource for the action
-                            var $validateDeferred;
-                            if (action.saveBeforeAction === false) {
-                                $validateDeferred = $.Deferred().resolve(null);
-                            } else {
-                                $validateDeferred = _this.validateResource($window, resource, action.pgmKey);
-                                if ($validateDeferred === true || $validateDeferred === undefined) {
-                                    // ok
-                                    $validateDeferred = $.Deferred().resolve(null);
-                                } else if ($validateDeferred === false) {
-                                    $validateDeferred = $.Deferred().reject();
-                                } else {
-                                    // assume a promise
-                                }
-                            }
+                        // WAIT FOR beforePerformAction
+                        $windowDeferred.done(function (data) {
+                            // console.log("FORM - performAction - " + _this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]:" + action.name);
 
-                            // WAIT FOR VALIDATE
-                            $validateDeferred.done(function () {
-                                var $windowDeferred;
-                                if (action.reasonRequested) {
-                                    // display a window to enter a reason
-                                    $windowDeferred = expresso.util.UIUtil.buildPromptWindow(_this.getLabel("enterReason")).then(function (comment) {
-                                        return {comment: comment};
-                                    });
-                                } else if (action.beforePerformAction) {
-                                    var result = action.beforePerformAction.call(_this.resourceManager, resource);
-                                    if (result === true || result === undefined) {
-                                        // ok
-                                        $windowDeferred = $.Deferred().resolve(null);
-                                    } else if (result === false) {
-                                        $windowDeferred = $.Deferred().reject();
-                                    } else {
-                                        // assume a promise
-                                        $windowDeferred = result;
+                            action.performAction.call(_this.resourceManager, resource, data)
+                                .done(function (updatedResource) {
+                                    if (updatedResource && updatedResource.id == resource.id) {
+                                        // refresh only the resource
+                                        _this.resourceManager.sections.grid.updateResource(resource, updatedResource);
                                     }
-                                } else {
-                                    // ok
-                                    $windowDeferred = $.Deferred().resolve(null);
-                                }
+                                    _this.savedResource = updatedResource;
+                                    _this.close();
 
-                                // WAIT FOR beforePerformAction
-                                $windowDeferred.done(function (data) {
-                                    // console.log("FORM - performAction - " + _this.resourceManager.resourceName + " [" + (resource ? resource.id : null) + "]:" + action.name);
+                                    if (action.afterPerformAction) {
+                                        action.afterPerformAction.call(_this.resourceManager, updatedResource);
+                                    }
 
-                                    action.performAction.call(_this.resourceManager, resource, data)
-                                        .done(function (updatedResource) {
-                                            if (updatedResource && updatedResource.id == resource.id) {
-                                                // refresh only the resource
-                                                _this.resourceManager.sections.grid.updateResource(resource, updatedResource);
-                                            }
-                                            _this.savedResource = updatedResource;
-                                            _this.close();
-
-                                            if (action.afterPerformAction) {
-                                                action.afterPerformAction.call(_this.resourceManager, updatedResource);
-                                            }
-
-                                            if (_this.resourceManager.sections.preview) {
-                                                _this.resourceManager.sections.preview.forceRefresh();
-                                            }
-                                        }).always(function () {
-                                        expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
-                                    });
-                                }).fail(function () {
-                                    expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
-                                });
-                            }).fail(function () {
+                                    if (_this.resourceManager.sections.preview) {
+                                        _this.resourceManager.sections.preview.forceRefresh();
+                                    }
+                                }).always(function () {
                                 expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
                             });
                         }).fail(function () {
                             expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
-                        })
+                        });
+                    }).fail(function () {
+                        expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
                     });
-                }
+                }).fail(function () {
+                    expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
+                })
             });
-
-            // now select by default the first one if no one is default
-            window.setTimeout(function () {
-                //console.log("Primary button is [" + $window.find(".k-edit-buttons .k-button.k-primary:visible").text() + "]");
-                if (!$window.find(".k-edit-buttons .k-button.k-primary:visible").length) {
-                    //console.log("Primary button not found. Adding primary to [" + $window.find(".k-edit-buttons .k-button:visible:last").text() + "]");
-                    $window.find(".k-edit-buttons .k-button:visible:last").addClass("k-primary");
-                }
-            }, 100);
-        });
+        }
     },
 
     /**
