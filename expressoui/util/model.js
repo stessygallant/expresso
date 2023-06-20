@@ -57,7 +57,6 @@ expresso.util.Model = (function () {
                             type: "date",
                             editable: false,
                             nullable: true,
-                            defaultValue: null,
                             refreshable: true,
                             timestamp: true
                         },
@@ -77,7 +76,6 @@ expresso.util.Model = (function () {
                             type: "date",
                             editable: false,
                             nullable: true,
-                            defaultValue: null,
                             refreshable: true,
                             timestamp: true
                         },
@@ -187,6 +185,7 @@ expresso.util.Model = (function () {
                         // patch for date when defaultValue are "stalled" when the application is opened for a long time
                         if (field.type == "date" && field.defaultValue === undefined && field.nullable !== true) {
                             field.defaultValue = null;
+                            field.setNewDate = true;
                         }
 
                         // if nullable is true, the defaultValue is ignored

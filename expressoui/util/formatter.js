@@ -57,7 +57,7 @@ expresso.util.Formatter = (function () {
         var d;
         if (dateString) {
             if (typeof dateString === "string") {
-                if (dateString.length >= 25) {
+                if (dateString.length >= 24) {
                     // standard format from Expresso backend
                     // yyyy-MM-ddTHH:mm:ssXXX"
                     // 2019-01-31T00:00:00-05:00

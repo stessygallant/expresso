@@ -416,6 +416,10 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		user.setNbrFailedAttempts(0);
 		user.setDeactivationDate(null);
 		user.setTerminationDate(null);
+		user.setLastVisitDate(new Date());
+		if (!user.isLocalAccount()) {
+			user.setPasswordExpirationDate(null);
+		}
 	}
 
 	private void sendMail(U user, String template) throws Exception {

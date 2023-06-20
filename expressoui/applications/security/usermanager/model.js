@@ -46,8 +46,7 @@ expresso.applications.security.usermanager.Model = {
     lastVisitDate: {
         type: "date",
         nullable: true,
-        timestamp: true,
-        editable: false
+        timestamp: true
     },
     nbrFailedAttempts: {
         type: "number"
