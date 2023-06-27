@@ -38,7 +38,6 @@ public class BaseOptionService<E extends BaseOption> extends BaseDeactivableEnti
 	 * @return
 	 * @throws Exception
 	 */
-	@Override
 	public E get(String pgmKey) throws Exception {
 		return get(new Filter("pgmKey", pgmKey));
 	}

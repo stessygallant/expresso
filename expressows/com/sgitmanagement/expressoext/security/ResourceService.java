@@ -24,7 +24,6 @@ public class ResourceService extends BaseEntityService<Resource> {
 	 * @return
 	 * @throws Exception
 	 */
-	@Override
 	public Resource get(String name) throws Exception {
 		return get(new Filter("name", name));
 	}

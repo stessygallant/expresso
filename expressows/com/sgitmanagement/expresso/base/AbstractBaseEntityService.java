@@ -697,7 +697,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		return (get(id) != null);
 	}
 
-	public E get(String keyFieldNo) throws Exception {
+	public E getByKeyField(String keyFieldNo) throws Exception {
 		String keyField = getKeyField();
 		return get(new Filter(keyField, formatKeyField(keyField, keyFieldNo)));
 	}
