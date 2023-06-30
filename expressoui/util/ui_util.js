@@ -145,9 +145,6 @@ expresso.util.UIUtil = (function () {
                     case "expressopicturepicker":
                         widget = $element.data("kendoExpressoPicturePicker");
                         break;
-                    case "expressodocumentpicker":
-                        widget = $element.data("kendoExpressoDocumentPicker");
-                        break;
 
                     // Cezinc Widget (BACKWARD compatibility only)
                     case "cezincsingleselect":
@@ -1088,12 +1085,7 @@ expresso.util.UIUtil = (function () {
             //console.log("onChangeEvent - " + $input.attr("name"));
 
             // find the name of the attribute
-            var bindNameId = $input.attr("data-bind");
-            if (bindNameId && bindNameId.startsWith("value:")) {
-                bindNameId = bindNameId.substring("value:".length);
-            } else {
-                bindNameId = $input.attr("name");
-            }
+            var bindNameId = getBindName($input);
             var attName;
             var objectDefaultValue = {}; // default value for the object
             if (bindNameId && bindNameId.endsWith("Id")) {
@@ -1213,12 +1205,7 @@ expresso.util.UIUtil = (function () {
         var retrieveCurrentValue = function ($input, customOptions) {
             var value;
 
-            var bindNameId = $input.attr("data-bind");
-            if (bindNameId && bindNameId.startsWith("value:")) {
-                bindNameId = bindNameId.substring("value:".length);
-            } else {
-                bindNameId = $input.attr("name");
-            }
+            var bindNameId = getBindName($input);
 
             // 1- get from the resource
             if (customOptions.resource) {
@@ -2315,6 +2302,11 @@ expresso.util.UIUtil = (function () {
                             widget.wrapper.removeClass("readonly");
                         }
                     }
+
+                    // if it is an upload, hide it
+                    if ($el.data("role") == "upload") {
+                        hideField($el);
+                    }
                 } else if ($el.is(":checkbox") || $el.is(":radio") || $el.is("select") || $el.is("button")) {
                     $el.prop("disabled", readonly);
                 } else {
@@ -2775,6 +2767,127 @@ expresso.util.UIUtil = (function () {
             return customData;
         };
 
+        /**
+         *
+         * @param $input
+         * @returns {*}
+         */
+        var getBindName = function ($input) {
+            var bindName = $input.attr("data-bind");
+            if (bindName) {
+                if (bindName && bindName.startsWith("value:")) {
+                    bindName = bindName.substring("value:".length);
+                }
+                if (bindName && bindName.startsWith("checked:")) {
+                    bindName = bindName.substring("checked:".length);
+                }
+            } else {
+                bindName = $input.attr("name");
+            }
+            return bindName;
+        };
+
+        /**
+         * Return the field definition from the model for the input
+         * @param $input
+         * @param model
+         * @return {null|*}
+         */
+        var getFieldForInput = function ($input, model) {
+            var bindName = getBindName($input);
+
+            if (bindName) {
+                return model.fields[bindName];
+            } else {
+                return null;
+            }
+        };
+
+        /**
+         *
+         * @param $input
+         * @param options
+         * @returns
+         */
+        var buildNewUpload = function ($input, options) {
+            // <input name='file' type='file' />
+
+            // make sure the input if defined correctly
+            $input.attr("type", "file");
+
+            // the name of the input must be "file"
+            $input.attr("data-name", $input.attr("name"));
+            $input.attr("name", "file");
+
+            // remove data-bind
+            // $input.removeAttr("data-bind");
+
+            // avoid null pointer
+            options = options || {};
+            options.customData = options.customData || {};
+            options.document = options.document || {};
+
+            var kendoUploadOptions = $.extend(true, {}, {
+                async: {
+                    saveUrl: "define later",
+                    removeUrl: null,
+                    autoUpload: false
+                },
+                upload: function (e) {
+                    options = e.sender.options;
+                    // console.log("options: " + JSON.stringify(options));
+
+                    expresso.util.UIUtil.showLoadingMask($input, true, {id: "uploadDocument"});
+
+                    // console.log("uploading");
+                    var data = {};
+
+                    // add the creation user (this is only mandatory because of the public path)
+                    data["creationUserId"] = expresso.Common.getUserInfo().id;
+
+                    // add token if present
+                    if (expresso.Security) {
+                        data["sessionToken"] = expresso.Security.getSessionToken();
+                    }
+
+                    // add data from document
+                    $.extend(data, options.document);
+
+                    // add custom data
+                    var d = options.customData;
+                    if (typeof d === "function") {
+                        d = d();
+                    }
+                    $.extend(data, d);
+
+                    // console.log("Upload data: " + JSON.stringify(data));
+                    e.data = data;
+
+                    // we need to use a special path for upload
+                    var url = options.url;
+                    if (typeof url === "function") {
+                        url = url();
+                    }
+                    e.sender.options.async.saveUrl = url;
+                },
+                success: function (e) {
+                    if (options.onUploaded) {
+                        options.onUploaded(e);
+                    }
+                    // remove the progress
+                    expresso.util.UIUtil.showLoadingMask($input, false, {id: "uploadDocument"});
+                },
+                error: function (e) {
+                    if (e && e.operation == "upload" && e.XMLHttpRequest) {
+                        expresso.Common.displayServerValidationMessage(e.XMLHttpRequest);
+                    }
+                    // remove the progress
+                    expresso.util.UIUtil.showLoadingMask($input, false, {id: "uploadDocument"});
+                }
+            }, options);
+
+            return $input.kendoUpload(kendoUploadOptions).data("kendoUpload");
+        };
 
         /**
          *
@@ -2901,10 +3014,12 @@ expresso.util.UIUtil = (function () {
             buildCheckBox: buildCheckBox,
             buildRadioButton: buildRadioButton,
             buildUpload: buildUpload,
+            buildNewUpload: buildNewUpload,
             getDocumentUploadCustomData: getDocumentUploadCustomData,
 
             getKendoWidget: getKendoWidget,
             destroyKendoWidgets: destroyKendoWidgets,
+            getFieldForInput: getFieldForInput,
 
             buildWindow: buildWindow,
             setWindowDimension: setWindowDimension,

@@ -1254,12 +1254,13 @@ public class Util {
 			}
 		} else {
 			code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-			StringBuilder sb = new StringBuilder();
-			while (ex != null) {
-				sb.append("Caused by: " + ex.getClass().getSimpleName() + " - " + ex.getMessage() + "<br>\n");
-				ex = ex.getCause();
-			}
-			map.put("description", sb.toString());
+			map.put("description", "");
+			// StringBuilder sb = new StringBuilder();
+			// while (ex != null) {
+			// sb.append("Caused by: " + ex.getClass().getSimpleName() + " - " + ex.getMessage() + "<br>\n");
+			// ex = ex.getCause();
+			// }
+			// map.put("description", sb.toString());
 		}
 
 		map.put("code", code);

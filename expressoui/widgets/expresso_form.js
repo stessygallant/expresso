@@ -101,20 +101,7 @@
             }
 
             var model = this.options.model;
-            var field;
-            if (model) {
-                field = model.fields[name];
-
-                // if not found using the name, try with the binding name
-                if (!field) {
-                    var bindName = $el.attr("data-bind");
-                    if (bindName && bindName.startsWith("value:")) {
-                        bindName = bindName.substring("value:".length);
-                        field = model.fields[bindName];
-                    }
-                }
-            }
-
+            var field = (model ? expresso.util.UIUtil.getFieldForInput($el, model) : null);
             var role = $el.data("exp-role");
 
             // console.log("Enhancing [" + el.nodeName + "] Type[" + type + "]  Name[" + $el.attr("name") +
@@ -345,7 +332,7 @@
 
                 switch (el.nodeName) {
                     case "INPUT":
-                        type = $el.attr("type") || $el.data("type") || "text";
+                        type = $el.data("type") || $el.attr("type") || "text";
 
                         // set the input type if needed
                         if (!$el.attr("type")) {
@@ -513,13 +500,7 @@
                         break;
 
                     case "document":
-                        $el.attr("type", "text");
-                        $el.kendoExpressoDocumentPicker({
-                            resourceName: field && field.document && field.document.resourceName ? field.document.resourceName : (resource && resource.type ? resource.type : $el.data("resourceName")),
-                            resourceId: (resource && resource.id ? resource.id : null),
-                            resourceSecurityPath: field && field.document && field.document.resourceSecurityPath ? field.document.resourceSecurityPath : $el.data("resourceSecurityPath"),
-                            documentTypePgmKey: field && field.document && field.document.documentTypePgmKey ? field.document.documentTypePgmKey : $el.data("documentTypePgmKey")
-                        });
+                        expresso.util.UIUtil.buildNewUpload($el);
                         break;
 
                     case "email":
