@@ -229,11 +229,6 @@ expresso.util.Model = (function () {
                             field.defaultValue = field.defaultValue || [];
                         }
 
-                        // we cannot do it because the form.js already contains some conversions to combobox
-                        // if (f.endsWith("Id") && field.reference !== false && !field.values) {
-                        //     field.reference = field.reference || true;
-                        // }
-
                         //
                         // complete reference and values
                         //

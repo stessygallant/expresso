@@ -204,13 +204,13 @@
         // UPLOAD WIDGET - DROP BUTTON
         .exp-upload-button {
             &.k-dropzone-active {
-                background-color: red;
+                background-color: $red;
                 width: 180px;
                 height: 80px;
             }
 
             &.k-dropzone-hovered {
-                background-color: green;
+                background-color: $green;
                 width: 180px;
                 height: 80px;
             }
@@ -901,6 +901,30 @@ $formPreviewHeight: 12em;
             input[type=checkbox], input[type=radio] {
                 margin-top: 1px;
             }
+        }
+    }
+
+    .k-upload {
+        .k-dropzone {
+            background-color: white;
+            em {
+                color: $themeTextColor;
+            }
+            &.k-dropzone-hovered {
+                background-color: $green;
+
+                em {
+                    color: white;
+                }
+            }
+        }
+
+        .k-upload-files {
+
+        }
+
+        .k-action-buttons {
+            display: none;
         }
     }
 }

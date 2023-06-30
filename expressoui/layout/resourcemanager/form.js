@@ -65,13 +65,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                             if (!$this.attr("type")) {
                                 $this.attr("type", "checkbox");
                             }
-
-                            // if this is a boolean, data-bind should be checked: and not value:
-                            // var dataBind = $this.attr("data-bind");
-                            // if (dataBind && dataBind.indexOf("checked:") == -1) {
-                            //     dataBind += ",checked:" + dataBind.substring("value:".length);
-                            //     $this.attr("data-bind", dataBind);
-                            // }
                         }
                     }
                 }
@@ -248,7 +241,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             var $input = $(this);
 
             // verify the model
-            var field = _this.getFieldForInput($input, model);
+            var field = expresso.util.UIUtil.getFieldForInput($input, model);
             if (field && ((field.reference && field.reference.resourceManager) ||
                 (field.values && field.values.resourceManager))) {
                 expresso.util.UIUtil.addSearchButton($input, field.reference || field.values);
@@ -306,7 +299,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             if ($this.prop("readonly")) {
                 expresso.util.UIUtil.setFieldReadOnly($this);
             } else {
-                var field = _this.getFieldForInput($this, model);
+                var field = expresso.util.UIUtil.getFieldForInput($this, model);
                 if (field && typeof field !== "string") {
                     if (field.editable === true && !(field.updatable === false && resource && resource.id)) {
                         // ok
@@ -402,16 +395,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 formSplitter.resize();
             });
         }
-
-        // auto select the text on focus for combobox
-        $window.find("input[role=combobox]").on("focus", function () {
-            $(this).select();
-        });
-
-        // patch: if a SELECT has been defined with readonly, we need to put it readonly
-        $window.find("select[readonly]").each(function () {
-            expresso.util.UIUtil.setFieldReadOnly($(this));
-        });
 
         // add the actions buttons for the applications
         this.resourceManager.getAvailableActionsWithRestrictions().done(function (actions) {
@@ -619,32 +602,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     expresso.util.UIUtil.showLoadingMask(_this.$window, false, {id: "formPerformAction"});
                 })
             });
-        }
-    },
-
-    /**
-     * Return the field definition from the model for the input
-     * @param $input
-     * @param model
-     * @return {null|*}
-     */
-    getFieldForInput: function ($input, model) {
-        var bindName = $input.attr("data-bind");
-        if (bindName) {
-            if (bindName && bindName.startsWith("value:")) {
-                bindName = bindName.substring("value:".length);
-            }
-            if (bindName && bindName.startsWith("checked:")) {
-                bindName = bindName.substring("checked:".length);
-            }
-        } else {
-            bindName = $input.attr("name");
-        }
-
-        if (bindName) {
-            return model.fields[bindName];
-        } else {
-            return null;
         }
     },
 
@@ -896,6 +853,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param fieldName
      */
     verifyMissingRequiredField: function ($window, resource, fieldName) {
+        var missingRequired = false;
         var field = this.resourceManager.model.fields[fieldName];
         if (field && field.inlineGridResourceManager) {
             // verify if there is at least one row in the grid
@@ -904,26 +862,31 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             if (inlineGridResourceManager) {
                 var inlineGridDataSource = inlineGridResourceManager.sections.grid.dataSource;
                 if (inlineGridDataSource.total() == 0) {
-                    console.log("Required field is null [" + fieldName + "]");
                     $div.addClass("exp-invalid");
-                    return false;
-                } else {
-                    return true;
+                    missingRequired = true;
                 }
             } else {
                 return true;
+            }
+        } else if (field && field.type == "document") {
+            var $input = $window.find("[data-name='" + fieldName + "']");
+            var kendoUpload = $input.data("kendoUpload");
+            if (kendoUpload && !kendoUpload.getFiles().length) {
+                expresso.util.UIUtil.highlightField($input);
+                missingRequired = true;
             }
         } else {
             var value = resource[fieldName];
             if (value === undefined || value === null || value === "" || (value && value.length == 0)) {
                 //$f.attr("validationMessage", field.validation.required.message);
-                console.log("Required field is null [" + fieldName + "]");
                 expresso.util.UIUtil.highlightField($window, fieldName);
-                return false;
-            } else {
-                return true;
+                missingRequired = true;
             }
         }
+        if (missingRequired) {
+            console.log("Required field is null [" + fieldName + "]");
+        }
+        return !missingRequired;
     },
 
     /**
@@ -1052,6 +1015,8 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
      * @param originalResource resource before the save (which refresh the resource)
      */
     onSaved: function (resource, originalResource) {
+        var _this = this;
+
         // console.log("FORM - onSaved - " + this.resourceManager.resourceName + " [" + (resource ? resource.id : null) +
         //    "] preventWindowClosing:" + this.preventWindowClosing);
 
@@ -1094,6 +1059,51 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         });
                     });
                 }
+
+                // save documents
+                this.$window.find("[data-type=document]").each(function () {
+                    var $input = $(this);
+                    var kendoUpload = $input.data("kendoUpload");
+                    if (kendoUpload.getFiles().length) {
+                        var resourceManager = _this.resourceManager;
+                        // var field = resourceManager.model.fields[$input.attr("name")];
+                        var document = kendoUpload.options.document;
+
+                        var documentFolderPath;
+                        if (resourceManager.resourceFieldNo &&
+                            resourceManager.currentResource[resourceManager.resourceFieldNo]) {
+                            // use the resourceNo
+                            // ex: project/AP-1090, activityLogRequest/0011234
+                            documentFolderPath = resourceManager.getResourceSecurityPath() + "/" +
+                                resourceManager.currentResource[resourceManager.resourceFieldNo];
+                        } else {
+                            // probably a sub resource
+                            documentFolderPath = resourceManager.getRelativeWebServicePath(resourceManager.getCurrentResourceId());
+                        }
+
+                        // override some fields
+                        var field = resourceManager.model.fields[$input.attr("name")];
+                        $.extend(document, {
+                            resourceName: resourceManager.resourceName,
+                            resourceSecurityPath: resourceManager.getResourceSecurityPath(),
+                            documentCategoryId: (field && field.documentCategoryId ? field.documentCategoryId : resourceManager.options.defaultDocumentCategoryId),
+                            resourceId: resource.id,
+                            resourcePath: resourceManager.getRelativeWebServicePath(resource.id),
+                            documentParameter: documentFolderPath
+                        });
+
+                        // setup url
+                        kendoUpload.options.url = expresso.Common.getWsUploadPathURL() + "/document" +
+                            "?creationUserName=" + expresso.Common.getUserInfo().userName +
+                            // creation validation security only
+                            "&siblingResourceId=" + document.resourceId +
+                            "&siblingResourceName=" + document.resourceName +
+                            "&siblingResourceSecurityPath=" + document.resourceSecurityPath;
+
+                        // upload
+                        kendoUpload.upload();
+                    }
+                });
             }
 
             this.savedResource = resource;
@@ -1105,7 +1115,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             }
 
             if (!this.preventWindowClosing) {
-                var _this = this;
                 window.setTimeout(function () {
                     _this.close();
                 }, 10);
