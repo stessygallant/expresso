@@ -149,7 +149,7 @@ public class AuthorizationFilter implements Filter {
 					String userAgent = request.getHeader("User-Agent");
 
 					// logger.info(String.format("START %10s %10s %s %s %s %s%s", (ip != null ? ip : "n/a"), (user != null ? user.getUserName() : "n/a"), version, appNAme, request.getMethod(),
-					// 		request.getRequestURI(), (action != null && !action.equals("read") && !action.equals("create") ? " action=" + action : "")));
+					// request.getRequestURI(), (action != null && !action.equals("read") && !action.equals("create") ? " action=" + action : "")));
 
 					// pass the request along the filter chains
 					long startTime = new Date().getTime();
@@ -184,7 +184,7 @@ public class AuthorizationFilter implements Filter {
 						}
 					}
 				} else {
-					logger.warn(user + ": " + action + " -> " + resources + ": FORBIDDEN");
+					logger.error(user + ": " + action + " -> " + resources + ": FORBIDDEN");
 
 					HttpServletResponse resp = (HttpServletResponse) servletResponse;
 					resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
