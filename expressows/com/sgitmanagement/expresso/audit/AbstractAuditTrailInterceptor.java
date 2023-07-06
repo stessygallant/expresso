@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Interceptor;
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.annotations.Formula;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
@@ -19,16 +19,18 @@ import com.sgitmanagement.expresso.base.IUser;
 import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.util.DateUtil;
+import com.sgitmanagement.expresso.util.DeserializeOnlyStringAdapter;
 import com.sgitmanagement.expresso.util.Util;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 //  extends EmptyInterceptor 
 //  implements Interceptor
-abstract public class AbstractAuditTrailInterceptor implements Interceptor, Serializable {
+abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
 	final static protected Logger logger = LoggerFactory.getLogger(AbstractAuditTrailInterceptor.class);
 	private static ThreadLocal<Set<String>> auditThreadLocal = new ThreadLocal<>();
 
@@ -106,7 +108,8 @@ abstract public class AbstractAuditTrailInterceptor implements Interceptor, Seri
 			} else if ((currentValue == null && (newValue != null && newValue.equals(""))) || (newValue == null && (currentValue != null && currentValue.equals("")))) {
 				// ignore difference between null and empty
 			} else if (field != null && (field.isAnnotationPresent(ForbidAudit.class) || field.isAnnotationPresent(FieldRestriction.class) || field.isAnnotationPresent(Formula.class)
-					|| field.isAnnotationPresent(Transient.class))) {
+					|| field.isAnnotationPresent(Transient.class)
+					|| (field.getAnnotation(XmlJavaTypeAdapter.class) != null && field.getAnnotation(XmlJavaTypeAdapter.class).value().equals(DeserializeOnlyStringAdapter.class)))) {
 				// do not audit
 			} else if (fieldName.endsWith("Ids")) {
 				// do not audit many to many

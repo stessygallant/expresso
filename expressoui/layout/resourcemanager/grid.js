@@ -2672,7 +2672,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @param e
      */
     onExportExcel: function (e) {
-        e.workbook.fileName = this.resourceManager.resourceName + "-" + (new Date()).getTime() + ".xlsx";
+        e.workbook.fileName = (this.getLabel(this.resourceManager.resourceName.plural(), null, true) ||
+                this.getLabel(this.resourceManager.resourceName, null, true) ||
+                this.resourceManager.resourceName) +
+            // "-" + (new Date()).getTime() +
+            ".xlsx";
     },
 
     /**

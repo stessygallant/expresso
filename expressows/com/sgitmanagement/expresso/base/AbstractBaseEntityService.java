@@ -36,7 +36,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Formula;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,6 +50,7 @@ import com.sgitmanagement.expresso.exception.AttributeNotFoundException;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.exception.WrongVersionException;
 import com.sgitmanagement.expresso.util.DateUtil;
+import com.sgitmanagement.expresso.util.DeserializeOnlyStringAdapter;
 import com.sgitmanagement.expresso.util.FieldRestrictionUtil;
 import com.sgitmanagement.expresso.util.ProgressSender;
 import com.sgitmanagement.expresso.util.SystemEnv;
@@ -90,6 +90,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /* 
 resourceName: activityLogRequestChange
@@ -398,6 +399,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				Object oldValue = field.get(dest);
 				Object newValue = field.get(source);
 
+				// logger.debug("Updating [" + field.getName() + "]");
+
 				// if the entity has FieldRestriction, make sure that the user has to role
 				if (restrictedFields != null) {
 					String restrictedRole = restrictedFields.get(field.getName());
@@ -420,6 +423,12 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						createUpdateApprobationRequired(dest, field, oldValue, newValue);
 						continue;
 					}
+				}
+
+				// if DeserializeOnlyStringAdapter, do not update the field
+				if (field.getAnnotation(XmlJavaTypeAdapter.class) != null && field.getAnnotation(XmlJavaTypeAdapter.class).value().equals(DeserializeOnlyStringAdapter.class)) {
+					logger.debug("Skipping assigning [" + field.getName() + "] because DeserializeOnlyStringAdapter");
+					continue;
 				}
 
 				if (oldValue != null && (IEntity.class.isInstance(oldValue) || EntityDerived.class.isInstance(oldValue))) {
@@ -1953,7 +1962,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 						// in Hibernate5: p.getJavaType() is Set for a OneToMany
 						// in Hibernate6: p.getJavaType() is the generic type in the Set for a OneToMany
-						if (Collection.class.isAssignableFrom(p.getJavaType()) || p instanceof SqmPluralValuedSimplePath /* || s.endsWith("s") */) {
+						if (Collection.class.isAssignableFrom(p.getJavaType()) /* || p instanceof SqmPluralValuedSimplePath || s.endsWith("s") */) {
 							distinctNeeded = true;
 						}
 
@@ -1967,6 +1976,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							// build the left join
 							// fetch instead of join
 							// if we use .join(), it will create a new join instead of using the same
+							fetch = false; // Hibernate5 does not work well with fetch
 							if (fetch) {
 								join = (Join<?, ?>) join.fetch(s, JoinType.LEFT);
 							} else {
@@ -2973,6 +2983,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		sb = new StringBuilder();
 		sb.append(namespace + ".Labels = {\n");
 		sb.append("    " + StringUtils.uncapitalize(getTypeOfE().getSimpleName()) + ": " + "\"" + getTypeOfE().getSimpleName() + "\",\n");
+		sb.append("    " + StringUtils.uncapitalize(getTypeOfE().getSimpleName()) + "s" + ": " + "\"" + getTypeOfE().getSimpleName() + "s\",\n");
 
 		// fields
 		for (String fieldName : appClassFieldMap.keySet()) {
