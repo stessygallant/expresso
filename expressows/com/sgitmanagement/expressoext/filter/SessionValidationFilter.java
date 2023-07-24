@@ -11,7 +11,6 @@ import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.security.AuthorizationHelper;
 import com.sgitmanagement.expressoext.security.User;
-import com.sgitmanagement.termont.util.UserUtil;
 
 import jakarta.persistence.NoResultException;
 import jakarta.servlet.Filter;
@@ -29,10 +28,22 @@ public class SessionValidationFilter implements Filter {
 
 	final private static String HEADER_TOKEN = "X-Session-Token";
 	final private static String HEADER_IMPERSONATE = "X-Impersonate-User";
+	private AutoCreatableUser autoCreatableUser = null;
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
 		logger.info("SessionValidationFilter init");
+
+		String autoCreateClassString = config.getInitParameter("autoCreateUserClass");
+		if (autoCreateClassString != null) {
+			try {
+				@SuppressWarnings("unchecked")
+				Class<AutoCreatableUser> autoCreatableUserClass = (Class<AutoCreatableUser>) Class.forName(autoCreateClassString);
+				autoCreatableUser = autoCreatableUserClass.getDeclaredConstructor().newInstance();
+			} catch (Exception ex) {
+				logger.error("Cannot intantiate [" + autoCreateClassString + "]", ex);
+			}
+		}
 	}
 
 	@Override
@@ -153,11 +164,13 @@ public class SessionValidationFilter implements Filter {
 					user = AuthorizationHelper.getUser(authName);
 				} catch (NoResultException ex) {
 					logger.info("Cannot find user with userName [" + authName + "]");
-					// if SSO and user is in Active Directory, create the user in local database
-					try {
-						user = UserUtil.createUserFromActiveDirectory(authName);
-					} catch (Exception ex1) {
-						logger.warn("Cannot create user with userName [" + authName + "]");
+
+					if (autoCreatableUser != null) {
+						try {
+							user = autoCreatableUser.create(authName);
+						} catch (Exception ex1) {
+							logger.warn("Cannot create user with userName [" + authName + "]");
+						}
 					}
 				}
 			}
