@@ -35,6 +35,15 @@ expresso.util.Model = (function () {
             $deferredModel.done(function (model) {
                 model = $.extend(true, {}, model && model.fields ? model : {fields: model});
 
+                // for backward compatibility, if the model is defined and contains the type, use it
+                if (!resourceManager.resourceName) {
+                    resourceManager.resourceName = (model.fields.type && model.fields.type.defaultValue ? model.fields.type.defaultValue :
+                        resourceManager.resourcePath);
+                }
+                if (!resourceManager.resourceFieldNo) {
+                    resourceManager.resourceFieldNo = resourceManager.resourceName + "No";
+                }
+
                 // create the model for the kendo UI Grid
                 model = $.extend(true, {}, {
                     id: "id",

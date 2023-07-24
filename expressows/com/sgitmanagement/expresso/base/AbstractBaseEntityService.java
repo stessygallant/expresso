@@ -36,6 +36,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Formula;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -365,7 +366,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				throw new Exception("Cannot update a resource. p: " + p + " e:" + e);
 			}
 
+			// set the properties on the previous entity (already in the Hibernate context)
 			setProperties(getTypeOfE(), p, e);
+
+			// then we will return the updated previous entity
 			e = p;
 		}
 
@@ -1962,7 +1966,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 						// in Hibernate5: p.getJavaType() is Set for a OneToMany
 						// in Hibernate6: p.getJavaType() is the generic type in the Set for a OneToMany
-						if (Collection.class.isAssignableFrom(p.getJavaType()) /* || p instanceof SqmPluralValuedSimplePath || s.endsWith("s") */) {
+						if (Collection.class.isAssignableFrom(p.getJavaType()) || p instanceof SqmPluralValuedSimplePath /* || s.endsWith("s") */) {
 							distinctNeeded = true;
 						}
 
@@ -1976,7 +1980,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							// build the left join
 							// fetch instead of join
 							// if we use .join(), it will create a new join instead of using the same
-							fetch = false; // Hibernate5 does not work well with fetch
 							if (fetch) {
 								join = (Join<?, ?>) join.fetch(s, JoinType.LEFT);
 							} else {
@@ -2966,10 +2969,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		sb.append("    getMobileColumns: function () {\n");
 		sb.append("        return {\n");
 		sb.append("            mobileNumberFieldName: \"" + getKeyField() + "\",\n");
-		sb.append("            mobileDescriptionFieldName: null,\n");
 		sb.append("            mobileTopRightFieldName: null,\n");
 		sb.append("            mobileMiddleLeftFieldName: null,\n");
-		sb.append("            mobileMiddleRightFieldName: null\n");
+		sb.append("            mobileMiddleRightFieldName: null,\n");
+		sb.append("            mobileDescriptionFieldName: null\n");
 		sb.append("        };\n");
 		sb.append("    }\n");
 

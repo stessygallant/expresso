@@ -68,6 +68,16 @@
     font-style: italic;
 }
 
+// remove arrows
+input.exp-no-arrows {
+    -moz-appearance: textfield; // Firefox
+    &::-webkit-outer-spin-button, // Chrome, Safari, Edge, Opera
+    &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
 //
 // ------------------------------------------------------------------------------------------------------------------
 // WINDOW CSS
@@ -1011,6 +1021,17 @@ label input + span {
     }
 }
 
+// do not display the KendoUI loading mask as Expresso will display one
+.exp-loading {
+    .k-loading-mask {
+        display: none;
+
+        .k-loading-image {
+            display: none;
+        }
+    }
+}
+
 /*
  * ------------------------------------------------------------------------------------------------------------------
  * MOBILE CSS
@@ -1023,7 +1044,7 @@ label input + span {
     }
 
     .exp-screen-mode-tablet {
-        font-size: 100%;
+        font-size: 120%;
         line-height: 1.2;
     }
 

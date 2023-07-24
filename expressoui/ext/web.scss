@@ -517,6 +517,10 @@ div.main {
             color: $themeTextColor;
             font-family: $fontFamilyOpenSans;
             font-weight: 600;
+            max-width: 11.5em;
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
         }
     }
 

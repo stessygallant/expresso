@@ -907,9 +907,11 @@ $formPreviewHeight: 12em;
     .k-upload {
         .k-dropzone {
             background-color: white;
+
             em {
                 color: $themeTextColor;
             }
+
             &.k-dropzone-hovered {
                 background-color: $green;
 

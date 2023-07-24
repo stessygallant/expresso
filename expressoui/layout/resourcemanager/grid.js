@@ -378,6 +378,18 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     _this.reloadCurrentResource();
                 });
             }
+            expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: "dataSourceRequest"});
+        });
+
+        // when there is a request to the datasource, make sure that the user cannot interact with the grid
+        this.kendoGrid.dataSource.bind("requestStart", function () {
+            // console.log("EVENT requestStart [" + _this.resourceManager.resourceName + "] ");
+            expresso.util.UIUtil.showLoadingMask(_this.$domElement, true, {id: "dataSourceRequest"});
+        });
+        // when there is a request to the datasource, make sure that the user cannot interact with the grid
+        this.kendoGrid.dataSource.bind("requestEnd", function () {
+            // console.log("EVENT requestEnd [" + _this.resourceManager.resourceName + "] ");
+            expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: "dataSourceRequest"});
         });
 
         // find key fields and highlight them
@@ -486,7 +498,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             var fieldName = mobileColumns[column];
             if (fieldName) {
                 var field = fields[fieldName];
-                //console.log("fieldName: " + column + "=" + fieldName, field);
+                // console.log("fieldName: " + column + "=" + fieldName, field);
 
                 var clazz;
                 switch (column) {
@@ -508,7 +520,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 }
 
                 // only display the field if it exists
-                if (field || fieldName.indexOf(".") != -1) {
+                if (field || fieldName.indexOf(".") != -1 || fieldName == "label") {
                     if (field && field.type == "date") {
                         fieldName = "expresso.util.Formatter.formatDate(" + fieldName + ")";
                     }
@@ -901,10 +913,17 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             }
 
             // adjust column width according to the font-size
-            if (screenMode != expresso.Common.SCREEN_MODES.DESKTOP) {
-                if (column.width) {
-                    column.width = column.width * 1.1;
-                    // column.width = column.width * expresso.Common.getFontRatio();
+            if (column.width) {
+                switch (screenMode) {
+                    case expresso.Common.SCREEN_MODES.PHONE:
+                        column.width = column.width * 1.1;
+                        break;
+                    case expresso.Common.SCREEN_MODES.TABLET:
+                        column.width = column.width * expresso.Common.getFontRatio();
+                        break;
+                    default:
+                        // ok
+                        break;
                 }
             }
         }
@@ -1091,13 +1110,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             e.preventDefault();
             expresso.util.UIUtil.showNotification(_this.getLabel("excelDownloadInProgress"));
             kendoGrid.saveAsExcel();
-
-            // because there is no event at the end of the load, for hierachical, we need to remove the loading mask
-            if (_this.hierarchical) {
-                window.setTimeout(function () {
-                    expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: "readDataSourceTreeList"});
-                }, 1000);
-            }
         });
 
         $grid.find(".exp-hierarchical-toogle-button").on("click.grid", function (e) {
@@ -2488,7 +2500,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 _this.loadResources();
             });
         }
-
     },
 
     /**
@@ -2502,7 +2513,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     onDataBound: function () {
         var _this = this;
-        // console.log("EVENT dataBound [" + this.resourceManager.resourceName + "]: " + this.selectedRows.length);
+        // console.log("EVENT dataBound [" + this.resourceManager.resourceName + "] " +
+        //     (this.resourceManager.siblingResourceManager ? " sibling[" + this.resourceManager.siblingResourceManager.getCurrentResourceId() + "] " : "") +
+        //     (this.resourceManager.masterResourceManager ? " master[" + this.resourceManager.masterResourceManager.getCurrentResourceId() + "] " : "")
+        // );
 
         // record that the grid has been updated (auto refresh feature)
         this.lastUpdateDate = new Date();
@@ -2615,10 +2629,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 // change the button to collapse
                 $icon.addClass("fa-compress").removeClass("fa-expand");
             }
-
-            // TreeList does not display a loading mask on sort and filter
-            // we had to display it. Remove it now
-            expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: "readDataSourceTreeList"});
         }
     },
 
@@ -3013,7 +3023,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @return {*} the row selected
      */
     selectFirstRow: function () {
-        // console.log(this.resourceManager.getResourceSecurityPath() + " - selectFirstRow");
+        // console.log(this.resourceManager.resourceName + " - selectFirstRow");
         var $row = null;
         if (this.kendoGrid) {
             var total = this.kendoGrid.dataSource.total();
@@ -3031,7 +3041,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @param [fireEvent] default is true
      */
     clearSelection: function (fireEvent) {
-        // console.log(this.resourceManager.getResourceSecurityPath() + " - clearSelection");
+        // console.log(this.resourceManager.resourceName + " - clearSelection");
         this.selectedRows = [];
 
         if (this.kendoGrid && this.kendoGrid.tbody) {
@@ -3148,10 +3158,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             $queryDeferred = this.kendoGrid.dataSource.query(dataSourceOptions);
         }
 
-        if (this.hierarchical) {
-            expresso.util.UIUtil.showLoadingMask(this.$domElement, true, {id: "grid"});
-        }
-
         return $queryDeferred.done(function () {
 
             if (!_this.autoSyncGridDataSource) {
@@ -3201,10 +3207,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // console.log("loadResources is done");
             // _this.selectFirstRow();
             _this.loadingResources = false;
-
-            if (_this.hierarchical) {
-                expresso.util.UIUtil.showLoadingMask(_this.$domElement, false, {id: "grid"});
-            }
         });
     },
 
@@ -3256,10 +3258,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     dataType: "json",
                     type: "GET",
                     url: function () {
-                        if (_this.hierarchical) {
-                            // TreeList does not display a loading mask on sort and filter
-                            expresso.util.UIUtil.showLoadingMask(_this.$domElement, true, {id: "readDataSourceTreeList"});
-                        }
                         return _this.resourceManager.getResourceUrl();
                     }
                 },

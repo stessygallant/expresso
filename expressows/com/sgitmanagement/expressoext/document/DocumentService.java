@@ -193,11 +193,10 @@ public class DocumentService extends BaseFileService<Document> {
 	 * @throws Exception
 	 */
 	public void copyDocuments(String sourceResourceName, Integer sourceResourceId, String targetResourceName, Integer targetResourceId) throws Exception {
-		DocumentService documentService = newService(DocumentService.class, Document.class);
 		Filter filter = new Filter();
 		filter.addFilter(new Filter("resourceName", sourceResourceName));
 		filter.addFilter(new Filter("resourceId", sourceResourceId));
-		List<Document> documents = documentService.list(filter);
+		List<Document> documents = list(filter);
 		if (!documents.isEmpty()) {
 			for (Document document : documents) {
 				// create the record
@@ -205,12 +204,29 @@ public class DocumentService extends BaseFileService<Document> {
 				document.setId(null);
 				document.setResourceName(targetResourceName);
 				document.setResourceId(targetResourceId);
-				documentService.create(document);
+				create(document);
 			}
 
 			// then copy the documents from the directory
-			FileUtils.copyDirectory(new File(documentService.getAbsoluteFolder(sourceResourceName, sourceResourceId)),
-					new File(documentService.getAbsoluteFolder(targetResourceName, targetResourceId)));
+			FileUtils.copyDirectory(new File(getAbsoluteFolder(sourceResourceName, sourceResourceId)), new File(getAbsoluteFolder(targetResourceName, targetResourceId)));
 		}
+	}
+
+	/**
+	 * 
+	 * @param file
+	 * @param targetResourceName
+	 * @param targetResourceId
+	 * @throws Exception
+	 */
+	public void addDocument(File file, String targetResourceName, Integer targetResourceId) throws Exception {
+		Document document = new Document();
+		document.setResourceName(targetResourceName);
+		document.setResourceId(targetResourceId);
+		document.setFileName(file.getName());
+		create(document);
+
+		// then copy the document
+		FileUtils.copyFile(file, new File(getAbsoluteFolder(targetResourceName, targetResourceId) + File.separator + file.getName()));
 	}
 }

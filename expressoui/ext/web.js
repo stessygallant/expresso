@@ -413,7 +413,7 @@ expresso.Main = function () {
         var $menu = $(".main-menu");
         var $appItem = $menu.find("[data-app='" + appName + "']").first().parent().parent();
 
-        console.log("Auto Loading [" + appName + "]: " + $appItem.length);
+        console.log("Auto Loading [" + appName + "]");
         if ($appItem && $appItem.length) {
             // $menu.data("kendoPanelBar").select($appItem);
         }

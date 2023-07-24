@@ -232,8 +232,9 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         // set the title of the window
         kendoWindow.setOptions({
             // set the name of the resource as title
-            title: _this.getLabel(_this.resourceManager.resourcePath, null, true) ||
-                _this.getLabel(_this.resourceManager.resourceName)
+            title: _this.getLabel(_this.resourceManager.resourceName, null, true) ||
+                _this.getLabel(_this.resourceManager.resourcePath, null, true) ||
+                _this.getLabel(_this.resourceManager.resourceName) // if not defined, end with this one
         });
 
         // for each combo box, if there is a manager defined, add a search button

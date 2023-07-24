@@ -62,6 +62,7 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
                 _this.resizeContent();
             }
         }, 100);
+        console.log("Application [" + this.appDef.absoluteAppName + "] initialized");
     },
 
     /**

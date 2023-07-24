@@ -90,16 +90,6 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         this.resourcePath = resourcePath;
         this.model = model;
 
-        // for backward compatibility, if the model is defined and contains the type, use it
-        this.resourceName = (model && model.fields && model.fields.type && model.fields.type.defaultValue ? model.fields.type.defaultValue :
-            (model && model.type && model.type.defaultValue ? model.type.defaultValue : resourcePath));
-        if (!this.resourceFieldNo) {
-            this.resourceFieldNo = this.resourceName + "No";
-        }
-
-        // create the EC for the resource
-        this.eventCentral = new expresso.util.EventCentral(this.resourceName);
-
         // initialized the sections container
         this.sections = $.extend({}, {
             grid: true,
@@ -107,8 +97,6 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
             preview: sections === undefined,
             filter: false
         }, sections);
-
-        console.log("ResourceManager [" + this.resourceName + "] initialized");
     },
 
     /**
@@ -435,8 +423,13 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
 
                 _this.initialized = true;
 
-                // load the the model
+                // load the model
                 expresso.util.Model.initModel(_this).done(function () {
+
+                    // create the EC for the resource
+                    // resourceName is set in the initModel
+                    _this.eventCentral = new expresso.util.EventCentral(_this.resourceName);
+
                     $deferred.resolve();
                 });
             });

@@ -269,6 +269,9 @@ expresso.util.UIUtil = (function () {
                 (customOptions.field && customOptions.field.reference && customOptions.field.reference.autoSearch == false)) {
                 autoSearch = false;
             }
+            if (customOptions.readOnly || $input.attr("readonly")) {
+                autoSearch = false;
+            }
 
             var fieldName = $input.attr("name");
 
@@ -312,6 +315,10 @@ expresso.util.UIUtil = (function () {
                                 if (!initialized) {
                                     initialized = true;
                                     data.id = retrieveCurrentValue($input, customOptions);
+
+                                    if (autoSearch === false && !data.id) {
+                                        data.id = -1;
+                                    }
                                 }
                                 return data;
                             }
@@ -2637,6 +2644,7 @@ expresso.util.UIUtil = (function () {
                         });
                     }
 
+                    $element.addClass("exp-loading");
                     if (!$element.find(".exp-loading-mask").length || customOptions.id) {
                         return $("<div class='exp-loading-mask'" +
                             (customOptions.id ? " data-mask-id='" + customOptions.id + "'" : "") + ">" +
@@ -2645,6 +2653,7 @@ expresso.util.UIUtil = (function () {
                             "</div>").appendTo($element);
                     }
                 } else {
+                    $element.removeClass("exp-loading");
                     $element.children(".exp-loading-mask").each(function () {
                         var $this = $(this);
                         var maskId = $this.data("maskId");

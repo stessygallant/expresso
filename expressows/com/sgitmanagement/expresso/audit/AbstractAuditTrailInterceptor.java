@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.annotations.Formula;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 //  extends EmptyInterceptor 
 //  implements Interceptor
-abstract public class AbstractAuditTrailInterceptor extends EmptyInterceptor {
+abstract public class AbstractAuditTrailInterceptor implements Interceptor, Serializable {
 	final static protected Logger logger = LoggerFactory.getLogger(AbstractAuditTrailInterceptor.class);
 	private static ThreadLocal<Set<String>> auditThreadLocal = new ThreadLocal<>();
 
