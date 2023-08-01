@@ -1025,34 +1025,46 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         if (resource) {
             // now we need to verify if there is inline grid
             if (this.$window) {
-                this.$window.find(".exp-grid-inline").each(function () {
-                    var inlineGridResourceManager = $(this).data("resourceManager");
 
-                    // it may happen than the resource manager is not yet loading when the user close the window
-                    // in this case, there can not be any change, so skip the sync
-                    if (inlineGridResourceManager) {
-                        // console.log("FORM - onSaved - inlineGrid " + inlineGridResourceManager.resourceName);
-
-                        // set the current resource
-                        inlineGridResourceManager.masterResourceManager.currentResource = resource;
-
-                        // for each dataItem, we need to set the masterIdProperty
-                        var dataSource = $(this).children(".k-grid").data("kendoGrid").dataSource;
-                        $.each(dataSource.data(), function () {
-                            var dataItem = this;
-                            if (!dataItem[inlineGridResourceManager.model.masterIdProperty] ||
-                                dataItem[inlineGridResourceManager.model.masterIdProperty] == -1) {
-                                dataItem.set(inlineGridResourceManager.model.masterIdProperty, resource.id);
-                            }
-                        });
-
-                        // this will automatically sync (no need for dataSource.sync())
-                        dataSource.online(true);
-                    }
-                });
-
-                // save picture for new resource
+                // only for new resources
                 if (!originalResource || !originalResource.id) {
+                    this.$window.find(".exp-grid-inline").each(function () {
+                        var inlineGridResourceManager = $(this).data("resourceManager");
+
+                        // it may happen than the resource manager is not yet loading when the user close the window
+                        // in this case, there can not be any change, so skip the sync
+                        if (inlineGridResourceManager) {
+                            // console.log("FORM - onSaved - inlineGrid " + inlineGridResourceManager.resourceName);
+
+                            // set the current resource
+                            inlineGridResourceManager.masterResourceManager.currentResource = resource;
+
+                            // for each dataItem, we need to set the masterIdProperty
+                            var subKendoGrid = $(this).children(".k-grid").data("kendoGrid");
+                            var subDataSource = subKendoGrid.dataSource;
+                            $.each(subDataSource.data(), function () {
+                                var dataItem = this;
+                                if (!dataItem[inlineGridResourceManager.model.masterIdProperty] ||
+                                    dataItem[inlineGridResourceManager.model.masterIdProperty] == -1) {
+                                    dataItem.set(inlineGridResourceManager.model.masterIdProperty, resource.id);
+                                }
+                            });
+
+                            // this will automatically sync (no need for dataSource.sync())
+                            subDataSource.online(true);
+
+                            // then refresh the master after the sub resources are saved
+                            // for an unknown reason, if we do not resync the current data source,
+                            // some fields will remain dirty
+                            var currentKendoGrid = _this.resourceManager.sections.grid.kendoGrid;
+                            var currentDataSource = currentKendoGrid.dataSource;
+                            currentKendoGrid.one("dataBound", function () {
+                                currentDataSource.sync();
+                            });
+                        }
+                    });
+
+                    // save picture
                     this.$window.find(".exp-picture-picker [data-type=picture]").each(function () {
                         var picturePicker = $(this).data("kendoExpressoPicturePicker");
                         picturePicker.savePicture(null, null, resource.id).done(function () {
@@ -1061,7 +1073,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                     });
                 }
 
-                // save documents
+                // save documents (always, not only for new resource)
                 this.$window.find("[data-type=document]").each(function () {
                     var $input = $(this);
                     var kendoUpload = $input.data("kendoUpload");
@@ -1287,6 +1299,16 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             if (splitter) {
                 splitter.size(".k-pane:first", splitter.size(".k-pane:first"));
             }
+        }
+    },
+
+    /**
+     *  update the resource
+     */
+    updateCurrentResource: function (updatedResource) {
+        var resource = this.resourceManager.currentResource;
+        if (resource && resource.id) {
+            this.resourceManager.sections.grid.updateResource(resource, updatedResource);
         }
     },
 
