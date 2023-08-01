@@ -5,7 +5,7 @@ expresso.applications.security.usermanager.PreviewTabAudittrail = expresso.layou
         expresso.layout.resourcemanager.PreviewTab.fn.initDOMElement.call(this, $domElement);
 
         var _this = this;
-        this.loadSiblingResourceManager(sherpa.config.Applications.AuditTrailManager).done(function (resourceManager) {
+        this.loadSiblingResourceManager(expresso.Common.getSiteNamespace().config.Applications.AuditTrailManager).done(function (resourceManager) {
             resourceManager.labels = $.extend({}, resourceManager.labels, _this.resourceManager.labels);
         });
     }
