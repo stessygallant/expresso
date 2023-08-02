@@ -161,9 +161,9 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings("rawtypes")
 	private BaseEntityService getService(RequiredApproval requiredApproval) throws Exception {
-		BaseEntityService service = newService(requiredApproval.getResourceName());
+		BaseEntityService service = (BaseEntityService) newService(requiredApproval.getResourceName());
 		return service;
 	}
 

@@ -36,10 +36,12 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.net.util.SubnetUtils.SubnetInfo;
+import org.glassfish.jersey.client.ClientConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.sgitmanagement.expresso.audit.AbstractAuditTrailInterceptor;
 import com.sgitmanagement.expresso.base.AbstractBaseService;
 import com.sgitmanagement.expresso.base.KeyField;
@@ -47,10 +49,18 @@ import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.base.Sortable;
 import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.exception.BaseException;
+import com.sgitmanagement.expresso.exception.ValidationException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 
 public class Util {
@@ -1283,7 +1293,7 @@ public class Util {
 		} else {
 			String entityBasePackage = SystemEnv.INSTANCE.getDefaultProperties().getProperty("entity_base_package");
 			for (Package p : Package.getPackages()) {
-				if (p.getName().startsWith(entityBasePackage)) {
+				if (p.getName() != null && p.getName().startsWith(entityBasePackage)) {
 					try {
 						Class<?> clazz = Class.forName(p.getName() + "." + name);
 						classNameCache.put(name, clazz);
@@ -1294,6 +1304,61 @@ public class Util {
 				}
 			}
 			return null;
+		}
+	}
+
+	/**
+	 * 
+	 * @param recaptchaResponse
+	 * @param secretKey
+	 * @throws Exception
+	 */
+	static public void verifyRecaptchaResponse(String recaptchaResponse, String secretKey) throws Exception {
+		String url = "https://www.google.com";
+		String path = "/recaptcha/api/siteverify";
+
+		ClientConfig clientConfig = new ClientConfig();
+		Client client = ClientBuilder.newClient(clientConfig);
+
+		try {
+			WebTarget target = client.target(url).path(path);
+
+			// build request
+			Invocation.Builder requestBuilder = target.request().accept(MediaType.APPLICATION_JSON);
+
+			MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
+			formData.add("secret", secretKey);
+			formData.add("response", recaptchaResponse);
+
+			// POST the request
+			Response response = requestBuilder.post(Entity.entity(formData, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+			try {
+				String responseJSON = response.readEntity(String.class);
+				if (response.getStatus() == 200) {
+					JsonObject responseObject = new Gson().fromJson(responseJSON, JsonObject.class);
+					boolean success = responseObject.get("success").getAsBoolean();
+					if (!success) {
+						System.err.println(response.getStatus() + " " + responseJSON);
+						throw new ValidationException("invalidCaptchaNotSuccess");
+					}
+
+					// reCAPTCHA v3
+					if (responseObject.get("score") != null) {
+						float score = responseObject.get("score").getAsFloat();
+						if (score < 0.5) {
+							throw new ValidationException("invalidCaptchaScoreTooLow");
+						}
+					}
+
+				} else {
+					throw new ValidationException("invalidCaptcha");
+				}
+			} finally {
+				response.close();
+			}
+
+		} finally {
+			client.close();
 		}
 	}
 

@@ -110,7 +110,6 @@ public class User extends Person implements IUser, Auditable {
 		this.password = password;
 	}
 
-	// @XmlElement
 	public List<UserInfo> getUserInfos() {
 		return userInfos;
 	}
