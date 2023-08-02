@@ -167,9 +167,9 @@ public class DocumentService extends BaseFileService<Document> {
 			switch (action) {
 			case "delete":
 				verifyUserPrivileges(document, "delete");
-				if (getUser().getId().equals(document.getCreationUserId()) || isUserAdmin()) {
-					allowed = true;
-				}
+				// if (getUser().getId().equals(document.getCreationUserId()) || isUserAdmin()) {
+				// allowed = true;
+				// }
 				break;
 
 			case "update":

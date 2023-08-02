@@ -916,10 +916,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             if (column.width) {
                 switch (screenMode) {
                     case expresso.Common.SCREEN_MODES.PHONE:
-                        column.width = column.width * 1.1;
+                        column.width *= 1.1;
                         break;
                     case expresso.Common.SCREEN_MODES.TABLET:
-                        column.width = column.width * expresso.Common.getFontRatio();
+                        column.width *= 1.3; // expresso.Common.getFontRatio();
                         break;
                     default:
                         // ok

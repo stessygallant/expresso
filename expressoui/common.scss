@@ -1000,9 +1000,9 @@ label input + span {
             margin-right: 0.9em;
         }
 
-        //& + span.exp-button-label, & + :not(:empty) {
-        //    margin-left: 0.9em;
-        //}
+        span.exp-button-label:not(:empty) {
+            margin-left: 0.9em;
+        }
     }
 }
 
@@ -1064,11 +1064,6 @@ label input + span {
             .fa {
                 margin-top: 0.1em;
             }
-
-            // label
-            .exp-button-label {
-                display: none
-            }
         }
 
         // Close button on Window
@@ -1088,6 +1083,12 @@ label input + span {
     }
 
     .exp-screen-mode-phone {
+        .exp-button {
+            .exp-button-label {
+                display: none
+            }
+        }
+
         .exp-screen-mode-tablet-only {
             display: none;
         }
