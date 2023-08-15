@@ -1074,47 +1074,61 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 }
 
                 // save documents (always, not only for new resource)
-                this.$window.find("[data-type=document]").each(function () {
-                    var $input = $(this);
-                    var kendoUpload = $input.data("kendoUpload");
-                    if (kendoUpload.getFiles().length) {
-                        var resourceManager = _this.resourceManager;
-                        // var field = resourceManager.model.fields[$input.attr("name")];
-                        var document = kendoUpload.options.document;
+                this.$window.find(".k-upload").each(function () {
+                    // as there are 1 input per selected file, we need to only get the first input
+                    var $input = $(this).find("[data-type=document]").first();
+                    if ($input.length) {
+                        var kendoUpload = $input.data("kendoUpload");
+                        if (kendoUpload.getFiles().length) {
+                            var resourceManager = _this.resourceManager;
+                            // var field = resourceManager.model.fields[$input.attr("name")];
+                            var document = kendoUpload.options.document;
 
-                        var documentFolderPath;
-                        if (resourceManager.resourceFieldNo &&
-                            resourceManager.currentResource[resourceManager.resourceFieldNo]) {
-                            // use the resourceNo
-                            // ex: project/AP-1090, activityLogRequest/0011234
-                            documentFolderPath = resourceManager.getResourceSecurityPath() + "/" +
-                                resourceManager.currentResource[resourceManager.resourceFieldNo];
-                        } else {
-                            // probably a sub resource
-                            documentFolderPath = resourceManager.getRelativeWebServicePath(resourceManager.getCurrentResourceId());
+                            var documentFolderPath;
+                            if (resourceManager.resourceFieldNo &&
+                                resourceManager.currentResource[resourceManager.resourceFieldNo]) {
+                                // use the resourceNo
+                                // ex: project/AP-1090, activityLogRequest/0011234
+                                documentFolderPath = resourceManager.getResourceSecurityPath() + "/" +
+                                    resourceManager.currentResource[resourceManager.resourceFieldNo];
+                            } else {
+                                // probably a sub resource
+                                documentFolderPath = resourceManager.getRelativeWebServicePath(resourceManager.getCurrentResourceId());
+                            }
+
+                            // override some fields
+                            var field = resourceManager.model.fields[$input.attr("name")];
+                            $.extend(document, {
+                                resourceId: resource.id,
+                                resourceName: resourceManager.resourceName,
+                                resourceSecurityPath: resourceManager.getResourceSecurityPath(),
+                                resourcePath: resourceManager.getRelativeWebServicePath(resource.id),
+                                documentTypeId: (field && field.documentTypeId) ||
+                                    resource.documentTypeId || resourceManager.options.defaultDocumentTypeId ||
+                                    originalResource.documentTypeId,
+                                // CEZinc
+                                documentParameter: documentFolderPath,
+                                documentCategoryId: (field && field.documentCategoryId) ||
+                                    resource.documentCategoryId || resourceManager.options.defaultDocumentCategoryId ||
+                                    originalResource.documentCategoryId
+                            });
+
+                            // setup url
+                            kendoUpload.options.url = expresso.Common.getWsUploadPathURL() + "/document" +
+                                "?creationUserName=" + expresso.Common.getUserInfo().userName +
+                                // creation validation security only
+                                "&siblingResourceId=" + document.resourceId +
+                                "&siblingResourceName=" + document.resourceName +
+                                "&siblingResourceSecurityPath=" + document.resourceSecurityPath;
+
+                            kendoUpload.one("success", function (/*e*/) {
+                                // e.response is the document json
+                                _this.resourceManager.sections.grid.reloadCurrentResource();
+                            });
+
+                            // upload
+                            kendoUpload.upload();
                         }
-
-                        // override some fields
-                        var field = resourceManager.model.fields[$input.attr("name")];
-                        $.extend(document, {
-                            resourceName: resourceManager.resourceName,
-                            resourceSecurityPath: resourceManager.getResourceSecurityPath(),
-                            documentCategoryId: (field && field.documentCategoryId ? field.documentCategoryId : resourceManager.options.defaultDocumentCategoryId),
-                            resourceId: resource.id,
-                            resourcePath: resourceManager.getRelativeWebServicePath(resource.id),
-                            documentParameter: documentFolderPath
-                        });
-
-                        // setup url
-                        kendoUpload.options.url = expresso.Common.getWsUploadPathURL() + "/document" +
-                            "?creationUserName=" + expresso.Common.getUserInfo().userName +
-                            // creation validation security only
-                            "&siblingResourceId=" + document.resourceId +
-                            "&siblingResourceName=" + document.resourceName +
-                            "&siblingResourceSecurityPath=" + document.resourceSecurityPath;
-
-                        // upload
-                        kendoUpload.upload();
                     }
                 });
             }

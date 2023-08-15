@@ -16,10 +16,5 @@
             resource.set("resourceName", this.resourceManager.siblingResourceManager.getResourceName());
             resource.set("resourceId", this.resourceManager.siblingResourceManager.currentResource.id);
         }
-
-        if (!this.resourceManager.options.showDates) {
-            expresso.util.UIUtil.hideField($window.find("[name=fromDate]"));
-            expresso.util.UIUtil.hideField($window.find("[name=toDate]"));
-        }
     }
 });

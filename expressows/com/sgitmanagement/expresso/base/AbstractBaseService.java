@@ -67,7 +67,7 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 		this.parentId = parentId;
 	}
 
-	protected String getPersistenceUnit() {
+	public String getPersistenceUnit() {
 		return null; // default persistence unit by default
 	}
 

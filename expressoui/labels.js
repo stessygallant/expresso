@@ -173,7 +173,7 @@ $.extend(expresso.Labels, {
     createdByLabel: "Créé(e) par",
     lastModificationLabel: "Dernière modification par",
     createdByDateLabel: "le",
- 
+
     // filters
     filterFromDate: "À partir du",
     filterToDate: "Jusqu'au",
@@ -224,7 +224,7 @@ $.extend(expresso.Labels, {
     printButtonTitle: "Imprimer les enregistrements sélectionnés",
     downloadButtonTitle: "Télécharger les rapports PDFs des enregistrements sélectionnés",
     sendEmail: "Envoyer un courriel aux enregistrements sélectionnés",
-    uploadDocument: "Télécharger un fichier (drag&drop)",
+    uploadDocument: "Téléverser un fichier (drag&drop)",
     showActiveRecords: "Afficher seulement les enregistrements actifs",
     search: "Rechercher",
     enterReason: "Entrer une raison",

@@ -1032,6 +1032,19 @@ label input + span {
     }
 }
 
+.exp-choices {
+    margin: 0 auto 0 auto;
+    width: 80%;
+
+    .exp-input-wrap {
+        width: auto !important;
+
+        .k-radio-label {
+            max-width: none !important;
+        }
+    }
+}
+
 /*
  * ------------------------------------------------------------------------------------------------------------------
  * MOBILE CSS

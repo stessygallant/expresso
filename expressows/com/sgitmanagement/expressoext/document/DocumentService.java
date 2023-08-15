@@ -12,7 +12,6 @@ import com.sgitmanagement.expresso.base.DocumentUploadNotification;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
-import com.sgitmanagement.expresso.util.DateUtil;
 import com.sgitmanagement.expressoext.base.BaseFileService;
 import com.sgitmanagement.expressoext.security.Resource;
 import com.sgitmanagement.expressoext.security.ResourceService;
@@ -36,9 +35,6 @@ public class DocumentService extends BaseFileService<Document> {
 			document.setDocumentTypeId(newService(DocumentTypeService.class, DocumentType.class)
 					.get(new Query().addFilter(new Filter("resourceName", params.get("resourceName"))).addFilter(new Filter("pgmKey", params.get("documentTypePgmKey")))).getId());
 		}
-
-		document.setFromDate(DateUtil.parseDate(params.get("fromDate")));
-		document.setToDate(DateUtil.parseDate(params.get("toDate")));
 
 		return merge(document);
 	}
@@ -168,7 +164,7 @@ public class DocumentService extends BaseFileService<Document> {
 			case "delete":
 				verifyUserPrivileges(document, "delete");
 				// if (getUser().getId().equals(document.getCreationUserId()) || isUserAdmin()) {
-				// allowed = true;
+				allowed = true;
 				// }
 				break;
 
