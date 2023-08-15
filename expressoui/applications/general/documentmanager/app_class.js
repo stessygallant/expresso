@@ -51,14 +51,6 @@
                         }
                     }
                 }
-            },
-            fromDate: {
-                type: "date",
-                nullable: true
-            },
-            toDate: {
-                type: "date",
-                nullable: true
             }
         };
 

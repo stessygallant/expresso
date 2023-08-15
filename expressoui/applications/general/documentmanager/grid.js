@@ -36,16 +36,7 @@
         columns.push({
             field: "description",
             width: 300
-        });
-
-        if (this.resourceManager.options.showDates || this.resourceManager.displayAsMaster) {
-            columns.push({
-                field: "fromDate"
-            }, {
-                field: "toDate"
-            });
-        }
-
+        }, {});
         return columns;
     },
 

@@ -1180,9 +1180,31 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				}
 			}
+
+			// In Hibernate 6, we cannot search through entityIds for ManyToMany
+			// but we can search for entity.id if the ManyToMany is defined correctly
+			fixManyToManyFilters(query.getFilter());
 		}
 
 		return query;
+	}
+
+	/**
+	 * In Hibernate 6, we cannot search through entityIds for ManyToMany but we can search for entities.id if the ManyToMany is defined correctly
+	 * 
+	 * @param filter
+	 */
+	private void fixManyToManyFilters(Filter filter) {
+		if (filter != null) {
+			if (filter.getField() != null && filter.getField().endsWith("Ids")) {
+				filter.setField(filter.getField().replace("Ids", "s.id"));
+			}
+			if (filter.getFilters() != null) {
+				for (Filter f : filter.getFilters()) {
+					fixManyToManyFilters(f);
+				}
+			}
+		}
 	}
 
 	/**
@@ -1570,7 +1592,16 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		Field parentEntityField = getParentEntityField();
 		if (parentEntityField != null) {
 			Class parentEntityClass = parentEntityField.getType();
-			Class parentEntityServiceClass = Class.forName(parentEntityClass.getCanonicalName() + "Service");
+
+			// if the name of the type start with Basic, get the full type (there is no service for Basic*)
+			if (parentEntityClass.getCanonicalName().contains(".Basic")) {
+				String parentEntityClassName = parentEntityClass.getCanonicalName();
+				parentEntityClassName = parentEntityClassName.replace(".Basic", ".");
+				parentEntityClass = Class.forName(parentEntityClassName);
+			}
+
+			String parentEntityServiceClassName = parentEntityClass.getCanonicalName() + "Service";
+			Class parentEntityServiceClass = Class.forName(parentEntityServiceClassName);
 			return newService(parentEntityServiceClass, parentEntityClass);
 		} else {
 			return null;
@@ -1763,7 +1794,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	public String getResourceSecurityPath() throws Exception {
 		String resourcePath = getResourceName();
-
 		if (getParentEntityField() != null) {
 			// usually, sub resource starts with the name of the parent resource
 			// Ex: project, projectLot and projectLotItem
@@ -3204,6 +3234,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							// ex: ca.cezinc.expressoservice.resources.humanresources.person.User
 							String refString = field.getGenericType().toString();
 							refString = refString.substring(refString.lastIndexOf('.') + 1);
+							if (refString.startsWith("Basic")) {
+								refString = refString.substring("Basic".length());
+							}
 							refString = StringUtils.uncapitalize(refString);
 							if (!fieldName.equals(refString)) {
 								ref = refString;
@@ -3528,7 +3561,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 			return service;
 		} catch (Exception ex) {
-			logger.error("Problem creating the service for resource [" + resourceName + "]", ex);
+			// logger.error("Problem creating the service for resource [" + resourceName + "]", ex);
 			return null;
 		}
 	}

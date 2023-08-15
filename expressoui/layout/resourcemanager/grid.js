@@ -1311,14 +1311,16 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             var href = $a.attr("href");
             var $row = $a.closest("tr");
             var dataItem = kendoGrid.dataItem($row);
-            var fileName = dataItem.fileName.replace(/'/g, '&apos;');
+            var document = dataItem.document || dataItem;
+            var fileName = document.fileName.replace(/'/g, '&apos;');
 
             //console.log("HREF [" + href + "]");
             if (href && href != "_") {
                 // ok the browser will open it
             } else {
                 e.preventDefault();
-                var url = _this.resourceManager.getWebServicePath(dataItem.id) + "/file/" + fileName;
+                var url = expresso.Common.getWsResourcePathURL() + "/document/" + document.id + "/file/" + fileName;
+                // console.log(url);
                 window.open(url);
             }
         });

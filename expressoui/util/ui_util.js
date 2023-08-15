@@ -2840,7 +2840,8 @@ expresso.util.UIUtil = (function () {
                 async: {
                     saveUrl: "define later",
                     removeUrl: null,
-                    autoUpload: false
+                    autoUpload: false,
+                    multiple: options.multiple
                 },
                 upload: function (e) {
                     options = e.sender.options;
