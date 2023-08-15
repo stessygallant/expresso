@@ -20,6 +20,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     // when local data, do not sync the data source automatically
     autoSyncGridDataSource: undefined,
 
+    // if not null, auto refresh the main grid
+    autoRefreshIntervalInSeconds: undefined,
+
     // define if the widget is a TreeList or a Grid
     hierarchical: undefined,
 
@@ -62,6 +65,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
     // by default, sort and filter from the server
     localData: false,
+
+    // by default, sort from the server
+    serverSorting: true,
 
     // by default, duplicate is done server side
     serverSideDuplicate: undefined,
@@ -137,9 +143,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // support auto refresh
         // only for main grid
         if (this.resourceManager.displayAsMaster) {
-            if (expresso.Common.getSiteNamespace().config.Configurations.autoRefreshIntervalInSeconds) {
-                // refresh the grid every n seconds if no updates have been made
-                var autoRefreshIntervalInSeconds = expresso.Common.getSiteNamespace().config.Configurations.autoRefreshIntervalInSeconds;
+            var autoRefreshIntervalInSeconds = this.autoRefreshIntervalInSeconds || expresso.Common.getSiteNamespace().config.Configurations.autoRefreshIntervalInSeconds;
+            if (autoRefreshIntervalInSeconds) {
                 this.resourceManager.addInterval(function () {
                     if (_this.lastUpdateDate && (new Date().getTime() - _this.lastUpdateDate.getTime()) / 1000 >= autoRefreshIntervalInSeconds) {
 
@@ -3322,7 +3327,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             aggregate: _this.getAggregate(),
             serverPaging: _this.autoSyncGridDataSource && !_this.localData,
             serverFiltering: _this.autoSyncGridDataSource && !_this.localData,
-            serverSorting: _this.autoSyncGridDataSource && !_this.localData,
+            serverSorting: _this.autoSyncGridDataSource && !_this.localData && _this.serverSorting !== false,
             filter: _this.autoSyncGridDataSource && _this.isFilterable() ? _this.getInitialGridFilter() : undefined
         };
     },

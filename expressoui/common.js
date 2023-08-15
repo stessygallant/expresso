@@ -376,9 +376,10 @@ expresso.Common = (function () {
                             displayServerValidationMessage(jqxhr);
                         } else if (jqxhr.status == HTTP_CODES.UNAUTHORIZED || jqxhr.status == HTTP_CODES.CUSTOM_UNAUTHORIZED) {
                             // 401 Unauthorized - When no or invalid authentication details are provided
-                            expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("expiredSession")).done(function () {
-                                window.location.reload();
-                            });
+                            // expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("expiredSession")).done(function () {
+                            //     window.location.reload();
+                            // });
+                            window.location.href = expresso.Common.getSiteNamespace().config.Configurations.authenticationFailureRedirect || "/";
                         } else if (jqxhr.status == HTTP_CODES.FORBIDDEN) {
                             // 403 Forbidden - When authenticated user doesn't have access to the resource.
                             expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("userUnauthorized"));
@@ -459,6 +460,11 @@ expresso.Common = (function () {
 
         // help the browser to guess the document format
         url += "&_=" + new Date().getTime() + "&_format=." + format;
+
+        // Send impersonate if provided
+        if (getImpersonateUser()) {
+            url += "&impersonate=" + getImpersonateUser();
+        }
 
         console.log("Download [" + url + "]");
         var $href = $("<a href='" + url + "' target='" + target + "' hidden></a>");

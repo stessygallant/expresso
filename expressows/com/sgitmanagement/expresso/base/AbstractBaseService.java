@@ -16,6 +16,7 @@ import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -67,7 +68,7 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 		this.parentId = parentId;
 	}
 
-	protected String getPersistenceUnit() {
+	public String getPersistenceUnit() {
 		return null; // default persistence unit by default
 	}
 
@@ -97,14 +98,18 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	}
 
 	final public void flush() {
-		getEntityManager().flush();
+		getEntityManager(false).flush();
 	}
 
 	final public void clearCache() {
 		// clear the cache
-		flush();
-		getEntityManager().clear();
-		getEntityManager().getEntityManagerFactory().getCache().evictAll();
+		EntityTransaction tx = getEntityManager(false).getTransaction();
+		if (tx.isActive()) {
+			flush();
+		}
+
+		getEntityManager(false).clear();
+		getEntityManager(false).getEntityManagerFactory().getCache().evictAll();
 	}
 
 	/**
@@ -131,7 +136,7 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	 * @throws Exception
 	 */
 	final public void commit(boolean startNewTransaction) throws Exception {
-		getPersistenceManager().commit(getEntityManager(), startNewTransaction);
+		getPersistenceManager().commit(getEntityManager(false), startNewTransaction);
 	}
 
 	/**
@@ -139,7 +144,7 @@ abstract public class AbstractBaseService<U extends IUser> implements AutoClosea
 	 *
 	 */
 	final public void rollback() {
-		getPersistenceManager().rollback(getEntityManager(), true);
+		getPersistenceManager().rollback(getEntityManager(false), true);
 
 		// then we need to clear the cache
 		// because the object in cache are no longer valid

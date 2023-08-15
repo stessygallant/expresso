@@ -1298,7 +1298,7 @@ public class Util {
 						Class<?> clazz = Class.forName(p.getName() + "." + name);
 						classNameCache.put(name, clazz);
 						return clazz;
-					} catch (ClassNotFoundException e) {
+					} catch (NoClassDefFoundError | ClassNotFoundException ex) {
 						// not in this package, try another
 					}
 				}
