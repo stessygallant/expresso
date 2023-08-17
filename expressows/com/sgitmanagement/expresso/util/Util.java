@@ -1299,7 +1299,7 @@ public class Util {
 							Class<?> clazz = Class.forName(p.getName() + "." + name);
 							classNameCache.put(name, clazz);
 							return clazz;
-						} catch (ClassNotFoundException | NoClassDefFoundError e) {
+						} catch (ClassNotFoundException | NoClassDefFoundError ex) {
 							// not in this package, try another
 						}
 					}
