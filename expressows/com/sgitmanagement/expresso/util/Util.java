@@ -1291,15 +1291,17 @@ public class Util {
 		if (classNameCache.containsKey(name)) {
 			return classNameCache.get(name);
 		} else {
-			String entityBasePackage = SystemEnv.INSTANCE.getDefaultProperties().getProperty("entity_base_package");
+			String[] entityBasePackages = SystemEnv.INSTANCE.getDefaultProperties().getProperty("entity_base_package").split(",");
 			for (Package p : Package.getPackages()) {
-				if (p.getName() != null && p.getName().startsWith(entityBasePackage)) {
-					try {
-						Class<?> clazz = Class.forName(p.getName() + "." + name);
-						classNameCache.put(name, clazz);
-						return clazz;
-					} catch (NoClassDefFoundError | ClassNotFoundException ex) {
-						// not in this package, try another
+				for (String entityBasePackage : entityBasePackages) {
+					if (p.getName() != null && p.getName().startsWith(entityBasePackage)) {
+						try {
+							Class<?> clazz = Class.forName(p.getName() + "." + name);
+							classNameCache.put(name, clazz);
+							return clazz;
+						} catch (ClassNotFoundException | NoClassDefFoundError e) {
+							// not in this package, try another
+						}
 					}
 				}
 			}

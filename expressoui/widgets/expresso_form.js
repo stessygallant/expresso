@@ -288,6 +288,13 @@
                                 $el.data("decimals", (field.decimals || 0));
                             }
 
+                            // add support for step
+                            // seems to be fixed in latest kendo version 2023-08-15
+                            if (!$el.data("step") && field.step !== undefined) {
+                                $el.data("step", field.step);
+                            }
+
+                            //
                             if (field.currency) {
                                 if (field.currency === true) {
                                     $el.data("format", "{0:c" + (field.decimals || 0) + "}");
@@ -410,6 +417,7 @@
                     case "number":
                         var format = $el.data("format");
                         var decimals = $el.data("decimals");
+                        var step = $el.data("step");
 
                         if (!format) {
                             format = "{0:n" + (decimals || 0) + "}";
@@ -427,6 +435,7 @@
                             });
                         }
                         $el.kendoNumericTextBox({
+                            step: step,
                             format: format,
                             decimals: decimals,
                             restrictDecimals: true
