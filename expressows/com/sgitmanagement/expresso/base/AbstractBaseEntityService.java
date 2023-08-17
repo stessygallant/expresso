@@ -581,13 +581,13 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param e
 	 */
 	final public E lock(E e) {
-		logger.debug("Waiting lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
+		// logger.debug("Waiting lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
 
 		// do NOT perform this locking refresh directly because it will lock all resources (with MySQL at least)
 		// getEntityManager().refresh(e, LockModeType.PESSIMISTIC_WRITE);
 		getEntityManager().lock(e, LockModeType.PESSIMISTIC_WRITE);
 
-		logger.debug("Got lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
+		// logger.debug("Got lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
 
 		// we must get the latest committed version of the entity (while waiting on the lock, the entity may have been changed by the owner of the lock
 		return flushAndRefresh(e);
