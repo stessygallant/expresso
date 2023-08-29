@@ -581,13 +581,13 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param e
 	 */
 	final public E lock(E e) {
-		logger.debug("Waiting lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
+		// logger.debug("Waiting lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
 
 		// do NOT perform this locking refresh directly because it will lock all resources (with MySQL at least)
 		// getEntityManager().refresh(e, LockModeType.PESSIMISTIC_WRITE);
 		getEntityManager().lock(e, LockModeType.PESSIMISTIC_WRITE);
 
-		logger.debug("Got lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
+		// logger.debug("Got lock [" + e.getClass().getSimpleName() + ":" + e.getId() + "]");
 
 		// we must get the latest committed version of the entity (while waiting on the lock, the entity may have been changed by the owner of the lock
 		return flushAndRefresh(e);
@@ -861,7 +861,18 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				// then issue the SQL query
 				Date startDate = new Date();
-				List<E> data = typedQuery.getResultList();
+				List<E> data;
+				try {
+					data = typedQuery.getResultList();
+				} catch (IllegalArgumentException ex) {
+					// this could happen when the grid tries to get a next page but that the
+					// data has changed since the first load
+					// ex: grid tries to display last page: from 150 to 152
+					// but there is only 144 records now
+					// java.lang.IllegalArgumentException: fromIndex(150) > toIndex(144)
+					logger.warn("Problem loading the data: dataset is less than than previously: " + ex + "\n" + new Gson().toJson(query));
+					data = new ArrayList<>();
+				}
 
 				// if the query required the entity to be created if is does not exist, create it
 				if (data.size() == 0 && (query.getCreateIfNotFound() != null && query.getCreateIfNotFound().booleanValue())) {

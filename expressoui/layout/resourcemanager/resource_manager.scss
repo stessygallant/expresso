@@ -660,7 +660,7 @@ $formPreviewHeight: 12em;
 .exp-form, .exp-filter {
     color: $themeTextColor;
 
-    .input-wrap, span.info {
+    .exp-input-wrap, .input-wrap, span.info {
         @include default-div;
         box-sizing: border-box; // includes content, padding and border
         display: inline-block;
@@ -682,7 +682,7 @@ $formPreviewHeight: 12em;
         color: $themeTextColor;
     }
 
-    .input-wrap {
+    .exp-input-wrap, .input-wrap {
         line-height: 1.7;
 
         label:not(.k-checkbox-label):not(.k-radio-label):not(.exp-switch) {
@@ -726,7 +726,7 @@ $formPreviewHeight: 12em;
     }
 
     &.exp-form-single-column {
-        div.input-wrap {
+        div.exp-input-wrap, div.input-wrap {
             width: 100%;
 
             &.full-length, &.exp-full-length {
@@ -736,7 +736,7 @@ $formPreviewHeight: 12em;
     }
 
     &.exp-form-three-columns {
-        div.input-wrap {
+        div.exp-input-wrap, div.input-wrap {
             width: calc(33% - 2px);
 
             &.double-length, &.exp-double-length {
@@ -750,7 +750,7 @@ $formPreviewHeight: 12em;
     }
 
     &.exp-form-four-columns {
-        div.input-wrap {
+        div.exp-input-wrap, div.input-wrap {
             width: calc(25% - 3px);
 
             &.double-length, &.exp-double-length {
@@ -861,7 +861,7 @@ $formPreviewHeight: 12em;
     }
 
     // remove gray from dropdownlist
-    div.input-wrap:not(.readonly) {
+    div.exp-input-wrap:not(.readonly), div.input-wrap:not(.readonly) {
         .k-dropdown, .k-dropdowntree {
             .k-dropdown-wrap.k-state-default:not(.k-state-hover) {
                 .k-input {
@@ -873,8 +873,10 @@ $formPreviewHeight: 12em;
     }
 
     // remove the border for date input
-    div.input-wrap.readonly .k-picker-wrap .k-select {
-        border-width: 0;
+    div.exp-input-wrap.readonly, div.input-wrap.readonly {
+        .k-picker-wrap .k-select {
+            border-width: 0;
+        }
     }
 
     // fix length for multiselect
@@ -886,7 +888,7 @@ $formPreviewHeight: 12em;
 
     .checkbox-group, .radio-group {
         .checkbox-div, .radio-div, // checkbox div (built using buildCheckbox)
-        &.input-wrap, & > .input-wrap // checkbox div (built using expressoForm)
+        &.exp-input-wrap, &.input-wrap, & > .exp-input-wrap, & > .input-wrap // checkbox div (built using expressoForm)
         {
             margin: 0 0 0 10px;
             padding: 0;
@@ -1299,7 +1301,7 @@ k-widget k-window
     .exp-screen-mode-phone {
         // form is single column
         .exp-form {
-            .input-wrap {
+            .exp-input-wrap, .input-wrap {
                 width: 100%;
 
                 [type=checkbox], [type=radio] {

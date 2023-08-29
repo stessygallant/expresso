@@ -512,10 +512,19 @@
                         if (field && field.updatable === false && resource && resource.id) {
                             // hide the field and put the filename instead
                             if (field.multiple === false) {
-                                $el.attr("type", "text");
-                                $el.addClass("k-textbox");
-                                expresso.util.UIUtil.setFieldReadOnly($el);
-                                $el.setval(resource.fileName || (resource.document && resource.document.fileName));
+                                var document = resource.document || resource;
+                                var showLink = true;
+                                if (showLink) {
+                                    $el.hide();
+                                    $("<a href='" +
+                                        expresso.Common.getWsResourcePathURL() + "/document/" + document.id + "/file/" + document.fileName
+                                        + "' target='_blank'>" + document.fileName + "</a>").insertAfter($el);
+                                } else {
+                                    $el.attr("type", "text");
+                                    $el.addClass("k-textbox");
+                                    expresso.util.UIUtil.setFieldReadOnly($el);
+                                    $el.setval(document.fileName);
+                                }
                             } else {
                                 expresso.util.UIUtil.hideField($el);
                             }

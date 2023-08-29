@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.dto.Query;
+import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
@@ -30,7 +31,7 @@ public class BasicAuthentificationFilter implements Filter {
 	final private static Logger logger = LoggerFactory.getLogger(BasicAuthentificationFilter.class);
 
 	private static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
-	private static final String AUTHORIZATION_HEADER = "Authorization";
+	private static final String WWW_AUTHORIZATION = "Authorization";
 	private static final String BASIC_PREFIX = "Basic ";
 
 	@Override
@@ -48,19 +49,18 @@ public class BasicAuthentificationFilter implements Filter {
 		HttpServletResponse response = (HttpServletResponse) resp;
 
 		// do not create a session if not
-		HttpSession session = request.getSession(false);
+		HttpSession httpSession = request.getSession(false);
 
 		// if there is no valid session, authenticate the user again
-		if (session != null) {
-			// logger.debug("Session is active [" + session.getId() + "] for user [" +
-			// request.getUserPrincipal().getName()
-			// + "]");
+		if (httpSession != null && httpSession.getAttribute(WWW_AUTHORIZATION) != null) {
+			// logger.debug("Session is active [" + httpSession.getId() + "]");
 			chain.doFilter(request, response);
 		} else {
 			String authUser = null;
 
 			// get username and password from the Authorization header
-			String authHeader = request.getHeader(AUTHORIZATION_HEADER);
+			String authHeader = request.getHeader(WWW_AUTHORIZATION);
+			// logger.debug("authHeader [" + authHeader + "]");
 
 			if (authHeader == null || !authHeader.startsWith(BASIC_PREFIX)) {
 				// this will prompt the basic auth dialog on the browser
@@ -70,13 +70,20 @@ public class BasicAuthentificationFilter implements Filter {
 				try {
 					String userPassBase64 = authHeader.substring(BASIC_PREFIX.length());
 					String userPassDecoded = new String(Base64.decodeBase64(userPassBase64));
+					// logger.debug("userPassDecoded [" + userPassDecoded + "]");
 
 					// Finally userPassDecoded must contain readable "username:password"
 					if (!userPassDecoded.contains(":")) {
 						setBasicAuthRequired(response);
 					} else {
 						authUser = userPassDecoded.substring(0, userPassDecoded.indexOf(':'));
-						String authPass = userPassDecoded.substring(userPassDecoded.indexOf(':') + 1);
+						String authPass = Util.nullifyIfNeeded(userPassDecoded.substring(userPassDecoded.indexOf(':') + 1));
+
+						// of the authPass is null, verify if it is an autologin user
+						if (authPass == null) {
+							authPass = SystemEnv.INSTANCE.getDefaultProperties().getProperty(authUser);
+							// logger.debug("Got password for [" + authUser + "]: [" + authPass + "]");
+						}
 
 						EntityManager em = PersistenceManager.getInstance().getEntityManager();
 						try {
@@ -90,7 +97,8 @@ public class BasicAuthentificationFilter implements Filter {
 										"Authenticated [" + authUser + "] from IP [" + Util.getIpAddress(request) + "] URL[" + request.getRequestURI() + "] Query[" + request.getQueryString() + "]");
 
 								// we must create a session (to store the authorization)
-								session = request.getSession(true);
+								httpSession = request.getSession(true);
+								httpSession.setAttribute(WWW_AUTHORIZATION, authHeader);
 
 							} else {
 								logger.warn("Authentication failed for [" + authUser + "] from IP [" + Util.getIpAddress(request) + "]");
@@ -114,7 +122,7 @@ public class BasicAuthentificationFilter implements Filter {
 					setBasicAuthFailed(response);
 				}
 
-				if (session != null) {
+				if (httpSession != null) {
 					chain.doFilter(new ExpressoHttpServletRequestWrapper(authUser, request), response);
 				}
 			}

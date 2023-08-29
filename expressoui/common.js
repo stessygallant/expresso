@@ -376,10 +376,13 @@ expresso.Common = (function () {
                             displayServerValidationMessage(jqxhr);
                         } else if (jqxhr.status == HTTP_CODES.UNAUTHORIZED || jqxhr.status == HTTP_CODES.CUSTOM_UNAUTHORIZED) {
                             // 401 Unauthorized - When no or invalid authentication details are provided
-                            // expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("expiredSession")).done(function () {
-                            //     window.location.reload();
-                            // });
-                            window.location.href = expresso.Common.getSiteNamespace().config.Configurations.authenticationFailureRedirect || "/";
+                            if (expresso.Common.getSiteNamespace().config.Configurations.authenticationFailureRedirect) {
+                                window.location.href = expresso.Common.getSiteNamespace().config.Configurations.authenticationFailureRedirect; // || "/";
+                            } else {
+                                expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("expiredSession")).done(function () {
+                                    window.location.reload();
+                                });
+                            }
                         } else if (jqxhr.status == HTTP_CODES.FORBIDDEN) {
                             // 403 Forbidden - When authenticated user doesn't have access to the resource.
                             expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("userUnauthorized"));
