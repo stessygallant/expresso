@@ -747,6 +747,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     column.width = column.width || 110;
                 }
 
+                // special case with nullable boolean (type: string)
+                if (field && field.type == "string" && field.values && field.values.data && field.values.data.length == 3) {
+                    column.width = column.width || 110;
+                }
+
                 // numbers
                 if (field && field.type == "number" && !column.field.endsWith("Id")) {
                     column.attributes = column.attributes || {};
@@ -2050,7 +2055,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
     },
 
-    performDuplicate: function () {
+    performDuplicate: function (data) {
         var _this = this;
 
         // send a request to the backend to duplicate the current resource and then edit it
@@ -2086,7 +2091,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                 $deferred.resolve(duplicatedResource);
             } else {
-                this.sendRequest(_this.resourceManager.getRelativeWebServicePath(this.resourceManager.currentResource.id), "duplicate")
+                this.sendRequest(_this.resourceManager.getRelativeWebServicePath(this.resourceManager.currentResource.id), "duplicate", data)
                     .done(function (duplicatedResource) {
 
                         // we need to parse it

@@ -65,9 +65,10 @@
             if (resource.id) {
                 expresso.util.UIUtil.hideField($window.find("[name=personId]"));
             } else {
-                expresso.util.UIUtil.hideField($window.find("[name=firstName]"));
-                expresso.util.UIUtil.hideField($window.find("[name=lastName]"));
-
+                if (!expresso.Security.isAdmin()) {
+                    expresso.util.UIUtil.hideField($window.find("[name=firstName]"));
+                    expresso.util.UIUtil.hideField($window.find("[name=lastName]"));
+                }
                 this.bindOnChange($window.find("[name=personId]"), function () {
                     var person = this.dataItem();
                     if (person) {
@@ -137,7 +138,9 @@
         requiredFieldNames.push("email");
         requiredFieldNames.push("userName");
         if (!resource.id && expresso.Common.getSiteNamespace().config.Configurations.supportPersonImportation) {
-            requiredFieldNames.push("personId");
+            if (!expresso.Security.isAdmin()) {
+                requiredFieldNames.push("personId");
+            }
         }
         return requiredFieldNames;
     }

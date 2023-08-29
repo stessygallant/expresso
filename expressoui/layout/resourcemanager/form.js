@@ -1052,15 +1052,6 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
                             // this will automatically sync (no need for dataSource.sync())
                             subDataSource.online(true);
-
-                            // then refresh the master after the sub resources are saved
-                            // for an unknown reason, if we do not resync the current data source,
-                            // some fields will remain dirty
-                            var currentKendoGrid = _this.resourceManager.sections.grid.kendoGrid;
-                            var currentDataSource = currentKendoGrid.dataSource;
-                            currentKendoGrid.one("dataBound", function () {
-                                currentDataSource.sync();
-                            });
                         }
                     });
 

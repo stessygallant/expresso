@@ -633,7 +633,7 @@ expresso.Security = function () {
                 }
                 var credentials;
                 if (userName) {
-                    credentials = window.btoa(unescape(encodeURIComponent(userName + ":" + password)));
+                    credentials = window.btoa(userName + ":" + password);
                 }
                 if (loginToken) {
                     credentials = loginToken;
@@ -754,7 +754,8 @@ expresso.Security = function () {
         var $ssoDeferred;
         if (expresso.Common.getSiteNamespace().config.Configurations.supportSSO &&
             !expresso.util.Util.getUrlParameter("securityToken") &&
-            !expresso.util.Util.getUrlParameter("loginToken")) {
+            !expresso.util.Util.getUrlParameter("loginToken") &&
+            !expresso.util.Util.getUrlParameter("userName")) {
             // first try to use Windows credential SSO login
             expresso.Common.setAuthenticationPath("sso");
             $ssoDeferred = performLogin();
@@ -769,7 +770,13 @@ expresso.Security = function () {
         }).fail(function () {
             // then try using rest
             expresso.Common.setAuthenticationPath("rest");
-            performLogin(null, null, expresso.util.Util.getUrlParameter("loginToken")).done(function () {
+            // username is usually base64 encoded in the URL
+            var userName = expresso.util.Util.getUrlParameter("userName");
+            if (userName) {
+                userName = window.atob(userName);
+            }
+            performLogin(userName, null,
+                expresso.util.Util.getUrlParameter("loginToken")).done(function () {
                 // success continue using Kerberos rest
                 $loginDeferred.resolve();
             }).fail(function () {

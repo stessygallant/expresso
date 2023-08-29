@@ -110,7 +110,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                     if (typeof tabName !== "string") {
                         tabName = tabName.contentUrl;
                     }
-                    //console.log("Loaded tab [" + tabName + "]");
+                    // console.log("Loaded tab [" + tabName + "]");
 
                     var $contentElement = $(e.contentElement);
 
@@ -127,7 +127,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                             // add the name of the site
                             objectClass = expresso.Common.getSiteName() + "." + objectClass;
                         }
-                        //console.log("Initializing [" + objectClass + "]: " + tabName);
+                        // console.log("Initializing [" + objectClass + "]: " + tabName);
                         var objectInstance = eval("new " + objectClass + "(_this.resourceManager, tabName, $tab)");
                         objectInstance.initDOMElement($contentElement);
 
@@ -151,7 +151,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                         //console.log(" window.location", window.location);
                         var url = window.location.protocol + "//" + window.location.host + window.location.pathname;
                         url += "?app=" + objectInstance.subResourceManager.appDef.absoluteAppName;
-                        console.log("Opening tab in new window URL [" + url + "]");
+                        // console.log("Opening tab in new window URL [" + url + "]");
                         window.open(url, "_blank");
                     }
                 }
@@ -167,6 +167,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                 }
             });
 
+
             // init the first tab
             window.setTimeout(function () {
                 var tabIndex = 0; // select the fist one by default
@@ -179,6 +180,8 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
                             }
                         }
                     }
+
+                    // TO DO if the first tab is the same manager as the current manager, it will loop forever
                     _this.kendoTabStrip.select(tabIndex);
                 }
             }, 100);
@@ -190,8 +193,8 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
      * @param e event triggered
      */
     selectNewTab: function (e) {
-        //var tabName = $(e.item).find("> .k-link").text();
-        //console.log("Activate/select tab [" + tabName + "]");
+        // var tabName = $(e.item).find("> .k-link").text();
+        // console.log("Activate/select tab [" + tabName + "]");
 
         // unselect the current tab
         if (this.currentTab) {

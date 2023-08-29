@@ -861,7 +861,18 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				// then issue the SQL query
 				Date startDate = new Date();
-				List<E> data = typedQuery.getResultList();
+				List<E> data;
+				try {
+					data = typedQuery.getResultList();
+				} catch (IllegalArgumentException ex) {
+					// this could happen when the grid tries to get a next page but that the
+					// data has changed since the first load
+					// ex: grid tries to display last page: from 150 to 152
+					// but there is only 144 records now
+					// java.lang.IllegalArgumentException: fromIndex(150) > toIndex(144)
+					logger.warn("Problem loading the data: dataset is less than than previously: " + ex + "\n" + new Gson().toJson(query));
+					data = new ArrayList<>();
+				}
 
 				// if the query required the entity to be created if is does not exist, create it
 				if (data.size() == 0 && (query.getCreateIfNotFound() != null && query.getCreateIfNotFound().booleanValue())) {

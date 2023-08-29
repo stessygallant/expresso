@@ -174,12 +174,12 @@ public class MonitoringService extends BaseService {
 					long methodExecutionTime = endDate.getTime() - startDate.getTime();
 					logger.debug("Monitoring resource [" + resource.getName() + "]: " + methodExecutionTime + " ms");
 
-					// TODO call the web service resource
+					// TO DO call the web service resource
 					// String path = resource.getResourceSecurityPath();
 					// // for sub resource, use /0 as parent
 					// path = path.replace("/", "/0/");
 
-					// TODO compare with the executionTime
+					// TO DO compare with the executionTime
 
 					// close the service
 					service.close();
