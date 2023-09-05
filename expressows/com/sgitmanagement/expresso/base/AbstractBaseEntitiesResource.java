@@ -465,7 +465,11 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 		// id is use for hierarchical grid
 		String idString = getRequest().getParameter("id");
 		E e = null;
-		if (idString != null && idString.length() > 0) {
+		if (idString != null && idString.equals("-1")) {
+			// this is a fake record
+			// always false
+			throw new ForbiddenException();
+		} else if (idString != null && idString.length() > 0) {
 			e = baseEntityResource.get(getService().convertId(idString));
 		}
 
@@ -542,7 +546,12 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 		// get the entity (if the user cannot see the entity, it will throw an exception)
 		E e = null;
 		Boolean isParentUpdateAllowed = null;
-		if (idString != null && idString.length() > 0) {
+
+		if (idString != null && idString.equals("-1")) {
+			// this is a fake record
+			// always false
+			isParentUpdateAllowed = false;
+		} else if (idString != null && idString.length() > 0) {
 			e = baseEntityResource.get(getService().convertId(idString));
 		} else {
 			// there is no ID, this mean a new resource

@@ -427,13 +427,18 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.addColumnMenu();
         }
 
-        // verify if there is a favorite grid preferences to be loaded
-        var gridPreference = this.getApplicationPreferences().favoriteGridPreference ?
-            this.getApplicationPreferences().gridPreferences[this.getApplicationPreferences().favoriteGridPreference] :
-            null;
-        if (gridPreference) {
-            this.applyApplicationPreference(gridPreference);
-        }
+        // wait promises (wait for the subclass to terminate before getting ready)
+        window.setTimeout(function () {
+            _this.isReady().done(function () {
+                // verify if there is a favorite grid preferences to be loaded
+                var gridPreference = _this.getApplicationPreferences().favoriteGridPreference ?
+                    _this.getApplicationPreferences().gridPreferences[_this.getApplicationPreferences().favoriteGridPreference] :
+                    null;
+                if (gridPreference) {
+                    _this.applyApplicationPreference(gridPreference);
+                }
+            });
+        }, 10);
     },
 
     /**
@@ -1182,12 +1187,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         $grid.find(".exp-activate-button").on("click.grid", function (e) {
             e.preventDefault();
-            _this.performCustomAction("activate");
+            _this.performActivate();
         });
 
         $grid.find(".exp-deactivate-button").on("click.grid", function (e) {
             e.preventDefault();
-            _this.performCustomAction("deactivate");
+            _this.performDeactivate();
         });
 
         $grid.find(".exp-print-button").on("click.grid", function (e) {
@@ -1799,7 +1804,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.PHONE) {
             // do not apply column preferences on phone
-            return;
+            return false;
         }
 
         // rename the button
@@ -1874,6 +1879,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.resourceManager.sections.filter.setFilters(selectedGridPreference && selectedGridPreference.query &&
             selectedGridPreference.query.filter ? selectedGridPreference.query.filter : null);
         }
+
+        return true;
     },
 
     /**
@@ -2249,7 +2256,16 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
     },
 
+    performDeactivate: function () {
+        return this.performCustomAction("deactivate");
+    },
+
+    performActivate: function () {
+        return this.performCustomAction("activate");
+    },
+
     performCustomAction: function (action) {
+        var $deferred = $.Deferred();
         if (this.selectedRows.length) {
             var _this = this;
             var actionPromises = [];
@@ -2267,8 +2283,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (_this.resourceManager.sections.preview) {
                     _this.resourceManager.sections.preview.forceRefresh();
                 }
+                $deferred.resolve();
             });
         }
+        return $deferred;
     },
 
     performPrint: function () {
@@ -2573,8 +2591,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                             }
                         } else {
                             var text = $this.text();
-                            // replace ' by &apos;
-                            text = text.replace(/'/g, "&apos;");
                             $this.attr("title", text);
                         }
                     });

@@ -1,6 +1,7 @@
 package com.sgitmanagement.expresso.dto;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -10,6 +11,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
+import com.sgitmanagement.expresso.util.DateUtil;
 
 public class Query {
 	private Integer skip;
@@ -652,6 +654,19 @@ public class Query {
 				booleanValue = Boolean.parseBoolean(v);
 			}
 			return booleanValue;
+		}
+
+		public Date getDateValue() {
+			Object value = getValue();
+			String valueType = value.getClass().getSimpleName();
+
+			Date dateValue;
+			if (valueType.equals("Date")) {
+				dateValue = (Date) value;
+			} else {
+				dateValue = DateUtil.parseDate(value);
+			}
+			return dateValue;
 		}
 
 		public void setValue(Object value) {

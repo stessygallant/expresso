@@ -488,13 +488,15 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
                     }
                 }
 
-                // load the grid
-                _this.sections.grid.isReady().done(function () {
-                    // if there is a query, overwrite the current default grid filter
-                    _this.sections.grid.loadResources(query, _this.options.autoEdit, !!query).done(function () {
-                        _this.$readyPromise.resolve();
+                // load the grid (wait for the grid to be ready_
+                window.setTimeout(function () {
+                    _this.sections.grid.isReady().done(function () {
+                        // if there is a query, overwrite the current default grid filter
+                        _this.sections.grid.loadResources(query, _this.options.autoEdit, !!query).done(function () {
+                            _this.$readyPromise.resolve();
+                        });
                     });
-                });
+                }, 10);
             } else {
                 _this.$readyPromise.resolve();
             }
