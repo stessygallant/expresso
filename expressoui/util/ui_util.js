@@ -388,24 +388,28 @@ expresso.util.UIUtil = (function () {
                     }
                 }); // call last
             } else {
-                // on enter, stop the search and get the only "expected" result
-                cb.input[0].addEventListener("keydown", function (e) {
-                    if (e.which == 13 /*ENTER*/ || e.which == 9 /*TAB*/) {
-                        if (!cb.hasDirtyValue) {
-                            return;
-                        }
-                        e.preventDefault();
-                        e.stopPropagation();
+                /**
+                 * Only try to search and trigger if there is a dirty value
+                 */
+                var handleEnter = function () {
+                    if (!cb.hasDirtyValue) {
+                        return;
+                    }
 
-                        var text = cb.input.val();
-                        // console.log("CB input Enter/Tab [" + text + "]");
+                    cb.hasDirtyValue = false;
+                    if (cb.countRequests) cb.countRequests++;
+                    else cb.countRequests = 1;
 
-                        // get the resource
-                        expresso.Common.sendRequest(url, null, null, {term: text}, {
-                            ignoreErrors: true,
-                            waitOnElement: null
-                        }).done(function (result) {
-                            cb.hasDirtyValue = false;
+                    var text = cb.input.val();
+                    // console.log("CB input Enter/Tab/Focusout [" + text + "]");
+
+                    // get the resource
+                    var countRequests = cb.countRequests;
+                    expresso.Common.sendRequest(url, null, null, {term: text}, {
+                        ignoreErrors: true,
+                        waitOnElement: null
+                    }).done(function (result) {
+                        if (countRequests == cb.countRequests) {
                             // console.log("GOT result");
                             if (result && result.length == 1) {
                                 highlightField(cb.input, null, null, true);
@@ -419,12 +423,26 @@ expresso.util.UIUtil = (function () {
                                 cb.value(null);
                                 customOptions.resource && customOptions.resource.set(fieldName, null);
                             }
-                            cb.trigger("change");
-                        });
+                            cb.trigger("change", {userTriggered: true});
+                        } else {
+                            console.log("Ignoring deprecated response");
+                        }
+                    });
+                }
+
+                // on enter, stop the search and get the only "expected" result
+                cb.input[0].addEventListener("keydown", function (e) {
+                    if (e.which == 13 /*ENTER*/ || e.which == 9 /*TAB*/) {
+                        handleEnter();
                     } else {
                         cb.hasDirtyValue = true;
                     }
                 }, true);
+
+                // on mouse focus out
+                cb.input.on("focusout", function () {
+                    handleEnter();
+                });
             }
 
             // on focus, select the text
@@ -2700,7 +2718,7 @@ expresso.util.UIUtil = (function () {
                 widget.bind("change", function (e) {
                     //console.log("bindOnChange (widget) waiting: " + $input[0].name);
                     $waitingPromise.done(function () {
-                        //console.log("bindOnChange (widget) DONE: " + $input[0].name);
+                        // console.log("bindOnChange (widget) DONE: " + $input[0].name, e);
                         if (!e.isDefaultPrevented()) {
                             var dataItem;
                             e.sender = e.sender || {};

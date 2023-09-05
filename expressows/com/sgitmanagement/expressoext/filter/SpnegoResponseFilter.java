@@ -141,14 +141,15 @@ public class SpnegoResponseFilter implements Filter {
 					logger.info("Replying UNAUTHORIZED: " + httpServletRequest.getPathInfo() + ": " + httpServletRequest.getHeader("Cookie") + ":" + httpServletRequest.getHeader(WWW_AUTHORIZATION));
 				}
 
+				// DO NOT do this: it will remove the authorization for the Basic Auth
 				// if login failed, remove the WWW_AUTHORIZATION from the session
-				try {
-					httpSession.removeAttribute(WWW_AUTHORIZATION);
-					// httpSession.invalidate();
-				} catch (IllegalStateException ex) {
-					// may happen when logout: Session already invalidated
-					// ignore
-				}
+				// try {
+				// httpSession.removeAttribute(WWW_AUTHORIZATION);
+				// httpSession.invalidate();
+				// } catch (IllegalStateException ex) {
+				// may happen when logout: Session already invalidated
+				// ignore
+				// }
 
 				// if user is not authenticated, it will return
 				// WWW-Authenticate: Negotiate
