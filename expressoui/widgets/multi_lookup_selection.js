@@ -334,12 +334,12 @@
          */
         setOptions: function (options) {
             $.extend(true, this.options, options);
-
             var reference = (this.options.field ? this.options.field.values || this.options.field.reference : {}) || {};
+
             this.data = (this.options.dataSource ? this.options.dataSource.data : null) || reference.data;
             this.url = (this.options.dataSource ? this.options.dataSource.url : null) || reference.resourcePath;
             this.filter = (this.options.dataSource ? this.options.dataSource.filter : null) || reference.filter;
-            this.autoLoad = (reference.autoLoad !== undefined ? reference.autoLoad : this.options.autoLoad);
+            this.autoLoad = this.options.autoLoad;
             this.serverSideFiltering = (reference.serverSideFiltering !== undefined ? reference.serverSideFiltering : this.options.serverSideFiltering);
 
             // if local data, perform local search
