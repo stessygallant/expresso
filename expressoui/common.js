@@ -1752,6 +1752,7 @@ expresso.Common = (function () {
         delete params.loginToken;
         delete params.securityToken;
         delete params.userName;
+        delete params.loginUserName;
 
         // cezinc only
         delete params.menuItemSecurityProfile;

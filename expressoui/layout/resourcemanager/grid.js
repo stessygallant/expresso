@@ -534,7 +534,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     if (field && field.type == "date") {
                         fieldName = "expresso.util.Formatter.formatDate(" + fieldName + ")";
                     }
-                    mobileTemplate.push("<span class='" + clazz + "'>#:(" + fieldName + "?" + fieldName + ":'')#</span>");
+                    mobileTemplate.push("<span class='" + clazz + "'>#=(" + fieldName + "?" + fieldName + ":'')#</span>");
                 }
             }
         });

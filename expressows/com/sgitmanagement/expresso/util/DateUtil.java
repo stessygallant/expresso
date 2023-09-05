@@ -329,6 +329,10 @@ public class DateUtil {
 		return DateUtils.addMinutes(date, minutes);
 	}
 
+	static public Date addSeconds(Date date, int seconds) {
+		return DateUtils.addSeconds(date, seconds);
+	}
+
 	/**
 	 * Verify if the date is between fromDate and toDate (inclusively). Use DateUtils.truncate(date, Calendar.DATE) to truncate the dates before calling this method if needed
 	 *

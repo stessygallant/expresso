@@ -632,12 +632,12 @@ expresso.Security = function () {
                     xhr.setRequestHeader("X-Session-Token", sessionToken);
                 }
                 var credentials;
-                if (userName) {
-                    credentials = window.btoa(userName + ":" + password);
-                }
                 if (loginToken) {
                     credentials = loginToken;
+                } else if (userName) {
+                    credentials = window.btoa(userName + ":" + password);
                 }
+
                 if (credentials) {
                     xhr.setRequestHeader("Authorization", "Basic " + credentials);
                 }
@@ -771,11 +771,16 @@ expresso.Security = function () {
             // then try using rest
             expresso.Common.setAuthenticationPath("rest");
             // username is usually base64 encoded in the URL
-            var userName = expresso.util.Util.getUrlParameter("userName");
-            if (userName) {
-                userName = window.atob(userName);
+            var loginUserName = expresso.util.Util.getUrlParameter("loginUserName");
+            if (loginUserName) {
+                try {
+                    loginUserName = window.atob(loginUserName);
+                } catch (e) {
+                    // userName not Base64 encoded. Ignore
+                }
             }
-            performLogin(userName, null,
+
+            performLogin(loginUserName, null,
                 expresso.util.Util.getUrlParameter("loginToken")).done(function () {
                 // success continue using Kerberos rest
                 $loginDeferred.resolve();
