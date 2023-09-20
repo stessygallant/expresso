@@ -755,7 +755,8 @@ expresso.Security = function () {
         if (expresso.Common.getSiteNamespace().config.Configurations.supportSSO &&
             !expresso.util.Util.getUrlParameter("securityToken") &&
             !expresso.util.Util.getUrlParameter("loginToken") &&
-            !expresso.util.Util.getUrlParameter("userName")) {
+            !expresso.util.Util.getUrlParameter("userName") &&
+            !expresso.util.Util.getUrlParameter("autoLoginUserName")) {
             // first try to use Windows credential SSO login
             expresso.Common.setAuthenticationPath("sso");
             $ssoDeferred = performLogin();
@@ -771,16 +772,16 @@ expresso.Security = function () {
             // then try using rest
             expresso.Common.setAuthenticationPath("rest");
             // username is usually base64 encoded in the URL
-            var loginUserName = expresso.util.Util.getUrlParameter("loginUserName");
-            if (loginUserName) {
+            var autoLoginUserName = expresso.util.Util.getUrlParameter("autoLoginUserName");
+            if (autoLoginUserName) {
                 try {
-                    loginUserName = window.atob(loginUserName);
+                    autoLoginUserName = window.atob(autoLoginUserName);
                 } catch (e) {
                     // userName not Base64 encoded. Ignore
                 }
             }
 
-            performLogin(loginUserName, null,
+            performLogin(autoLoginUserName, null,
                 expresso.util.Util.getUrlParameter("loginToken")).done(function () {
                 // success continue using Kerberos rest
                 $loginDeferred.resolve();

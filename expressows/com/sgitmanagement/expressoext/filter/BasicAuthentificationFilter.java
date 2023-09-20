@@ -122,7 +122,7 @@ public class BasicAuthentificationFilter implements Filter {
 					setBasicAuthFailed(response);
 				}
 
-				if (httpSession != null) {
+				if (httpSession != null && httpSession.getAttribute(WWW_AUTHORIZATION) != null) {
 					chain.doFilter(new ExpressoHttpServletRequestWrapper(authUser, request), response);
 				}
 			}

@@ -107,7 +107,9 @@ expresso.Common = (function () {
             var criterion = criteria[i];
 
             // the object could be a simple {key:value, key2:value2, ...}, or it could be {operator: o, field: f, value: v}
-            if (criterion.field || criterion.filters) {
+            if (!criterion) {
+                // null, just skip it
+            } else if (criterion.field || criterion.filters) {
                 kendoQuery.filter.filters.push(criterion);
             } else {
                 for (var p in criterion) {
@@ -613,26 +615,13 @@ expresso.Common = (function () {
      */
     var setScreenMode = function (sm) {
         screenMode = sm;
-
-        var classes = [];
-        if (screenMode == expresso.Common.SCREEN_MODES.PHONE) {
-            // classes.push("k-mobile");
-            // classes.push("km-phone");
-        } else if (screenMode == expresso.Common.SCREEN_MODES.TABLET) {
-            // classes.push("k-mobile");
-            //classes.push("km-phone");
-        }
-
-        var $body = $("body");
-        $body
+        
+        $("body")
             .removeClass("exp-screen-mode-mobile")
             .removeClass("exp-screen-mode-desktop")
             .removeClass("exp-screen-mode-tablet")
             .removeClass("exp-screen-mode-phone")
             .addClass("exp-screen-mode-" + screenMode);
-        $.each(classes, function () {
-            $body.addClass(this);
-        });
 
         // reset the font ratio
         fontRatio = undefined;
@@ -1752,7 +1741,7 @@ expresso.Common = (function () {
         delete params.loginToken;
         delete params.securityToken;
         delete params.userName;
-        delete params.loginUserName;
+        delete params.autoLoginUserName;
 
         // cezinc only
         delete params.menuItemSecurityProfile;

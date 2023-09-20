@@ -689,6 +689,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     column.template = column.template ||
                         "<div class='exp-grid-multiple-lines' title='#=(" + labelColumn
                         + "||'').replace(/\\" + separator + "/g, \"\\r\\n\").replace(/'/g, \"&apos;\")#'>#=(" + labelColumn + "||'').replace(/\\" + separator + "/g, \"<br>\")#</div>";
+
+                    // must set a fixed height on the row
+                    if (!column.hidden && screenMode == expresso.Common.SCREEN_MODES.DESKTOP) {
+                        _this.$domElement.addClass("exp-grid-fixed-height");
+                    }
                 }
 
                 // Labels column (usually references as persons, etc)
@@ -696,6 +701,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     column.template = column.template ||
                         "<div class='exp-grid-multiple-lines' title='#=(" + column.field
                         + "||'').replace(/\\" + separator + "/g, \"\\r\\n\").replace(/'/g, \"&apos;\")#'>#=(" + column.field + "||'').replace(/\\" + separator + "/g, \"<br>\")#</div>";
+
+                    // must set a fixed height on the row
+                    if (!column.hidden && screenMode == expresso.Common.SCREEN_MODES.DESKTOP) {
+                        _this.$domElement.addClass("exp-grid-fixed-height");
+                    }
                 }
 
                 // remove the filter if it is set to false
@@ -788,6 +798,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         column.template = "<div class='exp-picture'>" +
                             "<img alt='' src='" + path + "?thumbnail=true" + "' data-original-src='" + path + "'>" +
                             "</div>";
+                    }
+
+                    // must set a fixed height on the row
+                    if (!column.hidden && screenMode == expresso.Common.SCREEN_MODES.DESKTOP) {
+                        _this.$domElement.addClass("exp-grid-fixed-height");
                     }
                 }
 

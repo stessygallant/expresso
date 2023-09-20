@@ -13,7 +13,7 @@ import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @MappedSuperclass
 public abstract class BaseUpdatableDeactivableEntity extends BaseUpdatableEntity implements Deactivable {
-	@Temporal(TemporalType.DATE)
+	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "deactivation_date")
 	private Date deactivationDate;
 
