@@ -1253,6 +1253,18 @@ k-widget k-window
     }
 }
 
+// when we use picture or multiple lines, we need to use a fixed heigth otherwise
+// scrolling a virtual grid with different heights does not work correctly
+.exp-screen-mode-desktop {
+    .exp-grid.exp-grid-fixed-height {
+        tbody {
+            tr {
+                height: 60px;
+            }
+        }
+    }
+}
+
 /*
  * ------------------------------------------------------------------------------------------------------------------
  * MOBILE CSS
@@ -1263,101 +1275,102 @@ k-widget k-window
     width: 20em;
 }
 
-.k-mobile {
-    .exp-screen-mode-phone, .exp-screen-mode-tablet {
-        .k-window-titlebar .k-window-action {
-            padding: 0.1em;
-            width: 1.5em;
-            height: 1.5em;
+//.k-mobile {
+.exp-screen-mode-phone, .exp-screen-mode-tablet {
+    .k-window-titlebar .k-window-action {
+        padding: 0.1em;
+        width: 1.5em;
+        height: 1.5em;
 
-            .k-icon {
-                font-size: 1.25em;
-            }
-        }
-
-        .exp-grid {
-            tbody {
-                tr {
-                    td {
-                        line-height: 1.5;
-                    }
-                }
-            }
+        .k-icon {
+            font-size: 1.25em;
         }
     }
 
-    .exp-screen-mode-tablet {
-        .exp-grid {
-            tbody {
-                tr {
-                    td {
-                        line-height: 1.8;
-                    }
-                }
-            }
-        }
-    }
-
-    .exp-screen-mode-phone {
-        // form is single column
-        .exp-form {
-            .exp-input-wrap, .input-wrap {
-                width: 100%;
-
-                [type=checkbox], [type=radio] {
-                    margin-top: 2em;
-                }
-            }
-        }
-
-        // do not display the column header
-        .exp-grid {
-            .k-grid-header {
-                display: none;
-                height: 0;
-            }
-
-            tbody tr {
-                &.k-state-selected {
-                    font-weight: normal;
-                }
-
+    .exp-grid {
+        tbody {
+            tr {
                 td {
-                    white-space: normal;
-                    text-align: left;
-                    padding: 0.4em 0.5em;
+                    line-height: 1.5;
+                }
+            }
+        }
+    }
+}
 
-                    .mobile-grid-column {
-                        height: 5.7em;
+.exp-screen-mode-tablet {
+    .exp-grid {
+        tbody {
+            tr {
+                td {
+                    line-height: 1.8;
+                }
+            }
+        }
+    }
+}
 
-                        .mobile-grid-column-number {
-                            color: $themeColorDark;
-                            font-weight: bold;
-                            display: block;
-                        }
+.exp-screen-mode-phone {
+    // form is single column
+    .exp-form {
+        .exp-input-wrap, .input-wrap {
+            width: 100%;
 
-                        .mobile-grid-column-top-right {
-                            float: right;
-                            font-size: 95%;
-                        }
+            [type=checkbox], [type=radio] {
+                margin-top: 2em;
+            }
+        }
+    }
 
-                        .mobile-grid-column-middle-right {
-                            float: right;
-                            font-size: 85%;
-                        }
+    // do not display the column header
+    .exp-grid {
+        .k-grid-header {
+            display: none;
+            height: 0;
+        }
 
-                        .mobile-grid-column-middle-left {
-                            font-size: 85%;
-                            font-weight: bold;
-                            display: block;
-                        }
+        tbody tr {
+            &.k-state-selected {
+                font-weight: normal;
+            }
 
-                        .mobile-grid-column-description {
-                            font-size: 95%;
-                        }
+            td {
+                white-space: normal;
+                text-align: left;
+                padding: 0.4em 0.5em;
+
+                .mobile-grid-column {
+                    height: 5.7em;
+
+                    .mobile-grid-column-number {
+                        color: $themeColorDark;
+                        font-weight: bold;
+                        display: block;
+                    }
+
+                    .mobile-grid-column-top-right {
+                        float: right;
+                        font-size: 95%;
+                    }
+
+                    .mobile-grid-column-middle-right {
+                        float: right;
+                        font-size: 85%;
+                    }
+
+                    .mobile-grid-column-middle-left {
+                        font-size: 85%;
+                        font-weight: bold;
+                        display: block;
+                    }
+
+                    .mobile-grid-column-description {
+                        font-size: 95%;
                     }
                 }
             }
         }
     }
 }
+
+//}

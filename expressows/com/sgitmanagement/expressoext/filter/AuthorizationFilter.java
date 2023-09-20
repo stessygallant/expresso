@@ -159,7 +159,7 @@ public class AuthorizationFilter implements Filter {
 
 					if (user != null && user.isGenericAccount() && action.equals("read")) {
 						// do not log calls from TV
-					} else if (request.getRequestURI() != null && request.getRequestURI().endsWith("systemMessage")) {
+					} else if (request.getRequestURI() != null && (request.getRequestURI().endsWith("systemMessage") || request.getRequestURI().endsWith("data"))) {
 						// do not logs those calls
 					} else {
 						try {
