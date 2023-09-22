@@ -265,7 +265,9 @@ expresso.Common = (function () {
                     // for each Id, add a default object if not defined
                     var objectName = fieldName.substring(0, fieldName.length - 2);
                     parentItem[objectName] = parentItem[objectName] || {};
-                } else if (fields[f].type == "date" || f == "date" || f.endsWith("Date") || f.endsWith("DateTime") || f.endsWith("Timestamp")) {
+                } else if (fields[f].type == "date" || f == "date" || (
+                    !fields[f].type &&
+                    (f.endsWith("Date") || f.endsWith("DateTime") || f.endsWith("Timestamp")))) {
                     parentItem[fieldName] = expresso.util.Formatter.parseDateTime(parentItem[fieldName]);
                 }
             }
@@ -615,7 +617,7 @@ expresso.Common = (function () {
      */
     var setScreenMode = function (sm) {
         screenMode = sm;
-        
+
         $("body")
             .removeClass("exp-screen-mode-mobile")
             .removeClass("exp-screen-mode-desktop")
@@ -1868,7 +1870,7 @@ expresso.Common = (function () {
 
                 // handle title, description, label, fullName, name
                 if (lastKey == "title" || lastKey == "description" || lastKey == "label" || lastKey == "fullName" ||
-                    lastKey == "name" || lastKey == "pgmKey") {
+                    lastKey == "name" || lastKey == "pgmKey" || lastKey == "fullDescription") {
                     // take the previous key
                     var previousKey = key.substring(0, key.lastIndexOf("."));
                     if (previousKey.indexOf(".") != -1) {

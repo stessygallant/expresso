@@ -733,8 +733,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 }
 
                 // date column
-                if (field && (field.type == "date" || column.field == "date" || column.field.endsWith("Date") ||
-                    column.field.endsWith("DateTime") || column.field.endsWith("Timestamp"))) {
+                if (field && (field.type == "date" || column.field == "date" || (!field.type && (column.field.endsWith("Date") ||
+                    column.field.endsWith("DateTime") || column.field.endsWith("Timestamp"))))) {
                     field.type = "date";
                     if (column.filterable !== false) {
                         column.filterable = column.filterable || {};
@@ -1532,7 +1532,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                             var action = this;
 
                             var $button = $toolbar.find(".exp-" + action.name + "-button");
-                            if ($button.hasClass("exp-always-active-button") ||
+                            if (/*$button.hasClass("exp-always-active-button") ||*/
                                 (_this.selectedRows.length > 1 && $button.hasClass("exp-multiple-selection"))) {
                                 // remains active
                             } else {
@@ -1839,7 +1839,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.PHONE) {
             // do not apply column preferences on phone
-            return false;
+            return null;
         }
 
         // rename the button
@@ -1915,7 +1915,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             selectedGridPreference.query.filter ? selectedGridPreference.query.filter : null);
         }
 
-        return true;
+        return selectedGridPreference && selectedGridPreference.query && selectedGridPreference.query.filter &&
+            selectedGridPreference.query.filter.filters;
     },
 
     /**
@@ -3161,7 +3162,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     loadResources: function (query, autoEdit, clearFilters) {
         var _this = this;
-        // console.log("CALLING loadResources - " + this.resourceManager.resourceName + " clearFilters:" + clearFilters + ": " + JSON.stringify(query));
+        // console.trace("CALLING loadResources - " + this.resourceManager.resourceName + " clearFilters:" + clearFilters + ": " + JSON.stringify(query));
 
         // avoid null issue
         query = query || {};

@@ -1217,7 +1217,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         } else {
             // empty is not valid for unique key. It must be null
             if (value === "") {
-                $input.setval(null);
+                $input.val(null);
             }
             $deferred.resolve();
         }
