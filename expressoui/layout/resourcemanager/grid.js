@@ -876,9 +876,29 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     // add a title to get a tooltip
                     var title = column.reference.label;
                     if (title === undefined) {
-                        if (column.field.endsWith("No")) {
-                            // this does not always exist and it makes KendoUI crashes
-                            // title = "#=" + column.field.substring(0, column.field.length - 2) + "Label#";
+                        if (column.field.endsWith("No") && column.field.indexOf(".") != -1) {
+                            // if the object exits, use the label as tooltip
+                            var fieldNamespace = column.field.substring(0, column.field.lastIndexOf(".") + 1);
+                            var referedObject = column.field.substring(column.field.lastIndexOf(".") + 1, column.field.length - 2);
+                            var label;
+
+                            // use cases
+                            if (column.field.endsWith(referedObject + "." + referedObject + "No")) {
+                                // 1- equipment.equipmentNo
+                                label = fieldNamespace + "label";
+                            } else {
+                                // 2- workOrder.equipmentNo
+                                $.each(["Description", "Title", "Label"], function () {
+                                    if (model.fields[fieldNamespace + referedObject + this]) {
+                                        label = fieldNamespace + referedObject + this;
+                                    }
+                                });
+                            }
+
+                            // console.log("referedObject [" + referedObject + "]: " + label);
+                            if (label) {
+                                title = "#=" + label + "#";
+                            }
                         }
                     }
 
@@ -2588,8 +2608,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // display a tooltips for all text fields
         $.each(this.columns, function () {
             var column = this;
-            if (column.tooltip || (column.field && (column.field == "description" || column.field == "title" || column.field == "comment" || column.field == "comments" || column.field == "note"
-                || column.field == "notes"))) {
+            if (column.tooltip || (column.field && (column.field.endsWith("description") || column.field.endsWith("title") ||
+                column.field.endsWith("comment") || column.field.endsWith("comments") || column.field.endsWith("note") ||
+                column.field.endsWith("notes")))) {
 
                 // find the real position in the table (user may have changed the columns)
                 var $column = _this.$domElement.find(".k-grid-header th[data-field='" + column.field + "']");
