@@ -36,6 +36,9 @@ Date.prototype.lastSunday = function () {
     return new Date(this.getFullYear(), this.getMonth(), this.getDate() - this.getDay());
 };
 
+Date.prototype.lastMonday = function () {
+    return new Date(this.getFullYear(), this.getMonth(), this.getDate() - this.getDay() + 1);
+};
 
 var _dateWeekDayNames = {
     fr: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],

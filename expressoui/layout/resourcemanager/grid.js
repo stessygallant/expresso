@@ -3206,7 +3206,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         // console.log("1-Query filter: " + JSON.stringify(dataSourceOptions.filter));
 
         // if there is a masterFilter defined, always use it
-        var masterFilter = this.getMasterGridFilter();
+        var masterFilter = this.masterFilter || this.getMasterGridFilter();
         if (masterFilter) {
             if (typeof masterFilter === "function") {
                 masterFilter = masterFilter();
