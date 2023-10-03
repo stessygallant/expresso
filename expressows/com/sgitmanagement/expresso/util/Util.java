@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -805,17 +806,39 @@ public class Util {
 		return false;
 	}
 
-	static public String getIpAddress(HttpServletRequest req) {
-		String ip = null;
+	static public String getIpAddress(HttpServletRequest httpServletRequest) {
+		String ipAddress = null;
 		try {
-			ip = req.getRemoteAddr();
-			if (req.getHeader("X-Forwarded-For") != null) {
-				ip = req.getHeader("X-Forwarded-For").split(",")[0];
+			ipAddress = httpServletRequest.getRemoteAddr();
+			if (httpServletRequest.getHeader("X-Forwarded-For") != null) {
+				ipAddress = httpServletRequest.getHeader("X-Forwarded-For").split(",")[0];
 			}
 		} catch (Exception e) {
 			// ignore
 		}
-		return ip;
+		return ipAddress;
+	}
+
+	static public String getHostName(String ipAddress) {
+		String hostName = null;
+		try {
+			InetAddress addr = InetAddress.getByName(ipAddress);
+			hostName = addr.getHostName();
+		} catch (Exception e) {
+			// ignore
+		}
+		return hostName;
+	}
+
+	static public String getHostName(HttpServletRequest httpServletRequest) {
+		String hostName = null;
+		try {
+			String ipAddress = getIpAddress(httpServletRequest);
+			hostName = getHostName(ipAddress);
+		} catch (Exception e) {
+			// ignore
+		}
+		return hostName;
 	}
 
 	static public String generateRandomPassword() {
@@ -1393,24 +1416,22 @@ public class Util {
 		// map.put("DESCRIPTION", "aaaa");
 		// System.out.println(Util.replacePlaceHolders("cadscsdc %DESCRIPTION% asfdsfsdf", map));
 
-		String format = "XX-0000";
-		for (String key : new String[] { "un-10", "un10", "UN-010", "UN10", "UN-100", "UN-0100", "UN-00100" }) {
-			System.out.println(key + ":\t" + Util.formatKey(format, key));
-		}
+		// String format = "XX-0000";
+		// for (String key : new String[] { "un-10", "un10", "UN-010", "UN10", "UN-100", "UN-0100", "UN-00100" }) {
+		// System.out.println(key + ":\t" + Util.formatKey(format, key));
+		// }
+		//
+		// format = "XX0000";
+		// for (String key : new String[] { "un-10", "un10", "UN-010", "UN10", "UN-100", "UN-0100", "UN-00100" }) {
+		// System.out.println(key + ":\t" + Util.formatKey(format, key));
+		// }
+		//
+		// format = "";
+		// for (String key : new String[] { "", "999999999999" }) {
+		// System.out.println(key + ":\t" + Util.formatKey(format, key));
+		// }
+		//
 
-		format = "XX0000";
-		for (String key : new String[] { "un-10", "un10", "UN-010", "UN10", "UN-100", "UN-0100", "UN-00100" }) {
-			System.out.println(key + ":\t" + Util.formatKey(format, key));
-		}
-
-		format = "";
-		for (String key : new String[] { "", "999999999999" }) {
-			System.out.println(key + ":\t" + Util.formatKey(format, key));
-		}
-
-		format = "XX-XXX{-X}";
-		for (String key : new String[] { "PL100", "pl100", "pl-100", "pl-100-a", "pl100a", "pl100-", "pl-100-" }) {
-			System.out.println(key + ":\t" + Util.formatKey(format, key));
-		}
+		System.out.println(Util.getHostName("10.113.80.15"));
 	}
 }
