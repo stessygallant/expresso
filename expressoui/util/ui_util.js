@@ -1479,7 +1479,7 @@ expresso.util.UIUtil = (function () {
 
             // if the option label is null, add a empty one
             if (customOptions.optionLabel === null || typeof customOptions.optionLabel === "string" ||
-                (customOptions.field && customOptions.field.nullable)) {
+                (customOptions.field && customOptions.field.nullable) || customOptions.nullable) {
                 var text = customOptions.optionLabel;
                 if (text) {
                     text = expresso.Common.getLabel(text, null, null, true) || text;
