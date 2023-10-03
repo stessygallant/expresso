@@ -112,14 +112,20 @@ public enum Mailer {
 
 	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, boolean importantFlag, String emailTemplate, Map<String, String> params,
 			Collection<String> attachments) {
+		sendMail(tos, ccs, bccs, replyTo, importantFlag, emailTemplate, params, attachments, false);
+	}
+
+	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, boolean importantFlag, String emailTemplate, Map<String, String> params,
+			Collection<String> attachments, boolean skipMaxRecipientsValidation) {
 		// get the messageBody from the email template
 		String messageBody = getMessageBody(emailTemplate, params);
 		if (messageBody != null) {
-			sendMail(tos, ccs, bccs, replyTo, false, messageBody, attachments);
+			sendMail(tos, ccs, bccs, replyTo, false, messageBody, attachments, skipMaxRecipientsValidation);
 		}
 	}
 
-	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, boolean importantFlag, String messageBody, Collection<String> attachments) {
+	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, boolean importantFlag, String messageBody, Collection<String> attachments,
+			boolean skipMaxRecipientsValidation) {
 		// get the subject from the title element in the HTML messageBody
 		String subject = "";
 		if (messageBody != null && messageBody.indexOf("<title>") != -1 && messageBody.indexOf("</title>") != -1) {
@@ -127,7 +133,7 @@ public enum Mailer {
 		}
 
 		// send the email
-		sendMail(tos, ccs, bccs, replyTo, subject, false, messageBody, attachments, this.bccSupport);
+		sendMail(tos, ccs, bccs, replyTo, subject, false, messageBody, attachments, this.bccSupport, skipMaxRecipientsValidation);
 	}
 
 	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag, String messageBody,

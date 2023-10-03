@@ -23,7 +23,7 @@
         }
 
         if (!expresso.Common.isUserInRole("UserManager.admin")) {
-            expresso.util.UIUtil.setFieldReadOnly($window.find("[name=username]"));
+            expresso.util.UIUtil.setFieldReadOnly($window.find("[name=userName]"));
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=extKey]"));
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=nbrFailedAttempts]"));
             expresso.util.UIUtil.setFieldReadOnly($window.find("[name=passwordExpirationDate]"));
