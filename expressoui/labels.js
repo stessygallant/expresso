@@ -173,6 +173,8 @@ $.extend(expresso.Labels, {
     createdByLabel: "Créé(e) par",
     lastModificationLabel: "Dernière modification par",
     createdByDateLabel: "le",
+    selectAllButtonLabel: "",
+    selectAllButtonTitle: "Sélectionner tous les enregistrements",
 
     // filters
     filterFromDate: "À partir du",

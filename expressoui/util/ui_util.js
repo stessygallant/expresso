@@ -1763,13 +1763,13 @@ expresso.util.UIUtil = (function () {
         var buildMultiSelect = function ($select, wsListPathOrData, customOptions) {
             var $deferred = $.Deferred();
 
-            // because we cannot apply the max-height directly on the multiselect (scroll does not work when readonly)
-            // we need to wrap the select element
-            $select.wrap("<div class='exp-multiselect-wrap'></div>");
-
             // deal with undefined customOptions
             customOptions = customOptions || {};
             customOptions.fieldReference = customOptions.fieldReference || {};
+
+            // because we cannot apply the max-height directly on the multiselect (scroll does not work when readonly)
+            // we need to wrap the select element
+            $select.wrap("<div class='exp-multiselect-wrap'></div>");
 
             var dataSource;
             var serverFiltering = (customOptions.serverFiltering !== false);
@@ -1893,6 +1893,22 @@ expresso.util.UIUtil = (function () {
             };
 
             var kendoMultiSelect = $select.kendoMultiSelect(defaultOptions).data("kendoMultiSelect");
+
+            // add support for selectAllButton
+            if (customOptions.selectAllButton) {
+                var $inputWrap = $select.closest(".exp-input-wrap");
+                $inputWrap.addClass("exp-ref-with-buttons");
+
+                var $selectAllButton = $("<button class='exp-ref-button exp-ref-select-all-button k-button' title='" +
+                    expresso.Common.getLabel("selectAllButtonTitle") + "'><i class='fa fa-list'></i></button>").appendTo($inputWrap);
+
+                $selectAllButton.on("click", function () {
+                    var values = $.map(kendoMultiSelect.dataSource.data(), function (dataItem) {
+                        return dataItem[dataValueField];
+                    });
+                    kendoMultiSelect.value(values);
+                });
+            }
 
             if (serverFiltering) {
                 kendoMultiSelect.dataSource.one("change", function () {

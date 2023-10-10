@@ -206,7 +206,8 @@
                             model: model,
                             field: field,
                             nullable: field.nullable,
-                            fieldValues: field.values
+                            fieldValues: field.values,
+                            selectAllButton: field.selectAllButton
                         }));
                     // }
                 } else {

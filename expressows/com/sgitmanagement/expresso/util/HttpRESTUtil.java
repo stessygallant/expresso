@@ -82,17 +82,9 @@ public class HttpRESTUtil {
 	public JsonObject performRESTRequest(String urlString, String method, String contentType, String body, String encoding, String username, String password, Map<String, String> headers,
 			int timeoutInMs) throws Exception {
 
-		if (encoding == null) {
-			encoding = "UTF-8";
-		}
-
-		if (contentType == null) {
-			contentType = "application/json; charset=" + encoding;
-		}
-
 		CloseableHttpClient httpClient;
 		RequestConfig config = RequestConfig.custom().setConnectTimeout(timeoutInMs).setConnectionRequestTimeout(timeoutInMs).setSocketTimeout(timeoutInMs).build();
-		if (WinHttpClients.isWinAuthAvailable()) {
+		if (username == null && WinHttpClients.isWinAuthAvailable()) {
 			// There is no need to provide user credentials
 			// HttpClient will attempt to access current user security context through
 			// Windows platform specific methods via JNI.
@@ -136,6 +128,13 @@ public class HttpRESTUtil {
 
 			// add the body if needed
 			if (body != null && body.trim().length() > 0) {
+				if (encoding == null) {
+					encoding = "UTF-8";
+				}
+
+				if (contentType == null) {
+					contentType = "application/json; charset=" + encoding;
+				}
 				StringEntity entity = new StringEntity(body, StandardCharsets.UTF_8);
 				entity.setContentType(new BasicHeader("Content-Type", contentType));
 				entity.setContentEncoding(new BasicHeader("Charset", encoding));
@@ -148,8 +147,14 @@ public class HttpRESTUtil {
 				if (response.getStatusLine().getStatusCode() == 200) {
 					Gson gson = new GsonBuilder().serializeNulls().create();
 					String jsonResponse = EntityUtils.toString(entity);
-					JsonObject jsonObject = gson.fromJson(jsonResponse, JsonObject.class);
-					return jsonObject;
+					try {
+						JsonObject jsonObject = gson.fromJson(jsonResponse, JsonObject.class);
+						return jsonObject;
+					} catch (Exception ex) {
+						// if the response is not in JSON, make it
+						JsonObject jsonObject = gson.fromJson("{\"response\":\"" + jsonResponse + "\"}", JsonObject.class);
+						return jsonObject;
+					}
 				} else if (response.getStatusLine().getStatusCode() == 204) {
 					// no content
 					EntityUtils.consume(entity);

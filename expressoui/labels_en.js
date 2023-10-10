@@ -171,6 +171,8 @@ $.extend(expresso.Labels, {
 
     creationUserFullName: "Created by",
     lastModifiedUserFullName: "Last modified by",
+    selectAllButtonLabel: "",
+    selectAllButtonTitle: "Select all records",
 
     // filters
     filterFromDate: "From",
