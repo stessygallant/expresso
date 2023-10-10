@@ -295,7 +295,7 @@ public enum Mailer {
 			}
 
 			if (saveEmailOnDisk) {
-				File file = new File(saveEmailOnDiskPath + "\\" + subject + "-" + System.currentTimeMillis() + ".html");
+				File file = new File(saveEmailOnDiskPath + "\\" + Util.purgeInvalidFileNameCharacters(subject) + "-" + System.currentTimeMillis() + ".html");
 				FileUtils.write(file, messageBody, StandardCharsets.UTF_8);
 				logger.warn("mail.smtp.save_email_on_disk is enbaled, saving email to : " + file.getPath());
 			}
