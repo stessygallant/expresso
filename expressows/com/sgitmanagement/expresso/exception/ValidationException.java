@@ -48,7 +48,7 @@ public class ValidationException extends BaseException {
 		String params = "";
 		if (getParams() != null) {
 			for (String name : getParams().keySet()) {
-				params += "[" + name + "=" + getParams().get(name).toString() + "]";
+				params += "[" + name + "=" + getParams().get(name) + "]";
 			}
 		}
 		return "ValidationException [code=" + this.getCode() + ", description=" + this.getDescription() + ", params=" + params + "] at " + new Date() + ": " + errors.toString();
