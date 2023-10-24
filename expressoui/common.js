@@ -2362,6 +2362,13 @@ expresso.Common = (function () {
         // set the default for Ajax calls
         initAjax();
 
+        // The navigator properties is not configured properly (no difference between a PC or the tablet)
+        // Kendo scroll does not work on the tablet because of it
+        kendo.support.kineticScrollNeeded = kendo.support.kineticScrollNeeded || (/iPad|iPhone|iPod/.test(navigator.platform) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) ||
+            expresso.util.Util.getUrlParameter("screenMode") == "tablet" ||
+            expresso.util.Util.getUrlParameter("screenMode") == "phone";
+
         // resize section on window resize
         var $window = $(window);
         $window.on('orientationchange', function () {

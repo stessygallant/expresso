@@ -1288,7 +1288,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         var $windowDeferred;
                         if (action.reasonRequested) {
                             // display a window to enter a reason
-                            $windowDeferred = expresso.util.UIUtil.buildPromptWindow(_this.getLabel("enterReason")).then(function (comment) {
+                            $windowDeferred = expresso.util.UIUtil.buildPromptWindow(_this.getLabel("enterReason"), "", {mandatory: true}).then(function (comment) {
                                 return {comment: comment};
                             });
                         } else if (action.beforePerformAction) {

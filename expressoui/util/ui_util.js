@@ -525,7 +525,7 @@ expresso.util.UIUtil = (function () {
             var $windowDiv = $("<div class='exp-prompt-div'></div>").appendTo($("body"));
             customOptions = customOptions || {};
 
-            $windowDiv.kendoPrompt({
+            var kendoPrompt = $windowDiv.kendoPrompt({
                 title: title,
                 content: text,
                 value: customOptions.value || "",
@@ -534,7 +534,10 @@ expresso.util.UIUtil = (function () {
                     okText: customOptions.okText || expresso.Common.getLabel("save"),
                     cancel: customOptions.cancel || expresso.Common.getLabel("cancel")
                 }
-            }).data("kendoPrompt").open();
+            }).data("kendoPrompt");
+
+            // display the window
+            kendoPrompt.open();
 
             var $input = $windowDiv.closest(".k-window").find("input.k-textbox");
 
@@ -556,7 +559,19 @@ expresso.util.UIUtil = (function () {
                 }
             }, 100);
 
-            return $windowDiv.data("kendoPrompt").result;
+            var $deferred = $.Deferred();
+            kendoPrompt.result.done(function (data) {
+                if (customOptions.mandatory && !data) {
+                    expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("dataMandatory"));
+                    $deferred.reject();
+                } else {
+                    $deferred.resolve(data);
+                }
+            }).fail(function () {
+                $deferred.reject();
+            });
+
+            return $deferred;
         };
 
         /**
@@ -950,13 +965,13 @@ expresso.util.UIUtil = (function () {
                     }
 
                     // by default, select the first input and set the focus
-                    try {
-                        if (options.autoFocus) {
-                            //console.log("autoFocus"); // + $window.find(":input:visible:not([readonly]):enabled:first").attr("name"));
-                            $window.find(":input:visible:not([readonly]):enabled:first").focus();
+                    if (options.autoFocus) {
+                        //console.log("autoFocus"); // + $window.find(":input:visible:not([readonly]):enabled:first").attr("name"));
+                        try {
+                            $windowDiv.find(":input:visible:not([readonly]):enabled:first").focus();
+                        } catch (e) {
+                            console.warn("Cannot focus on input");
                         }
-                    } catch (e) {
-                        // ignore
                     }
                 },
 
