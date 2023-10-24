@@ -96,6 +96,7 @@ $.extend(expresso.Labels, {
     emailNotValid: "L'adresse courriel n'est pas valide",
     accountBlocked: "Votre compte a été bloqué",
     serviceUnavailable: "Maintenance en cours",
+    dataMandatory: "Le champ est obligatoire",
 
     forgotPasswordTitle: "Mot de passe oublié",
     forgotPasswordText: "Veuillez entrer votre nom d'utilisateur",

@@ -93,6 +93,7 @@ $.extend(expresso.Labels, {
     emailNotValid: "Email is not a valid email address",
     accountBlocked: "Your account has been blocked",
     serviceUnavailable: "Maintenance in progress",
+    dataMandatory: "Field is mandatory",
 
     forgotPasswordTitle: "Forgot password",
     forgotPasswordText: "Please enter your username",
