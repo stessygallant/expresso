@@ -687,7 +687,9 @@ expresso.Common = (function () {
      */
     var setLanguage = function (lang) {
         if (!language || lang != language) {
-            lang = lang || expresso.util.Util.getFirstBrowserLanguage();
+            lang = lang ||
+                expresso.util.Util.getUrlParameter("lang") ||
+                expresso.util.Util.getFirstBrowserLanguage();
 
             var supportedLanguages = expresso.Common.getSiteNamespace().config.Configurations.supportedLanguages || ["en", "fr"];
 
@@ -806,6 +808,7 @@ expresso.Common = (function () {
      * @return {*}
      */
     var loadLabels = function (path, filename, lang, stopIfFail) {
+        path = path || "";
         filename = filename || "labels";
         if (lang === undefined) {
             lang = language;
@@ -819,16 +822,8 @@ expresso.Common = (function () {
             lang = null;
         }
 
-        var labelFullFileName = (path ? path + "/" : "") + filename + (lang ? "_" + lang : "") + ".js";
-
+        var labelFullFileName = path + "/" + filename + (lang ? "_" + lang : "") + ".js";
         // console.log("Loading label file [" + labelFullFileName + "]");
-
-        if (filename != "labels") {
-            var prefix = filename.substring(0, filename.indexOf('-'));
-            path = (path ? path + "/" : "") + prefix;
-        } else {
-            path = path || "";
-        }
 
         // before evaluating, make sure the namespace already exists
         var namespace = getApplicationNamespace(path);
@@ -1545,6 +1540,9 @@ expresso.Common = (function () {
             width: windowOptions.width,
             title: title || windowOptions.title || "",
             saveButtonLabel: windowOptions.saveButtonLabel || expresso.Common.getLabel("close"),
+            buttons: windowOptions.buttons || undefined,
+            destroyOnClose: windowOptions.destroyOnClose,
+            confirmationOnClose: windowOptions.confirmationOnClose,
             open: function () {
                 var $windowDiv = $(this);
                 var $div = $windowDiv.find("." + className);
@@ -1744,6 +1742,7 @@ expresso.Common = (function () {
         delete params.securityToken;
         delete params.userName;
         delete params.autoLoginUserName;
+        // delete params.lang;
 
         // cezinc only
         delete params.menuItemSecurityProfile;

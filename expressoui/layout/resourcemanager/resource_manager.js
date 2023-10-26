@@ -805,6 +805,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
         //     resourceCollectionAction: false,     // default is false
         //     saveBeforeAction: true,              // default is true
         //     reasonRequested: false,      // if a reason is requested, a default window will be displayed
+        //     skipConfirmationOnMobile: false   // skip the confirmation box on mobile. default is false
         //     beforePerformAction: function(resource) {
         //          // resource is null if multiple resources have been selected
         //          // validate it the send request can be executed

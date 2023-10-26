@@ -29,12 +29,12 @@ import jakarta.mail.Session;
 public class IMAPMailboxUtil {
 	static final private Logger logger = LoggerFactory.getLogger(IMAPMailboxUtil.class);
 
-	static final private int RETRY_DELAY = 10000;
+	static final private int RETRY_DELAY = 5000;
 	static private Properties mailProperties;
 
 	private Object WAIT_LOCK = new Object();
 	private Session session;
-	private String username;
+	private String userName;
 	private String password;
 	private IMAPStore store;
 	private int errorsCount;
@@ -45,22 +45,34 @@ public class IMAPMailboxUtil {
 
 	/**
 	 * 
-	 * @param username
+	 * @param domain
+	 * @param userName
+	 * @param mailbox
 	 * @param password
 	 * @throws Exception
 	 */
-	public IMAPMailboxUtil(String domain, String username, String password) throws Exception {
-		this(domain + "\\" + username, password);
+	public IMAPMailboxUtil(String domain, String userName, String mailbox, String password) throws Exception {
+		this(domain + "\\" + userName + "\\" + mailbox, password);
 	}
 
 	/**
 	 * 
-	 * @param username
+	 * @param userName
 	 * @param password
 	 * @throws Exception
 	 */
-	public IMAPMailboxUtil(String username, String password) throws Exception {
-		this.username = username;
+	public IMAPMailboxUtil(String domain, String userName, String password) throws Exception {
+		this(domain + "\\" + userName, password);
+	}
+
+	/**
+	 * 
+	 * @param userName
+	 * @param password
+	 * @throws Exception
+	 */
+	public IMAPMailboxUtil(String userName, String password) throws Exception {
+		this.userName = userName;
 		this.password = password;
 		this.errorsCount = 0;
 
@@ -79,7 +91,7 @@ public class IMAPMailboxUtil {
 	}
 
 	public void connect() throws Exception {
-		logger.debug("Connecting to IMAP");
+		logger.info("Connecting to IMAP [" + this.userName + "]");
 
 		// Flag to use when debugging connection to IMAP Exchange
 		// session.setDebug(true);
@@ -90,12 +102,12 @@ public class IMAPMailboxUtil {
 
 		try {
 			this.store = (IMAPStore) session.getStore(protocol);
-			store.connect(hostName, Integer.valueOf(port), this.username, this.password);
+			store.connect(hostName, Integer.valueOf(port), this.userName, this.password);
 
 		} catch (MessagingException e) {
 			errorsCount++;
 
-			if (errorsCount < 10) {
+			if (errorsCount < 3) {
 				logger.warn("Error trying to connect to mailbox, waiting [" + RETRY_DELAY + "] and retrying");
 
 				synchronized (WAIT_LOCK) {

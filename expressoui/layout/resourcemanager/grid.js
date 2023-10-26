@@ -17,8 +17,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     // reference to the grid object
     kendoGrid: undefined,
 
-    // when local data, do not sync the data source automatically
+    // when inline grid, do not sync the data source automatically
     autoSyncGridDataSource: undefined,
+
+    // when working offline, save data in localStorage
+    online: undefined,
 
     // if not null, auto refresh the main grid
     autoRefreshIntervalInSeconds: undefined,
@@ -228,8 +231,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             this.hierarchical = undefined;
         }
 
-        // when using local data, do not sync datasource (default is auto sync)
+        // when inline grid, do not sync datasource (default is auto sync)
         this.autoSyncGridDataSource = (this.resourceManager.options.autoSyncGridDataSource !== false);
+
+        // when working offline
+        this.online = (this.resourceManager.options.online !== false);
 
         // when using local data, we cannot use virtualScroll
         if (this.localData) {
@@ -238,7 +244,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         // we cannot support virtual scrolling if there is a group or aggregate
         if (this.virtualScroll === undefined) {
-            this.virtualScroll = (!(this.getGroup() || this.getAggregate()) && !this.hierarchical && this.autoSyncGridDataSource);
+            this.virtualScroll = (!(this.getGroup() || this.getAggregate()) && !this.hierarchical && this.autoSyncGridDataSource && this.online);
         }
 
         if (this.serverSideDuplicate === undefined) {
@@ -1302,7 +1308,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                                 // assume a promise
                                 $windowDeferred = result;
                             }
-                        } else if (expresso.Common.getScreenMode() != expresso.Common.SCREEN_MODES.DESKTOP) {
+                        } else if (expresso.Common.getScreenMode() != expresso.Common.SCREEN_MODES.DESKTOP &&
+                            !action.skipConfirmationOnMobile) {
                             // display a confirmation window
                             $windowDeferred = expresso.util.UIUtil.buildYesNoWindow(_this.getLabel("confirmTitle"),
                                 _this.getLabel("confirmAction") +
@@ -3162,10 +3169,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      */
     loadResources: function (query, autoEdit, clearFilters) {
         var _this = this;
-        // console.trace("CALLING loadResources - " + this.resourceManager.resourceName + " clearFilters:" + clearFilters + ": " + JSON.stringify(query));
 
         // avoid null issue
         query = query || {};
+        if (query.query) {
+            // when buildKendoFilter
+            query = JSON.parse(query.query);
+        }
+        // console.log("CALLING loadResources - " + this.resourceManager.resourceName + " clearFilters:" + clearFilters + ": " + JSON.stringify(query), query);
 
         this.loadingResources = true;
 
@@ -3232,7 +3243,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         return $queryDeferred.done(function () {
 
-            if (!_this.autoSyncGridDataSource) {
+            if (!_this.autoSyncGridDataSource || _this.online === false) {
                 // after loading, set offline
                 _this.kendoGrid.dataSource.online(false);
             }
@@ -3255,8 +3266,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                 if (resource) {
                     // trigger the edit command
-                    var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + resource.uid + "']");
-                    _this.kendoGrid.editRow($row);
+                    //var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + resource.uid + "']");
+                    //_this.kendoGrid.editRow($row);
+                    _this.selectRowById(resource.id);
+                    _this.performEdit();
                 } else {
                     if (id && id != -1) {
                         // this means that the resource has been deleted or the user
@@ -3302,6 +3315,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
 
         return {
+            // this attribute has to be set at initialization, but we cannot do it always
+            // because it will put in localStorage all data from all grids for nothing
+            offlineStorage: (_this.online ? undefined : "offline-grid-" + model.fields.type.defaultValue),
             transport: {
                 parameterMap: function (data, operation) {
                     if (operation === "read") {

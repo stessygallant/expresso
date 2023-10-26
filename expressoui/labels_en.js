@@ -123,6 +123,7 @@ $.extend(expresso.Labels, {
     missingFields: "Please fill the missing fields",
     searchPlaceHolder: "Search...",
     checkAll: "Select all",
+    confirmWindowClosing: "Are you sure you want to close this window (you will lose your modifications if any)?",
 
     message_question: "Question",
     message_info: "Information",

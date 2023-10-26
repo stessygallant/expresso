@@ -1094,6 +1094,14 @@ label input + span {
         .k-list-scroller {
             max-height: 10em;
         }
+
+        &.k-group {
+            max-height: 12em;
+
+            .k-list-scroller {
+                max-height: 6em;
+            }
+        }
     }
 }
 
