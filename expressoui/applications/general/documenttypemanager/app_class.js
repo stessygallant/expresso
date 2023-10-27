@@ -31,6 +31,10 @@ expresso.applications.general.documenttypemanager.DocumentTypeManager = expresso
             deactivationDate: {
                 type: "date",
                 nullable: true
+            },
+            confidential: {
+                type: "boolean",
+                defaultValue: false
             }
         };
 

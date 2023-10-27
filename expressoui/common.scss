@@ -380,7 +380,7 @@ input.exp-no-arrows {
 }
 
 .exp-picture-overlay {
-    z-index: 10004;
+    z-index: 10006; // runtime
     position: absolute;
     top: 0;
     display: none;

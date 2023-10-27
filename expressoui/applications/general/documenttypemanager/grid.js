@@ -9,6 +9,8 @@ expresso.applications.general.documenttypemanager.Grid = expresso.layout.resourc
             field: "pgmKey",
             width: 120
         }, {
+            field: "confidential"
+        }, {
             field: "sortOrder",
             width: 70
         }, {

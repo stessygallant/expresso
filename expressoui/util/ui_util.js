@@ -2589,6 +2589,17 @@ expresso.util.UIUtil = (function () {
             if (!$overlay.length) {
                 $overlay = $("<div class='exp-picture-overlay'><div><img class='exp-picture-full-size' src='' alt=''><span class='exp-close-button'>X</span></div></div>").appendTo($body);
             }
+
+            // z-index must be the greatest
+            var maxZIndex = 10000;
+            $body.find(".k-window").each(function () {
+                var currentZindex = parseInt($(this).css("zIndex"), 10);
+                if (currentZindex > maxZIndex) {
+                    maxZIndex = currentZindex;
+                }
+            });
+            $overlay.css("z-index", maxZIndex + 1);
+
             var $imageOverlay = $overlay.find("img");
 
             // if there is another path for full size, use it

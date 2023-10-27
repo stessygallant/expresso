@@ -49,7 +49,7 @@ public class BaseEntity implements IEntity<Integer> {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + id;
+		result = prime * result + (id != null ? id.intValue() : 0);
 		return result;
 	}
 
@@ -65,7 +65,7 @@ public class BaseEntity implements IEntity<Integer> {
 			return false;
 		}
 		BaseEntity other = (BaseEntity) obj;
-		if (id != other.id) {
+		if (id == null || other.id == null || id != other.id) {
 			return false;
 		}
 		return true;
