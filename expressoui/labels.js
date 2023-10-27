@@ -125,6 +125,7 @@ $.extend(expresso.Labels, {
     print: "Imprimer",
     searchPlaceHolder: "Recherche...",
     checkAll: "Sélectionner tous",
+    confirmWindowClosing: "Êtes-vous sûr de vouloir fermer cette fenêtre (sans sauvegarder vos changements s'il y en a)?",
 
     message_question: "Question",
     message_info: "Information",

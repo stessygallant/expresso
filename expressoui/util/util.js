@@ -403,14 +403,26 @@ expresso.util.Util = (function () {
         // console.log("frequency: " + frequency);
 
         var dateFormat;
-        if (rangeInHours <= 24) { // 1 day
-            dateFormat = "d MMM HH:mm";
-        } else if (rangeInHours <= (24 * 7)) { // 1 week
-            dateFormat = (baseUnit == "hours" ? "d MMM HH:mm" : "d MMM");
-        } else if (rangeInHours <= (24 * 31)) { // 1 month
-            dateFormat = (baseUnit == "hours" ? "d MMM HH:mm" : "d MMM");
+        if (expresso.Common.getLanguage() == "fr") {
+            if (rangeInHours <= 24) { // 1 day
+                dateFormat = "d MMM HH:mm";
+            } else if (rangeInHours <= (24 * 7)) { // 1 week
+                dateFormat = (baseUnit == "hours" ? "d MMM HH:mm" : "d MMM");
+            } else if (rangeInHours <= (24 * 31)) { // 1 month
+                dateFormat = (baseUnit == "hours" ? "d MMM HH:mm" : "d MMM");
+            } else {
+                dateFormat = "d MMM yyyy";
+            }
         } else {
-            dateFormat = "d MMM yyyy";
+            if (rangeInHours <= 24) { // 1 day
+                dateFormat = "MMM d, HH:mm";
+            } else if (rangeInHours <= (24 * 7)) { // 1 week
+                dateFormat = (baseUnit == "hours" ? "MMM d, HH:mm" : "MMM d");
+            } else if (rangeInHours <= (24 * 31)) { // 1 month
+                dateFormat = (baseUnit == "hours" ? "MMM d, HH:mm" : "MMM d");
+            } else {
+                dateFormat = "MMM d, yyyy";
+            }
         }
         // console.log("dateFormat: " + dateFormat);
 

@@ -677,6 +677,11 @@ expresso.util.UIUtil = (function () {
             //console.log("percFactor: " + percFactor);
 
             var sideMargin = 10 * percFactor;
+            // special case
+            if (options.width == "full") {
+                sideMargin = 0;
+            }
+
             var width = options.width;
             var $browserWindow = $(window);
             var singleColumnWidth = 420 * percFactor;
@@ -698,7 +703,7 @@ expresso.util.UIUtil = (function () {
             } else {
                 if (typeof width === "string" && width.endsWith("px")) {
                     width = parseInt(width.substring(0, width.length - 2)) * percFactor;
-                } else if (width == "100%" || width == "max") {
+                } else if (width == "100%" || width == "max" || width == "full") {
                     width = maxWidth;
                 }
             }
@@ -770,14 +775,22 @@ expresso.util.UIUtil = (function () {
 
             //console.log("classes: " + $userRootDivContent.attr("class"));
 
+
             // set the new width
             var width = getFormWidth($userRootDivContent, options);
             var leftMargin = ($browserWindow.width() - width) / 2;
+            if (options.width == "full") {
+                leftMargin = 0;
+            }
 
             // calculate the maximum height for the window
             // do not use the outerHeight for the titleBar (it will report 0). Add margin for it
             var titleBarMargin = 15;
             var windowMargin = 8; // allow x pixels on each top and bottom
+            if (options.height == "full") {
+                windowMargin = 0;
+            }
+
             var maxHeight = $browserWindow.height() - $editButtonDiv.outerHeight(true) - $titleBar.height() -
                 (windowMargin * 2) - titleBarMargin;
 
@@ -796,7 +809,7 @@ expresso.util.UIUtil = (function () {
 
             // set the height
             var height = options.height;
-            if (height == "100%" || height == "max" || $userRootDivContent.hasClass("exp-form-max-height")) {
+            if (height == "100%" || height == "max" || height == "full" || $userRootDivContent.hasClass("exp-form-max-height")) {
                 $formWrapper.height(maxHeight);
                 options.top = 0;
             } else if (height) {
@@ -804,19 +817,20 @@ expresso.util.UIUtil = (function () {
             }
             //console.log("$formWrapper.height(): " + $formWrapper.height());
 
-            var maxTopMargin = ($browserWindow.height() - $formWrapper.height()) / 2 -
-                ($titleBar.height() + titleBarMargin + (windowMargin * 2)) - 15;
-            //console.log("maxTopMargin: " + maxTopMargin);
+            var maxTopMargin = Math.max(0, ($browserWindow.height() - $formWrapper.height()) / 2 -
+                ($titleBar.height() + titleBarMargin + (windowMargin * 2)) - 15);
+            // console.log("maxTopMargin: " + maxTopMargin);
             var topMargin = options.top;
-            //console.log("topMargin: " + topMargin);
+            // console.log("topMargin: " + topMargin);
             if ((!topMargin && topMargin !== 0) || topMargin > maxTopMargin) {
                 topMargin = maxTopMargin;
             }
 
             // if the class mark exp-form-top is defined, put the window at the top
-            if (topMargin < 5 || $userRootDivContent.hasClass("exp-form-top")) {
+            if (topMargin < 0 || $userRootDivContent.hasClass("exp-form-top")) {
                 topMargin = 5;
             }
+
             //console.log("topMargin: " + topMargin);
             kendoWindow.setOptions({
                 resizable: (options.resizable !== false),
@@ -865,6 +879,7 @@ expresso.util.UIUtil = (function () {
                 buttons: [],
                 width: undefined,
                 destroyOnClose: true,
+                confirmationOnClose: false,
                 autoOpen: true,
                 autoFocus: true,
                 resizable: true,
@@ -942,8 +957,18 @@ expresso.util.UIUtil = (function () {
                     //console.log("buildWindow - refresh");
                 },
                 // Triggered when a Window is closed (before deactivate)
-                close: function () {
-                    //console.log("buildWindow - close");
+                close: function (e) {
+                    console.log("buildWindow - close " + e.userTriggered + ":" + options.confirmationOnClose);
+                    var window = this;
+                    if (e.userTriggered && options.confirmationOnClose) {
+                        // avoid closing
+                        e.preventDefault();
+
+                        expresso.util.UIUtil.buildYesNoWindow(expresso.Common.getLabel("confirmTitle"),
+                            expresso.Common.getLabel("confirmWindowClosing")).done(function () {
+                            window.close();
+                        });
+                    }
                 },
 
                 // Triggered when a Window has finished its opening animation. (called after open and refresh)
@@ -967,11 +992,7 @@ expresso.util.UIUtil = (function () {
                     // by default, select the first input and set the focus
                     if (options.autoFocus) {
                         //console.log("autoFocus"); // + $window.find(":input:visible:not([readonly]):enabled:first").attr("name"));
-                        try {
-                            $windowDiv.find(":input:visible:not([readonly]):enabled:first").focus();
-                        } catch (e) {
-                            console.warn("Cannot focus on input");
-                        }
+                        $windowDiv.find(":input:visible:not([readonly]):enabled:first").focus();
                     }
                 },
 
@@ -1458,7 +1479,7 @@ expresso.util.UIUtil = (function () {
                     } : undefined)
                 };
             } else {
-                // if the list is only string, build a complete data source
+                // build a complete data source
                 if (wsListPathOrData) {
                     wsListPathOrData = convertList(wsListPathOrData, customOptions.labels, dataValueField, dataTextField);
                 }
@@ -1506,7 +1527,7 @@ expresso.util.UIUtil = (function () {
                 defaultOptions.optionLabel[dataTextField] = text;
             }
 
-            //console.log("OPTIONS: " + JSON.stringify(options));
+            // console.log("OPTIONS: " + JSON.stringify(defaultOptions));
             var kendoDropDownList = $input.kendoDropDownList(defaultOptions).data("kendoDropDownList");
 
             if (typeof wsListPathOrData === "string") {
