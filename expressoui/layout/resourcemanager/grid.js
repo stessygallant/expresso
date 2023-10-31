@@ -3266,8 +3266,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                 if (resource) {
                     // trigger the edit command
-                    //var $row = _this.kendoGrid.tbody.find("tr[data-uid='" + resource.uid + "']");
-                    //_this.kendoGrid.editRow($row);
                     _this.selectRowById(resource.id);
                     _this.performEdit();
                 } else {

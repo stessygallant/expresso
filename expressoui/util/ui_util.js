@@ -958,9 +958,9 @@ expresso.util.UIUtil = (function () {
                 },
                 // Triggered when a Window is closed (before deactivate)
                 close: function (e) {
-                    console.log("buildWindow - close " + e.userTriggered + ":" + options.confirmationOnClose);
+                    // console.log("buildWindow - close " + e.userTriggered + ":" + options.confirmationOnClose);
                     var window = this;
-                    if (e.userTriggered && options.confirmationOnClose) {
+                    if (e && e.userTriggered && options.confirmationOnClose) {
                         // avoid closing
                         e.preventDefault();
 
