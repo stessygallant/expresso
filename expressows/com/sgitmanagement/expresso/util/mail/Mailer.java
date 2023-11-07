@@ -333,7 +333,8 @@ public enum Mailer {
 			mailSender.sendMail(fromAddress, fromName, tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments, skipMaxRecipientsValidation);
 
 			long endDate = new Date().getTime();
-			logger.info("Email sent [" + subject + "] to [" + tos + "] in " + (endDate - startDate) + " ms");
+			logger.info("Email sent [" + subject + "] tos[" + tos + "] ccs[" + ccs + "] bccs[" + bccs + "] in " + (endDate - startDate) + " ms");
+
 		} catch (Exception ex) {
 			throw new Exception("Cannot send email [" + subject + "] to [" + tos + "]: " + ex);
 		} finally {

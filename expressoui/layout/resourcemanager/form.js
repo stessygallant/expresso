@@ -222,11 +222,10 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             }
         }
 
-        // hide/show the parent field if the master resource manager is available
-        if (this.resourceManager.masterResourceManager && this.resourceManager.masterResourceManager.currentResource) {
-            // ok
-        } else {
-            expresso.util.UIUtil.hideField($form.find("[name='" + this.resourceManager.model.masterIdProperty + "']"), false);
+        // hide the parent field if the master resource manager is available
+        if ((!resource.id && resource[this.resourceManager.model.masterIdProperty]) ||
+            (this.resourceManager.masterResourceManager && this.resourceManager.masterResourceManager.currentResource)) {
+            expresso.util.UIUtil.hideField($form.find("[name='" + this.resourceManager.model.masterIdProperty + "']"));
         }
 
         // set the title of the window

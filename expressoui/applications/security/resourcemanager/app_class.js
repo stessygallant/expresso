@@ -1,9 +1,4 @@
-﻿var expresso = expresso || {};
-expresso.applications = expresso.applications || {};
-expresso.applications.security = expresso.applications.security || {};
-expresso.applications.security.resourcemanager = expresso.applications.security.resourcemanager || {};
-
-expresso.applications.security.resourcemanager.ResourceManager = expresso.layout.resourcemanager.ResourceManager.extend({
+﻿expresso.applications.security.resourcemanager.ResourceManager = expresso.layout.resourcemanager.ResourceManager.extend({
     // @override
     init: function (applicationPath) {
         var fields = {
@@ -45,6 +40,25 @@ expresso.applications.security.resourcemanager.ResourceManager = expresso.layout
         };
 
         expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "resource", fields);
+    },
+
+    // @override
+    getAvailableActions: function () {
+        var _this = this;
+        return [
+            {
+                name: "publish",
+                icon: "fa-folder-open",
+                showButtonInGridToolbar: true,
+                resourceCollectionAction: true,
+                performAction: function () {
+                    // return _this.sendRequest("resource", "publish", $.param({id: _this.getCurrentResourceId()}));
+                    // TODO how to get the files?
+                    // window.open();
+                    return $.Deferred().resolve();
+                }
+            }
+        ];
     }
 });
                                                                                                                                                                                                                                                                                                                                                                   

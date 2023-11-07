@@ -7,6 +7,7 @@ import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expresso.dto.Query.Sort;
+import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
 import com.sgitmanagement.expressoext.util.MainUtil;
 
@@ -56,5 +57,24 @@ public class ResourceService extends BaseEntityService<Resource> {
 	@Override
 	protected Sort[] getDefaultQuerySort() {
 		return new Query.Sort[] { new Query.Sort("name", Query.Sort.Direction.asc) };
+	}
+
+	@Override
+	public void verifyActionRestrictions(String action, Resource resource) {
+		boolean allowed = false;
+		switch (action) {
+		case "delete":
+		case "update":
+		case "deactivate":
+		case "publish":
+			if (resource != null) {
+				allowed = true;
+			}
+			break;
+		}
+
+		if (!allowed) {
+			throw new ForbiddenException();
+		}
 	}
 }

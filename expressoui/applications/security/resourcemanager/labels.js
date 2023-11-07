@@ -7,5 +7,9 @@ expresso.applications.security.resourcemanager.Labels = {
     "masterResource.securityPath": "Ressource maître",
     actions: "Actions",
     name: "Nom",
-    path: "Chemin"
+    path: "Chemin",
+    publishButtonLabel: "Publier",
+    publishButtonTitle: "Publier le gestionnaire de ressources",
+
+    _: ""
 };

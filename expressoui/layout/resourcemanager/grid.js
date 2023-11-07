@@ -1225,12 +1225,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             e.preventDefault();
             _this.performDelete();
         });
-
-        $grid.find(".exp-activate-button").on("click.grid", function (e) {
-            e.preventDefault();
-            _this.performActivate();
-        });
-
+        
         $grid.find(".exp-deactivate-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performDeactivate();
@@ -2301,10 +2296,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
     performDeactivate: function () {
         return this.performCustomAction("deactivate");
-    },
-
-    performActivate: function () {
-        return this.performCustomAction("activate");
     },
 
     performCustomAction: function (action) {
@@ -3752,10 +3743,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             toolbar.push({template: '<button type="button" class="k-button exp-button exp-single-selection exp-update-button" title="modifyRecord"><span class="fa fa-pencil"><span class="exp-button-label" data-text-key="modifyRecordButton"></span></span></button>'});
         }
 
-        // add the activate and deactivate button
-        if (this.isUserAllowed("activate")) {
-            toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-activate-button" title="activateRecords"><span class="fa-stack"><i class="fa fa-asterisk fa-stack-1x"></i><i class="fa fa-times fa-stack-1x"></i></span><span class="exp-button-label" data-text-key="activateRecordsButton"></span></button>'});
-        }
+        // add the deactivate button
         if (this.isUserAllowed("deactivate")) {
             toolbar.push({template: '<button type="button" class="k-button exp-button exp-multiple-selection exp-deactivate-button" title="deactivateRecords"><span class="fa fa-asterisk"><span class="exp-button-label" data-text-key="deactivateRecordsButton"></span></span></button>'});
         }

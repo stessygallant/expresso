@@ -598,9 +598,10 @@ input.exp-no-arrows {
 .exp-date-selector {
     & > div.input-wrap {
         margin: 0;
+        display: inline;
 
         .date {
-            width: 10em;
+            width: 9.5em;
         }
     }
 
@@ -854,14 +855,53 @@ label input + span {
     font-size: 1.4em;
 }
 
+.exp-header, .header {
+    border: 0;
+    margin: 0 0 0.5em 0;
+    padding: 0.2em 0.5em 0.5em 0.5em;
+    background-color: transparent;
+    width: calc(100% - 1em);
+    border-bottom: 0.1em solid lightgray;
+
+    & > * {
+        display: inline-block;
+        margin: 0.4em 2em 0 0 !important;
+        vertical-align: middle;
+    }
+
+    & > button {
+        margin-right: 0.5em !important;
+    }
+
+    .k-datepicker {
+        width: 8.5em;
+    }
+
+    .exp-input-wrap, .input-wrap {
+        // label
+        label:not(:empty) {
+            font-weight: bold;
+            margin-right: 0.5em;
+
+            //&:not(.k-checkbox-label):after {
+            //    content: ":";
+            //}
+            &:after {
+                content: ":"
+            }
+        }
+    }
+}
+
 .k-split-container {
     background-color: white;
 }
 
-.k-toolbar {
+.exp-report-selector.k-toolbar {
     padding: 0;
     border: 0;
     background-color: transparent;
+    vertical-align: top;
 
     .k-split-button {
         margin: $toolbarButtonMargin;
@@ -879,24 +919,6 @@ label input + span {
 
         .k-split-button-arrow {
             background-color: transparent;
-        }
-    }
-
-    // label
-    label {
-        font-weight: bold;
-        margin-right: 0.5em;
-
-        &:not(.k-checkbox-label):after {
-            content: ":";
-        }
-    }
-
-    .input-wrap {
-        margin-right: 2em;
-
-        .k-datepicker {
-            width: 8.5em;
         }
     }
 }
