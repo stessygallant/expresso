@@ -225,7 +225,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
         // hide the parent field if the master resource manager is available
         if ((!resource.id && resource[this.resourceManager.model.masterIdProperty]) ||
             (this.resourceManager.masterResourceManager && this.resourceManager.masterResourceManager.currentResource)) {
-            expresso.util.UIUtil.hideField($form.find("[name='" + this.resourceManager.model.masterIdProperty + "']"));
+            expresso.util.UIUtil.hideField($form.find("[name='" + this.resourceManager.model.masterIdProperty + "']:not(.exp-always-show)"));
         }
 
         // set the title of the window
