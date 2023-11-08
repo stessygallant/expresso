@@ -855,7 +855,7 @@ label input + span {
     font-size: 1.4em;
 }
 
-.exp-header, .exp-toolbar {
+.exp-toolbar {
     border: 0;
     margin: 0 0 0.5em 0;
     padding: 0.2em 0.5em 0.5em 0.5em;
@@ -871,6 +871,10 @@ label input + span {
 
     & > button {
         margin-right: 0.5em !important;
+
+        &.exp-button {
+            padding-top: 0.4em;
+        }
     }
 
     .k-datepicker {
@@ -1142,5 +1146,8 @@ label input + span {
 
     .exp-screen-mode-tablet-only {
         display: none;
+    }
+
+    .exp-toolbar {
     }
 }
