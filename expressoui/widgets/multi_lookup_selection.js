@@ -194,8 +194,9 @@
                 var filter = expresso.Common.buildKendoFilter(this.filter, {pageSize: 1000})
                     + "&term=" + encodeURIComponent(term);
                 return expresso.Common.sendRequest(this.url + "/search", null, null, filter,
-                    {waitOnElement: this.$wrapper}).done(function (dataItems) {
-
+                    {waitOnElement: this.$wrapper}).done(function (searchResult) {
+                    var dataItems = searchResult.data;
+                    
                     // remove selected target from source
                     var selected = _this.targetListBox.dataItems();
                     dataItems = $.grep(dataItems, function (a) {

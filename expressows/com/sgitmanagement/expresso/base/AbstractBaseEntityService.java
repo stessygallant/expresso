@@ -36,7 +36,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Formula;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -610,11 +609,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	/**
 	 * Search the entity using a predefined query (usually called by ComboBox, Multiselect, etc)
 	 *
-	 * @param searchString
+	 * @param searchText
 	 * @return
 	 */
-	public List<E> search(Query query, String searchString) throws Exception {
-		if (searchString != null) {
+	public List<E> search(Query query, String searchText) throws Exception {
+		if (searchText != null) {
 			// if activeOnly and there is a keyField for the entity
 			// add a filter to search the keyField only
 			// if active only is requested, get the active only filter
@@ -635,7 +634,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				// add the search Filter to the original filter
-				originalFilter.addFilter(getSearchFilter(searchString));
+				originalFilter.addFilter(getSearchFilter(searchText));
 
 				// create a new top filter
 				Filter newQueryFilter = new Filter(Logic.or);
@@ -652,12 +651,12 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				newQueryFilter.addFilter(keyFieldFilter);
 				for (String keyField : getKeyFields()) {
 					if (!keyField.equals("id")) {
-						keyFieldFilter.addFilter(new Filter(keyField, formatKeyField(keyField, searchString)));
+						keyFieldFilter.addFilter(new Filter(keyField, formatKeyField(keyField, searchText)));
 					}
 				}
 			} else {
 				// only add the search filter
-				query.addFilter(getSearchFilter(searchString));
+				query.addFilter(getSearchFilter(searchText));
 			}
 		}
 		// logger.debug("Search query: " + query);
@@ -668,19 +667,19 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * By default, use the same search as the Combo Box
 	 *
 	 * @param query
-	 * @param searchString
+	 * @param searchText
 	 * @return
 	 * @throws Exception
 	 */
-	public List<E> searchOverall(Query query, String searchString) throws Exception {
+	public List<E> searchOverall(Query query, String searchText) throws Exception {
 		Filter filter;
-		if (searchString == null) {
+		if (searchText == null) {
 			filter = new Filter();
 		} else {
 			// if multiple words, each word must be present
-			String[] words = searchString.trim().split(" ");
+			String[] words = searchText.trim().split(" ");
 			if (words.length == 1) {
-				filter = getSearchOverallFilter(searchString);
+				filter = getSearchOverallFilter(searchText);
 			} else {
 				filter = new Filter(Logic.and);
 				for (String s : words) {
@@ -1191,31 +1190,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				}
 			}
-
-			// In Hibernate 6, we cannot search through entityIds for ManyToMany
-			// but we can search for entity.id if the ManyToMany is defined correctly
-			fixManyToManyFilters(query.getFilter());
 		}
 
 		return query;
-	}
-
-	/**
-	 * In Hibernate 6, we cannot search through entityIds for ManyToMany but we can search for entities.id if the ManyToMany is defined correctly
-	 * 
-	 * @param filter
-	 */
-	private void fixManyToManyFilters(Filter filter) {
-		if (filter != null) {
-			if (filter.getField() != null && filter.getField().endsWith("Ids")) {
-				filter.setField(filter.getField().replace("Ids", "s.id"));
-			}
-			if (filter.getFilters() != null) {
-				for (Filter f : filter.getFilters()) {
-					fixManyToManyFilters(f);
-				}
-			}
-		}
 	}
 
 	/**
@@ -2007,7 +1984,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 						// in Hibernate5: p.getJavaType() is Set for a OneToMany
 						// in Hibernate6: p.getJavaType() is the generic type in the Set for a OneToMany
-						if (Collection.class.isAssignableFrom(p.getJavaType()) || p instanceof SqmPluralValuedSimplePath /* || s.endsWith("s") */) {
+						if (Collection.class.isAssignableFrom(p.getJavaType()) /* || p instanceof SqmPluralValuedSimplePath || s.endsWith("s") */) {
 							distinctNeeded = true;
 						}
 
@@ -2021,6 +1998,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							// build the left join
 							// fetch instead of join
 							// if we use .join(), it will create a new join instead of using the same
+							fetch = false; // Hibernate5 does not work well with fetch
 							if (fetch) {
 								join = (Join<?, ?>) join.fetch(s, JoinType.LEFT);
 							} else {
@@ -2036,7 +2014,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// get the path of the class attribute
 				p = join.get(field);
 			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
 				// attribute not found
 				// ignore. it means that the filter contains other filter than the one on the
 				// entity

@@ -4,7 +4,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,6 +18,7 @@ import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
+import com.sgitmanagement.expresso.dto.SearchResult;
 import com.sgitmanagement.expresso.dto.VirtualList;
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
@@ -292,53 +292,51 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 	@GET
 	@Path("search")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<E> search() throws Exception {
-		String queryJSONString = getRequest().getParameter("query");
-
+	public SearchResult<E> search() throws Exception {
+		String queryJSONString = Util.nullifyIfNeeded(getRequest().getParameter("query"));
 		String idString = Util.nullifyIfNeeded(getRequest().getParameter("id"));
+
+		// for multiselect
 		boolean retrieveIdOnly = (getRequest().getParameter("retrieveIdOnly") != null ? Boolean.parseBoolean(getRequest().getParameter("retrieveIdOnly")) : true);
 
-		String term = getRequest().getParameter("filter[filters][0][value]");
+		// get the searchText from the request parameter
+		String searchText = Util.nullifyIfNeeded(getRequest().getParameter("filter[filters][0][value]"));
+		if (searchText == null) {
+			searchText = Util.nullifyIfNeeded(getRequest().getParameter("term")); // backward compatibility
+			if (searchText == null) {
+				searchText = Util.nullifyIfNeeded(getRequest().getParameter("searchText"));
+			}
+		}
+
+		if (idString != null && idString.equals("-1")) {
+			// special case
+			return new SearchResult<>("id=-1");
+		}
 
 		try {
-			if (idString != null && idString.equals("-1")) {
-				// special case
-				return new ArrayList<>();
-			}
-
-			if (term == null) {
-				// get the term from the request parameter
-				term = getRequest().getParameter("term");
-			}
-
-			if (term != null) {
-				term = term.trim();
-				if (term.length() == 0) {
-					term = null;
-				}
-			}
-
 			Query query;
 			if (queryJSONString == null) {
 				query = new Query();
 			} else {
 				// make sure the term does not contains " (double quote)
-				if (term != null && term.indexOf('"') != -1) {
-					term = term.replaceAll("\"", "\\\\\"");
+				if (searchText != null && searchText.indexOf('"') != -1) {
+					searchText = searchText.replaceAll("\"", "\\\\\"");
 				}
 
-				if (queryJSONString.indexOf("{term}") != -1) {
-					// replace {term} with the term
-					queryJSONString = queryJSONString.replace("{term}", (term != null ? term : ""));
+				if (queryJSONString.indexOf("{term}") != -1) { // backward compatibility
+					// replace {term} with the searchText
+					queryJSONString = queryJSONString.replace("{term}", (searchText != null ? searchText : ""));
+				}
+				if (queryJSONString.indexOf("{searchText}") != -1) {
+					// replace {searchText} with the searchText
+					queryJSONString = queryJSONString.replace("{searchText}", (searchText != null ? searchText : ""));
 				}
 				query = Query.getQuery(queryJSONString);
 			}
+			// logger.debug("Perform a search term[" + term + "] idString[" + idString + "] Query[" + new Gson().toJson(query) + "]");
 
 			// we need to have distinct result
 			Set<E> list = new LinkedHashSet<>();
-
-			// logger.debug("Perform a search term[" + term + "] idString[" + idString + "] Query["
-			// + new Gson().toJson(query) + "]");
 
 			if (idString != null) {
 				// on initialization, the search is called with the id
@@ -368,11 +366,11 @@ public abstract class AbstractBaseEntitiesResource<E extends IEntity<I>, S exten
 				// logger.debug("Search query: " + new Gson().toJson(query));
 
 				// use the search query
-				list.addAll(getService().search(query, term));
+				list.addAll(getService().search(query, searchText));
 			}
-			return new ArrayList<>(list);
+			return new SearchResult<>((idString != null ? "id=" + idString : searchText), list, query.getPageSize() != null && query.getPageSize().intValue() <= list.size());
 		} catch (Exception e) {
-			logger.error("Cannot perform a search term[" + term + "] idString[" + idString + "]", e);
+			logger.error("Cannot perform a search term[" + (idString != null ? "id=" + idString : searchText) + "]", e);
 			throw e;
 		}
 	}

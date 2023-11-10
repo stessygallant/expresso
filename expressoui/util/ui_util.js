@@ -187,7 +187,7 @@ expresso.util.UIUtil = (function () {
         };
 
         /**
-         * Convert (or create) a KenodUI combo box to a server side filtering combo box
+         * Convert (or create) a KendodUI combo box to a server side filtering combo box
          * @param $input the jQuery SELECT element to convert
          * @param resourceURL url for the resource
          * @param [customOptions]
@@ -214,296 +214,22 @@ expresso.util.UIUtil = (function () {
                 return $deferred.reject();
             }
 
-            // avoid null pointer
-            customOptions = customOptions || {};
-            customOptions.field = customOptions.field || {};
-            customOptions.field.reference = customOptions.field.reference || {};
-            customOptions.fieldReference = customOptions.fieldReference || {};
-
-            // get the info from the field if defined
-            if (customOptions.field && customOptions.field.reference) {
-                customOptions.nullable = customOptions.nullable || customOptions.field.nullable;
-                customOptions.filter = customOptions.filter || customOptions.field.reference.filter;
-                customOptions.cascadeFrom = customOptions.cascadeFrom || customOptions.field.reference.cascadeFrom;
-                customOptions.cascadeFromField = customOptions.cascadeFromField || customOptions.field.reference.cascadeFromField;
-
-                if (customOptions.triggerChangeOnInit === undefined) {
-                    customOptions.triggerChangeOnInit = customOptions.field.reference.triggerChangeOnInit;
-                }
-            }
-
-            var url;
-            if (resourceURL.startsWith("/")) {
-                // static URL
-                url = expresso.Common.getWsResourcePathURL() + resourceURL;
-            } else {
-                url = expresso.Common.getWsResourcePathURL() + "/" + resourceURL + "/search";
-
-                // make sure that the user has access to the resource
-                var resourceName = getResourceNameFromURL(resourceURL);
-                if (resourceName && !expresso.Common.isUserAllowed(resourceName, "read")) {
-                    console.warn("Hiding server side combo box because user does not have read access to [" + resourceName + "]");
-                    $input.closest("div").hide();
-                    return $deferred.resolve();
-                }
-            }
-
-            // by default, we use autoBind.
-            // but sometimes we may want to avoid it (but you will lose the onchange event on load)
-            var autoBind = customOptions.autoBind !== undefined ? customOptions.autoBind :
-                (customOptions.field.autoBind !== undefined ? customOptions.field.autoBind :
-                        (customOptions.field.reference.autoBind !== undefined ? customOptions.field.reference.autoBind : true)
-                );
-
-            // custom label
-            var dataTextField = customOptions.dataTextField || customOptions.fieldReference.dataTextField ||
-                customOptions.field.reference.dataTextField ||
-                customOptions.field.reference.label /*deprecated*/ || "label";
-
-            if (typeof dataTextField === "function") {
-                dataTextField = dataTextField();
-            }
-
-            var autoSearch = true;
-            if (customOptions.autoSearch === false ||
-                (customOptions.field && customOptions.field.reference && customOptions.field.reference.autoSearch == false)) {
-                autoSearch = false;
-            }
-            if (customOptions.readOnly || $input.attr("readonly")) {
-                autoSearch = false;
-            }
-
-            var fieldName = $input.attr("name");
-
-            // create the combo box
-            // console.log("Creating kendoComboBox for [" + resourceURL + "]: " + autoBind);
-            var initialized;
-            cb = $input.kendoComboBox({
-                autoBind: autoBind,
-                dataValueField: "id",
-                dataTextField: dataTextField,
-                valuePrimitive: true,
-                filter: "contains",
-                //suggest: true, // auto select first option
-                syncValueAndText: false,
-                //highlightFirst: true,
-                value: retrieveCurrentValue($input, customOptions),
-                minLength: (autoSearch ? 2 : 99),  // avoid filtering for at least n characters
-                enforceMinLength: false, // if true, on clear, do not show all options
-                cascadeFrom: customOptions.cascadeFrom,
-                cascadeFromField: customOptions.cascadeFromField,
-                dataSource: {
-                    serverFiltering: true,
-                    transport: {
-                        read: {
-                            url: url,
-                            data: function () {
-                                var data = {};
-
-                                // if a custom filter is defined, use it
-                                if (customOptions.filter) {
-                                    var filter;
-                                    if (typeof customOptions.filter === "function") {
-                                        filter = customOptions.filter();
-                                    } else {
-                                        filter = customOptions.filter;
-                                    }
-                                    data = expresso.Common.buildKendoFilter(filter, null, true);
-                                }
-
-                                // this is used the first time to load the default value
-                                if (!initialized) {
-                                    initialized = true;
-                                    data.id = retrieveCurrentValue($input, customOptions);
-
-                                    if (autoSearch === false && !data.id) {
-                                        data.id = -1;
-                                    }
-                                }
-                                return data;
-                            }
-                        }
-                    },
-                    schema: {
-                        parse: function (response) {
-                            //console.log("CB response", response);
-                            if (response.data) {
-                                response = response.data;
-                            }
-
-                            if (customOptions.dataTextField) {
-                                if (typeof customOptions.dataTextField === "function") {
-                                    var i;
-                                    for (i = 0; i < response.length; i++) {
-                                        response[i].label = customOptions.dataTextField(response[i]);
-                                    }
-                                } else {
-                                    for (i = 0; i < response.length; i++) {
-                                        response[i].label = response[i][customOptions.dataTextField];
-                                    }
-                                }
-                            }
-
-                            // always sort on the label
-                            if (!customOptions.avoidSorting && !customOptions.field.reference.avoidSorting) {
-                                response.sort(function (r1, r2) {
-                                    if (r1[dataTextField] && r2[dataTextField]) {
-                                        return r1[dataTextField].localeCompare(r2[dataTextField]);
-                                    } else {
-                                        return 1;
-                                    }
-                                });
-                            }
-
-                            // verify if there is a null element at the end
-                            if (response && response.length >= MAXIMUM_RESULTS) {
-                                var tooManyEntry = {id: 0};
-                                tooManyEntry[dataTextField] = expresso.Common.getLabel("tooManyResults");
-                                response.push(tooManyEntry);
-                            }
-
-                            return response;
-                        }
-                    }
-                },
-                change: onChangeEvent($input, customOptions, resourceURL)
-            }).data("kendoComboBox");
-
-            if (autoSearch) {
-                // on enter, avoid the default action (the result may not yet have been received and
-                // the value would be the "term" instead of the id of the dataItem
-                cb.input[0].addEventListener("keydown", function (e) {
-                    if (e.which == 13 /*ENTER*/) {
-                        // console.log("Set dirty");
-                        cb.hasDirtyValue = true;
-                    }
-                }, true); // call first
-                cb.input[0].addEventListener("keydown", function (e) {
-                    if (e.which == 13 /*ENTER*/) {
-                        // console.log("Clear dirty");
-                        cb.hasDirtyValue = false;
-                    }
-                }); // call last
-            } else {
-                /**
-                 * Only try to search and trigger if there is a dirty value
-                 */
-                var handleEnter = function () {
-                    if (!cb.hasDirtyValue) {
-                        return;
-                    }
-
-                    cb.hasDirtyValue = false;
-                    if (cb.countRequests) cb.countRequests++;
-                    else cb.countRequests = 1;
-
-                    var text = cb.input.val();
-                    // console.log("CB input Enter/Tab/Focusout [" + text + "]");
-
-                    // get the resource
-                    var countRequests = cb.countRequests;
-                    expresso.Common.sendRequest(url, null, null, {term: text}, {
-                        ignoreErrors: true,
-                        waitOnElement: null
-                    }).done(function (result) {
-                        if (countRequests == cb.countRequests) {
-                            // console.log("GOT result");
-                            if (result && result.length == 1) {
-                                highlightField(cb.input, null, null, true);
-                                var dataItem = result[0];
-                                addDataItemToWidget(dataItem, cb);
-                                cb.value(dataItem.id);
-                                customOptions.resource && customOptions.resource.set(fieldName, dataItem.id);
-                            } else {
-                                // clear input
-                                highlightField(cb.input);
-                                cb.value(null);
-                                customOptions.resource && customOptions.resource.set(fieldName, null);
-                            }
-                            cb.trigger("change", {userTriggered: true});
-                        } else {
-                            console.log("Ignoring deprecated response");
-                        }
-                    });
-                }
-
-                // on enter, stop the search and get the only "expected" result
-                cb.input[0].addEventListener("keydown", function (e) {
-                    if (e.which == 13 /*ENTER*/ || e.which == 9 /*TAB*/) {
-                        handleEnter();
-                    } else {
-                        cb.hasDirtyValue = true;
-                    }
-                }, true);
-
-                // on mouse focus out
-                cb.input.on("focusout", function () {
-                    handleEnter();
-                });
-            }
-
-            // on focus, select the text
-            cb.input.on("focus", function () {
-                $(this).select();
-            });
-
-            if (autoBind) {
-                cb.dataSource.one("change", function () {
-                    $deferred.resolve(cb);
-                    triggerChangeEvent($input, cb, customOptions);
-                });
-            } else {
-                $deferred.resolve(cb);
-                triggerChangeEvent($input, cb, customOptions);
-            }
-
-            return $deferred;
-        };
-
-
-        /**
-         * Convert (or create) a KenodUI combo box to a server side filtering combo box
-         * @param $input the jQuery SELECT element to convert
-         * @param resourceURL url for the resource
-         * @param [customOptions]
-         * @returns {*} the KendoUI ComboBox widget
-         */
-        var buildComboBox2 = function ($input, resourceURL, customOptions) {
-            var $deferred = $.Deferred();
-
-            // if the DOM element is not present, return immediately
-            if (!$input || !$input.length) {
-                // the input may be removed because of permission
-                return $deferred.resolve();
-            }
-
-            // patch: if the input has .k-textbox class, remove it
-            if ($input.hasClass("k-textbox")) {
-                $input.removeClass("k-textbox");
-            }
-
-            var cb = $input.data("kendoComboBox");
-            if (cb) {
-                alert("Do not define the comboxbox if using server side filtering [" + $input.attr("name") +
-                    ":" + $input.attr("class") + "]");
-                return $deferred.reject();
-            }
-
             // make sure that the user has access to the resource
             var url = expresso.Common.getWsResourcePathURL() + "/" + resourceURL + "/search";
             var resourceName = getResourceNameFromURL(resourceURL);
+            // var fieldName = $input.attr("name");
             if (resourceName && !expresso.Common.isUserAllowed(resourceName, "read")) {
                 console.warn("Hiding server side combo box because user does not have read access to [" + resourceName + "]");
                 $input.closest("div").hide();
                 return $deferred.resolve();
             }
 
-            var fieldName = $input.attr("name");
 
             // Custom Options
             // - triggerChangeOnInit
             // - resource
             // - value
+            // - model
             // - nullable
             // - defaultValue
             // - filter
@@ -525,29 +251,26 @@ expresso.util.UIUtil = (function () {
                     $.extend(customOptions, customOptions.field.reference);
                 }
             }
-            console.log("customOptions", customOptions);
-
-            // TODO remove
-            // var autoBind = false;  // But we need the change event at init
-            // var autoSearch = true;
+            // TODO console.log(resourceName + " - customOptions", customOptions);
 
             // custom label
             var dataTextField = customOptions.dataTextField || "label";
 
             // create the combo box
-            var initialized;
+            var searchEvent = {};
             cb = $input.kendoComboBox({
                 autoBind: true,
                 dataValueField: "id",
                 dataTextField: dataTextField,
                 valuePrimitive: true,
                 filter: "contains",
-                //suggest: true, // auto select first option
-                //highlightFirst: true,
-                syncValueAndText: false,
+                suggest: false, // auto select first option.
+                highlightFirst: true, // the first suggestion will be automatically highlighted. (selected on enter)
+                syncValueAndText: false, // avoid auto adding new text
                 value: retrieveCurrentValue($input, customOptions),
-                minLength: 99,  // avoid filtering for at least n characters
-                enforceMinLength: false, // if true, on clear, do not show all options
+                minLength: 3,  // avoid filtering for at least n characters
+                delay: 200, // default is 200
+                enforceMinLength: true, // if true, on clear, do not show all options
                 cascadeFrom: customOptions.cascadeFrom,
                 cascadeFromField: customOptions.cascadeFromField,
                 dataSource: {
@@ -568,32 +291,45 @@ expresso.util.UIUtil = (function () {
                                 }
 
                                 // this is used the first time to load the default value
-                                if (!initialized) {
-                                    initialized = true;
+                                if (!searchEvent.initialized) {
+                                    searchEvent.initialized = true;
                                     data.id = retrieveCurrentValue($input, customOptions);
 
                                     if (!data.id) {
                                         data.id = -1;
                                     }
                                 }
+                                console.log(resourceName + " - search", searchEvent);
                                 return data;
                             }
                         }
                     },
                     schema: {
                         parse: function (response) {
-                            if (response.data) {
-                                response = response.data;
+                            console.log(resourceName + " - parse response [" + (response.searchText || "") + "]");
+
+                            // verify if token is the last token. If not, ignore this response
+                            // The combobox does not send a new request until it gets the response
+                            // to the previous request.
+                            // But we need this code if we manually send a search request
+                            if (searchEvent.searchText && (response.searchText || "").trim() != (searchEvent.searchText || "").trim()) {
+                                console.log("Ignoring response searchText [" + response.searchText + "] <> expected [" + searchEvent.searchText + "]");
+                                window.setTimeout(function () {
+                                    cb.close();
+                                }, 10);
+                                return [];
                             }
+
+                            var dataItems = response.data;
                             if (dataTextField != "label") {
-                                for (var i = 0; i < response.length; i++) {
-                                    response[i].label = response[i][dataTextField];
+                                for (var i = 0; i < dataItems.length; i++) {
+                                    dataItems[i].label = dataItems[i][dataTextField];
                                 }
                             }
 
                             // always sort on the label
                             if (!customOptions.avoidSorting) {
-                                response.sort(function (r1, r2) {
+                                dataItems.sort(function (r1, r2) {
                                     if (r1[dataTextField] && r2[dataTextField]) {
                                         return r1[dataTextField].localeCompare(r2[dataTextField]);
                                     } else {
@@ -603,18 +339,62 @@ expresso.util.UIUtil = (function () {
                             }
 
                             // verify if there is a null element at the end
-                            if (response.length >= MAXIMUM_RESULTS) {
-                                var tooManyEntry = {id: 0};
-                                tooManyEntry[dataTextField] = expresso.Common.getLabel("tooManyResults");
-                                response.push(tooManyEntry);
+                            if (response.tooManyResults) {
+                                var tooManyResults = {id: 0};
+                                tooManyResults[dataTextField] = expresso.Common.getLabel("tooManyResults");
+                                dataItems.push(tooManyResults);
                             }
 
-                            return response;
+                            return dataItems;
                         }
                     }
                 },
-                change: onChangeEvent($input, customOptions, resourceURL)
+                filtering: function (e) {
+                    // calling this.value() will trigger this event
+                    var text = ((e.filter && e.filter.value) || "");
+                    console.error(resourceName + " - filtering event [" + text + "]", e);
+                    if (!text) {
+                        // e.preventDefault();
+                    } else {
+                        searchEvent.searchText = text;
+                    }
+                },
+                error: function (e) {
+                    console.error(resourceName + " - error event", e);
+                },
+                open: function () {
+                    console.log(resourceName + " - open event[" + searchEvent.searchText + "]:" + cb.dataSource.data().length);
+                    if (cb.dataSource.data().length <= 1 && !searchEvent.searchText) {
+                        // trigger a search (3 spaces minimum)
+                        //cb.close();
+                        cb.search("   ");
+                    }
+                },
+                select: function (e) {
+                    // console.log(resourceName + " - select event - dataItem[" + (e.dataItem ? e.dataItem.id : null) + "]");
+                },
+                dataBound: function (e) {
+                    console.log(resourceName + " - dataBound event - search[" + searchEvent.searchText + "] data: " + cb.dataSource.data().length);
+                    if (cb.dataSource.data().length == 1 && searchEvent.searchText) {
+                        cb.select(0);
+                        cb.close();
+                        cb.trigger("change");
+                    }
+                    searchEvent.dirty = false;
+                },
+                change2: onChangeEvent($input, customOptions, resourceURL),
+                change: function (e) {
+                    console.log(resourceName + " - change event value[" + cb.value() + "] dateItem[" + cb.dataItem() + "]");
+                    searchEvent.searchText = null;
+                    searchEvent.dirty = false;
+                    if (!cb.dataItem()) {
+                        cb.value(null);
+                    }
+                }
             }).data("kendoComboBox");
+
+            var $comboBox = cb.input.closest(".k-combobox");
+            cb.searchEvent = searchEvent;
 
             // on focus, select the text
             cb.input.on("focus", function () {
@@ -623,14 +403,33 @@ expresso.util.UIUtil = (function () {
 
             // trigger init
             cb.dataSource.one("change", function () {
+                // console.log(resourceName + " - dataSource change");
                 $deferred.resolve(cb);
                 triggerChangeEvent($input, cb, customOptions);
             });
 
-            // TODO on create, cb is empty
-
-            // TODO Enter, Tab, Focusout
-
+            // Enter, Tab
+            cb.input[0].addEventListener("keydown", function (e) {
+                if (e.key == "Enter" || e.key == "Tab") {
+                    if (searchEvent.dirty) {
+                        if (searchEvent.searchText != this.value) {
+                            console.log("******** Enter/tab [" + this.value + "]");
+                            searchEvent.searchText = this.value;
+                            e.stopPropagation();
+                            cb.search(this.value);
+                        } else {
+                            console.log("******** Skipping Enter/tab [" + this.value + "]");
+                            e.stopPropagation();
+                        }
+                    }
+                } else {
+                    // this.value does not contain the last character
+                    // console.log("Key [" + e.key + "]: " + (e.key && e.key.length == 1));
+                    if (e.key && e.key.length == 1) {
+                        searchEvent.dirty = true;
+                    }
+                }
+            }, true); // call first
 
             return $deferred;
         };
@@ -1320,9 +1119,8 @@ expresso.util.UIUtil = (function () {
          * @return {function(*=): void}
          */
         var onChangeEvent = function ($input, customOptions, resourceURL) {
-            //console.log("onChangeEvent - " + $input.attr("name"));
-
             // find the name of the attribute
+            var resource = customOptions.resource;
             var bindNameId = getBindName($input);
             var attName;
             var objectDefaultValue = {}; // default value for the object
@@ -1334,30 +1132,33 @@ expresso.util.UIUtil = (function () {
                 }
             }
 
-            var resource = customOptions.resource;
-
             return function (e) {
-                var value;
-                if (this.value) {
-                    value = this.value();
-                }
-                var dataItem;
+                console.log(bindNameId + " - change event");
+                var widget = getKendoWidget($input);
+                var searchEvent = widget.searchEvent || {}; // for combobox
 
-                if (this.dataItem) {
-                    // Combobox, DropDownList
-                    dataItem = this.dataItem();
-                    // console.log("Change Combobox/DropDownList", dataItem);
-                }
-
-                if (!dataItem && e.sender && e.sender.treeview) {
-                    // select event from DropDownTree
-                    dataItem = e.sender.treeview.dataItem(e.sender.treeview.select());
-                    // console.log("Change DropDownTree", dataItem);
-                }
-
-                // console.log((bindNameId ? bindNameId + " - " : "") + "Change value[" + value + "] data item", dataItem);
+                // remove the highlight
                 highlightField($input, null, null, true);
 
+                var value;
+                if (widget.value) {
+                    value = widget.value();
+                }
+
+                var dataItem;
+                if (widget.dataItem) {
+                    // Combobox, DropDownList
+                    dataItem = widget.dataItem();
+                }
+                if (!dataItem && e.sender && e.sender.treeview) {
+                    // DropDownTree
+                    dataItem = e.sender.treeview.dataItem(e.sender.treeview.select());
+                }
+
+                /**
+                 * Inline method to trigger client change event
+                 * @param ev
+                 */
                 var triggerChange = function (ev) {
                     if (resource && attName) {
                         // perform only if done by a user (otherwise the object is already loaded by default)
@@ -1375,18 +1176,47 @@ expresso.util.UIUtil = (function () {
                         // PATCH: because KendoUI will trigger twice the same event on blur,
                         // we need to keep the previous value and do not fire the event
                         // if the value is the same
-                        if (this.previousValue === undefined || this.previousValue != value) {
-                            this.previousValue = value;
-                            customOptions.change.call(this, ev);
+                        if (widget.previousValue === undefined || widget.previousValue != value) {
+                            widget.previousValue = value;
+                            customOptions.change.call(widget, ev);
                         }
+                    }
+                    // reset flag
+                    if (this.searchEvent) {
+                        console.log("Reseting dirty flag");
+                        this.searchEvent.dirty = false;
+                        this.searchEvent.searchText = null;
                     }
                 };
 
-                var widget = getKendoWidget($input);
-                // console.log(bindNameId + ": " + value + " datatem: " + !!dataItem + " dirty: " + widget.hasDirtyValue);
-                if (!widget.hasDirtyValue) {
+                console.log(bindNameId + " - value[" + value + "] dataItem[" + (dataItem ? dataItem.id : null) + "] selectedIndex[" +
+                    e.sender.selectedIndex + "]", searchEvent);
+                if (searchEvent.dirty && searchEvent.searchText && e.sender.selectedIndex == -1) {
+                    // combo box only
+                    // Enter/Tab event
+                    expresso.Common.sendRequest(resourceURL + "/search", null, null,
+                        {searchText: searchEvent.searchText}, {
+                            ignoreErrors: true,
+                            waitOnElement: null
+                        })
+                        .done(function (searchResult) {
+                            searchEvent.preventFiltering = true;
+                            expresso.util.UIUtil.setDataSource($input, searchResult.data);
+                            searchEvent.preventFiltering = false;
+
+                            if (searchResult.data.length >= 1) {
+                                dataItem = searchResult.data[0];
+                            } else {
+                                dataItem = null;
+                                highlightField($input);
+                            }
+
+                            // then trigger the change
+                            triggerChange.call(widget, e);
+                        });
+
+                } else {
                     if (value && !dataItem && resourceURL) {
-                        var _this = this;
 
                         // console.trace(bindNameId + " - We need to get the data item for the value[" + value + "]");
                         expresso.Common.sendRequest(resourceURL + "/" + value, null, null, null, {
@@ -1397,17 +1227,16 @@ expresso.util.UIUtil = (function () {
                             dataItem = addDataItemToWidget(result, widget);
 
                             // then trigger the change
-                            triggerChange.call(_this, e);
+                            triggerChange.call(widget, e);
                         }).fail(function () {
                             // not found
                             // console.log("Id not found [" + value + "]. Setting null");
-
-                            _this.value(null);
+                            widget.value(null); // this will perform a search
                             highlightField($input);
-                            triggerChange.call(_this, e);
+                            triggerChange.call(widget, e);
                         });
                     } else {
-                        triggerChange.call(this, e);
+                        triggerChange.call(widget, e);
                     }
                 }
             };
@@ -3271,7 +3100,7 @@ expresso.util.UIUtil = (function () {
             displayMissingRequiredFieldNotification: displayMissingRequiredFieldNotification,
 
             buildDropDownList: buildDropDownList,       // local (array or url) and single select
-            buildComboBox: buildComboBox2,              // remote and single select
+            buildComboBox: buildComboBox,              // remote and single select
             buildMultiSelect: buildMultiSelect,         // local (array or url)/remote and multiple select
             buildDropDownTree: buildDropDownTree,       // local (array or url) and single select
             buildLookupSelection: buildLookupSelection, // remote multiple select lookup
