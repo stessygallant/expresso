@@ -56,7 +56,8 @@
             //expresso.util.UIUtil.showLoadingMask($form, true);
 
             // process all input elements
-            $form.find(":input").each(function (index, el) {
+            $form.find(":input").each(function () {
+                var el = this;
                 if (el.name && el.name.endsWith("input")) {
                     // ignore
                 } else {
@@ -77,6 +78,20 @@
 
             //  try to localize the form
             expresso.Common.localizePage($form, labels);
+
+            window.setTimeout(function () {
+                // set the tabindex
+                $form.find("button,span.fa,i.fa").each(function () {
+                    var $input = $(this);
+                    $input.attr("tabindex", "-1");
+                });
+                // $form.find(":input:visible").each(function (index, el) {
+                //     var $input = $(el);
+                //     if (!$input.attr("tabindex")) {
+                //         $input.attr("tabindex", ""+( index + 1));
+                //     }
+                // });
+            }, 500);
         },
 
         /**
@@ -185,13 +200,7 @@
                             expresso.util.UIUtil.buildComboBox($el, field.reference.resourcePath, {
                                 resource: resource,
                                 model: model,
-                                field: field,
-                                filter: field.reference.filter,
-                                nullable: field.nullable,
-                                triggerChangeOnInit: field.reference.triggerChangeOnInit,
-                                cascadeFrom: field.reference.cascadeFromId,
-                                cascadeFromField: field.reference.cascadeFromField,
-                                fieldReference: field.reference
+                                field: field
                             }));
                     }
                 }

@@ -837,61 +837,6 @@ $formPreviewHeight: 12em;
         }
     }
 
-    // readonly and disabled
-    [readonly], .readonly {
-        //color: #C0C0C1;
-        .k-input, .k-select, .k-textbox, .k-multiselect-wrap {
-            background-color: #ededee;
-        }
-
-        .k-icon {
-            visibility: hidden;
-        }
-
-        // default color is too white
-        .k-state-disabled {
-            color: $themeTextColor;
-        }
-
-        .k-numerictextbox {
-            .k-select {
-                background-color: #ededee;
-                border: 0;
-            }
-        }
-    }
-
-    // remove white backgroung on input when readonly
-    input[readonly], input:hover[readonly] {
-        background-color: #ededee;
-    }
-
-    // remove gray from dropdownlist
-    div.exp-input-wrap:not(.readonly), div.input-wrap:not(.readonly) {
-        .k-dropdown, .k-dropdowntree {
-            .k-dropdown-wrap.k-state-default:not(.k-state-hover) {
-                .k-input {
-                    background-color: white;
-                    opacity: 1;
-                }
-            }
-        }
-    }
-
-    // remove the border for date input
-    div.exp-input-wrap.readonly, div.input-wrap.readonly {
-        .k-picker-wrap .k-select {
-            border-width: 0;
-        }
-    }
-
-    // fix length for multiselect
-    .k-multiselect-wrap li.k-button {
-        display: inline-block;
-        width: 100%;
-        text-align: left;
-    }
-
     .checkbox-group, .radio-group {
         .checkbox-div, .radio-div, // checkbox div (built using buildCheckbox)
         &.exp-input-wrap, &.input-wrap, & > .exp-input-wrap, & > .input-wrap // checkbox div (built using expressoForm)

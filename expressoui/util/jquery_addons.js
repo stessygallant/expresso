@@ -18,22 +18,27 @@
             var role = $this.data("role");
             if (role) {
                 // then set the value to Kendo UI element
-                var $kendoEl = expresso.util.UIUtil.getKendoWidget($this);
-
-                if ($kendoEl) {
+                var widget = expresso.util.UIUtil.getKendoWidget($this);
+                if (widget) {
                     // setter invoked on a DOM element enhanced by KendoUI
-                    if (typeof $kendoEl.value === "function") {
+                    if (typeof widget.value === "function") {
 
                         // dropdowntree does not support null
                         if (role == "dropdowntree" && value === null) {
                             value = "";
                         }
-                        $kendoEl.value(value);
+                        widget.value(value);
+
+                        if (value === null && role == "combobox") {
+                            // we need to do it otherwise the dataItem will remain
+                            widget.select(null);
+                        }
 
                         if (triggerChangeEvent !== false &&
                             (triggerChangeEvent || role == "combobox" || role == "dropdownlist" || role == "dropdowntree")) {
-                            //console.log("triggerChangeEvent");
-                            $kendoEl.trigger("change");
+                            widget.trigger("change");
+                        } else {
+                            widget.expressoPreviousValue = value;
                         }
                         return this;
                     }

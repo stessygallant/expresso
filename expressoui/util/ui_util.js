@@ -217,41 +217,35 @@ expresso.util.UIUtil = (function () {
             // make sure that the user has access to the resource
             var url = expresso.Common.getWsResourcePathURL() + "/" + resourceURL + "/search";
             var resourceName = getResourceNameFromURL(resourceURL);
-            // var fieldName = $input.attr("name");
+            var fieldName = $input.attr("name");
             if (resourceName && !expresso.Common.isUserAllowed(resourceName, "read")) {
                 console.warn("Hiding server side combo box because user does not have read access to [" + resourceName + "]");
                 $input.closest("div").hide();
                 return $deferred.resolve();
             }
 
-
             // Custom Options
             // - triggerChangeOnInit
+            // - filter
             // - resource
-            // - value
+            // - field
             // - model
+            // - value
             // - nullable
-            // - defaultValue
-            // - filter
             // - dataTextField
-            // - filter
-            // - dataTextField
-            // - cascadeFrom
-            // - cascadeFromField
             // - avoidSorting
             // - cascadeFrom
             // - cascadeFromField
-            // - avoidSorting
             customOptions = customOptions || {};
 
-            // backward compatibility
+            // if field is defined, get the options from the field too
             if (customOptions.field) {
                 $.extend(customOptions, customOptions.field);
                 if (customOptions.field.reference) {
                     $.extend(customOptions, customOptions.field.reference);
                 }
             }
-            // TODO console.log(resourceName + " - customOptions", customOptions);
+            // console.log(fieldName + " - customOptions", customOptions);
 
             // custom label
             var dataTextField = customOptions.dataTextField || "label";
@@ -268,7 +262,7 @@ expresso.util.UIUtil = (function () {
                 highlightFirst: true, // the first suggestion will be automatically highlighted. (selected on enter)
                 syncValueAndText: false, // avoid auto adding new text
                 value: retrieveCurrentValue($input, customOptions),
-                minLength: 3,  // avoid filtering for at least n characters
+                minLength: customOptions.minLength || 3,  // avoid filtering for at least n characters
                 delay: 200, // default is 200
                 enforceMinLength: true, // if true, on clear, do not show all options
                 cascadeFrom: customOptions.cascadeFrom,
@@ -299,24 +293,24 @@ expresso.util.UIUtil = (function () {
                                         data.id = -1;
                                     }
                                 }
-                                console.log(resourceName + " - search", searchEvent);
+                                // console.log(fieldName + " - search", searchEvent);
+                                searchEvent.dirty = false;
                                 return data;
                             }
                         }
                     },
                     schema: {
                         parse: function (response) {
-                            console.log(resourceName + " - parse response [" + (response.searchText || "") + "]");
+                            // console.log(fieldName + " - parse response [" + (response.searchText || "") + "]");
+                            searchEvent.skippingResponse = false;
 
                             // verify if token is the last token. If not, ignore this response
                             // The combobox does not send a new request until it gets the response
                             // to the previous request.
                             // But we need this code if we manually send a search request
                             if (searchEvent.searchText && (response.searchText || "").trim() != (searchEvent.searchText || "").trim()) {
-                                console.log("Ignoring response searchText [" + response.searchText + "] <> expected [" + searchEvent.searchText + "]");
-                                window.setTimeout(function () {
-                                    cb.close();
-                                }, 10);
+                                // console.log("Ignoring response searchText [" + response.searchText + "] <> expected [" + searchEvent.searchText + "]");
+                                searchEvent.skippingResponse = true;
                                 return [];
                             }
 
@@ -349,80 +343,103 @@ expresso.util.UIUtil = (function () {
                         }
                     }
                 },
+                error: function (e) {
+                    // console.error(fieldName + " - error event", e);
+                },
+                select: function (e) {
+                    // console.log(fieldName + " - select event - dataItem[" + (e.dataItem ? e.dataItem.id : null) + "]");
+                },
                 filtering: function (e) {
                     // calling this.value() will trigger this event
                     var text = ((e.filter && e.filter.value) || "");
-                    console.error(resourceName + " - filtering event [" + text + "]", e);
-                    if (!text) {
-                        // e.preventDefault();
-                    } else {
+                    // console.log(fieldName + " - filtering event text[" + text + "]");
+                    if (text) {
                         searchEvent.searchText = text;
+                    } else {
+                        // console.log(fieldName + " - filtering preventDefault");
+                        e.preventDefault();
                     }
-                },
-                error: function (e) {
-                    console.error(resourceName + " - error event", e);
                 },
                 open: function () {
-                    console.log(resourceName + " - open event[" + searchEvent.searchText + "]:" + cb.dataSource.data().length);
-                    if (cb.dataSource.data().length <= 1 && !searchEvent.searchText) {
-                        // trigger a search (3 spaces minimum)
-                        //cb.close();
-                        cb.search("   ");
-                    }
+                    searchEvent.popupOpened = true;
                 },
-                select: function (e) {
-                    // console.log(resourceName + " - select event - dataItem[" + (e.dataItem ? e.dataItem.id : null) + "]");
+                close: function () {
+                    searchEvent.popupOpened = false;
                 },
                 dataBound: function (e) {
-                    console.log(resourceName + " - dataBound event - search[" + searchEvent.searchText + "] data: " + cb.dataSource.data().length);
-                    if (cb.dataSource.data().length == 1 && searchEvent.searchText) {
-                        cb.select(0);
-                        cb.close();
-                        cb.trigger("change");
+                    // console.log(fieldName + " - dataBound event - forceSelect[" + searchEvent.forceSelect + "] inputText[" +
+                    //     cb.input.val() + "] data: " + cb.dataSource.data().length);
+                    highlightField($input, null, null, true);
+
+                    // do not select if user still typing
+                    if (searchEvent.forceSelect) {
+                        // console.log("*** forceSelect");
+                        if (cb.dataSource.data().length == 0) {
+                            // console.log("No result");
+                            if (searchEvent.skippingResponse) {
+                                cb.close();
+                            } else {
+                                highlightField($input);
+                            }
+                        } else if (cb.dataSource.data().length == 1) {
+                            console.log("Auto select");
+                            searchEvent.forceSelect = false;
+                            searchEvent.searchText = null;
+                            cb.select(0);
+                            cb.close();
+                            cb.trigger("change", {expressoUserTriggered: true});
+
+                            // otherwise the clear button will not work after
+                            cb._blur();
+                        } else {
+                            // console.log("Multiple results");
+                            searchEvent.forceSelect = false;
+                            searchEvent.searchText = null;
+                        }
+                    } else if (cb.dataSource.data().length == 0 && cb.input.val()) {
+                        if (!searchEvent.dirty) {
+                            // we cannot do it: it will clear the input while the user is still typing slowly
+                            // reset text
+                            // cb.input.val("");
+                            highlightField($input);
+                        }
                     }
-                    searchEvent.dirty = false;
                 },
-                change2: onChangeEvent($input, customOptions, resourceURL),
-                change: function (e) {
-                    console.log(resourceName + " - change event value[" + cb.value() + "] dateItem[" + cb.dataItem() + "]");
-                    searchEvent.searchText = null;
-                    searchEvent.dirty = false;
-                    if (!cb.dataItem()) {
-                        cb.value(null);
-                    }
-                }
+                change: onChangeEvent($input, customOptions, resourceURL)
             }).data("kendoComboBox");
 
-            var $comboBox = cb.input.closest(".k-combobox");
-            cb.searchEvent = searchEvent;
-
-            // on focus, select the text
-            cb.input.on("focus", function () {
-                $(this).select();
-            });
-
-            // trigger init
+            // trigger at init
             cb.dataSource.one("change", function () {
-                // console.log(resourceName + " - dataSource change");
+                // console.log(fieldName + " - dataSource change");
                 $deferred.resolve(cb);
                 triggerChangeEvent($input, cb, customOptions);
             });
 
             // Enter, Tab
             cb.input[0].addEventListener("keydown", function (e) {
-                if (e.key == "Enter" || e.key == "Tab") {
+                if (e.key == "Enter" /*|| e.key == "Tab"*/) {
+                    searchEvent.forceSelect = true;
+                    searchEvent.searchText = this.value;
+
                     if (searchEvent.dirty) {
-                        if (searchEvent.searchText != this.value) {
-                            console.log("******** Enter/tab [" + this.value + "]");
-                            searchEvent.searchText = this.value;
-                            e.stopPropagation();
-                            cb.search(this.value);
+                        // console.log("******** Enter/tab Force search [" + this.value + "]");
+                        e.stopPropagation(); // otherwise it will assign the text for the value and trigger change
+                        cb.search(this.value);
+                    } else {
+                        // console.log("******** Skipping Enter/tab (not dirty) [" + this.value + "]");
+                        if (searchEvent.popupOpened) {
+                            // if already displayed, let the ENTER does the job
+                            searchEvent.forceSelect = false;
+                            searchEvent.searchText = null;
                         } else {
-                            console.log("******** Skipping Enter/tab [" + this.value + "]");
-                            e.stopPropagation();
+                            e.stopPropagation(); // otherwise it will assign the text for the value and trigger change
                         }
                     }
                 } else {
+                    // reset flag
+                    searchEvent.forceSelect = false;
+                    searchEvent.searchText = null;
+
                     // this.value does not contain the last character
                     // console.log("Key [" + e.key + "]: " + (e.key && e.key.length == 1));
                     if (e.key && e.key.length == 1) {
@@ -430,6 +447,46 @@ expresso.util.UIUtil = (function () {
                     }
                 }
             }, true); // call first
+
+            // on focus, select the text
+            cb.input.on("focus", function () {
+                // console.log("Focus [" + cb.value() + "]");
+                $(this).select();
+            });
+
+            // on blur, if the text is not valid, remove it
+            cb.input.on("blur", function (e) {
+                // console.log("Blur this.value[" + this.value + "] cb.value[" + cb.value() + "] dataItem[" + cb.dataItem() +
+                //     "]", searchEvent);
+                if (searchEvent.forceSelect) {
+                    // console.log("do not blur");
+                } else {
+                    if (cb.value() && !cb.dataItem()) {
+                        // console.log("Clear value on blur");
+                        $input.setval(null);
+                    } else if (this.value && !cb.value()) {
+                        // console.log("Clear text on blur");
+                        $(this).val("");
+                    }
+                }
+            });
+
+            // force search when opening the popup
+            cb.input.closest(".k-combobox").find(".k-select")[0].addEventListener("click", function (e) {
+                if (!searchEvent.popupOpened) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // console.log(fieldName + " - click popup [" + searchEvent.searchText + "] data:" + cb.dataSource.data().length);
+                    // trigger a search (3 spaces minimum)
+                    cb.search("   ");
+                }
+            }, true); // first
+
+            // PATCH: the clear button is not userTriggerred, but it must be if the client is validating e.userTriggered
+            cb.input.closest(".k-combobox").find(".k-clear-value").on("click", function () {
+                cb.expressoPreviousValue = undefined;
+                cb.trigger("change", {expressoUserTriggered: true});
+            });
 
             return $deferred;
         };
@@ -1121,6 +1178,7 @@ expresso.util.UIUtil = (function () {
         var onChangeEvent = function ($input, customOptions, resourceURL) {
             // find the name of the attribute
             var resource = customOptions.resource;
+            var inputName = $input.attr("name");
             var bindNameId = getBindName($input);
             var attName;
             var objectDefaultValue = {}; // default value for the object
@@ -1133,9 +1191,18 @@ expresso.util.UIUtil = (function () {
             }
 
             return function (e) {
-                console.log(bindNameId + " - change event");
+                e = e || {};
+                e.sender = e.sender || {};
+                if (e.userTriggered === undefined) {
+                    e.userTriggered = e.sender._userTriggered;
+                }
+                // force userTriggered
+                if (e.expressoUserTriggered) {
+                    e.userTriggered = true;
+                    e.sender._userTriggered = true;
+                }
+
                 var widget = getKendoWidget($input);
-                var searchEvent = widget.searchEvent || {}; // for combobox
 
                 // remove the highlight
                 highlightField($input, null, null, true);
@@ -1150,7 +1217,7 @@ expresso.util.UIUtil = (function () {
                     // Combobox, DropDownList
                     dataItem = widget.dataItem();
                 }
-                if (!dataItem && e.sender && e.sender.treeview) {
+                if (!dataItem && e.sender.treeview) {
                     // DropDownTree
                     dataItem = e.sender.treeview.dataItem(e.sender.treeview.select());
                 }
@@ -1163,7 +1230,7 @@ expresso.util.UIUtil = (function () {
                     if (resource && attName) {
                         // perform only if done by a user (otherwise the object is already loaded by default)
                         // console.log("triggerChange: " + attName, ev);
-                        if ((ev && ev.sender && ev.sender._userTriggered) || (ev && ev.userTriggered)) {
+                        if (ev.userTriggered) {
                             //console.log("Setting [" + attName + "]", dataItem);
                             // do not allow to set null: it will crash the grid (ex: equipment.equipmentNo)
                             resource.set(attName, dataItem || objectDefaultValue);
@@ -1171,54 +1238,21 @@ expresso.util.UIUtil = (function () {
                     }
 
                     if (customOptions.change) {
-                        //console.log("Calling application change event listener");
-
                         // PATCH: because KendoUI will trigger twice the same event on blur,
                         // we need to keep the previous value and do not fire the event
                         // if the value is the same
-                        if (widget.previousValue === undefined || widget.previousValue != value) {
-                            widget.previousValue = value;
+                        if (widget.expressoPreviousValue === undefined || widget.expressoPreviousValue != value) {
+                            widget.expressoPreviousValue = value;
+                            // console.log("Calling change event listener - userTriggered: " + ev.userTriggered);
                             customOptions.change.call(widget, ev);
                         }
                     }
-                    // reset flag
-                    if (this.searchEvent) {
-                        console.log("Reseting dirty flag");
-                        this.searchEvent.dirty = false;
-                        this.searchEvent.searchText = null;
-                    }
                 };
 
-                console.log(bindNameId + " - value[" + value + "] dataItem[" + (dataItem ? dataItem.id : null) + "] selectedIndex[" +
-                    e.sender.selectedIndex + "]", searchEvent);
-                if (searchEvent.dirty && searchEvent.searchText && e.sender.selectedIndex == -1) {
-                    // combo box only
-                    // Enter/Tab event
-                    expresso.Common.sendRequest(resourceURL + "/search", null, null,
-                        {searchText: searchEvent.searchText}, {
-                            ignoreErrors: true,
-                            waitOnElement: null
-                        })
-                        .done(function (searchResult) {
-                            searchEvent.preventFiltering = true;
-                            expresso.util.UIUtil.setDataSource($input, searchResult.data);
-                            searchEvent.preventFiltering = false;
-
-                            if (searchResult.data.length >= 1) {
-                                dataItem = searchResult.data[0];
-                            } else {
-                                dataItem = null;
-                                highlightField($input);
-                            }
-
-                            // then trigger the change
-                            triggerChange.call(widget, e);
-                        });
-
-                } else {
-                    if (value && !dataItem && resourceURL) {
-
-                        // console.trace(bindNameId + " - We need to get the data item for the value[" + value + "]");
+                // console.log(inputName + " - change event" + /* bindNameId[" + bindNameId + "]" + */ " value[" + value + "] dataItem[" + (dataItem ? dataItem.id : null) + "] userTriggered: " + e.userTriggered);
+                if (value && !dataItem) {
+                    if (resourceURL) {
+                        // console.log(inputName + " - We need to get the data item for the value[" + value + "]");
                         expresso.Common.sendRequest(resourceURL + "/" + value, null, null, null, {
                             ignoreErrors: true,
                             waitOnElement: null
@@ -1236,8 +1270,21 @@ expresso.util.UIUtil = (function () {
                             triggerChange.call(widget, e);
                         });
                     } else {
-                        triggerChange.call(widget, e);
+                        // if it userTriggered, the value is not the id, then we cannot search for the id
+                        highlightField($input);
                     }
+                } else if (value && dataItem) {
+                    // make sure the dataItem is part of the dataSource.
+                    if (!widget.dataSource.get(value)) {
+                        // console.log(inputName + " - adding dataItem for value[" + value + "]");
+                        dataItem = addDataItemToWidget(dataItem, widget);
+                    }
+                    triggerChange.call(widget, e);
+                } else if (!value && dataItem && dataItem.id) {
+                    console.warn("value is null but not the dataItem");
+                    triggerChange.call(widget, e);
+                } else {
+                    triggerChange.call(widget, e);
                 }
             };
         };
@@ -1373,7 +1420,7 @@ expresso.util.UIUtil = (function () {
             data = convertList(data, labels);
 
             // console.log("Setting new datasource on [" + $input[0].name + "]", data);
-            widget.value(null);
+            $input.setval(null, false);
             widget.setDataSource(new kendo.data.DataSource({data: data}));
             if (defaultValue !== undefined) {
                 //console.log("Setting default value [" + defaultValue + "] " + (typeof defaultValue));

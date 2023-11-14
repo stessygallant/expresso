@@ -381,6 +381,7 @@ public class Util {
 			} catch (Exception ex) {
 				logger.warn("Cannot format keyfield: " + ex);
 			}
+			logger.debug("Key [" + key + "]");
 			return key;
 		}
 	}
@@ -392,11 +393,14 @@ public class Util {
 	 * @return
 	 */
 	private static String formatKey(String format, String key) {
-		// 0: means digits (it will automatically left pad with 0)
+		// 0: means digit (it will automatically left pad with 0)
+		// #: means digit, no padding
 		// x: letter lowercase
 		// X: letter uppercase
 		// -: mandatory dash
 		// {}: enclosed format char are optional
+
+		// System.out.println(format + "=" + key);
 
 		if (format == null || key == null || format.length() == 0) {
 			return key;
@@ -418,6 +422,8 @@ public class Util {
 					break;
 				}
 				char cKey = key.charAt(keyIndex);
+
+				// System.out.println("cKey[" + cKey + "] cFormat[" + cFormat + "]");
 
 				// if we find a dash and it is not in the format, remove it
 				if (cKey == '-' && cFormat != '-') {
@@ -443,6 +449,8 @@ public class Util {
 					// go back to the previous char in the format
 					i--;
 
+					// System.out.println("digitCount:" + digitCount + " cFormat[" + cFormat + "]");
+
 					// get all digits from the key
 					// keep the digits in a buffer to pad them if needed
 					StringBuilder sbDigit = new StringBuilder();
@@ -453,6 +461,7 @@ public class Util {
 						}
 						cKey = key.charAt(++keyIndex);
 					}
+					// System.out.println("keyIndex:" + keyIndex + " sbDigit[" + sbDigit + "]");
 
 					if (sbDigit.length() != digitCount) {
 						// pad with 0
@@ -460,6 +469,11 @@ public class Util {
 					} else {
 						sbKey.append(sbDigit.toString());
 					}
+					keyIndex++;
+					break;
+				case '#':
+					sbKey.append(cKey);
+					keyIndex++;
 					break;
 				case 'x':
 					sbKey.append(Character.toLowerCase(cKey));
@@ -471,6 +485,7 @@ public class Util {
 					break;
 				case '-':
 					// add "-" if needed
+					// System.out.println("optional:" + optional + " cKey[" + cKey + "]");
 					if (cKey != '-') {
 						sbKey.append('-');
 					} else {
@@ -482,7 +497,7 @@ public class Util {
 					break;
 
 				default:
-					// invalid character
+					logger.warn("Invalid format character[" + cFormat + "] in [" + format + "]");
 					break;
 				}
 			}
@@ -1416,22 +1431,21 @@ public class Util {
 		// map.put("DESCRIPTION", "aaaa");
 		// System.out.println(Util.replacePlaceHolders("cadscsdc %DESCRIPTION% asfdsfsdf", map));
 
-		// String format = "XX-0000";
-		// for (String key : new String[] { "un-10", "un10", "UN-010", "UN10", "UN-100", "UN-0100", "UN-00100" }) {
-		// System.out.println(key + ":\t" + Util.formatKey(format, key));
-		// }
-		//
-		// format = "XX0000";
-		// for (String key : new String[] { "un-10", "un10", "UN-010", "UN10", "UN-100", "UN-0100", "UN-00100" }) {
-		// System.out.println(key + ":\t" + Util.formatKey(format, key));
-		// }
-		//
-		// format = "";
-		// for (String key : new String[] { "", "999999999999" }) {
-		// System.out.println(key + ":\t" + Util.formatKey(format, key));
-		// }
-		//
+		// System.out.println(Util.getHostName("10.113.80.15"));
 
-		System.out.println(Util.getHostName("10.113.80.15"));
+		String format = "XX-0000";
+		for (String key : new String[] { "un-10", "un10", "UN-010", "UN10", "UN-100", "UN-0100", "UN-00100" }) {
+			System.out.println(key + ":\t" + Util.formatKey(format, key));
+		}
+
+		format = "XX0000";
+		for (String key : new String[] { "un-10", "un10", "UN-010", "UN10", "UN-100", "UN-0100", "UN-00100" }) {
+			System.out.println(key + ":\t" + Util.formatKey(format, key));
+		}
+
+		format = "";
+		for (String key : new String[] { "", "999999999999" }) {
+			System.out.println(key + ":\t" + Util.formatKey(format, key));
+		}
 	}
 }

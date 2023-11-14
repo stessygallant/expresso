@@ -36,6 +36,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Formula;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -114,7 +115,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	private Field hierarchicalParentEntityField = null;
 
 	// for performance optimization
-	private String keyField = null;
+	private String[] keyFields = null;
 	private Boolean parentUpdatable = null;
 	private static final Map<Query, Object> creationQueryMap = Collections.synchronizedMap(new HashMap<>());
 
@@ -1190,9 +1191,31 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				}
 			}
+
+			// In Hibernate 6, we cannot search through entityIds for ManyToMany
+			// but we can search for entity.id if the ManyToMany is defined correctly
+			fixManyToManyFilters(query.getFilter());
 		}
 
 		return query;
+	}
+
+	/**
+	 * In Hibernate 6, we cannot search through entityIds for ManyToMany but we can search for entities.id if the ManyToMany is defined correctly
+	 * 
+	 * @param filter
+	 */
+	private void fixManyToManyFilters(Filter filter) {
+		if (filter != null) {
+			if (filter.getField() != null && filter.getField().endsWith("Ids")) {
+				filter.setField(filter.getField().replace("Ids", "s.id"));
+			}
+			if (filter.getFilters() != null) {
+				for (Filter f : filter.getFilters()) {
+					fixManyToManyFilters(f);
+				}
+			}
+		}
 	}
 
 	/**
@@ -1668,19 +1691,22 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * Give a change to subclass to define the "key" fields
 	 */
 	protected String[] getKeyFields() {
-		List<String> keyFields = new ArrayList<>();
-		Class<?> c = getTypeOfE();
-		do {
-			for (Field field : c.getDeclaredFields()) {
-				if (field.isAnnotationPresent(KeyField.class)) {
-					keyFields.add(field.getName());
+		if (this.keyFields == null) {
+			List<String> keyFields = new ArrayList<>();
+			Class<?> c = getTypeOfE();
+			do {
+				for (Field field : c.getDeclaredFields()) {
+					if (field.isAnnotationPresent(KeyField.class)) {
+						keyFields.add(field.getName());
+					}
 				}
-			}
-		} while ((c = c.getSuperclass()) != null);
-		keyFields.add("id");
+			} while ((c = c.getSuperclass()) != null);
+			// always add the id at the end
+			keyFields.add("id");
+			this.keyFields = keyFields.toArray(new String[0]);
+		}
 
-		// if not defined, return id
-		return keyFields.toArray(new String[0]);
+		return this.keyFields;
 	}
 
 	/**
@@ -1689,10 +1715,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 */
 	protected String getKeyField() {
-		if (this.keyField == null) {
-			this.keyField = getKeyFields()[0];
-		}
-		return this.keyField;
+		return getKeyFields()[0];
 	}
 
 	/**
@@ -1948,7 +1971,21 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 */
 	protected Filter getSearchFilter(String term) {
-		return null;
+		// if there is a keyField, define the default filter
+		String keyFieldName = null;
+		for (String k : getKeyFields()) {
+			if (!k.equals("id")) {
+				keyFieldName = k;
+				break;
+			}
+		}
+		if (keyFieldName != null) {
+			Filter filter = new Filter(Logic.or);
+			filter.addFilter(new Filter(keyFieldName, formatKeyField(keyFieldName, term)));
+			return filter;
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -1984,7 +2021,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 						// in Hibernate5: p.getJavaType() is Set for a OneToMany
 						// in Hibernate6: p.getJavaType() is the generic type in the Set for a OneToMany
-						if (Collection.class.isAssignableFrom(p.getJavaType()) /* || p instanceof SqmPluralValuedSimplePath || s.endsWith("s") */) {
+						if (Collection.class.isAssignableFrom(p.getJavaType()) || p instanceof SqmPluralValuedSimplePath /* || s.endsWith("s") */) {
 							distinctNeeded = true;
 						}
 
@@ -1998,7 +2035,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							// build the left join
 							// fetch instead of join
 							// if we use .join(), it will create a new join instead of using the same
-							fetch = false; // Hibernate5 does not work well with fetch
 							if (fetch) {
 								join = (Join<?, ?>) join.fetch(s, JoinType.LEFT);
 							} else {
