@@ -215,13 +215,21 @@ expresso.util.UIUtil = (function () {
             }
 
             // make sure that the user has access to the resource
-            var url = expresso.Common.getWsResourcePathURL() + "/" + resourceURL + "/search";
-            var resourceName = getResourceNameFromURL(resourceURL);
-            var fieldName = $input.attr("name");
-            if (resourceName && !expresso.Common.isUserAllowed(resourceName, "read")) {
-                console.warn("Hiding server side combo box because user does not have read access to [" + resourceName + "]");
-                $input.closest("div").hide();
-                return $deferred.resolve();
+            // var fieldName = $input.attr("name");
+            var url;
+            var resourceName;
+            if (resourceURL.startsWith("/")) {
+                //  static URL. This is used by report in CEZinc
+                url = expresso.Common.getWsResourcePathURL() + resourceURL;
+            } else {
+                url = expresso.Common.getWsResourcePathURL() + "/" + resourceURL + "/search";
+                resourceName = getResourceNameFromURL(resourceURL);
+
+                if (resourceName && !expresso.Common.isUserAllowed(resourceName, "read")) {
+                    console.warn("Hiding server side combo box because user does not have read access to [" + resourceName + "]");
+                    $input.closest("div").hide();
+                    return $deferred.resolve();
+                }
             }
 
             // Custom Options
@@ -245,10 +253,13 @@ expresso.util.UIUtil = (function () {
                     $.extend(customOptions, customOptions.field.reference);
                 }
             }
-            // console.log(fieldName + " - customOptions", customOptions);
+            //console.log(fieldName + " - customOptions", customOptions);
 
             // custom label
             var dataTextField = customOptions.dataTextField || "label";
+
+            // minimum length before an auto search
+            var minLength = customOptions.minLength || 3;
 
             // create the combo box
             var searchEvent = {};
@@ -262,7 +273,7 @@ expresso.util.UIUtil = (function () {
                 highlightFirst: true, // the first suggestion will be automatically highlighted. (selected on enter)
                 syncValueAndText: false, // avoid auto adding new text
                 value: retrieveCurrentValue($input, customOptions),
-                minLength: customOptions.minLength || 3,  // avoid filtering for at least n characters
+                minLength: minLength,  // avoid filtering for at least n characters
                 delay: 200, // default is 200
                 enforceMinLength: true, // if true, on clear, do not show all options
                 cascadeFrom: customOptions.cascadeFrom,
@@ -301,6 +312,14 @@ expresso.util.UIUtil = (function () {
                     },
                     schema: {
                         parse: function (response) {
+                            if (!response.data) {
+                                response = {
+                                    data: response,
+                                    searchText: searchEvent.searchText,
+                                    tooManyResults: false
+                                }
+                            }
+
                             // console.log(fieldName + " - parse response [" + (response.searchText || "") + "]");
                             searchEvent.skippingResponse = false;
 
@@ -366,7 +385,7 @@ expresso.util.UIUtil = (function () {
                 close: function () {
                     searchEvent.popupOpened = false;
                 },
-                dataBound: function (e) {
+                dataBound: function () {
                     // console.log(fieldName + " - dataBound event - forceSelect[" + searchEvent.forceSelect + "] inputText[" +
                     //     cb.input.val() + "] data: " + cb.dataSource.data().length);
                     highlightField($input, null, null, true);
@@ -382,7 +401,7 @@ expresso.util.UIUtil = (function () {
                                 highlightField($input);
                             }
                         } else if (cb.dataSource.data().length == 1) {
-                            console.log("Auto select");
+                            // console.log("Auto select");
                             searchEvent.forceSelect = false;
                             searchEvent.searchText = null;
                             cb.select(0);
@@ -422,9 +441,15 @@ expresso.util.UIUtil = (function () {
                     searchEvent.searchText = this.value;
 
                     if (searchEvent.dirty) {
-                        // console.log("******** Enter/tab Force search [" + this.value + "]");
                         e.stopPropagation(); // otherwise it will assign the text for the value and trigger change
-                        cb.search(this.value);
+
+                        // must have minimum length
+                        var searchString = this.value || "";
+                        if (searchString.length < minLength) {
+                            searchString = searchString.paddingLeft(Array(minLength + 1).join(" "));
+                        }
+                        // console.log("******** Enter/tab Force search [" + searchString + "]");
+                        cb.search(searchString);
                     } else {
                         // console.log("******** Skipping Enter/tab (not dirty) [" + this.value + "]");
                         if (searchEvent.popupOpened) {
@@ -455,7 +480,7 @@ expresso.util.UIUtil = (function () {
             });
 
             // on blur, if the text is not valid, remove it
-            cb.input.on("blur", function (e) {
+            cb.input.on("blur", function () {
                 // console.log("Blur this.value[" + this.value + "] cb.value[" + cb.value() + "] dataItem[" + cb.dataItem() +
                 //     "]", searchEvent);
                 if (searchEvent.forceSelect) {
@@ -1251,27 +1276,35 @@ expresso.util.UIUtil = (function () {
 
                 // console.log(inputName + " - change event" + /* bindNameId[" + bindNameId + "]" + */ " value[" + value + "] dataItem[" + (dataItem ? dataItem.id : null) + "] userTriggered: " + e.userTriggered);
                 if (value && !dataItem) {
-                    if (resourceURL) {
-                        // console.log(inputName + " - We need to get the data item for the value[" + value + "]");
-                        expresso.Common.sendRequest(resourceURL + "/" + value, null, null, null, {
-                            ignoreErrors: true,
-                            waitOnElement: null
-                        }).done(function (result) {
-                            // add the new dataItem in the datasource
-                            dataItem = addDataItemToWidget(result, widget);
-
-                            // then trigger the change
-                            triggerChange.call(widget, e);
-                        }).fail(function () {
-                            // not found
-                            // console.log("Id not found [" + value + "]. Setting null");
-                            widget.value(null); // this will perform a search
-                            highlightField($input);
-                            triggerChange.call(widget, e);
-                        });
+                    // verify if the value is in the datasource
+                    dataItem = widget.dataSource.get(value);
+                    if (dataItem) {
+                        // select it
+                        widget.select(widget.dataSource.indexOf(dataItem));
+                        triggerChange.call(widget, e);
                     } else {
-                        // if it userTriggered, the value is not the id, then we cannot search for the id
-                        highlightField($input);
+                        if (resourceURL) {
+                            console.log(inputName + " - We need to get the data item for the value[" + value + "]");
+                            expresso.Common.sendRequest(resourceURL + "/" + value, null, null, null, {
+                                ignoreErrors: true,
+                                waitOnElement: null
+                            }).done(function (result) {
+                                // add the new dataItem in the datasource
+                                dataItem = addDataItemToWidget(result, widget);
+
+                                // then trigger the change
+                                triggerChange.call(widget, e);
+                            }).fail(function () {
+                                // not found
+                                // console.log("Id not found [" + value + "]. Setting null");
+                                widget.value(null); // this will perform a search
+                                highlightField($input);
+                                triggerChange.call(widget, e);
+                            });
+                        } else {
+                            // if it userTriggered, the value is not the id, then we cannot search for the id
+                            highlightField($input);
+                        }
                     }
                 } else if (value && dataItem) {
                     // make sure the dataItem is part of the dataSource.
