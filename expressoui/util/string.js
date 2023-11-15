@@ -43,6 +43,11 @@ if (!String.prototype.replaceAll) {
     };
 }
 
+if (!String.prototype.paddingLeft) {
+    String.prototype.paddingLeft = function (paddingValue) {
+        return String(paddingValue + this).slice(-paddingValue.length);
+    };
+}
 
 if (!String.prototype.plural) {
     String.prototype.plural = function (revert) {
