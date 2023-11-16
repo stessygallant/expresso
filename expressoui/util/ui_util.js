@@ -436,6 +436,12 @@ expresso.util.UIUtil = (function () {
 
             // Enter, Tab
             cb.input[0].addEventListener("keydown", function (e) {
+
+                // if it is a local datasource (after a setDataSource by the user), then return
+                if (!cb.dataSource.options || !cb.dataSource.options.serverFiltering) {
+                    return;
+                }
+
                 if (e.key == "Enter" /*|| e.key == "Tab"*/) {
                     searchEvent.forceSelect = true;
                     searchEvent.searchText = this.value;
@@ -498,6 +504,11 @@ expresso.util.UIUtil = (function () {
 
             // force search when opening the popup
             cb.input.closest(".k-combobox").find(".k-select")[0].addEventListener("click", function (e) {
+                // if it is a local datasource (after a setDataSource by the user), then return
+                if (!cb.dataSource.options || !cb.dataSource.options.serverFiltering) {
+                    return;
+                }
+
                 if (!searchEvent.popupOpened) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1449,15 +1460,25 @@ expresso.util.UIUtil = (function () {
          * @param [labels]
          */
         var setDataSource = function ($input, data, defaultValue, labels) {
+            data = data.data || data;
+
             var widget = getKendoWidget($input);
+            var currentValue = widget.value();
             data = convertList(data, labels);
 
             // console.log("Setting new datasource on [" + $input[0].name + "]", data);
-            $input.setval(null, false);
+            widget.value(null);
             widget.setDataSource(new kendo.data.DataSource({data: data}));
+
             if (defaultValue !== undefined) {
-                //console.log("Setting default value [" + defaultValue + "] " + (typeof defaultValue));
+                // console.log("Setting default value [" + defaultValue + "] " + (typeof defaultValue));
                 $input.setval(defaultValue);
+            } else if (currentValue && widget.dataSource.get(currentValue)) {
+                // console.log("Putting back current value [" + currentValue + "]");
+                $input.setval(currentValue);
+            } else {
+                // console.log("Setting null value [" + null + "]");
+                $input.setval(null);
             }
         };
 
