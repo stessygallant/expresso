@@ -53,7 +53,7 @@
                 resourceCollectionAction: true,
                 performAction: function () {
                     // return _this.sendRequest("resource", "publish", $.param({id: _this.getCurrentResourceId()}));
-                    // TODO how to get the files?
+                    // TO DO how to get the files?
                     // window.open();
                     return $.Deferred().resolve();
                 }
