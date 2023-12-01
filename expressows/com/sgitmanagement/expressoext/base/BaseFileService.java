@@ -291,7 +291,7 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 			}
 			os.flush();
 		} catch (Exception ex) {
-			throw new BaseException(HttpServletResponse.SC_NOT_FOUND, "Error reading file [" + file.getAbsolutePath() + "]", ex);
+			throw new BaseException(HttpServletResponse.SC_NOT_FOUND, "Error reading file [" + file.getAbsolutePath() + "]");
 		} finally {
 			try {
 				is.close();

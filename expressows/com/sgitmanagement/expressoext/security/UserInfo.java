@@ -39,6 +39,13 @@ public class UserInfo extends BaseEntity {
 	@JoinColumn(name = "role_info_id", insertable = false, updatable = false)
 	private RoleInfo roleInfo;
 
+	@Column(name = "job_title_info_id")
+	private Integer jobTitleInfoId;
+
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "job_title_info_id", insertable = false, updatable = false)
+	private JobTitleInfo jobTitleInfo;
+
 	@Transient
 	private String password;
 
@@ -131,10 +138,17 @@ public class UserInfo extends BaseEntity {
 		return roleInfo;
 	}
 
-	@Override
-	public String toString() {
-		return "UserInfo [userId=" + userId + ", user=" + user + ", roleInfoId=" + roleInfoId + ", roleInfo=" + roleInfo + ", password=" + password + ", numberValue=" + numberValue + ", textValue="
-				+ textValue + ", stringValue=" + stringValue + ", dateValue=" + dateValue + "]";
+	public Integer getJobTitleInfoId() {
+		return jobTitleInfoId;
+	}
+
+	public void setJobTitleInfoId(Integer jobTitleInfoId) {
+		this.jobTitleInfoId = jobTitleInfoId;
+	}
+
+	@XmlElement
+	public JobTitleInfo getJobTitleInfo() {
+		return jobTitleInfo;
 	}
 
 }

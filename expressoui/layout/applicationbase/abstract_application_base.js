@@ -28,6 +28,9 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
     // promise when the application is ready
     $readyPromise: undefined,
 
+    // promises to be verified before calling a method on the section
+    readyPromises: undefined,
+
     // application preferences for the user
     applicationPreferences: undefined,
 
@@ -42,6 +45,8 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
 
         // init default options
         this.options = {queryParameters: {}};
+
+        this.readyPromises = [];
     },
 
     /**
@@ -92,6 +97,15 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
     resizeContent: function () {
         // by default, resize all kendo widgets in the DOM element
         // kendo.resize($domElement);
+    },
+
+    /**
+     * This method add a new promise to the section.
+     * All promises must be resolved before using the section (see isReady)
+     * @param promise
+     */
+    addPromise: function (promise) {
+        this.readyPromises.push(promise);
     },
 
     /**
@@ -169,11 +183,12 @@ expresso.layout.applicationbase.AbstractApplicationBase = kendo.Class.extend({
      */
     isReady: function () {
         if (!this.$readyPromise) {
-            // initialized the promise
-            return this.render();
+            this.readyPromises.push(this.render());
         } else {
-            return this.$readyPromise;
+            this.readyPromises.push(this.$readyPromise);
         }
+
+        return $.when.apply(null, this.readyPromises);
     },
 
     /**

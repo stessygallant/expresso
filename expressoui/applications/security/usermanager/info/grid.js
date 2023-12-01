@@ -6,6 +6,9 @@
             field: "roleInfo.pgmKey",
             width: 200
         }, {
+            field: "jobTitleInfo.pgmKey",
+            width: 200
+        }, {
             field: "dateValue",
             width: 150
         }, {

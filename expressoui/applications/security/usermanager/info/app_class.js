@@ -16,9 +16,18 @@ expresso.applications.security.usermanager.info.InfoManager = expresso.layout.re
             },
             roleInfoId: {
                 type: "number",
+                nullable: true,
                 reference: {
                     resourceName: "roleInfo",
                     resourcePath: "role/0/info"
+                }
+            },
+            jobTitleInfoId: {
+                type: "number",
+                nullable: true,
+                reference: {
+                    resourceName: "jobTitleInfo",
+                    resourcePath: "jobTitle/0/info"
                 }
             },
             numberValue: {

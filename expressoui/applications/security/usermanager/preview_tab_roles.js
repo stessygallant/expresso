@@ -74,7 +74,7 @@ expresso.applications.security.usermanager.PreviewTabRoles = expresso.layout.res
 
             // get roles for the jobtitle
             if (resource.jobTitleId) {
-                promises.push(expresso.Common.sendRequest("jobtitle/" + resource.jobTitleId + "/role").done(function (roles) {
+                promises.push(expresso.Common.sendRequest("jobTitle/" + resource.jobTitleId + "/role").done(function (roles) {
                     $.each(roles, function (index, value) {
                         // select it and the user cannot unselect it
                         $form.find("input[value=" + value.id + "]").prop("checked", true).prop("disabled", true);

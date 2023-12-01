@@ -1235,7 +1235,7 @@ expresso.Common = (function () {
                                 trackingId: expresso.Common.getSiteNamespace().config.Configurations.googleAnalyticsTrackingNumber,
                                 cookieDomain: 'auto',
                                 name: 't0', // default tracker name
-                                userId: expresso.Common.getUserInfo().id
+                                userId: expresso.Common.getUserProfile().id
                             });
                         }
 
@@ -1256,7 +1256,7 @@ expresso.Common = (function () {
                 if (gaFields.hitType == "pageview") {
                     var analyticsData = {
                         type: "log",
-                        userName: expresso.Common.getUserInfo().userName,
+                        userName: expresso.Common.getUserProfile().userName,
                         applicationName: expresso.util.Util.getUrlParameter("app"),
                         url: gaFields.page,
                         parameters: gaFields.params ? (typeof gaFields.params === "string" ? gaFields.params : $.param(gaFields.params)) : null,
@@ -1742,7 +1742,7 @@ expresso.Common = (function () {
         delete params.loginToken;
         delete params.securityToken;
         delete params.userName;
-        delete params.autoLoginUserName;
+        // delete params.autoLoginUserName;
         // delete params.lang;
 
         // cezinc only
@@ -2177,12 +2177,12 @@ expresso.Common = (function () {
      *
      * @returns {*}
      */
-    var getUserInfo = function () {
+    var getUserProfile = function () {
         // redirect this method to the Main application
         if (expresso.Security) {
-            return expresso.Security.getUserInfo();
+            return expresso.Security.getUserProfile();
         } else {
-            return siteNamespace.Main.getUserInfo();
+            return siteNamespace.Main.getUserProfile();
         }
     };
 
@@ -2211,7 +2211,7 @@ expresso.Common = (function () {
         } else {
             // get the user preferences
             var preferenceFilter = expresso.Common.buildKendoFilter({"application": applicationName});
-            return expresso.Common.sendRequest("user/" + expresso.Common.getUserInfo().id + "/preference", null,
+            return expresso.Common.sendRequest("user/" + expresso.Common.getUserProfile().id + "/preference", null,
                 null, preferenceFilter, {waitOnElement: null}
             ).then(function (appPreferences) {
 
@@ -2260,7 +2260,7 @@ expresso.Common = (function () {
                     applicationPreferences = {
                         id: undefined,
                         type: "userPreference",
-                        userId: expresso.Common.getUserInfo().id,
+                        userId: expresso.Common.getUserProfile().id,
                         application: applicationName,
                         preferences: {}
                     };
@@ -2283,7 +2283,7 @@ expresso.Common = (function () {
         applicationPreferences.preferences = JSON.stringify(applicationPreferences.preferences);
 
         // save the preference
-        return expresso.Common.sendRequest("user/" + expresso.Common.getUserInfo().id + "/preference" +
+        return expresso.Common.sendRequest("user/" + expresso.Common.getUserProfile().id + "/preference" +
             (applicationPreferences.id ? "/" + applicationPreferences.id : ""),
             applicationPreferences.id ? "update" : "create", applicationPreferences).then(function (updatedApplicationPreferences) {
             // the parse the preferences to use it as JSON
@@ -2468,7 +2468,7 @@ expresso.Common = (function () {
         isUserInRole: isUserInRole,
         isPowerUser: isPowerUser,
         isAdmin: isAdmin,
-        getUserInfo: getUserInfo,
+        getUserProfile: getUserProfile,
         getImpersonateUser: getImpersonateUser
     }
 }());

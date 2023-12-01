@@ -1225,7 +1225,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             e.preventDefault();
             _this.performDelete();
         });
-        
+
         $grid.find(".exp-deactivate-button").on("click.grid", function (e) {
             e.preventDefault();
             _this.performDeactivate();
@@ -2379,7 +2379,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             } else if (emails.length == 1) {
                 to = emails;
             } else {
-                to = expresso.Common.getUserInfo().email;
+                to = expresso.Common.getUserProfile().email;
                 bcc = emails.join(";");
             }
 
@@ -3211,7 +3211,12 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         var masterFilter = this.masterFilter || this.getMasterGridFilter();
         if (masterFilter) {
             if (typeof masterFilter === "function") {
-                masterFilter = masterFilter();
+                try {
+                    masterFilter = masterFilter();
+                } catch (e) {
+                    // if this is a sub or sibling resource manager, the currentResource may be null
+                    masterFilter = {customFilterFlag: true, field: "id", operator: "eq", value: -1};
+                }
             }
             expresso.Common.addKendoFilter(dataSourceOptions.filter, masterFilter, true);
         }

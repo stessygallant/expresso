@@ -236,7 +236,7 @@ expresso.layout.resourcemanager.ResourceManager = expresso.layout.applicationbas
     getUploadDocumentPath: function (siblingResourceManager, base64) {
         // always upload to /document
         var url = expresso.Common.getWsUploadPathURL() + "/document" + (base64 ? "/base64" : "") +
-            "?creationUserName=" + expresso.Common.getUserInfo().userName;
+            "?creationUserName=" + expresso.Common.getUserProfile().userName;
         return this.addSiblingParams(url, siblingResourceManager);
     },
 

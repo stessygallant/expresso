@@ -14,7 +14,7 @@ expresso.layout.resourcemanager.SectionBase = kendo.Class.extend({
 
     RM_EVENTS: undefined,
 
-    // promises to be verify before calling a method on the section
+    // promises to be verified before calling a method on the section
     readyPromises: undefined,
 
     /**

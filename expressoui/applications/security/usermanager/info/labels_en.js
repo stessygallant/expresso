@@ -4,6 +4,11 @@ expresso.applications.security.usermanager.info.Labels = {
     textValue: "Text",
     stringValue: "Text (max 1000)",
     dateValue: "Date",
-    "roleInfo.pgmKey": "Role info",
-    roleInfo: "Role info"
+    "roleInfo.pgmKey": "Role Info",
+    roleInfo: "Role Info",
+
+    jobTitleInfo: "Job Title Info",
+    "jobTitleInfo.pgmKey": "Job Title Info",
+
+    _: ""
 };

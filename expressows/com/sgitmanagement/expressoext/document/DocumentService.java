@@ -98,12 +98,16 @@ public class DocumentService extends BaseFileService<Document> {
 	public List<Document> list(Query query) throws Exception {
 		// a user can view a document if it can view the resource
 		if (query.getFilter("id") != null) {
-			Integer id = Integer.parseInt("" + query.getFilter("id").getValue());
-			List<Document> documents = new ArrayList<>();
-			Document document = get(id);
-			verifyUserPrivileges(document, "read");
-			documents.add(document);
-			return documents;
+			if (query.getFilter("id").getIntValue() != -1) {
+				Integer id = query.getFilter("id").getIntValue();
+				List<Document> documents = new ArrayList<>();
+				Document document = get(id);
+				verifyUserPrivileges(document, "read");
+				documents.add(document);
+				return documents;
+			} else {
+				return new ArrayList<>();
+			}
 		} else if (query.getFilter("resourceName") != null) {
 			String resourceName = (String) query.getFilter("resourceName").getValue();
 			Resource resource = newService(ResourceService.class, Resource.class).get(resourceName);

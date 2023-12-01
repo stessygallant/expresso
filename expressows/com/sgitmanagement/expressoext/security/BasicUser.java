@@ -7,6 +7,9 @@ import com.sgitmanagement.expresso.util.JAXBDateAdapter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -26,6 +29,15 @@ public class BasicUser extends BasicPerson implements IUser {
 	@Temporal(TemporalType.DATE)
 	@Column(name = "termination_date")
 	private Date terminationDate;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id", insertable = false, updatable = false)
+	private User extendedUser;
+
+	@Override
+	public User getExtended() {
+		return extendedUser;
+	}
 
 	@Override
 	@XmlElement

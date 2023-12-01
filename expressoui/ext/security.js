@@ -79,9 +79,36 @@ expresso.Security = function () {
      * Get the user profile
      * @returns {*} the user profile
      */
-    var getUserInfo = function () {
+    var getUserProfile = function () {
         return userProfile;
     };
+
+    /**
+     *
+     * @param info
+     * @param queryParameters
+     * @returns {*}
+     */
+    var getUserInfo = function (info, queryParameters) {
+        if (!info) {
+            console.error("Deprecated call to getUserInfo(). Use getUserProfile()");
+            return getUserProfile();
+        } else {
+            // parameters always override user info
+            if (queryParameters[info]) {
+                return queryParameters[info];
+            } else if (userProfile.userInfos && userProfile.userInfos[info]) {
+                // only one of them is not null
+                return userProfile.userInfos[info].stringValue ||
+                    userProfile.userInfos[info].dateValue ||
+                    userProfile.userInfos[info].textValue ||
+                    userProfile.userInfos[info].numberValue;
+            } else {
+                return null;
+            }
+        }
+    };
+
 
     /**
      *
@@ -99,10 +126,6 @@ expresso.Security = function () {
         return ipAddress;
     };
 
-    var getTimeToLoadProfile = function () {
-        return timeToLoadProfile;
-    };
-
     /**
      *
      * @returns {*}
@@ -116,7 +139,7 @@ expresso.Security = function () {
      * @param [userName] if not defined, load "me"
      * @returns {*} a promise when the profile is loaded
      */
-    var loadProfile = function (userName) {
+    var loadUserProfile = function (userName) {
         var $deferred = $.Deferred();
 
         if (userName === undefined) {
@@ -241,8 +264,13 @@ expresso.Security = function () {
                         waitOnElement: null
                     }).done(function (infos) {
                         userProfile.userInfos = {};
-                        $.each(infos.data, function (index, userInfo) {
-                            userProfile.userInfos[userInfo.roleInfo.pgmKey] = userInfo;
+                        $.each(infos.data, function () {
+                            var userInfo = this;
+                            if (userInfo.roleInfo) {
+                                userProfile.userInfos[userInfo.roleInfo.pgmKey] = userInfo;
+                            } else if (userInfo.jobTitleInfo) {
+                                userProfile.userInfos[userInfo.jobTitleInfo.pgmKey] = userInfo;
+                            }
                         });
                     }),
 
@@ -343,13 +371,13 @@ expresso.Security = function () {
     /**
      *
      */
-    var loadProfileWhileDisplaySplashPage = function () {
+    var loadUserProfileWhileDisplaySplashPage = function () {
         var $deferred = $.Deferred();
         var $overlayDiv = $("<div class='overlay-content'></div>").appendTo($("body"));
         expresso.Common.loadHTML($overlayDiv, "expresso/ext/splash.html").done(function ($div) {
             $div.find(".title").show().html(expresso.Common.getLabel("splashTitle"));
 
-            loadProfile().done(function () {
+            loadUserProfile().done(function () {
                 $deferred.resolve();
                 window.setTimeout(function () {
                     $overlayDiv.remove();
@@ -794,7 +822,7 @@ expresso.Security = function () {
 
         var $deferred = $.Deferred();
         $loginDeferred.done(function () {
-            loadProfileWhileDisplaySplashPage().done(function () {
+            loadUserProfileWhileDisplaySplashPage().done(function () {
                 $deferred.resolve();
             });
         });
@@ -896,19 +924,20 @@ expresso.Security = function () {
         login: login,
         logout: logout,
 
-        loadProfile: loadProfile,
+        loadUserProfile: loadUserProfile,
+        getUserProfile: getUserProfile,
+        getUserInfo: getUserInfo,
+
         isUserAllowed: isUserAllowed,
         isUserInRole: isUserInRole,
         isPowerUser: isPowerUser,
         isAdmin: isAdmin,
 
-        getUserInfo: getUserInfo,
         getImpersonateUser: getImpersonateUser,
         displayLoginPage: displayLoginPage,
         getSessionToken: getSessionToken,
 
         getIpAddress: getIpAddress,
-        isInternalIpAddress: isInternalIpAddress,
-        getTimeToLoadProfile: getTimeToLoadProfile
+        isInternalIpAddress: isInternalIpAddress
     };
 }();

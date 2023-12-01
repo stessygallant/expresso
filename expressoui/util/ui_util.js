@@ -2050,6 +2050,7 @@ expresso.util.UIUtil = (function () {
                         return dataItem[dataValueField];
                     });
                     kendoMultiSelect.value(values);
+                    kendoMultiSelect.trigger("change");
                 });
             }
 
@@ -2177,7 +2178,7 @@ expresso.util.UIUtil = (function () {
             // console.log("addSearchButton to " + $input.attr("name"));
 
             // add a search button beside the combo box
-            var $parent = $input.closest(".input-wrap");
+            var $parent = $input.closest(".input-wrap,.exp-input-wrap");
             $parent.addClass("exp-ref-with-buttons");
 
             var widget = getKendoWidget($input);
@@ -2503,7 +2504,7 @@ expresso.util.UIUtil = (function () {
                 }
 
                 if (setReadOnlyOnInputWrap !== false) {
-                    var $inputWrap = $el.closest(".input-wrap");
+                    var $inputWrap = $el.closest(".input-wrap,.exp-input-wrap");
                     if ($inputWrap.length) {
                         if (readonly) {
                             $inputWrap.addClass("readonly");
@@ -2548,8 +2549,8 @@ expresso.util.UIUtil = (function () {
                 // console.trace(el.name);
                 if (el.nodeName == "DIV" || el.nodeName == "FIELDSET") {
                     hide ? $el.hide() : $el.show();
-                } else if (supportInputWrap && $el.closest(".input-wrap").length) {
-                    hide ? $el.closest(".input-wrap").hide() : $el.closest(".input-wrap").show();
+                } else if (supportInputWrap && $el.closest(".input-wrap,.exp-input-wrap").length) {
+                    hide ? $el.closest(".input-wrap,.exp-input-wrap").hide() : $el.closest(".input-wrap,.exp-input-wrap").show();
                 } else if ($el.attr("data-role")) {
                     hide ? $el.closest(".k-widget").hide() : $el.closest(".k-widget").show();
                 } else {
@@ -2564,7 +2565,7 @@ expresso.util.UIUtil = (function () {
          * @param label
          */
         var updateLabel = function ($input, label) {
-            $input.closest(".input-wrap").find("label").text(label);
+            $input.closest(".input-wrap,.exp-input-wrap").find("label").text(label);
         };
 
         // @Deprecated
@@ -2928,6 +2929,12 @@ expresso.util.UIUtil = (function () {
                     // console.log("bindOnChange waiting: " + $input[0].name);
                     $waitingPromise.done(function () {
                         //console.log("bindOnChange DONE: " + $input[0].name);
+                        if (e.userTriggered === undefined) {
+                            // for radio button, user e.originalEvent
+                            if ($input[0].nodeName == "INPUT" && $input.attr("type") == "radio") {
+                                e.userTriggered = !!e.originalEvent;
+                            }
+                        }
                         onChangeCallback.call(e && e.target ? e.target : $input[0], e);
                     });
                 });
@@ -3041,7 +3048,7 @@ expresso.util.UIUtil = (function () {
                     var data = {};
 
                     // add the creation user (this is only mandatory because of the public path)
-                    data["creationUserId"] = expresso.Common.getUserInfo().id;
+                    data["creationUserId"] = expresso.Common.getUserProfile().id;
 
                     // add token if present
                     if (expresso.Security) {
@@ -3143,7 +3150,7 @@ expresso.util.UIUtil = (function () {
                     }
 
                     // add the creation user (this is only mandatory because of the public path)
-                    data["creationUserId"] = expresso.Common.getUserInfo().id;
+                    data["creationUserId"] = expresso.Common.getUserProfile().id;
 
                     // add token if present
                     if (expresso.Security) {

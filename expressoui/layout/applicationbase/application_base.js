@@ -152,11 +152,14 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
      *
      * @param fct
      * @param seconds
+     * @param [executeNow] default is true
      * @returns {*} the newly created interval
      */
-    addInterval: function (fct, seconds) {
-        // execute the fct now
-        fct();
+    addInterval: function (fct, seconds, executeNow) {
+        if (executeNow !== false) {
+            // execute the fct now
+            fct();
+        }
 
         // now set the interval
         if (seconds) {

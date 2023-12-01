@@ -1,14 +1,15 @@
-﻿expresso.applications.security.rolemanager.info.InfoManager = expresso.layout.resourcemanager.ResourceManager.extend({
+﻿expresso.applications.security.jobtitlemanager.info.InfoManager = expresso.layout.resourcemanager.ResourceManager.extend({
 
     // @override
     init: function (applicationPath) {
+        console.log("[" + this.getLabel("numberValue") + "]");
         var fields = {
             type: {
                 type: "string",
                 editable: false,
-                defaultValue: "roleInfo"
+                defaultValue: "jobTitleInfo"
             },
-            roleId: {
+            jobTitleId: {
                 type: "number",
                 reference: true
             },
@@ -23,7 +24,13 @@
             },
             infoType: {
                 type: "string",
-                maxLength: 50
+                maxLength: 50,
+                defaultValue: "string",
+                values: [{id: "number", label: this.getLabel("numberValue")},
+                    {id: "date", label: this.getLabel("dateValue")},
+                    {id: "string", label: this.getLabel("stringValue")},
+                    {id: "text", label: this.getLabel("textValue")}
+                ]
             },
             defaultNumber: {
                 type: "number",

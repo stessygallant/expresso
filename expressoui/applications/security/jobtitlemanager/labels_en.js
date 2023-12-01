@@ -3,6 +3,8 @@ expresso.applications.security.jobtitlemanager.Labels = {
     associatedRoles: "Associated roles",
     approbationAmounts: "Approbation amounts",
     users: "Users",
-    managedJobTitleIds: "May manage users with"
+    managedJobTitleIds: "May manage users with",
+    info: "Informations",
 
+    _: ""
 };

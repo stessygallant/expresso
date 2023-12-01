@@ -144,7 +144,7 @@ expresso.Main = function () {
 
         // inline function to determine if the menu item is in the favorite
         var isFavorite = function (appName) {
-            var favorites = expresso.Security.getUserInfo().favorites;
+            var favorites = expresso.Security.getUserProfile().favorites;
             for (var i = 0, l = favorites.length; i < l; i++) {
                 if (favorites[i] == appName) {
                     return true;
@@ -154,9 +154,9 @@ expresso.Main = function () {
         };
 
         // put favorite menu first
-        if (expresso.Security.getUserInfo().favorites.length) {
+        if (expresso.Security.getUserProfile().favorites.length) {
             var menuFavorites = {group: "Favorites", icon: "star", items: [], class: "favorites"};
-            $.each(expresso.Security.getUserInfo().favorites, function (index, fav) {
+            $.each(expresso.Security.getUserProfile().favorites, function (index, fav) {
                 var item = findMenuItem(menus, fav);
                 if (item) {
                     menuFavorites.items.push(item);
@@ -189,13 +189,13 @@ expresso.Main = function () {
                 var favorite = isFavorite(appName);
                 if (favorite) {
                     // remove favorite
-                    var index = expresso.Security.getUserInfo().favorites.indexOf(appName);
+                    var index = expresso.Security.getUserProfile().favorites.indexOf(appName);
                     if (index !== -1) {
-                        expresso.Security.getUserInfo().favorites.splice(index, 1);
+                        expresso.Security.getUserProfile().favorites.splice(index, 1);
                     }
                 } else {
                     // add new favorite
-                    expresso.Security.getUserInfo().favorites.push(appName);
+                    expresso.Security.getUserProfile().favorites.push(appName);
                 }
 
                 // rebuild the menu
@@ -312,15 +312,15 @@ expresso.Main = function () {
                 $target.parent().find("[data-app='" + appName + "']").closest(".k-item").insertBefore($target);
 
                 // modify favorites
-                var sourceIndex = expresso.Security.getUserInfo().favorites.indexOf(appName);
-                var targetIndex = expresso.Security.getUserInfo().favorites.indexOf(targetAppName);
+                var sourceIndex = expresso.Security.getUserProfile().favorites.indexOf(appName);
+                var targetIndex = expresso.Security.getUserProfile().favorites.indexOf(targetAppName);
                 console.log("Moved [" + appName + "] from [" + sourceIndex + "] to [" + targetIndex + "] (" + targetAppName + ")");
 
                 // remove at the current position
-                expresso.Security.getUserInfo().favorites.splice(sourceIndex, 1);
+                expresso.Security.getUserProfile().favorites.splice(sourceIndex, 1);
 
                 // insert at the new position
-                expresso.Security.getUserInfo().favorites.splice(targetIndex < sourceIndex ? targetIndex : targetIndex - 1,
+                expresso.Security.getUserProfile().favorites.splice(targetIndex < sourceIndex ? targetIndex : targetIndex - 1,
                     0, appName);
 
                 saveFavorites();
@@ -333,15 +333,15 @@ expresso.Main = function () {
     var saveFavorites = function () {
         var config = {
             type: "userConfig",
-            id: expresso.Security.getUserInfo().favoritesId,
-            userId: expresso.Security.getUserInfo().id,
+            id: expresso.Security.getUserProfile().favoritesId,
+            userId: expresso.Security.getUserProfile().id,
             key: "MenuFavorites",
-            value: JSON.stringify(expresso.Security.getUserInfo().favorites)
+            value: JSON.stringify(expresso.Security.getUserProfile().favorites)
         };
-        expresso.Common.sendRequest("user/" + expresso.Security.getUserInfo().id + "/config" +
-            (expresso.Security.getUserInfo().favoritesId ? "/" + expresso.Security.getUserInfo().favoritesId : ""),
-            (expresso.Security.getUserInfo().favoritesId ? "update" : "create"), config).done(function (updatedConfig) {
-            expresso.Security.getUserInfo().favoritesId = updatedConfig.id;
+        expresso.Common.sendRequest("user/" + expresso.Security.getUserProfile().id + "/config" +
+            (expresso.Security.getUserProfile().favoritesId ? "/" + expresso.Security.getUserProfile().favoritesId : ""),
+            (expresso.Security.getUserProfile().favoritesId ? "update" : "create"), config).done(function (updatedConfig) {
+            expresso.Security.getUserProfile().favoritesId = updatedConfig.id;
         });
     };
 
@@ -390,10 +390,10 @@ expresso.Main = function () {
 
         // verify if the user has a default application
         if (!appName) {
-            //console.log("expresso.Security.getUserInfo().userInfos", expresso.Security.getUserInfo().userInfos);
-            if (expresso.Security.getUserInfo().userInfos && expresso.Security.getUserInfo().userInfos['defaultApplication'] &&
-                expresso.Security.getUserInfo().userInfos['defaultApplication'].stringValue) {
-                appName = expresso.Security.getUserInfo().userInfos['defaultApplication'].stringValue;
+            //console.log("expresso.Security.getUserProfile().userInfos", expresso.Security.getUserProfile().userInfos);
+            if (expresso.Security.getUserProfile().userInfos && expresso.Security.getUserProfile().userInfos['defaultApplication'] &&
+                expresso.Security.getUserProfile().userInfos['defaultApplication'].stringValue) {
+                appName = expresso.Security.getUserProfile().userInfos['defaultApplication'].stringValue;
             }
         }
 
@@ -475,7 +475,7 @@ expresso.Main = function () {
                     var $windowDiv = this;
 
                     var $form = $windowDiv.find("form");
-                    var userProfile = expresso.Security.getUserInfo();
+                    var userProfile = expresso.Security.getUserProfile();
 
                     $windowDiv.find("[name=firstName]").setval(userProfile.firstName);
                     $windowDiv.find("[name=lastName]").setval(userProfile.lastName);
@@ -488,133 +488,17 @@ expresso.Main = function () {
                         $windowDiv.find("[name=password]").closest("div").hide();
                     }
 
-                    // roles
-                    // build the profile based on the roles
-                    var roleInfos = [];
-                    var promises = [];
-
-
-                    // get all info for all user roles
-                    $.each(userProfile.userRoles, function (index, userRole) {
-                        promises.push(expresso.Common.sendRequest("role/" + userRole.id + "/info").done(function (result) {
-                            if (result && result.total > 0) {
-                                roleInfos.push({role: userRole, info: result.data});
-                            }
-                        }));
-                    });
-
-                    $.when.apply(null, promises).done(function () {
-                        // build the UI
-                        for (var i = 0; i < roleInfos.length; i++) {
-                            var ri = roleInfos[i];
-                            var $fieldset = $("<fieldset class='" + ri.role.pgmKey + "'><legend>" + ri.role.label + "</legend></fieldset>").appendTo($form);
-
-                            for (var j = 0; j < ri.info.length; j++) {
-                                var rj = ri.info[j];
-
-                                var fullLength = false;
-                                var a;
-                                switch (rj.infoType) {
-                                    case "text":
-                                        a = "<textarea class='k-textbox role-input' name='" + rj.pgmKey + "' rows='4'></textarea>";
-                                        fullLength = true;
-                                        break;
-
-                                    case "date":
-                                        a = "<input class='k-textbox role-input' name='" + rj.pgmKey + "'>";
-                                        break;
-
-                                    case "number":
-                                        a = "<input class='k-textbox role-input' name='" + rj.pgmKey + "' data-role='numerictextbox' data-format='{0:n0}'>";
-                                        break;
-
-                                    case "string":
-                                    default:
-                                        a = "<input class='k-textbox role-input' name='" + rj.pgmKey + "'>";
-                                        break;
-                                }
-                                a = "<div class='input-wrap " + (fullLength ? "full-length" : "") + "'><label>" + rj.description + "</label>" + a + "</div>";
-                                $fieldset.append(a);
-                            }
-                        }
-
-                        // convert any text area to editor
-                        $windowDiv.find("textarea").kendoEditor({
-                            resizable: {
-                                content: true,
-                                toolbar: true
-                            },
-                            encoded: false
-                        });
-
-                        expresso.Common.sendRequest("user/" + userProfile.id + "/info").done(function (result) {
-                            $.each(result.data, function (index, userInfo) {
-                                var $input = $windowDiv.find("[name='" + userInfo.roleInfo.pgmKey + "']");
-                                var value;
-                                switch (userInfo.roleInfo.infoType) {
-                                    case "text":
-                                        value = userInfo.textValue;
-                                        break;
-
-                                    case "date":
-                                        value = userInfo.dateValue;
-                                        break;
-
-                                    case "number":
-                                        value = userInfo.numberValue;
-                                        break;
-
-                                    case "string":
-                                    default:
-                                        value = userInfo.stringValue;
-                                        break;
-                                }
-                                $input.setval(value);
-                                $input.data("userInfo", userInfo);
-                            });
-                        });
-
-                        // if the user is a local user, do not allow change the profile
-                        if (userProfile.genericAccount) {
-                            expresso.util.UIUtil.setFormReadOnly($form);
-                        }
-                    });
-
+                    // if the user is a local user, do not allow change the profile
+                    if (userProfile.genericAccount) {
+                        expresso.util.UIUtil.setFormReadOnly($form);
+                    }
                 },
                 save: function () {
                     var $windowDiv = this;
-                    var userProfile = expresso.Security.getUserInfo();
-
-                    // start by saving userInfo
-                    $windowDiv.find(".role-input[name]").each(function () {
-                        var userInfo;
-                        var $input = $(this);
-
-                        var value = $input.val();
-                        userInfo = $input.data("userInfo");
-                        switch (userInfo.roleInfo.infoType) {
-                            case "text":
-                                userInfo.textValue = value;
-                                break;
-
-                            case "date":
-                                userInfo.dateValue = value;
-                                break;
-
-                            case "number":
-                                userInfo.numberValue = value;
-                                break;
-
-                            case "string":
-                            default:
-                                userInfo.stringValue = value;
-                                break;
-                        }
-                        expresso.Common.sendRequest("user/" + userProfile.id + "/info/" + userInfo.id, "update", userInfo);
-                    });
+                    var userProfile = expresso.Security.getUserProfile();
 
                     // save profile
-                    var profile = $.extend({}, expresso.Security.getUserInfo(), {
+                    var profile = $.extend({}, expresso.Security.getUserProfile(), {
                         firstName: $windowDiv.find("[name=firstName]").val(),
                         lastName: $windowDiv.find("[name=lastName]").val(),
                         email: $windowDiv.find("[name=email]").val(),
@@ -628,12 +512,12 @@ expresso.Main = function () {
                         profile.password = $windowDiv.find("[name=password]").val();
                     }
 
-                    return expresso.Common.sendRequest("user/" + expresso.Security.getUserInfo().id, "update", profile).done(function (profile) {
-                        if (profile.language != expresso.Security.getUserInfo().language) {
+                    return expresso.Common.sendRequest("user/" + expresso.Security.getUserProfile().id, "update", profile).done(function (profile) {
+                        if (profile.language != expresso.Security.getUserProfile().language) {
                             //expresso.Common.setLanguage(profile.language);
                             location.reload();
                         } else {
-                            $.extend(expresso.Security.getUserInfo(), profile);
+                            $.extend(expresso.Security.getUserProfile(), profile);
                         }
                     });
                 },
@@ -771,15 +655,12 @@ expresso.Main = function () {
         // initialize the footer
         $footerDiv.html(expresso.Common.getLabel("footerDisclaimer"));
 
-        // $footerDiv.append("<span class='time-to-load-profile'>" + expresso.Security.getTimeToLoadProfile() + "</span>");
-
         // initialize the version section
         var $versionDiv = $body.find(".version");  // 2 versions: in the title (tablet) and the footer (desktop)
         $versionDiv.html("v" + expresso.Common.getSiteNamespace().config.Configurations.version);
-        // " [" + expresso.Security.getTimeToLoadProfile() + "]");
 
         // initialize the user profile section
-        var userName = expresso.Security.getUserInfo().firstName + " " + expresso.Security.getUserInfo().lastName;
+        var userName = expresso.Security.getUserProfile().firstName + " " + expresso.Security.getUserProfile().lastName;
         if (userName.length > 18) {
             userName = userName.substring(0, 18);
         }
@@ -804,8 +685,8 @@ expresso.Main = function () {
                     change: function () {
                         var user = this.dataItem();
                         // load the new profile and reinit the application
-                        expresso.Security.loadProfile(user ? user.userName : null).done(function () {
-                            $userDiv.find(".username").text(expresso.Security.getUserInfo().firstName + " " + expresso.Security.getUserInfo().lastName);
+                        expresso.Security.loadUserProfile(user ? user.userName : null).done(function () {
+                            $userDiv.find(".username").text(expresso.Security.getUserProfile().firstName + " " + expresso.Security.getUserProfile().lastName);
                             buildMenu($menu);
 
                             // select the application

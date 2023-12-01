@@ -18,7 +18,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 
-@Path("{jobtitle:(?i)jobtitle}")
+@Path("jobTitle")
 public class JobTitlesResource extends BaseOptionsResource<JobTitle, JobTitleService, JobTitleResource> {
 
 	public JobTitlesResource(@Context HttpServletRequest request, @Context HttpServletResponse response) {
@@ -26,7 +26,6 @@ public class JobTitlesResource extends BaseOptionsResource<JobTitle, JobTitleSer
 	}
 
 	static public class JobTitleResource extends BaseOptionResource<JobTitle, JobTitleService> {
-
 		public JobTitleResource(HttpServletRequest request, HttpServletResponse response) {
 			super(JobTitle.class, request, response);
 		}
@@ -36,8 +35,7 @@ public class JobTitlesResource extends BaseOptionsResource<JobTitle, JobTitleSer
 		@Produces(MediaType.APPLICATION_JSON)
 		public Set<Role> getRoles() {
 			if (getId() != -1) {
-				JobTitle jobTitle = getService().getRef(getId());
-				return jobTitle.getRoles();
+				return getService().getRef(getId()).getRoles();
 			} else {
 				return new HashSet<>();
 			}
@@ -57,9 +55,14 @@ public class JobTitlesResource extends BaseOptionsResource<JobTitle, JobTitleSer
 			getService().removeRole(getId(), roleId);
 		}
 
-		@Path("{approbationamount:(?i)approbationamount}")
+		@Path("approbationAmount")
 		public JobTitleApprobationAmountsResource getJobTitleApprobationAmounts() {
 			return new JobTitleApprobationAmountsResource(request, response, getId());
+		}
+
+		@Path("info")
+		public JobTitleInfosResource getJobTitleInfosResource() {
+			return new JobTitleInfosResource(request, response, getId());
 		}
 	}
 }

@@ -81,7 +81,7 @@ public class BasicAuthentificationFilter implements Filter {
 
 						// of the authPass is null, verify if it is an autologin user
 						if (authPass == null) {
-							authPass = SystemEnv.INSTANCE.getDefaultProperties().getProperty(authUser);
+							authPass = SystemEnv.INSTANCE.getDefaultProperties().getProperty("autologinuser_" + authUser);
 							// logger.debug("Got password for [" + authUser + "]: [" + authPass + "]");
 						}
 

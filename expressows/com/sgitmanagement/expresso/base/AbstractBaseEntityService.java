@@ -1464,7 +1464,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @param e
 	 * @throws Exception
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void verifyActionRestrictions(String action, E e) throws Exception {
 		// logger.debug("verifyActionRestrictions: " + action + ":" +
 		// getTypeOfE().getSimpleName() + ":"
@@ -1485,7 +1485,12 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			if (action.equals("duplicate")) {
 				// by default, if the user can read the entity, it can duplicate it
 			} else {
-				getParentEntityService().verifyActionRestrictions("update", getParentEntityInstance(e));
+				IEntity parentEntity = getParentEntityInstance(e);
+				if (parentEntity != null && parentEntity instanceof BasicEntity) {
+					// this happen using the Basic and Extended pattern
+					parentEntity = (IEntity) ((BasicEntity) parentEntity).getExtended();
+				}
+				getParentEntityService().verifyActionRestrictions("update", parentEntity);
 			}
 		}
 	}

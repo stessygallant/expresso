@@ -9,8 +9,9 @@
             contents.push.apply(contents, [
                 {title: "approbationAmounts", contentUrl: "approbationamount"},
                 {title: "users", contentUrl: "users"}]);
+            contents.push({title: "info", contentUrl: "info"});
         }
-
+        
         return contents;
     }
 });

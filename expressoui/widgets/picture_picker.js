@@ -212,13 +212,13 @@
                 formData.append("resourceId", this.options.resourceId);
                 formData.append("documentTypePgmKey", this.options.documentTypePgmKey);
                 formData.append("description", "Picture");
-                formData.append("creationUserId", expresso.Security.getUserInfo().id);
+                formData.append("creationUserId", expresso.Security.getUserProfile().id);
                 formData.append("fileName", "picture_" + new Date().getTime());
                 formData.append("maxWidth", this.options.maxWidth);
                 formData.append("file", file);
 
                 var url = expresso.Common.getWsUploadPathURL() + "/document" +
-                    "?creationUserName=" + expresso.Common.getUserInfo().userName;
+                    "?creationUserName=" + expresso.Common.getUserProfile().userName;
                 return $.ajax({
                     url: url,
                     data: formData,

@@ -46,7 +46,7 @@ expresso.applications.security.jobtitlemanager.PreviewTabRoles = expresso.layout
             // save on select
             $rolesDiv.find("input").on("click", function () {
                 var action = $(this).is(":checked") ? "create" : "delete";
-                expresso.Common.sendRequest("jobtitle/" + _this.resourceManager.currentResource.id +
+                expresso.Common.sendRequest("jobTitle/" + _this.resourceManager.currentResource.id +
                     "/role/" + $(this).val(), action);
             });
 
@@ -58,14 +58,14 @@ expresso.applications.security.jobtitlemanager.PreviewTabRoles = expresso.layout
         expresso.layout.resourcemanager.PreviewTab.fn.refresh.call(this, resource);
         var $form = this.$domElement;
         // if user not allowed, disable button
-        var allowed = expresso.Common.isUserAllowed("jobtitle/role", "create");
+        var allowed = expresso.Common.isUserAllowed("jobTitle/role", "create");
 
         // put back all input to be enabled (if allowed)
         $form.find("input").prop("disabled", !allowed);
 
         if (resource && resource.id) {
             // get all roles for this application
-            expresso.Common.sendRequest("jobtitle/" + resource.id + "/role").done(function (roles) {
+            expresso.Common.sendRequest("jobTitle/" + resource.id + "/role").done(function (roles) {
                 $.each(roles, function (index, value) {
                     $form.find("input[value=" + value.id + "]").prop("checked", true);
                 });

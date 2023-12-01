@@ -14,12 +14,16 @@ public class AuditTrailService extends BaseEntityService<AuditTrail> {
 		// verify if the user is allowed to read the resource
 
 		if (query.getFilter("id") != null) {
-			Integer id = Integer.parseInt("" + query.getFilter("id").getValue());
-			AuditTrail auditTrail = get(id);
-			verifyUserPrivileges("read", auditTrail.getResourceName(), auditTrail.getResourceId());
-			List<AuditTrail> auditTrails = new ArrayList<>();
-			auditTrails.add(auditTrail);
-			return auditTrails;
+			if (query.getFilter("id").getIntValue() != -1) {
+				Integer id = query.getFilter("id").getIntValue();
+				AuditTrail auditTrail = get(id);
+				verifyUserPrivileges("read", auditTrail.getResourceName(), auditTrail.getResourceId());
+				List<AuditTrail> auditTrails = new ArrayList<>();
+				auditTrails.add(auditTrail);
+				return auditTrails;
+			} else {
+				return new ArrayList<>();
+			}
 		} else if (query.getFilter("resourceName") != null && query.getFilter("resourceId") != null && query.getFilter("resourceId").getValue() != null) {
 			String resourceName = (String) query.getFilter("resourceName").getValue();
 			Integer resourceId = query.getFilter("resourceId").getIntValue();

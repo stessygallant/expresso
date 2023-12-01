@@ -1118,7 +1118,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
                             // setup url
                             kendoUpload.options.url = expresso.Common.getWsUploadPathURL() + "/document" +
-                                "?creationUserName=" + expresso.Common.getUserInfo().userName +
+                                "?creationUserName=" + expresso.Common.getUserProfile().userName +
                                 // creation validation security only
                                 "&siblingResourceId=" + document.resourceId +
                                 "&siblingResourceName=" + document.resourceName +
@@ -1355,7 +1355,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                         if (_this.deprecatedFileUploadSupport) {
                             return expresso.Common.getWsUploadPathURL() + "/" +
                                 _this.resourceManager.getRelativeWebServicePath(resource.id) +
-                                "?creationUserName=" + expresso.Common.getUserInfo().userName;
+                                "?creationUserName=" + expresso.Common.getUserProfile().userName;
                         } else if (_this.resourceManager.getResourceSecurityPath() == "document") {
                             return _this.resourceManager.getUploadDocumentPath(_this.resourceManager.siblingResourceManager);
                         } else {

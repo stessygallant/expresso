@@ -90,8 +90,8 @@ expresso.applications.general.chatviewer.ChatViewer = expresso.layout.applicatio
     sendMessage: function (content, append) {
         if (content) {
             var message = {
-                fromUserId: expresso.Security.getUserInfo().id,
-                from: expresso.Security.getUserInfo().fullName,
+                fromUserId: expresso.Security.getUserProfile().id,
+                from: expresso.Security.getUserProfile().fullName,
                 content: content.trim(),
                 date: new Date()
             };
