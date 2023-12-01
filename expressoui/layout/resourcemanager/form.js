@@ -972,13 +972,26 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
             expresso.util.UIUtil.displayMissingRequiredFieldNotification($window);
         }
 
+        // put uppercase when needed
+        var model = this.resourceManager.model;
+        for (var f in model.fields) {
+            if (f) {
+                var field = model.fields[f];
+                if (field && field.uppercase) {
+                    if (resource[f]) {
+                        resource[f] = resource[f].toUpperCase();
+                    }
+                }
+            }
+        }
+
         // make sure all constraints are validated
         if (valid) {
             // console.log("Unique constraint", this.uniqueConstraintsValidated);
             var promises = [];
-            for (var f in this.uniqueConstraintsValidated) {
-                // console.log("Unique constraint validated: [" + f + "]");
-                promises.push(this.uniqueConstraintsValidated[f]);
+            for (var c in this.uniqueConstraintsValidated) {
+                // console.log("Unique constraint validated: [" + c + "]");
+                promises.push(this.uniqueConstraintsValidated[c]);
             }
 
             if (promises.length) {

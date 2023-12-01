@@ -270,7 +270,7 @@ expresso.util.Model = (function () {
                                 }
                             }
 
-                            if (reference.data) {
+                            if (reference.data && typeof reference.data !== "function") {
                                 // make sure that the list contains all needed attributes
                                 expresso.Common.updateDataValues(reference.data, resourceManager.labels);
                             } else {
@@ -531,6 +531,15 @@ expresso.util.Model = (function () {
                             }
                         }
                     }));
+                } else if (field && field.values && field.values.data && typeof field.values.data === "function") {
+                    var data = field.values.data();
+                    if ($.isArray(data)) {
+                        field.values.data = expresso.Common.updateDataValues(data);
+                    } else { // data is a promise
+                        promises.push(data.done(function (result) {
+                            field.values.data = expresso.Common.updateDataValues(result);
+                        }));
+                    }
                 } else if (field && field.reference) {
                     // if there is a defaultValue, and the defaultValue is a string, and the field type is number.
                     // It means that we are using a pgmKey and that we need to replace it with the id

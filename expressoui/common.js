@@ -458,11 +458,12 @@ expresso.Common = (function () {
      *
      * @param url
      * @param [action]
+     * @param [format]
      */
-    var sendDownloadRequest = function (url, action) {
+    var sendDownloadRequest = function (url, action, format) {
         action = action || "download";
-        var target = "_blank";
-        var format = "pdf";
+        format = format || "pdf";
+
         url += (url.indexOf("?") == -1 ? "?" : "&") + "action=" + action;
 
         // help the browser to guess the document format
@@ -474,7 +475,7 @@ expresso.Common = (function () {
         }
 
         console.log("Download [" + url + "]");
-        var $href = $("<a href='" + url + "' target='" + target + "' hidden></a>");
+        var $href = $("<a href='" + url + "' target='_blank' hidden></a>");
         $href.appendTo("body")[0].click();
         $href.remove();
     };

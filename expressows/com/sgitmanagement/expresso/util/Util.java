@@ -749,17 +749,27 @@ public class Util {
 	}
 
 	/**
+	 * 
+	 * @param response
+	 * @param file
+	 * @throws Exception
+	 */
+	static public void downloadFile(HttpServletResponse response, File file) throws Exception {
+		downloadFile(response, file, file.getName(), true);
+	}
+
+	/**
 	 * Utility method to write on the HTTP response the stream of the file
 	 *
 	 * @param response
 	 * @param e
 	 * @throws Exception
 	 */
-	static public void downloadFile(HttpServletResponse response, File file) throws Exception {
+	static public void downloadFile(HttpServletResponse response, File file, String fileName, boolean inline) throws Exception {
 		InputStream is = null;
 		OutputStream os = null;
 		try {
-			response.setHeader("Content-disposition", "inline; filename=\"" + file.getName() + "\"");
+			response.setHeader("Content-disposition", (inline ? "inline" : "attachment") + "; filename=\"" + fileName + "\"");
 			// response.setContentType(contentType.getMimeType());
 
 			is = new FileInputStream(file);

@@ -420,6 +420,12 @@
                             $el.attr("type", "password");
                             $el.attr("autocomplete", "off");
                         }
+
+                        // uppercase
+                        if (field.uppercase) {
+                            $el.addClass("uppercase");
+                        }
+
                         break;
                     case "password":
                         $el.addClass("k-textbox");
