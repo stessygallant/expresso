@@ -422,7 +422,7 @@
                         }
 
                         // uppercase
-                        if (field.uppercase) {
+                        if (field && field.uppercase) {
                             $el.addClass("uppercase");
                         }
 
