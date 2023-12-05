@@ -148,6 +148,10 @@ public class ProgressSender {
 		}
 	}
 
+	public void close() throws Exception {
+		this.writer.close();
+	}
+
 	static public void main(String[] args) throws IOException {
 		ProgressSender progressSender = new ProgressSender(null);
 
