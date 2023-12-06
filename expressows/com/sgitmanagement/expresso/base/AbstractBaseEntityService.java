@@ -7,6 +7,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.sql.Connection;
@@ -1609,11 +1610,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		if (parentEntityField != null) {
 			Class parentEntityClass = parentEntityField.getType();
 
-			// if the name of the type start with Basic, get the full type (there is no service for Basic*)
-			if (parentEntityClass.getCanonicalName().contains(".Basic")) {
-				String parentEntityClassName = parentEntityClass.getCanonicalName();
-				parentEntityClassName = parentEntityClassName.replace(".Basic", ".");
-				parentEntityClass = Class.forName(parentEntityClassName);
+			if (parentEntityClass != null && BasicEntity.class.isAssignableFrom(parentEntityClass)) {
+				// this happen using the Basic and Extended pattern
+				parentEntityClass = getEntityFromBasicEntity(parentEntityClass);
 			}
 
 			String parentEntityServiceClassName = parentEntityClass.getCanonicalName() + "Service";
@@ -2818,6 +2817,20 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	/**
+	 * 
+	 * @param basicEntity
+	 * @return
+	 */
+	private Class<?> getEntityFromBasicEntity(Class<?> basicEntity) {
+		for (java.lang.reflect.Type type : basicEntity.getGenericInterfaces()) {
+			if (type instanceof BasicEntity || type.getTypeName().startsWith(BasicEntity.class.getName())) {
+				return (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
+			}
+		}
+		return basicEntity;
+	}
+
+	/**
 	 * Generate all base files for a resource manager
 	 *
 	 * @throws Exception
@@ -3261,11 +3274,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						Object ref = true;
 						if (field.getGenericType() != null) {
 							// ex: ca.cezinc.expressoservice.resources.humanresources.person.User
-							String refString = field.getGenericType().toString();
-							refString = refString.substring(refString.lastIndexOf('.') + 1);
-							if (refString.startsWith("Basic")) {
-								refString = refString.substring("Basic".length());
-							}
+							String refString = getEntityFromBasicEntity((Class<?>) field.getGenericType()).getSimpleName();
 							refString = StringUtils.uncapitalize(refString);
 							if (!fieldName.equals(refString)) {
 								ref = refString;

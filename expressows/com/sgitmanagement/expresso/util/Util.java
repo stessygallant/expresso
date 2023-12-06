@@ -381,7 +381,7 @@ public class Util {
 			} catch (Exception ex) {
 				logger.warn("Cannot format keyfield: " + ex);
 			}
-			logger.debug("Key [" + key + "]");
+			// logger.debug("Key [" + key + "]");
 			return key;
 		}
 	}
