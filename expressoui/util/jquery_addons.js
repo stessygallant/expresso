@@ -32,6 +32,7 @@
                         if (value === null && role == "combobox") {
                             // we need to do it otherwise the dataItem will remain
                             widget.select(null);
+                            widget.text(null);
                         }
 
                         if (triggerChangeEvent !== false &&

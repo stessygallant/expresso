@@ -203,6 +203,7 @@ $.extend(expresso.Labels, {
     lastUpdatedTime: "Last update",
 
     initialization: "Initialisation",
+    switchToTablet: "Switch Sherpa display to tablet mode",
 
     // Grid button title
     exportToExcel: "Export grid content to Excel",

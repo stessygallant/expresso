@@ -15,8 +15,6 @@ expresso.Main = function () {
     var currentAppInstance = undefined;
     var currentAppName = undefined;
 
-    var chatViewer = undefined;
-
     /**
      * Build the menu for the user
      */
@@ -250,7 +248,13 @@ expresso.Main = function () {
                 // verify if the user can load this application
                 if (expresso.Common.getApplication(appName) && expresso.Common.getApplication(appName).allowed) {
                     // load the application
-                    loadMainApplication(appName);
+                    // keeps the paramaters on the URL
+                    var options = {
+                        queryParameters: expresso.util.Util.getUrlParameters()
+                    };
+                    delete options.queryParameters.app;
+                    delete options.queryParameters.id;
+                    loadMainApplication(appName, options);
                 } else {
                     // no access
                 }
@@ -495,7 +499,6 @@ expresso.Main = function () {
                 },
                 save: function () {
                     var $windowDiv = this;
-                    var userProfile = expresso.Security.getUserProfile();
 
                     // save profile
                     var profile = $.extend({}, expresso.Security.getUserProfile(), {
@@ -528,21 +531,6 @@ expresso.Main = function () {
                     expresso.Security.logout();
                 }
             });
-        });
-    };
-
-    /**
-     * Init
-     */
-    var initChat = function () {
-        var $chatViewerDiv = $("<div class='chat-viewer-div'></div>").appendTo($("body"));
-        expresso.Common.loadApplication("ChatViewer", null, $chatViewerDiv).done(function (applicationInstance) {
-            chatViewer = applicationInstance;
-            try {
-                chatViewer.render();
-            } catch (ex) {
-                console.warn("ChatViewer not supported", ex);
-            }
         });
     };
 
@@ -679,8 +667,8 @@ expresso.Main = function () {
             // allow the superuser to change the user
             $userDiv.find(".username").off().on("click", function (e) {
                 e.preventDefault();
-                var $userSelector = $("<select class='user-selector'></select>").appendTo($mainDiv);
-                expresso.util.UIUtil.buildComboBox($userSelector, "user", {
+                var $userSelector = $("<div class='exp-user-selector'><select></select></div>").appendTo($body);
+                expresso.util.UIUtil.buildComboBox($userSelector.find("select"), "user", {
                     triggerChangeOnInit: false,
                     change: function () {
                         var user = this.dataItem();
@@ -719,11 +707,6 @@ expresso.Main = function () {
                 verifySystemMessages();
             }
 
-            // init the chat with users
-            if (expresso.Security.isAdmin()) {
-                // initChat();
-            }
-
             if (expresso.Common.getSiteNamespace().config.Configurations.supportNotifications) {
                 if (expresso.Common.isProduction()) {
                     initNotifications();
@@ -740,9 +723,9 @@ expresso.Main = function () {
             loadMainApplication(defaultApplication.appName, defaultApplication.options);
         }
 
-        // put a button to hide/show menu
-        var $menuButton = $mainDiv.find(".main-settings .show-menu-button");
-        $menuButton.on("click", function () {
+        // listen button to hide/show menu
+        var $showMenuButton = $mainDiv.find(".main-settings .show-menu-button");
+        $showMenuButton.on("click", function () {
             // show/hide menu
             if ($menuDiv.is(":visible")) {
                 $menuDiv.hide();
@@ -751,6 +734,13 @@ expresso.Main = function () {
                 $menuDiv.show();
                 $userDiv.show();
             }
+        });
+
+        // listen button to switch to tablet
+        var $switchTabletButton = $mainDiv.find(".main-settings .switch-tablet-button");
+        $switchTabletButton.attr("title", expresso.Common.getLabel("switchToTablet"));
+        $switchTabletButton.on("click", function () {
+            window.location = window.location + "&screenMode=tablet";
         });
 
         // now we can show the main div

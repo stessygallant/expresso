@@ -201,6 +201,7 @@ expresso.util.UIUtil = (function () {
                 // the input may be removed because of permission
                 return $deferred.resolve();
             }
+            var fieldName = $input.attr("name");
 
             // patch: if the input has .k-textbox class, remove it
             if ($input.hasClass("k-textbox")) {
@@ -209,13 +210,12 @@ expresso.util.UIUtil = (function () {
 
             var cb = $input.data("kendoComboBox");
             if (cb) {
-                alert("Do not define the comboxbox if using server side filtering [" + $input.attr("name") +
+                alert("Do not define the comboxbox if using server side filtering [" + fieldName +
                     ":" + $input.attr("class") + "]");
                 return $deferred.reject();
             }
 
             // make sure that the user has access to the resource
-            // var fieldName = $input.attr("name");
             var url;
             var resourceName;
             if (resourceURL.startsWith("/")) {
@@ -371,11 +371,11 @@ expresso.util.UIUtil = (function () {
                 filtering: function (e) {
                     // calling this.value() will trigger this event
                     var text = ((e.filter && e.filter.value) || "");
-                    // console.log(fieldName + " - filtering event text[" + text + "]");
+                    // console.log(fieldName + " - filtering event text[" + text + "]", e);
                     if (text) {
                         searchEvent.searchText = text;
                     } else {
-                        // console.log(fieldName + " - filtering preventDefault");
+                        // console.log(fieldName + " - filtering preventDefault", e);
                         e.preventDefault();
                     }
                 },

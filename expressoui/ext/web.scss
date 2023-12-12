@@ -268,6 +268,15 @@ div.main {
                 color: $themeTextColorLight;
             }
         }
+
+        .switch-tablet-button {
+            font-size: 250%;
+            color: #cccccc;
+
+            &:hover {
+                color: white;
+            }
+        }
     }
 
     .main-header {
@@ -523,12 +532,12 @@ div.main {
             white-space: nowrap;
         }
     }
+}
 
-    .user-selector {
-        position: absolute;
-        top: 0;
-        left: 0;
-    }
+.exp-user-selector {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .exp-system-message {
@@ -634,6 +643,10 @@ div.main {
         .main-settings {
             .show-menu-button {
                 display: block;
+            }
+
+            .switch-tablet-button {
+                display: none;
             }
         }
 

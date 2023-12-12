@@ -205,6 +205,7 @@ $.extend(expresso.Labels, {
     lastUpdatedTime: "Dernière MAJ",
 
     initialization: "Initialisation",
+    switchToTablet: "Changer l'affichage Sherpa en mode tablette",
 
     // Grid button title
     exportToExcel: "Exporter le contenu de la grille vers Excel",

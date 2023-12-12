@@ -129,6 +129,12 @@ public class AuthorizationFilter implements Filter {
 							}
 						}
 					} else if (securityPath.equals("websocket")) {
+						// path contains the resource security path (not the resource path)
+						resources = new ArrayList<>();
+						for (int i = 3; i < uris.length; i++) {
+							resources.add(uris[i]);
+						}
+						logger.debug("websocket  action:" + action + " resources:" + resources);
 						allowed = AuthorizationHelper.isUserAllowed(user, action, resources);
 					} else {
 						// rest or sso

@@ -87,7 +87,7 @@ expresso.layout.resourcemanager.Preview = expresso.layout.resourcemanager.Sectio
             }
 
             if (userAllowed) {
-                contentUrls.push(this.resourceManager.applicationPath + "/preview_tab_" + contentUrl + ".html");
+                contentUrls.push(this.resourceManager.applicationPath + "/preview_tab_" + contentUrl.toLowerCase() + ".html");
                 this.contents.push(content);
             }
         }

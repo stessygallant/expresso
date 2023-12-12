@@ -41,6 +41,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonPrimitive;
 import com.sgitmanagement.expresso.base.AppClassField.Reference;
 import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
@@ -58,6 +59,7 @@ import com.sgitmanagement.expresso.util.ProgressSender;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expresso.util.ZipUtil;
+import com.sgitmanagement.expresso.websocket.WebSocketService;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -259,6 +261,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	public void onPostMerge(E e) throws Exception {
 		// by default, do nothing
+	}
+
+	public void refreshWebSocket() throws Exception {
+		// notify if anyone listening
+		newServiceStatic(WebSocketService.class).broadcast(getResourceSecurityPath(), new JsonPrimitive("refresh"));
 	}
 
 	/**

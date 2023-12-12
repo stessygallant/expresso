@@ -22,6 +22,8 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
     // refresh delay (in seconds). Default is 10 minutes
     refreshViewDelay: undefined,
 
+	// web socket to listen to update
+    webSocket: undefined,
 
     /**
      * Method called when a new instance is created
@@ -248,9 +250,64 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
     },
 
     /**
+     *
+     * @param resourceSecurityPath
+     */
+    connectWebSocket: function (resourceSecurityPath) {
+        var _this = this;
+
+        try {
+            var path = expresso.Common.getWsBasePathURL();
+            path = path.substring("http".length); // keep the "s" is any
+            this.webSocket = new WebSocket("ws" + path + "/websocket/" + resourceSecurityPath);
+            this.webSocket.onerror = function (event) {
+                console.warn("Error on web socket. Reconnecting web socket in n seconds", event);
+                window.setTimeout(function () {
+                    _this.connectWebSocket(resourceSecurityPath);
+                }, 10 * 1000); // n seconds
+            };
+
+            this.webSocket.onopen = function (event) {
+                console.log("Web socket connection established");
+            };
+
+            this.webSocket.onmessage = function (event) {
+                var data = (event && event.data ? JSON.parse(event.data) : null);
+                _this.listenWebSocket(data);
+            }
+
+            this.webSocket.onclose = function () {
+                console.log("Closed. Reconnecting web socket in n seconds");
+                window.setTimeout(function () {
+                    _this.connectWebSocket(resourceSecurityPath);
+                }, 10 * 1000); // n seconds
+            }
+        } catch (ex) {
+            console.error("Cannot establish web socket connection: " + ex);
+        }
+    },
+
+    /**
+     *
+     * @param data
+     */
+    listenWebSocket: function (data) {
+        // by default, it calls refresh view
+        this.refreshView();
+    },
+
+    /**
      * This method is called when the main application is requested to switch to another application
      */
     destroy: function () {
+        if (this.webSocket) {
+            try {
+                this.webSocket.close();
+            } catch (ex) {
+                // ignore
+            }
+            this.webSocket = null;
+        }
 
         expresso.layout.applicationbase.AbstractApplicationBase.fn.destroy.call(this);
     }

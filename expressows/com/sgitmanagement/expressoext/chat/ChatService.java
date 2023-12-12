@@ -3,11 +3,11 @@ package com.sgitmanagement.expressoext.chat;
 import java.io.IOException;
 import java.util.Date;
 
-import com.sgitmanagement.expressoext.base.BaseWebSocketService;
+import com.sgitmanagement.expressoext.base.BaseService;
 
 import jakarta.websocket.Session;
 
-public class ChatService extends BaseWebSocketService {
+public class ChatService extends BaseService {
 
 	/**
 	 * 
@@ -34,7 +34,6 @@ public class ChatService extends BaseWebSocketService {
 		}
 	}
 
-	@Override
 	public void onMessage(Session session, Object chatMessage) throws IOException {
 		broadcast(session, (ChatMessage) chatMessage);
 	}

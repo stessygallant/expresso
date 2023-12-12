@@ -2,34 +2,19 @@ package com.sgitmanagement.expressoext.chat;
 
 import java.io.IOException;
 
-import com.sgitmanagement.expressoext.base.BaseWebSocketResource;
+import com.sgitmanagement.expressoext.base.BaseResource;
 
-import jakarta.websocket.OnClose;
-import jakarta.websocket.OnError;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
-import jakarta.websocket.server.ServerEndpoint;
+import jakarta.ws.rs.core.Context;
 
-@ServerEndpoint(value = "/websocket/chat", decoders = ChatMessageDecoder.class, encoders = ChatMessageEncoder.class)
-public class ChatResource extends BaseWebSocketResource<ChatService> {
-	public ChatResource() {
-		super(ChatService.class);
-	}
+// @ServerEndpoint(value = "/websocket/chat", decoders = ChatMessageDecoder.class, encoders = ChatMessageEncoder.class)
+public class ChatResource extends BaseResource<ChatService> {
 
-	@OnOpen
-	public void onOpen(Session session) throws IOException {
-		getService().onOpen(session);
-	}
-
-	@OnClose
-	public void onClose(Session session) throws IOException {
-		getService().onClose(session);
-	}
-
-	@OnError
-	public void onError(Session session, Throwable throwable) {
-		getService().onError(session, throwable);
+	public ChatResource(@Context HttpServletRequest request, @Context HttpServletResponse response) {
+		super(request, response, ChatService.class);
 	}
 
 	@OnMessage

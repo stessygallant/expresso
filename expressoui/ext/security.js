@@ -19,13 +19,14 @@ expresso.Security = function () {
     /**
      * Return true if the user has the role assigned
      * @param role role pgmKey
+     * @param [excludeAdmin] by default, false
      * @return {boolean}  true if the user has the role assigned
      */
-    var isUserInRole = function (role) {
+    var isUserInRole = function (role, excludeAdmin) {
         if (userProfile && userProfile.userRoles) {
             for (var i = 0; i < userProfile.userRoles.length; i++) {
                 // admin has all roles
-                if (userProfile.userRoles[i].pgmKey == role || userProfile.userRoles[i].pgmKey == "admin") {
+                if (userProfile.userRoles[i].pgmKey == role || (!excludeAdmin && userProfile.userRoles[i].pgmKey == "admin")) {
                     return true;
                 }
             }
@@ -49,12 +50,12 @@ expresso.Security = function () {
 
     /**
      * Method to verify if the user is allowed to perform the action on the resource.
-     * @param resourceName name of the resource
+     * @param resourceSecurityPath resourceSecurityPath of the resource
      * @param [action] action to be performed
      * @param [displayMessage] true if a message should be displayed if user is not allowed
      * @returns {boolean} true if the user is allowed to perform the action on the resource.
      */
-    var isUserAllowed = function (resourceName, action, displayMessage) {
+    var isUserAllowed = function (resourceSecurityPath, action, displayMessage) {
         var isAllowed;
         if (!privileges) {
             // if privileges are not yet loaded, let it
@@ -63,7 +64,7 @@ expresso.Security = function () {
             if (!action) {
                 action = "read";
             }
-            isAllowed = privileges[resourceName.toLowerCase() + "-" + action.toLowerCase()];
+            isAllowed = privileges[resourceSecurityPath.toLowerCase() + "-" + action.toLowerCase()];
             if (!isAllowed) {
                 //console.log("isUserAllowed " + resourceName + ":" + action + "=" + isAllowed);
                 if (displayMessage) {

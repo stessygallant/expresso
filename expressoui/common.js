@@ -1754,6 +1754,7 @@ expresso.Common = (function () {
         if (queryParameters) {
             url += "?" + queryParameters;
         }
+        // console.log("Pushing " + url);
         var title = (app && app.title) ? app.title : "";
         window.history.pushState(null, title, url);
         // window.history.replaceState(null, title, url);
