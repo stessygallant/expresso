@@ -128,18 +128,22 @@
         var promises = [];
 
         // get all info for all user roles
-        $.each(user.userRoles, function () {
-            var userRole = this;
-            promises.push(_this.sendRequest("role/" + userRole.id + "/info").done(function (roleInfos) {
-                infos.push({source: userRole, data: roleInfos.data});
-            }));
-        });
+        if (expresso.Security.isUserAllowed("role/info", "read")) {
+            $.each(user.userRoles, function () {
+                var userRole = this;
+                promises.push(_this.sendRequest("role/" + userRole.id + "/info").done(function (roleInfos) {
+                    infos.push({source: userRole, data: roleInfos.data});
+                }));
+            });
+        }
 
         // get all info for the job title
-        if (user.jobTitleId) {
-            promises.push(_this.sendRequest("jobTitle/" + user.jobTitleId + "/info").done(function (jobTitleInfos) {
-                infos.push({source: user.jobTitle, data: jobTitleInfos.data});
-            }));
+        if (expresso.Security.isUserAllowed("jobTitle/info", "read")) {
+            if (user.jobTitleId) {
+                promises.push(_this.sendRequest("jobTitle/" + user.jobTitleId + "/info").done(function (jobTitleInfos) {
+                    infos.push({source: user.jobTitle, data: jobTitleInfos.data});
+                }));
+            }
         }
 
         // build the UI
@@ -241,25 +245,28 @@
     // @override
     onSaved: function (resource, originalResource) {
         expresso.layout.resourcemanager.Form.fn.onSaved.call(this, resource, originalResource);
-        var _this = this;
-        var userId = resource.id;
 
-        this.$window.find(".user-infos").find("fieldset div :input").each(function () {
-            var $input = $(this);
-            var userInfo = $input.data("userInfo");
-            var info = $input.closest(".exp-input-wrap").data("info");
-            if (!userInfo) {
-                userInfo = {
-                    type: "userInfo",
-                    userId: userId,
-                    jobTitleInfoId: info.type == "jobTitleInfo" ? info.id : null,
-                    roleInfoId: info.type == "roleInfo" ? info.id : null
+        if (resource) {
+            var _this = this;
+            var userId = resource.id;
+
+            this.$window.find(".user-infos").find("fieldset div :input").each(function () {
+                var $input = $(this);
+                var userInfo = $input.data("userInfo");
+                var info = $input.closest(".exp-input-wrap").data("info");
+                if (!userInfo) {
+                    userInfo = {
+                        type: "userInfo",
+                        userId: userId,
+                        jobTitleInfoId: info.type == "jobTitleInfo" ? info.id : null,
+                        roleInfoId: info.type == "roleInfo" ? info.id : null
+                    }
                 }
-            }
 
-            // merge
-            userInfo[info.infoType + "Value"] = $input.getval();
-            _this.sendRequest("user/" + userId + "/info", "merge", userInfo);
-        });
+                // merge
+                userInfo[info.infoType + "Value"] = $input.getval();
+                _this.sendRequest("user/" + userId + "/info", "merge", userInfo);
+            });
+        }
     }
 });

@@ -63,7 +63,7 @@ public class SpnegoResponseFilter implements Filter {
 				// if a user tries to connect user BASIC AUTH in the internal network, report it (should be Negociate)
 				String ip = Util.getIpAddress(httpServletRequest);
 				String userAgent = httpServletRequest.getHeader("User-Agent");
-				boolean mobile = userAgent.indexOf("Mobile") != -1;
+				boolean mobile = userAgent.indexOf("Mobile") != -1 || httpServletRequest.getParameter("mobile") != null;
 				if (mobile || !Util.isInternalIpAddress(ip)) {
 					// ok, they cannot use SSO Kerberos
 				} else {

@@ -1,4 +1,4 @@
-package com.sgitmanagement.expresso.websocket;
+package com.sgitmanagement.expressoext.websocket;
 
 import java.util.Collections;
 import java.util.HashMap;

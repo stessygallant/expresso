@@ -1172,10 +1172,29 @@ expresso.Common = (function () {
                 })
                 .fail(function (jqXHR) {
                     expresso.util.UIUtil.showLoadingMask($domElement, false);
-                    if (options.showProgress) {
-                        kendoProgressBarText.text = expresso.Common.getLabel("requestFailure", options.labels);
+                    // retry on network error (it happens when multiple get at the same time on instable network)
+                    var maximumRetry = 1; // this code does not support more than 1 retry
+
+                    // status 0 means network error
+                    options.retryCount = options.retryCount || 0;
+                    if (jqXHR.status == 0 && options.retryCount < maximumRetry && !options.showProgress && action == "read") {
+                        options.retryCount++;
+                        jqXHR.alreadyProcessed = true; // do not display error message
+                        window.setTimeout(function () {
+                            sendRequest(path, action, data, queryString, options).done(function (result) {
+                                console.log("Network error on GET. Got it successfully on retry");
+                                $deferredComplete.resolve(result);
+                            }).fail(function (jqXHR) {
+                                console.error("Network error on GET AGAIN.");
+                                $deferredComplete.reject(jqXHR);
+                            });
+                        }, 500); // wait 500 ms
+                    } else {
+                        if (options.showProgress) {
+                            kendoProgressBarText.text = expresso.Common.getLabel("requestFailure", options.labels);
+                        }
+                        $deferredComplete.reject(jqXHR);
                     }
-                    $deferredComplete.reject(jqXHR);
                 })
                 .always(function () {
 

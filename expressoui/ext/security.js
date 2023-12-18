@@ -335,7 +335,7 @@ expresso.Security = function () {
                         securityToken: securityToken,
                         userName: userName,
                         newPassword: newPassword
-                    }, null, {public: true, waitOnElement: $windowDiv})
+                    }, null, {public: !!securityToken, waitOnElement: $windowDiv})
                         .done(function () {
                             // password change successfully
                             expresso.util.UIUtil.buildMessageWindow(expresso.Common.getLabel("passwordChanged")).always(function () {
@@ -547,7 +547,7 @@ expresso.Security = function () {
                 $div.find(".authentication-mechanism").hide();
             } else {
                 // do not allow password request on SSO
-                $div.find("[name=authentication]").on("click", function () {
+                $div.find("[name=authentication]").on("change", function () {
                     var auth = $div.find("[name=authentication]:checked").val();
                     if (auth == "kerberos") {
                         $div.find(".forgot-password").hide();
@@ -618,8 +618,24 @@ expresso.Security = function () {
                     });
             });
 
-            // then focus on username
-            $div.find("[name=userName]").focus();
+            //
+            if (expresso.util.Util.getUrlParameter("userName")) {
+                // set the username
+                $div.find("[name=userName]").setval(expresso.util.Util.getUrlParameter("userName"));
+                expresso.util.UIUtil.setFieldReadOnly($div.find("[name=userName]"));
+
+                // set the authentication
+                if (expresso.util.Util.getUrlParameter("authentication")) {
+                    $div.find("[name=authentication]").setval(expresso.util.Util.getUrlParameter("authentication"));
+                    expresso.util.UIUtil.hideField($div.find(".authentication-mechanism"));
+                }
+
+                // then focus on password
+                $div.find("[name=password]").focus();
+            } else {
+                // then focus on username
+                $div.find("[name=userName]").focus();
+            }
 
             if (expresso.util.Util.getUrlParameter("securityToken")) {
                 displayChangePassword().done(function () {
@@ -802,9 +818,10 @@ expresso.Security = function () {
             expresso.Common.setAuthenticationPath("rest");
             // username is usually base64 encoded in the URL
             var autoLoginUserName = expresso.util.Util.getUrlParameter("autoLoginUserName");
-            if (autoLoginUserName) {
+            if (autoLoginUserName && autoLoginUserName.startsWith("_z")) {
+                // it means it base64 encoded
                 try {
-                    autoLoginUserName = window.atob(autoLoginUserName);
+                    autoLoginUserName = window.atob(autoLoginUserName.substring(2));
                 } catch (e) {
                     // userName not Base64 encoded. Ignore
                 }

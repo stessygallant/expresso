@@ -46,7 +46,10 @@
                 }
             } else {
                 if ($this.attr("type") === "checkbox") {
-                    $this.prop("checked", !!value);
+                    $this.prop("checked", !!value).trigger("change");
+                    return this;
+                } else if ($this.attr("type") === "radio") {
+                    $this.filter("[value='" + value + "']").prop("checked", true).trigger("change");
                     return this;
                 }
             }

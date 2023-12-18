@@ -2752,6 +2752,28 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @param e
      */
     onExportExcel: function (e) {
+        // convert <br> to newline and add a space for newline
+        try {
+            var sheet = e.workbook.sheets[0];
+            for (var rowIndex = 0; rowIndex < sheet.rows.length; rowIndex++) {
+                var row = sheet.rows[rowIndex];
+                for (var cellIndex = 0; cellIndex < row.cells.length; cellIndex++) {
+                    var cell = row.cells[cellIndex];
+                    if (cell.value) {
+                        if (cell.value.toString().indexOf("<br />") >= 0) {
+                            cell.value = cell.value.replace("<br />", " \r\n");
+                            // cell.wrap = true;
+                        } else if (cell.value.toString().indexOf("\n") >= 0) {
+                            cell.value = cell.value.replace(/(\r\n|\r|\n)/g, " \r\n");
+                            // cell.wrap = true;
+                        }
+                    }
+                }
+            }
+        } catch (ex) {
+            console.error("Error replacing new lines", ex);
+        }
+
         e.workbook.fileName = (this.getLabel(this.resourceManager.resourceName.plural(), null, true) ||
                 this.getLabel(this.resourceManager.resourceName, null, true) ||
                 this.resourceManager.resourceName) +

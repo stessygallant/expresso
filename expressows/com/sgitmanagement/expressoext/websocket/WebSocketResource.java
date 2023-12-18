@@ -1,13 +1,16 @@
-package com.sgitmanagement.expresso.websocket;
+package com.sgitmanagement.expressoext.websocket;
 
 import java.io.IOException;
 
+import com.google.gson.JsonElement;
+import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.base.BaseResource;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnError;
+import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
@@ -27,19 +30,28 @@ public class WebSocketResource extends BaseResource<WebSocketService> {
 
 	@OnOpen
 	public void onOpen(Session session, @PathParam("resourceSecurityPath") String resourceSecurityPath) throws IOException {
-		logger.debug("New session [" + session.getId() + "]");
+		logger.info("New session id[" + session.getId() + "] user[" + (getUser() != null ? getUser().getUserName() : "n/a") + "] ip[" + Util.getIpAddress(getRequest()) + "] rs[" + resourceSecurityPath
+				+ "]");
 		getService().addWebSocketSession(session, resourceSecurityPath);
 	}
 
 	@OnClose
 	public void onClose(Session session, @PathParam("resourceSecurityPath") String resourceSecurityPath) throws IOException {
-		logger.debug("Disconnected session [" + session.getId() + "]");
+		logger.info("Disconnected session id[" + session.getId() + "] user[" + (getUser() != null ? getUser().getUserName() : "n/a") + "] ip[" + Util.getIpAddress(getRequest()) + "] rs["
+				+ resourceSecurityPath + "]");
 		getService().removeWebSocketSession(session, resourceSecurityPath);
 	}
 
 	@OnError
 	public void onError(Session session, Throwable throwable, @PathParam("resourceSecurityPath") String resourceSecurityPath) {
-		logger.error("Error on session [" + session.getId() + "]", throwable);
+		logger.warn("Error on session id[" + session.getId() + "] user[" + (getUser() != null ? getUser().getUserName() : "n/a") + "] ip[" + Util.getIpAddress(getRequest()) + "] rs["
+				+ resourceSecurityPath + "]: " + throwable);
 		getService().removeWebSocketSession(session, resourceSecurityPath);
+	}
+
+	@OnMessage
+	public void onMessage(Session session, JsonElement message) throws IOException {
+		// this is a keepalive packet
+		// getService().onMessage(session, message);
 	}
 }

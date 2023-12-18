@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtils;
 
+import com.google.gson.JsonPrimitive;
 import com.sgitmanagement.expresso.base.AbstractBaseEntityService;
 import com.sgitmanagement.expresso.base.Creatable;
 import com.sgitmanagement.expresso.base.RequireApproval;
@@ -28,6 +29,7 @@ import com.sgitmanagement.expressoext.security.ResourceService;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
 import com.sgitmanagement.expressoext.util.ReportUtil;
+import com.sgitmanagement.expressoext.websocket.WebSocketService;
 
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -243,5 +245,10 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 
 	public Set<String> getEmailsForRole(String rolePgmKey) throws Exception {
 		return AuthorizationHelper.getUsersInRole(rolePgmKey).stream().map(User::getEmail).collect(Collectors.toSet());
+	}
+
+	public void refreshWebSocket() throws Exception {
+		// notify if anyone listening
+		newServiceStatic(WebSocketService.class).broadcast(getResourceSecurityPath(), new JsonPrimitive("refresh"));
 	}
 }

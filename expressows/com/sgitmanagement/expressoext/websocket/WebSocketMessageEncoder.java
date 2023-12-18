@@ -1,4 +1,4 @@
-package com.sgitmanagement.expresso.websocket;
+package com.sgitmanagement.expressoext.websocket;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

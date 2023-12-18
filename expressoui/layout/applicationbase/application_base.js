@@ -5,8 +5,35 @@ expresso.layout.applicationbase = expresso.layout.applicationbase || {};
 /**
  * Base expresso.layout. Provide a basic layout: only 1 section
  */
-expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbase.AbstractApplicationBase.extend({
-    // if true, this application must has been loaded by the sub application
+expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
+    // Application definition
+    appDef: undefined,
+
+    // relative path of the application from the index.html
+    applicationPath: undefined,
+
+    // div where to put the $domElement
+    $containerDiv: undefined,
+
+    // a reference to the jquery object for the DOM element
+    $domElement: undefined,
+
+    // user defined option for the application
+    options: undefined,
+
+    // labels for the application
+    labels: undefined,
+
+    // promise when the application is ready
+    $readyPromise: undefined,
+
+    // promises to be verified before calling a method on the section
+    readyPromises: undefined,
+
+    // application preferences for the user
+    applicationPreferences: undefined,
+
+    // if true, this application must have been loaded by the sub application
     loadedBySubApplication: false,
 
     // true if this application should be displayed as a master application
@@ -22,15 +49,24 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
     // refresh delay (in seconds). Default is 10 minutes
     refreshViewDelay: undefined,
 
-	// web socket to listen to update
+    // web socket to listen to update
     webSocket: undefined,
+    webSocketReconnectionDelay: undefined, // n seconds
+
 
     /**
      * Method called when a new instance is created
      * @param applicationPath path for the application
      */
     init: function (applicationPath) {
-        expresso.layout.applicationbase.AbstractApplicationBase.fn.init.call(this, applicationPath);
+        //console.log("ApplicationBase initialized");
+
+        this.applicationPath = applicationPath;
+
+        // init default options
+        this.options = {queryParameters: {}};
+
+        this.readyPromises = [];
 
         this.intervals = [];
 
@@ -45,13 +81,18 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
      * @param $domElement reference to the jquery object for the DOM element
      */
     initDOMElement: function ($domElement) {
-        expresso.layout.applicationbase.AbstractApplicationBase.fn.initDOMElement.call(this, $domElement);
-
         var _this = this;
         this.$domElement = $domElement;
 
         // add the instance on the DOM element
         $domElement.data("object-instance", this);
+
+        // resize the application at the end of this call
+        window.setTimeout(function () {
+            if (_this.$domElement) {
+                _this.resizeContent();
+            }
+        }, 100);
 
         // resize section on window resize
         $(window).smartresize(function () {
@@ -74,7 +115,161 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
                 _this.setFullScreenMode(!_this.fullScreen);
             });
         }
+
+        console.log("Application [" + this.appDef.absoluteAppName + "] initialized");
     },
+
+    /**
+     * Give a chance to the application to load data before loading sections
+     * @returns {*} a promise when the data is loaded
+     */
+    initData: function () {
+        //return $.Deferred().resolve().promise();
+        // load the labels
+        var _this = this;
+
+        return $.when(
+            // load application preferences
+            _this.loadApplicationPreferences(),
+
+            // load applications labels
+            expresso.Common.loadLabels(this.applicationPath).done(function (applicationsLabels) {
+                // always append the common labels
+                _this.labels = $.extend({}, expresso.Labels, applicationsLabels);
+            })
+        );
+    },
+
+    /**
+     * Resize the content if needed
+     */
+    resizeContent: function () {
+        // by default, resize all kendo widgets in the DOM element
+        // kendo.resize($domElement);
+    },
+
+    /**
+     * This method add a new promise to the section.
+     * All promises must be resolved before using the section (see isReady)
+     * @param promise
+     */
+    addPromise: function (promise) {
+        this.readyPromises.push(promise);
+    },
+
+    /**
+     * Load the content: app.html and append it to the layout
+     * @param autoLoad true if you want to load/init the content of the application (default is false)
+     */
+    render: function (autoLoad) {
+        var _this = this;
+        var $containerDiv = this.$containerDiv || $("<div class='hidden' hidden></div>").appendTo($("body"));
+        var $domElement = $("<div class='exp-application-base'></div>");
+        $domElement.appendTo($containerDiv);
+
+        // load the HTML page
+        this.$readyPromise = $.Deferred();
+        expresso.Common.loadHTML($domElement, _this.applicationPath + "/app.html", null, false).done(function () {
+            // application could have been destroyed while waiting for HTML
+            if (_this.applicationPath) {
+                // console.log("app.html loaded successfully");
+                _this.initDOMElement($domElement);
+
+                // then customize the form if needed
+                _this.$domElement.kendoExpressoForm({labels: this.labels}).data("kendoExpressoForm").ready().done(function () {
+                    // localize the application
+                    expresso.Common.localizePage(_this.$domElement, _this.labels);
+
+                    _this.$readyPromise.resolve();
+                });
+            }
+        });
+
+        return this.$readyPromise;
+    },
+
+    /**
+     * Get the label for the key.
+     * @param key
+     * @param [params]
+     * @param [nullIfNoExist]
+     * @param [shortLabel] default is false
+     * @return {string} the label
+     */
+    getLabel: function (key, params, nullIfNoExist, shortLabel) {
+        return expresso.Common.getLabel(key, this.labels, params, nullIfNoExist, shortLabel);
+    },
+
+    /**
+     * Send a REST request to the server. But first, verify that the user is allowed to send this request
+     * @param [path] resource path
+     * @param [action] action on the resource (CRUD or custom)
+     * @param [data] data to be sent in the body
+     * @param [queryString]
+     * @param [options]
+     * @returns {*} a Ajax promise
+     */
+    sendRequest: function (path, action, data, queryString, options) {
+        // add the application labels and send the request
+        return expresso.Common.sendRequest(path, action, data, queryString, $.extend({}, {
+            waitOnElement: this.$domElement,
+            labels: this.labels
+        }, options));
+    },
+
+    /**
+     *
+     */
+    setOptions: function (options) {
+        this.options = options || {};
+        this.options.queryParameters = this.options.queryParameters || {};
+        // console.log("queryParameters", this.options.queryParameters);
+    },
+
+    /**
+     * Always validate that the section is ready before calling any method on it
+     * @returns a Promise to be resolved when the section is ready
+     */
+    isReady: function () {
+        if (!this.$readyPromise) {
+            this.readyPromises.push(this.render());
+        } else {
+            this.readyPromises.push(this.$readyPromise);
+        }
+
+        return $.when.apply(null, this.readyPromises);
+    },
+
+    /**
+     * Load the application preferences
+     * @return {*} promise when the request is done
+     */
+    loadApplicationPreferences: function () {
+        var _this = this;
+        return expresso.Common.loadApplicationPreferences(this.appDef.appClass).done(function (applicationPreferences) {
+            _this.applicationPreferences = applicationPreferences;
+        });
+    },
+
+    /**
+     * Get the application preferences
+     * @return {*}
+     */
+    getApplicationPreferences: function () {
+        return this.applicationPreferences.preferences;
+    },
+
+    /**
+     * Save the application preferences
+     * @return {*} promise when the request is done
+     */
+    saveApplicationPreferences: function () {
+        var _this = this;
+        return expresso.Common.saveApplicationPreferences(this.applicationPreferences).done(function (updatedApplicationPreferences) {
+            _this.applicationPreferences = updatedApplicationPreferences;
+        });
+    },
+
 
     /**
      * Refresh the view (at interval in full screen mode).
@@ -255,20 +450,38 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
      */
     connectWebSocket: function (resourceSecurityPath) {
         var _this = this;
+        if (!this.webSocketReconnectionDelay) {
+            this.webSocketReconnectionDelay = 20; // n seconds
+        }
 
         try {
+
+            /**
+             * Utility method to keep the web socket opened
+             */
+            function webSocketKeepAlive() {
+                try {
+                    // console.log("webSocketKeepAlive at" + new Date());
+                    _this.webSocket.send(JSON.stringify({message: "keepAlive"}));
+                } catch (ex1) {
+                    // this will trigger a reconnect
+                    _this.webSocket.close();
+                }
+                window.setTimeout(function () {
+                    webSocketKeepAlive();
+                }, 30 * 1000);
+            }
+
             var path = expresso.Common.getWsBasePathURL();
             path = path.substring("http".length); // keep the "s" is any
             this.webSocket = new WebSocket("ws" + path + "/websocket/" + resourceSecurityPath);
             this.webSocket.onerror = function (event) {
-                console.warn("Error on web socket. Reconnecting web socket in n seconds", event);
-                window.setTimeout(function () {
-                    _this.connectWebSocket(resourceSecurityPath);
-                }, 10 * 1000); // n seconds
+                console.warn("Error on web socket at" + new Date(), event);
             };
 
             this.webSocket.onopen = function (event) {
-                console.log("Web socket connection established");
+                console.log("Web socket connection established at " + new Date());
+                webSocketKeepAlive();
             };
 
             this.webSocket.onmessage = function (event) {
@@ -277,13 +490,34 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
             }
 
             this.webSocket.onclose = function () {
-                console.log("Closed. Reconnecting web socket in n seconds");
-                window.setTimeout(function () {
-                    _this.connectWebSocket(resourceSecurityPath);
-                }, 10 * 1000); // n seconds
+                if (_this.webSocketReconnectionDelay) {
+                    console.warn("Web socket closed at " + new Date() + ". Reconnecting web socket in " + _this.webSocketReconnectionDelay + " seconds");
+                    window.setTimeout(function () {
+                        _this.connectWebSocket(resourceSecurityPath);
+                    }, _this.webSocketReconnectionDelay * 1000);
+                } else {
+                    console.log("Web socket closed." + new Date());
+                }
             }
+
+
         } catch (ex) {
             console.error("Cannot establish web socket connection: " + ex);
+        }
+    },
+
+    /**
+     *
+     */
+    closeWebSocket: function () {
+        if (this.webSocket) {
+            try {
+                this.webSocketReconnectionDelay = null;
+                this.webSocket.close();
+            } catch (ex) {
+                // ignore
+            }
+            this.webSocket = null;
         }
     },
 
@@ -300,16 +534,28 @@ expresso.layout.applicationbase.ApplicationBase = expresso.layout.applicationbas
      * This method is called when the main application is requested to switch to another application
      */
     destroy: function () {
-        if (this.webSocket) {
-            try {
-                this.webSocket.close();
-            } catch (ex) {
-                // ignore
-            }
-            this.webSocket = null;
+        this.clearIntervals();
+
+        // remove all event handlers
+        $(window).off(".app");
+        $(window.document).off(".app");
+
+        // Web socket
+        this.closeWebSocket();
+
+        this.labels = null;
+        this.applicationPath = null;
+
+        if (this.$domElement) {
+            // remove the data
+            this.$domElement.data("object-instance", null);
+
+            expresso.util.UIUtil.destroyKendoWidgets(this.$domElement);
+
+            // remove HTML DOM elements
+            this.$domElement.empty();
+
+            this.$domElement = null;
         }
-
-        expresso.layout.applicationbase.AbstractApplicationBase.fn.destroy.call(this);
     }
-
 });
