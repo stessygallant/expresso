@@ -52,9 +52,8 @@
                 showButtonInGridToolbar: true,
                 resourceCollectionAction: true,
                 performAction: function () {
-                    // return _this.sendRequest("resource", "publish", $.param({id: _this.getCurrentResourceId()}));
-                    // TO DO how to get the files?
-                    // window.open();
+                    expresso.Common.sendDownloadRequest(expresso.Common.getWsResourcePathURL() + "/resource/" +
+                        _this.getCurrentResourceId(), "publish", "zip");
                     return $.Deferred().resolve();
                 }
             }

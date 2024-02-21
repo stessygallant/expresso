@@ -39,6 +39,15 @@
         events: ["change"],
 
         init: function (element, options) {
+
+            /*
+             * WARNING: this widget does not work well when the field is nullable: true.
+             * The first save will result in only 1 item regardless of the selection
+             */
+            if (options && options.field && options.field.nullable) {
+                alert("ExpressoMultiLookupSelection widget does not work well when the field is nullable: true");
+            }
+
             Widget.fn.init.call(this, element, options);
 
             this.setOptions(options);
@@ -80,15 +89,17 @@
             this.$element.wrap("<div class='k-widget exp-multilookupselection'></div>");
             this.$wrapper = this.$element.parent();
 
-            // TARGET SELECT
-            var $targetSelect = this.$element;
-            var selectedGUID = expresso.util.Util.guid();
-            $targetSelect.addClass("exp-lookup-selection").addClass("exp-lookup-selection-target")
-                .attr("id", selectedGUID).attr("multiple", "multiple");
+            // hide the current select
+            this.$element.hide();
+            this.$element.attr("multiple", "multiple");
 
             // SOURCE SELECT
-            var $sourceSelect = $("<select class='exp-lookup-selection exp-lookup-selection-source' multiple></select>");
-            $sourceSelect.insertBefore($targetSelect);
+            var $sourceSelect = $("<select class='exp-lookup-selection exp-lookup-selection-source' multiple></select>").appendTo(this.$wrapper);
+
+            // TARGET SELECT
+            var $targetSelect = $("<select class='exp-lookup-selection exp-lookup-selection-target' multiple></select>").appendTo(this.$wrapper);
+            var selectedGUID = expresso.util.Util.guid();
+            $targetSelect.attr("id", selectedGUID);
 
             // TITLE
             if (this.options.titles) {
@@ -196,7 +207,7 @@
                 return expresso.Common.sendRequest(this.url + "/search", null, null, filter,
                     {waitOnElement: this.$wrapper}).done(function (searchResult) {
                     var dataItems = searchResult.data;
-                    
+
                     // remove selected target from source
                     var selected = _this.targetListBox.dataItems();
                     dataItems = $.grep(dataItems, function (a) {
@@ -271,7 +282,8 @@
                     } else {
                         // get the list of objects
                         expresso.Common.sendRequest(this.url, null, null,
-                            expresso.Common.buildKendoFilter({"id": Array.from(values)})).done(function (result) {
+                            expresso.Common.buildKendoFilter({"id": values.join(",")})).done(function (result) {
+                            // console.log("Result", result);
                             _this.targetListBox.setDataSource(new kendo.data.DataSource({
                                 data: expresso.Common.updateDataValues(result.data, _this.options.labels)
                             }));
@@ -295,21 +307,25 @@
          */
         _refreshValue: function (userTriggered) {
             var dataItems = this.targetListBox.dataItems();
-            // console.log(dataItems);
-
-            // if the option does not exist: create and select it
             var _this = this;
+
+            // clear all selected options
             this.$element.find("option").prop("selected", false);
-            // select (or unselect) the option
+
+            // select the new options
             $.each(dataItems, function () {
                 var dataItem = this;
                 var $option = _this.$element.find("option[value='" + dataItem[_this.options.dataValueField] + "']");
+
+                // if the option does not exist, create
                 if (!$option.length) {
                     $option = $("<option value='" + dataItem[_this.options.dataValueField] + "'>" +
                         dataItem[_this.options.dataTextField] + "</option>").appendTo(_this.$element);
                 }
                 $option.prop("selected", true);
             });
+
+            // trigger change
             this.$element.trigger("change");
             this.trigger("change", {userTriggered: userTriggered});
         },
@@ -393,7 +409,7 @@
 
             this.sourceListBox.destroy();
             this.sourceListBox = null;
-            //this.targetListBox.destroy();
+            this.targetListBox.destroy();
             this.targetListBox = null;
 
             Widget.fn.destroy.call(this);

@@ -166,7 +166,7 @@ expresso.Common = (function () {
             } else if ($.isArray(f)) {
                 // add all filters in the array to the filter array
                 for (var i = 0; i < f.length; i++) {
-                    filter = expresso.Common.addKendoFilter(filter, f[i]);
+                    filter = expresso.Common.addKendoFilter(filter, f[i], customFilterFlag);
                 }
             } else {
                 // simple {field:value}
@@ -1102,7 +1102,7 @@ expresso.Common = (function () {
         }
 
         var progressFailure;
-        var $deferredComplete = $.Deferred();
+        var $deferredComplete = options.$retryDeferredComplete || $.Deferred();
         $deferredLogin.done(function () {
             var $deferred = $.ajax(url, {
                 method: method,
@@ -1173,23 +1173,20 @@ expresso.Common = (function () {
                 .fail(function (jqXHR) {
                     expresso.util.UIUtil.showLoadingMask($domElement, false);
                     // retry on network error (it happens when multiple get at the same time on instable network)
-                    var maximumRetry = 1; // this code does not support more than 1 retry
+                    var maximumRetry = 3;
 
                     // status 0 means network error
                     options.retryCount = options.retryCount || 0;
+                    options.$retryDeferredComplete = options.$retryDeferredComplete || $deferredComplete;
                     if (jqXHR.status == 0 && options.retryCount < maximumRetry && !options.showProgress && action == "read") {
                         options.retryCount++;
                         jqXHR.alreadyProcessed = true; // do not display error message
                         window.setTimeout(function () {
-                            sendRequest(path, action, data, queryString, options).done(function (result) {
-                                console.log("Network error on GET. Got it successfully on retry");
-                                $deferredComplete.resolve(result);
-                            }).fail(function (jqXHR) {
-                                console.error("Network error on GET AGAIN.");
-                                $deferredComplete.reject(jqXHR);
-                            });
+                            console.log("Network error on GET. Will retry");
+                            sendRequest(path, action, data, queryString, options);
                         }, 500); // wait 500 ms
                     } else {
+                        console.warn("Error sending request", jqXHR);
                         if (options.showProgress) {
                             kendoProgressBarText.text = expresso.Common.getLabel("requestFailure", options.labels);
                         }
@@ -2394,11 +2391,12 @@ expresso.Common = (function () {
         $window.on('orientationchange', function () {
             $window.trigger("resize")
         });
-        $window.on('resize', function () {
+        $window.smartresize(function () {
             // init screen mode
             screenMode = undefined;
             getScreenMode();
-        }).trigger("resize");
+        });
+        $window.trigger("resize");
 
         return $.when(
             // set the default language
@@ -2425,10 +2423,10 @@ expresso.Common = (function () {
         loadApplication: loadApplication,
         loadResourceManager: loadResourceManager,
         addApplicationToHistory: addApplicationToHistory,
+        displayResourceManager: displayResourceManager,
         displayApplication: displayApplication,
         displayUrl: displayUrl,
         displayForm: displayForm,
-        displayResourceManager: displayResourceManager,
 
         getScript: getScript,
         loadHTML: loadHTML,

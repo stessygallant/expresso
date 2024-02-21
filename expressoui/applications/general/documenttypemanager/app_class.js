@@ -20,7 +20,7 @@ expresso.applications.general.documenttypemanager.DocumentTypeManager = expresso
             },
             pgmKey: {
                 type: "string",
-                unique: true,
+                unique: false,
                 maxLength: 50
             },
             description: {

@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 
-@Path("/{action:(?i)action}")
+@Path("/action")
 public class ActionsResource extends BaseOptionsResource<Action, BaseOptionService<Action>, ActionResource> {
 	public ActionsResource(@Context HttpServletRequest request, @Context HttpServletResponse response) {
 		super(Action.class, request, response, new ActionResource(request, response));

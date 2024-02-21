@@ -295,7 +295,8 @@ div.main {
         @include default-div;
         padding-top: 0.1875em;
         height: calc(#{$footerHeight} - 0.2em);
-        width: 100%;
+        width: calc(100% - 40em);
+        margin: 0 20em;
         position: fixed;
         bottom: 0;
         left: 0;
@@ -323,10 +324,11 @@ div.main {
 
     .main-menu-div {
         @include default-div;
+        width: $menuWidth;
 
         .search-menu-div {
-            margin: 0.5em 0 0 2.7em;
-            width: calc(#{$menuWidth} - 5em);
+            margin: 0.5em 0 0.2em 2.7em;
+            width: calc(100% - 4em);
 
             .search-menu {
                 width: 100%;
@@ -337,8 +339,8 @@ div.main {
             border: 0;
             margin: 0;
             padding: 0;
-            width: $menuWidth;
-            height: calc(100% - #{$footerHeight} - #{$headerHeight} - #{$userDivHeight} - 3em);
+            width: 100%;
+            // height:runtime
             overflow-x: hidden;
             overflow-y: auto;
 
@@ -447,6 +449,89 @@ div.main {
                 }
             }
         }
+
+        .user-div {
+            @include default-div;
+            position: relative;
+            margin: 0.5em 0 1em 0.5em;
+            width: calc(100% - 2.5em);
+            height: fit-content;
+            padding: 0.7em 0.8em;
+            border: 1px solid rgba(111, 130, 148, 0.3);
+            background: linear-gradient(180deg, rgba(238, 238, 238, 0.2) 0%, rgba(216, 216, 216, 0.41) 100%);
+            box-shadow: 0 0.125em 0.1875em 0 rgba(0, 0, 0, 0.2);
+
+            .settings {
+                color: $themeIconColor;
+                float: right;
+                font-weight: normal;
+                margin-top: 0;
+                font-size: 150%;
+
+                &:hover {
+                    color: $themeColorDark;
+                    cursor: pointer;
+                }
+            }
+
+            .username {
+                text-transform: uppercase;
+                color: $themeTextColor;
+                font-family: $fontFamilyOpenSans;
+                font-weight: 600;
+                max-width: 11.5em;
+                display: inline-block;
+                overflow: hidden;
+                white-space: nowrap;
+            }
+
+            .notification-bell {
+                position: absolute;
+                top: 0.35em;
+                right: 1.5em;
+                font-size: 1.7em;
+                color: $themeIconColor;
+
+                &.fa-bell {
+                    color: red;
+
+                    &:hover {
+                        color: $themeIconColor;
+                        cursor: pointer;
+                    }
+
+                    .badge {
+                        color: white;
+                        font-size: 40%;
+                        min-width: 1.6em;
+                        font-weight: normal;
+                        width: auto;
+                        height: auto;
+                        text-align: center;
+                        margin: 0;
+                        position: absolute;
+                        top: 0.8em;
+                        left: 0.5em;
+                    }
+                }
+            }
+
+            .duties {
+                width: 100%;
+                text-align: center;
+                margin-top: 0.5em;
+
+                .on-duty-button {
+                    padding: 0.2em 1em;
+                    font-weight: bold;
+
+                    &.on-duty {
+                        background-color: $green;
+                        color: white;
+                    }
+                }
+            }
+        }
     }
 
     .main-div {
@@ -496,42 +581,7 @@ div.main {
         height: calc(100% - #{$mainTitleHeight});
     }
 
-    .user-div {
-        @include default-div;
-        position: fixed;
-        bottom: $footerHeight;
-        left: 1.25em;
-        width: calc(#{$menuWidth} - 4em);
-        height: calc(#{$userDivHeight} - 1em);
-        border: 1px solid rgba(111, 130, 148, 0.3);
-        background: linear-gradient(180deg, rgba(238, 238, 238, 0.2) 0%, rgba(216, 216, 216, 0.41) 100%);
-        box-shadow: 0 0.125em 0.1875em 0 rgba(0, 0, 0, 0.2);
-        padding: 0.7em 0.8em 0 0.8em;
 
-        .settings {
-            color: $themeIconColor;
-            float: right;
-            font-weight: normal;
-            margin-top: 0;
-            font-size: 150%;
-
-            &:hover {
-                color: $themeColorDark;
-                cursor: pointer;
-            }
-        }
-
-        .username {
-            text-transform: uppercase;
-            color: $themeTextColor;
-            font-family: $fontFamilyOpenSans;
-            font-weight: 600;
-            max-width: 11.5em;
-            display: inline-block;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-    }
 }
 
 .exp-user-selector {
@@ -584,37 +634,6 @@ div.main {
     border-bottom: $themeInputBottomBorder;
 }
 
-.notification-bell {
-    position: absolute;
-    top: 0.35em;
-    right: 1.5em;
-    font-size: 1.7em;
-    color: $themeIconColor;
-
-    &.fa-bell {
-        color: red;
-
-        &:hover {
-            color: $themeIconColor;
-            cursor: pointer;
-        }
-
-        .badge {
-            color: white;
-            font-size: 40%;
-            min-width: 1.6em;
-            font-weight: normal;
-            width: auto;
-            height: auto;
-            text-align: center;
-            margin: 0;
-            position: absolute;
-            top: 0.8em;
-            left: 0.5em;
-        }
-    }
-}
-
 .notification-tooltip {
     background-color: white;
     border: 0.1em solid red;
@@ -661,14 +680,9 @@ div.main {
                 margin: 0.1em 0 0 4em;
             }
 
-            .main-menu {
-                // width: 100%;
-                height: calc(100% - 9em);
+            .user-div {
+                margin: 0.5em 0 1em 0.5em;
             }
-        }
-
-        .user-div {
-            display: none;
         }
 
         .main-footer {

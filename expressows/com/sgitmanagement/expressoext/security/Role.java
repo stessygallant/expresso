@@ -205,7 +205,7 @@ public class Role extends BaseOption {
 		this.departmentIds.addAll(departmentIds);
 	}
 
-	public Set<Department> getDepartment() {
+	public Set<Department> getDepartments() {
 		return departments;
 	}
 
@@ -226,7 +226,7 @@ public class Role extends BaseOption {
 		this.jobTitleIds.addAll(jobTitleIds);
 	}
 
-	public Set<JobTitle> getJobTitle() {
+	public Set<JobTitle> getJobTitles() {
 		return jobTitles;
 	}
 
@@ -247,7 +247,7 @@ public class Role extends BaseOption {
 		this.jobTypeIds.addAll(jobTypeIds);
 	}
 
-	public Set<JobType> getJobType() {
+	public Set<JobType> getJobTypes() {
 		return jobTypes;
 	}
 
@@ -287,6 +287,10 @@ public class Role extends BaseOption {
 	public void setApplicationIds(Set<Integer> applicationIds) {
 		this.applicationIds.clear();
 		this.applicationIds.addAll(applicationIds);
+	}
+
+	public Set<Application> getApplication() {
+		return applications;
 	}
 
 	@XmlElement

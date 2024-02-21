@@ -237,11 +237,15 @@ expresso.layout.resourcemanager.PreviewTab = expresso.layout.resourcemanager.Sec
      */
     loadApplication: function (appDef, options) {
         var _this = this;
+        var $deferred = $.Deferred();
         var $div = this.$domElement.children("div").first();
         this.addPromise(expresso.Common.loadApplication(appDef, options, $div).done(function (appInstance) {
             _this.appInstance = appInstance;
-            _this.appInstance.render();
+            _this.appInstance.render().done(function () {
+                $deferred.resolve(_this.appInstance);
+            })
         }));
+        return $deferred;
     },
 
     /**

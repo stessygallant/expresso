@@ -189,10 +189,12 @@ public class ExchangeMessageUtil implements MailSender {
 				messageJsonObject.add("bccRecipients", createRecipients(bccs));
 			}
 
+			// not supported: status code: 400, reason phrase: Bad Request
+			// read-only properties
 			// replyTo
-			if (replyTo != null) {
-				messageJsonObject.add("replyTo", createRecipient(replyTo));
-			}
+			// if (replyTo != null) {
+			// messageJsonObject.add("replyTo", createRecipient(replyTo));
+			// }
 
 			// attachments (limited to 3M)
 			if (attachments != null && !attachments.isEmpty()) {

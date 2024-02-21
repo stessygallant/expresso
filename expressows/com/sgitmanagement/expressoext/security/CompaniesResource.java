@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Context;
 
-@Path("/{company:(?i)company}")
+@Path("/company")
 public class CompaniesResource extends BaseEntitiesResource<Company, CompanyService, CompanyResource> {
 
 	public CompaniesResource(@Context HttpServletRequest request, @Context HttpServletResponse response) {

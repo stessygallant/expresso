@@ -12,5 +12,7 @@ expresso.applications.security.resourcemanager.Labels = {
     publishButtonLabel: "Publish",
     publishButtonTitle: "Publish resource manager",
 
+    serviceNotFound: "Service class does not exist for resource [{resourceName}]",
+
     _: ""
 };

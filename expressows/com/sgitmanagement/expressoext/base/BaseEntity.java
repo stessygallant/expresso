@@ -2,6 +2,8 @@ package com.sgitmanagement.expressoext.base;
 
 import com.sgitmanagement.expresso.base.IEntity;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,8 +15,10 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 //@EntityListeners(AuditListener.class)
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
+@Access(value = AccessType.FIELD)
 @MappedSuperclass
 public class BaseEntity implements IEntity<Integer> {
 

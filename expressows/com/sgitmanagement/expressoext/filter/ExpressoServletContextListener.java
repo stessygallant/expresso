@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.mchange.v2.c3p0.C3P0Registry;
 import com.mchange.v2.c3p0.PooledDataSource;
+import com.sgitmanagement.expresso.event.ResourceEventCentral;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expressoext.util.MainUtil;
 
@@ -19,7 +20,10 @@ public class ExpressoServletContextListener implements ServletContextListener {
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		// init SystemEnv
-		SystemEnv.INSTANCE.getEnv();
+		SystemEnv.INSTANCE.name();
+
+		// init event Central
+		ResourceEventCentral.INSTANCE.name();
 
 		logger = LoggerFactory.getLogger(ExpressoSessionListener.class);
 		logger.info("ServletContextListener started");

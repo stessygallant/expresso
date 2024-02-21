@@ -337,7 +337,7 @@ $.extend(expresso.Labels, {
     noRecord: "No records",
     record: "record",
     nbrSelectedRecord: "{count} selected",
-    requireApprovalNote: "Field '{field}' has been changed",
+    requireApprovalNote: "Note for '{field}'",
 
     january: "January",
     february: "February",
@@ -416,6 +416,7 @@ $.extend(expresso.Labels, {
     // Notifications
     notifications: "You have {quantity} pending notification(s).",
     newNotifications: "You have {quantity} new notification(s).",
+    duties: "On Duty",
 
     // photo
     deletePictureWindowTitle: "Confirmation",

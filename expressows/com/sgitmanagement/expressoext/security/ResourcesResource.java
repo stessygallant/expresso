@@ -1,6 +1,7 @@
 package com.sgitmanagement.expressoext.security;
 
 import com.sgitmanagement.expresso.base.AbstractBaseEntityService;
+import com.sgitmanagement.expresso.exception.ValidationException;
 import com.sgitmanagement.expressoext.base.BaseEntitiesResource;
 import com.sgitmanagement.expressoext.base.BaseEntityResource;
 import com.sgitmanagement.expressoext.security.ResourcesResource.ResourceResource;
@@ -17,24 +18,26 @@ public class ResourcesResource extends BaseEntitiesResource<Resource, ResourceSe
 		super(Resource.class, request, response, new ResourceResource(request, response), ResourceService.class);
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void publish(MultivaluedMap<String, String> formParams) throws Exception {
-		Integer resourceId = Integer.parseInt(formParams.getFirst("id"));
-		Resource resource = getService().get(resourceId);
-		AbstractBaseEntityService resourceService = getService().newService(resource.getName());
-
-		// com.sgitmanagement.termont.it.tablet becomes sherpa.applications.it.tabletmanager
-		String namespace = resourceService.getClass().getPackageName();
-		namespace = namespace.replace("com.sgitmanagement", "");
-		namespace = namespace.replace("termont", "sherpa.applications");
-		namespace += "manager";
-
-		resourceService.generateResourceManager(namespace);
-	}
-
 	static public class ResourceResource extends BaseEntityResource<Resource, ResourceService> {
 		public ResourceResource(HttpServletRequest request, HttpServletResponse response) {
 			super(Resource.class, request, response);
+		}
+
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		public void publish(MultivaluedMap<String, String> formParams) throws Exception {
+			Resource resource = getService().get(getId());
+			AbstractBaseEntityService resourceService = getService().newService(resource.getName());
+			if (resourceService == null) {
+				throw new ValidationException("serviceNotFound", "resourceName", resource.getName());
+			}
+
+			// com.sgitmanagement.termont.it.tablet becomes sherpa.applications.it.tabletmanager
+			String namespace = resourceService.getClass().getPackageName();
+			namespace = namespace.replace("com.sgitmanagement.", "");
+			namespace = namespace.replace("termont", "sherpa.applications");
+			namespace += "manager";
+
+			resourceService.generateResourceManager(namespace);
 		}
 	}
 }

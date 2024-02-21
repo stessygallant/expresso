@@ -154,7 +154,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         // do not refresh if the form is opened
                         var formOpened = !!_this.resourceManager.sections.form.$window;
                         if (!formOpened) {
-                            console.log("Reloading grid [" + _this.resourceManager.resourceName + "]");
+                            // console.log("Reloading grid [" + _this.resourceManager.resourceName + "]");
 
                             // make sure not to display an error message
                             expresso.Common.doNotDisplayAjaxErrorMessage(true);
@@ -443,6 +443,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (gridPreference) {
                     _this.applyApplicationPreference(gridPreference);
                 }
+
+                if (_this.resourceManager.options && _this.resourceManager.options.columns) {
+                    _this.applyColumnPreferences(_this.resourceManager.options.columns);
+                }
             });
         }, 10);
     },
@@ -697,7 +701,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         + "||'').replace(/\\" + separator + "/g, \"\\r\\n\").replace(/'/g, \"&apos;\")#'>#=(" + labelColumn + "||'').replace(/\\" + separator + "/g, \"<br>\")#</div>";
 
                     // must set a fixed height on the row
-                    if (!column.hidden && screenMode == expresso.Common.SCREEN_MODES.DESKTOP) {
+                    if (!column.hidden && !column.avoidFixedHeight && screenMode == expresso.Common.SCREEN_MODES.DESKTOP) {
                         _this.$domElement.addClass("exp-grid-fixed-height");
                     }
                 }
@@ -709,7 +713,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                         + "||'').replace(/\\" + separator + "/g, \"\\r\\n\").replace(/'/g, \"&apos;\")#'>#=(" + column.field + "||'').replace(/\\" + separator + "/g, \"<br>\")#</div>";
 
                     // must set a fixed height on the row
-                    if (!column.hidden && screenMode == expresso.Common.SCREEN_MODES.DESKTOP) {
+                    if (!column.hidden && !column.avoidFixedHeight && screenMode == expresso.Common.SCREEN_MODES.DESKTOP) {
                         _this.$domElement.addClass("exp-grid-fixed-height");
                     }
                 }
@@ -1370,7 +1374,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 // ok the browser will open it
             } else {
                 e.preventDefault();
-                var url = expresso.Common.getWsResourcePathURL() + "/document/" + document.id + "/file/" + fileName;
+                // backward compatibility: not always document
+                var url = expresso.Common.getWsResourcePathURL() + "/" +
+                    (_this.backwardCompatibilityDocument ? _this.resourceManager.getRelativeWebServicePath() : "document")
+                    + "/" + document.id + "/file/" + fileName;
                 // console.log(url);
                 window.open(url);
             }
@@ -1850,6 +1857,27 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 selectedGridPreference.name.substring(0, this.maxGridFilterNameLength) : selectedGridPreference.name) : "";
         this.$domElement.find(".exp-saveconfiguration-button .exp-button-label").text(gridButtonName);
 
+        // apply column preferences
+        this.applyColumnPreferences(selectedGridPreference.gridColumns);
+
+        // need to set the filter to the filter
+        if (this.resourceManager.sections.filter) {
+            this.resourceManager.sections.filter.setFilters(selectedGridPreference && selectedGridPreference.query &&
+            selectedGridPreference.query.filter ? selectedGridPreference.query.filter : null);
+        }
+
+        return selectedGridPreference && selectedGridPreference.query && selectedGridPreference.query.filter &&
+            selectedGridPreference.query.filter.filters;
+    },
+
+
+    /**
+     *
+     * @param columns
+     */
+    applyColumnPreferences: function (columns) {
+        var _this = this;
+
         if (!this.defaultColumns) {
             this.defaultColumns = $.extend(true, [], this.columns);
         }
@@ -1858,8 +1886,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         this.kendoGrid.tbody.empty();
 
         var forceHidden = false;
-        if (!selectedGridPreference.gridColumns) {
-            selectedGridPreference.gridColumns = this.defaultColumns;
+        if (!columns) {
+            columns = this.defaultColumns;
             forceHidden = true;
         }
 
@@ -1871,7 +1899,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 columnIndexMap[column.field] = index;
 
                 // if inside the gridPreferences, show it
-                var visible = ($.grep(selectedGridPreference.gridColumns, function (gridColumn) {
+                var visible = ($.grep(columns, function (gridColumn) {
                     return (gridColumn.field == column.field) && (!forceHidden || !gridColumn.hidden);
                 }).length > 0);
 
@@ -1889,18 +1917,19 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         } else {
             // reorder columns
             var columnIndex = this.multipleSelectionEnabled ? 1 : 0; // 0 is for "select all" checkbox
-            //console.log("selectedGridPreference.gridColumns", selectedGridPreference.gridColumns);
-            $.each(selectedGridPreference.gridColumns, function () {
+            //console.log("columns", columns);
+            $.each(columns, function () {
                 var field = this.field;
                 var column = _this.columnMap[field];
                 if (column) {
-                    if (columnIndexMap[field] != columnIndex) {
-                        // console.log("Moving " + field + " from " + columnIndexMap[field] + " to " + columnIndex);
-                        _this.kendoGrid.reorderColumn(columnIndex, column);
-                    }
+                    // console.log("Moving " + field + " from " + columnIndexMap[field] + " to " + columnIndex);
+                    // always move, otherwise the column will be placed at the end
+                    //if (columnIndexMap[field] != columnIndex) {
+                    _this.kendoGrid.reorderColumn(columnIndex, column);
+                    //}
 
                     // TreeList does not have resizeColumn method
-                    if (_this.kendoGrid.resizeColumn) {
+                    if (this.width && _this.kendoGrid.resizeColumn) {
                         // set the column width
                         _this.kendoGrid.resizeColumn(column, this.width);
                     }
@@ -1910,15 +1939,6 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 }
             });
         }
-
-        // need to set the filter to the filter
-        if (this.resourceManager.sections.filter) {
-            this.resourceManager.sections.filter.setFilters(selectedGridPreference && selectedGridPreference.query &&
-            selectedGridPreference.query.filter ? selectedGridPreference.query.filter : null);
-        }
-
-        return selectedGridPreference && selectedGridPreference.query && selectedGridPreference.query.filter &&
-            selectedGridPreference.query.filter.filters;
     },
 
     /**
@@ -3701,7 +3721,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
         if (powerUser /*&& expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP*/) {
             // add the save filter button
-            toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-saveconfiguration-button" title="saveConfiguration"><span class="fa fa-bars"><span class="exp-button-label" data-text-key="saveConfigurationButton"></span></span></button>'});
+            toolbar.push({template: '<button type="button" class="k-button exp-button exp-always-active-button exp-saveconfiguration-button" title="saveConfiguration"><span class="fa fa-star"><span class="exp-button-label" data-text-key="saveConfigurationButton"></span></span></button>'});
             needSeparator = true;
         }
 

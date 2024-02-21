@@ -4,12 +4,13 @@ import com.sgitmanagement.expresso.dto.Query;
 import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.dto.Query.Sort;
 import com.sgitmanagement.expressoext.base.BaseOptionService;
+import com.sgitmanagement.expressoext.util.MainUtil;
 
 public class RoleService extends BaseOptionService<Role> {
 	public static void main(String[] args) throws Exception {
 		RoleService service = newServiceStatic(RoleService.class, Role.class);
 		service.list().forEach(r -> System.out.println(r.getPgmKey()));
-		System.out.println("Done");
+		MainUtil.close();
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package com.sgitmanagement.expressoext.filter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -144,15 +145,38 @@ public class AuthorizationFilter implements Filter {
 							throw new InvalidCredentialsException("No user found");
 						}
 
+						if (user.getTerminationDate() != null && user.getTerminationDate().before(new Date())) {
+							logger.warn("User [" + user.getUserName() + "] is terminated");
+							// throw new InvalidCredentialsException("User is terminated");
+						}
+
 						allowed = AuthorizationHelper.isUserAllowed(user, action, resources);
 					}
 				}
 
+				String version = request.getHeader(HEADER_VERSION);
+				String appNAme = request.getHeader(HEADER_APPLICATION_NAME);
+				String ip = Util.getIpAddress(request);
+				String userAgent = request.getHeader("User-Agent");
+				Client userAgentClient = new Parser().parse(userAgent);
+				// System.out.println(userAgentClient.userAgent.family); // => "Mobile Safari"
+				// System.out.println(userAgentClient.userAgent.major); // => "5"
+				// System.out.println(userAgentClient.userAgent.minor); // => "1"
+				// System.out.println(userAgentClient.os.family); // => "iOS"
+				// System.out.println(userAgentClient.os.major); // => "5"
+				// System.out.println(userAgentClient.os.minor); // => "1"
+				// System.out.println(userAgentClient.device.family); // => "iPhone"
+				String msg = String.format("%10s %10s %s %s %s %s%s - [%s %s/%s]", //
+						(ip != null ? ip : "n/a"), //
+						(user != null ? user.getUserName() : "n/a"), //
+						version, appNAme, request.getMethod(), //
+						request.getRequestURI(), //
+						(action != null && !action.equals("read") && !action.equals("create") ? " action=" + action : ""), //
+						(userAgentClient != null && userAgentClient.userAgent != null ? userAgentClient.userAgent.family : ""), //
+						(userAgentClient != null && userAgentClient.userAgent != null ? userAgentClient.userAgent.major + "." + userAgentClient.userAgent.minor : ""), //
+						(userAgentClient != null && userAgentClient.os != null ? userAgentClient.os.family : ""));
+
 				if (allowed) {
-					String version = request.getHeader(HEADER_VERSION);
-					String appNAme = request.getHeader(HEADER_APPLICATION_NAME);
-					String ip = Util.getIpAddress(request);
-					String userAgent = request.getHeader("User-Agent");
 
 					// logger.info(String.format("START %10s %10s %s %s %s %s%s", (ip != null ? ip : "n/a"), (user != null ? user.getUserName() : "n/a"), version, appNAme, request.getMethod(),
 					// request.getRequestURI(), (action != null && !action.equals("read") && !action.equals("create") ? " action=" + action : "")));
@@ -160,37 +184,24 @@ public class AuthorizationFilter implements Filter {
 					// pass the request along the filter chains
 					long startTime = new Date().getTime();
 					chain.doFilter(servletRequest, servletResponse);
-
 					long endTime = new Date().getTime();
 
-					if (user != null && user.isGenericAccount() && action.equals("read")) {
-						// do not log calls from TV
-					} else if (request.getRequestURI() != null && (request.getRequestURI().endsWith("systemMessage") || request.getRequestURI().endsWith("data"))) {
+					if (request.getRequestURI() != null && (request.getRequestURI().endsWith("systemMessage") || request.getRequestURI().endsWith("data"))) {
 						// do not logs those calls
+						// } else if (user != null && user.isGenericAccount() && action.equals("read")) {
+						// // do not log calls from TV
 					} else {
-						try {
-							Client userAgentClient = new Parser().parse(userAgent);
-
-							// System.out.println(userAgentClient.userAgent.family); // => "Mobile Safari"
-							// System.out.println(userAgentClient.userAgent.major); // => "5"
-							// System.out.println(userAgentClient.userAgent.minor); // => "1"
-							// System.out.println(userAgentClient.os.family); // => "iOS"
-							// System.out.println(userAgentClient.os.major); // => "5"
-							// System.out.println(userAgentClient.os.minor); // => "1"
-							// System.out.println(userAgentClient.device.family); // => "iPhone"
-
-							logger.info(String.format("%10s %10s %s %s %s %s%s - [%s %s/%s] (ms:%d)", (ip != null ? ip : "n/a"), (user != null ? user.getUserName() : "n/a"), version, appNAme,
-									request.getMethod(), request.getRequestURI(), (action != null && !action.equals("read") && !action.equals("create") ? " action=" + action : ""),
-									(userAgentClient != null && userAgentClient.userAgent != null ? userAgentClient.userAgent.family : ""), //
-									(userAgentClient != null && userAgentClient.userAgent != null ? userAgentClient.userAgent.major + "." + userAgentClient.userAgent.minor : ""), //
-									(userAgentClient != null && userAgentClient.os != null ? userAgentClient.os.family : ""), //
-									(endTime - startTime)));
-						} catch (Exception ex) {
-							logger.warn("Cannot log info: " + ex);
-						}
+						logger.info(String.format("%s (ms:%d)", msg, (endTime - startTime)));
 					}
 				} else {
-					logger.error(user + ": " + action + " -> " + resources + ": FORBIDDEN");
+					msg = String.format("INVALID %s (%s)", msg, (action + " -> " + resources + ": FORBIDDEN"));
+
+					String[] pentestIPs = new String[] { "147.253.144.195", "144.217.204.215" };
+					if (ip != null && Arrays.stream(pentestIPs).anyMatch(ip::equals)) {
+						logger.warn(msg);
+					} else {
+						logger.error(msg);
+					}
 
 					HttpServletResponse resp = (HttpServletResponse) servletResponse;
 					resp.setStatus(HttpServletResponse.SC_FORBIDDEN);

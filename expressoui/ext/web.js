@@ -30,13 +30,10 @@ expresso.Main = function () {
             $menu.empty();
         }
 
-        // var $menuDiv = $menu.parent();
-        // if the search input does not exists, add it
-        if (!$menuDiv.find(".search-menu-div").length) {
-            var $searchMenuDiv = $("<div class='search-menu-div'><input type='search' class='k-textbox search-menu' placeholder='" +
-                expresso.Common.getLabel("searchMenu") + "'></div>").prependTo($menuDiv);
-
-            $searchMenuDiv.find(".search-menu").on("change paste keyup search", function () {
+        $menuDiv.find(".search-menu")
+            .attr("placeholder", expresso.Common.getLabel("searchMenu")) // add placeholder text
+            .off()  // remove event listener before adding new ones
+            .on("change paste keyup search", function () {
                 // put back on menu
                 $menu.find("li").show();
 
@@ -44,7 +41,7 @@ expresso.Main = function () {
                 //console.log("**** [" + text + "]");
                 if (text) {
                     text = text.toLowerCase();
-                    // filter out all non matching item
+                    // filter out all non-matching item
                     $menu.find("li span[data-app]").each(function () {
                         var $span = $(this);
                         var $li = $span.closest("li");
@@ -67,7 +64,6 @@ expresso.Main = function () {
                     $menu.find(".favorites").closest("li").hide();
                 }
             });
-        }
 
         // build the menu
         var menuDataSource = [];
@@ -538,7 +534,7 @@ expresso.Main = function () {
      * init the list of notifications
      */
     var initNotifications = function () {
-        if (expresso.Security.isUserInRole("NotificationViewer.viewer")) {
+        if (expresso.Common.isProduction() && expresso.Security.isUserInRole("NotificationViewer.viewer")) {
             var $div = $(".main .user-div");
 
             // add a listener to the tooltip
@@ -547,34 +543,31 @@ expresso.Main = function () {
                 loadMainApplication("NotificationViewer");
             });
 
-            // insert the notification bell
-            var $notificationBell = $("<i class='fa fa-bell-o fa-2x notification-bell'><span class='badge'></span></i>").appendTo($div);
-
             // add a listener to the bell
+            var $notificationBell = $div.find(".notification-bell");
             $notificationBell.on("click", function () {
                 loadMainApplication("NotificationViewer");
             });
 
             // check notifications now (in 2 seconds)
             window.setTimeout(function () {
-                checkNotifications($div);
+                checkNotifications($notificationBell);
             }, 2 * 1000);
 
             // then check notifications every n minutes
             window.setInterval(function () {
-                checkNotifications($div);
+                checkNotifications($notificationBell);
             }, (expresso.Common.isProduction() ? 10 : 1) * 60 * 1000);
         }
     };
 
     /**
-     * @param $div
+     * @param $notificationBell
      */
-    var checkNotifications = function ($div) {
+    var checkNotifications = function ($notificationBell) {
         expresso.Common.sendRequest("notification/mine", null, null, null,
             {waitOnElement: null, ignoreErrors: true}).done(function (notifications) {
             // update the bell
-            var $notificationBell = $div.find("> .notification-bell");
             if (notifications.length) {
                 // if new notification, show tooltip
                 var ago15Minutes = new Date().addMinutes(-15);
@@ -613,6 +606,59 @@ expresso.Main = function () {
     };
 
     /**
+     * init the list of notifications
+     */
+    var initDuties = function () {
+        if (expresso.Common.isProduction() && expresso.Security.isUserInRole("DutyUserManager.user")) {
+            var $div = $(".main .user-div");
+
+            window.setTimeout(function () {
+                expresso.Common.sendRequest("duty/mine", null, null, null,
+                    {waitOnElement: null, ignoreErrors: true}).done(function (duties) {
+                    if (duties.length) {
+                        $div.append("<div class='duties'><button class='k-button exp-button on-duty-button'>" + expresso.Common.getLabel("duties") + "</button></div>");
+
+                        resizeContent();
+
+                        // listen on duty
+                        $div.find(".duties .on-duty-button").on("click", function (e) {
+                            e.preventDefault();
+                            expresso.Common.displayApplication("DutyController", expresso.Common.getLabel("duties"), {}, {
+                                height: 200,
+                                width: 800
+                            }).done(function () {
+                                // refresh the button
+                                // $div.find(".duties .on-duty-button").addClass("on-duty");
+                            });
+                        });
+                    }
+                });
+            }, 2 * 1000);
+        }
+    };
+
+    var resizeContent = function () {
+        var $body = $("body");
+        var $mainHeader = $body.find(".main-header");
+        var $menu = $menuDiv.find(".main-menu");
+        var $searchMenuDiv = $menuDiv.find(".search-menu-div");
+        var $userDiv = $menuDiv.find(".user-div");
+
+        if (expresso.Common.getScreenMode() == expresso.Common.SCREEN_MODES.DESKTOP) {
+            $menu.height($menuDiv.height() - $mainHeader.outerHeight(true) - $userDiv.outerHeight(true) - $searchMenuDiv.outerHeight(true));
+        } else {
+            $menu.height($menuDiv.height() - $userDiv.outerHeight(true) - $searchMenuDiv.outerHeight(true));
+        }
+
+        // console.log("$body: " + $body.height());
+        // console.log("$mainHeader: " + $mainHeader.height());
+        // console.log("$menuDiv: " + $menuDiv.height());
+        // console.log("$searchMenuDiv: " + $searchMenuDiv.height());
+        // console.log("$userDiv: " + $userDiv.height());
+        // console.log("$menu result: " + $menu.height());
+    };
+
+    /**
      * Initialization of the UI (menu and application)
      */
     var initUI = function () {
@@ -636,7 +682,6 @@ expresso.Main = function () {
         } else {
             // hide menu
             $menuDiv.hide();
-            $userDiv.hide();
             $mainDiv2.css("left", 0).width("100%");
         }
 
@@ -702,15 +747,23 @@ expresso.Main = function () {
             }
         });
 
+        // on window resize
+        $(window).smartresize(function () {
+            resizeContent();
+        });
+        $(window).trigger("resize");
+
         if (!noMenu) {
             if (expresso.Common.getSiteNamespace().config.Configurations.supportSystemMessage) {
                 verifySystemMessages();
             }
 
             if (expresso.Common.getSiteNamespace().config.Configurations.supportNotifications) {
-                if (expresso.Common.isProduction()) {
-                    initNotifications();
-                }
+                initNotifications();
+            }
+
+            if (expresso.Common.getSiteNamespace().config.Configurations.supportDuties) {
+                initDuties();
             }
         }
 
@@ -729,10 +782,9 @@ expresso.Main = function () {
             // show/hide menu
             if ($menuDiv.is(":visible")) {
                 $menuDiv.hide();
-                $userDiv.hide();
             } else {
                 $menuDiv.show();
-                $userDiv.show();
+                resizeContent();
             }
         });
 
@@ -1007,6 +1059,9 @@ expresso.Main = function () {
             } else {
                 // then load the new application
                 console.log("Loading main application [" + appName + "]", options || "");
+                if (app.options) { // if defined in the applications.js
+                    options = $.extend(options || {}, app.options);
+                }
                 return expresso.Common.loadApplication(app, options, $contentDiv).done(function (appInstance) {
                     currentAppInstance = appInstance;
                     currentAppName = appName;

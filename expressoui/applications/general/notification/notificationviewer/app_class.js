@@ -117,6 +117,11 @@ expresso.applications.general.notification.notificationviewer.NotificationViewer
                     }
                 });
 
+                // order by creation date
+                notifications.sort(function (a, b) {
+                    return b.creationDate.localeCompare(a.creationDate);
+                });
+
                 // build each notification
                 $.each(notifications, function () {
                     // display the notification
@@ -125,8 +130,11 @@ expresso.applications.general.notification.notificationviewer.NotificationViewer
                         purgeServiceDescription(notification.serviceDescription) + "'] .notification-div");
 
                     // convert data
+                    var creationDate = expresso.util.Formatter.parseDateTime(notification.creationDate);
+
                     notification.notes = notification.notes || "";
-                    notification.requestedDate = expresso.util.Formatter.formatDate(notification.requestedDate, expresso.util.Formatter.DATE_FORMAT.DATE/*_TIME*/);
+                    notification.requestedDate = expresso.util.Formatter.formatDate(notification.requestedDate, expresso.util.Formatter.DATE_FORMAT.DATE);
+                    notification.creationDate = expresso.util.Formatter.formatDate(notification.creationDate, expresso.util.Formatter.DATE_FORMAT.DATE_TIME);
                     notification.resourceStatusLabel = notification.resourceStatusPgmKey ? (_this.getLabel(notification.resourceName + notification.resourceStatusPgmKey.capitalize(), null, true) ||
                         _this.getLabel(notification.resourceStatusPgmKey, null, true) || _this.getLabel(notification.resourceName + notification.resourceStatusPgmKey.capitalize(), null, true) ||
                         notification.resourceStatusPgmKey.capitalize()) : "";
@@ -134,6 +142,11 @@ expresso.applications.general.notification.notificationviewer.NotificationViewer
                     // build the template
                     var $notification = $(_this.notificationTemplate(notification));
                     $notification.data("notification", notification);
+
+                    // highlight new
+                    if (creationDate > new Date().addMinutes(-60)) {
+                        $notification.addClass("new");
+                    }
 
                     // hide elements
                     if (!notification.resourceStatusLabel) {
@@ -144,6 +157,9 @@ expresso.applications.general.notification.notificationviewer.NotificationViewer
                     }
                     if (!notification.requestedDate) {
                         $notification.find(".requested-date").hide();
+                    }
+                    if (!notification.creationDate) {
+                        $notification.find(".creation-date").hide();
                     }
 
                     // add buttons for each available actions

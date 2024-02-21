@@ -411,6 +411,17 @@ public class DateUtil {
 		return calendar.getTime();
 	}
 
+	/**
+	 * Date and time only (time is 00:00:00)
+	 *
+	 * @return
+	 */
+	static public Date newDateTime() {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.getTime();
+	}
+
 	static public Date addTime(Date date, Date time) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);

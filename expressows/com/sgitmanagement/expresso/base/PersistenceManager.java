@@ -129,11 +129,13 @@ public class PersistenceManager implements AutoCloseable {
 			entityManager.setProperty("expresso.case_sensitive", false);
 			entityManager.setProperty("expresso.flush_mode", "commit");
 			entityManager.setProperty("expresso.empty_string_is_null", false);
+			entityManager.setProperty("expresso.in_max_values", 999);
 		} else if (databaseDialect.contains("SQLServer")) {
 			entityManager.setProperty("expresso.trunc_date_function", "cast");
 			entityManager.setProperty("expresso.case_sensitive", false);
 			entityManager.setProperty("expresso.flush_mode", "commit");
 			entityManager.setProperty("expresso.empty_string_is_null", false);
+			entityManager.setProperty("expresso.in_max_values", 2000);
 		} else {
 			logger.error("Database dialect [" + databaseDialect + "] not recognized in persistence.xml");
 		}

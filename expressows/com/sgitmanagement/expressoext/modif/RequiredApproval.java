@@ -90,6 +90,12 @@ public class RequiredApproval extends BaseCreatableEntity {
 		this.additionnalInfo = additionnalInfo;
 	}
 
+	public RequiredApproval(String resourceName, Integer resourceId, String resourceNo, String resourceDescription, String resourceFieldName, String oldValue, String newValue,
+			Integer newValueReferenceId, String additionnalInfo, Integer creationUserId) {
+		this(resourceName, resourceId, resourceNo, resourceDescription, resourceFieldName, oldValue, newValue, newValueReferenceId, additionnalInfo);
+		this.setCreationUserId(creationUserId);
+	}
+
 	public String getResourceName() {
 		return resourceName;
 	}

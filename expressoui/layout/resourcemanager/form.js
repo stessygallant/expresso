@@ -1263,6 +1263,15 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
     },
 
     /**
+     * Trigger the change event (on widget or on the input)
+     * @param $input
+     */
+    triggerChange: function ($input) {
+        // we need to wait for the for to be ready
+        expresso.util.UIUtil.triggerChange($input);
+    },
+
+    /**
      * Sets label,input html5 attributes and css based on the validation attributes of the
      * model
      * @param $domElement

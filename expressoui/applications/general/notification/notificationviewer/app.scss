@@ -57,6 +57,10 @@
                 overflow-y: visible;
                 width: calc(100% - 3.2em); // remove padding+margin
 
+                &.new {
+                    background-color: #fad5d5;
+                }
+
                 .notification-header {
                     margin-bottom: 0.3em;
                     font-weight: bold;
@@ -121,18 +125,6 @@
                         .data {
                             font-weight: bold;
                         }
-                    }
-
-                    .date {
-                    }
-
-                    .requester {
-                    }
-
-                    .user {
-                    }
-
-                    .resource-status {
                     }
                 }
             }

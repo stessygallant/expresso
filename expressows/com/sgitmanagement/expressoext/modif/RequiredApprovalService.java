@@ -120,18 +120,21 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 	 * @throws Exception
 	 */
 	private void sendEmail(RequiredApproval requiredApproval, String template) throws Exception {
-		Map<String, String> params = new HashMap<>();
-		params.put("resourceName", requiredApproval.getResourceName());
-		params.put("resourceNo", requiredApproval.getResourceNo());
-		params.put("approver", (requiredApproval.getApprobationUser() != null ? requiredApproval.getApprobationUser().getFullName() : ""));
-		params.put("reason", requiredApproval.getApprobationComment());
-		params.put("date", DateUtil.formatDate(requiredApproval.getCreationDate()));
+		// if created by admin, do not send email
+		if (!requiredApproval.getCreationUser().getCreationUserId().equals(getSystemUser().getId())) {
+			Map<String, String> params = new HashMap<>();
+			params.put("resourceName", requiredApproval.getResourceName());
+			params.put("resourceNo", requiredApproval.getResourceNo());
+			params.put("approver", (requiredApproval.getApprobationUser() != null ? requiredApproval.getApprobationUser().getFullName() : ""));
+			params.put("reason", requiredApproval.getApprobationComment());
+			params.put("date", DateUtil.formatDate(requiredApproval.getCreationDate()));
 
-		params.put("url", getLink(requiredApproval));
+			params.put("url", getLink(requiredApproval));
 
-		String to = requiredApproval.getCreationUser().getEmail();
+			String to = requiredApproval.getCreationUser().getEmail();
 
-		Mailer.INSTANCE.sendMail(to, "requiredapproval/" + template, params);
+			Mailer.INSTANCE.sendMail(to, "requiredapproval/" + template, params);
+		}
 	}
 
 	@Override

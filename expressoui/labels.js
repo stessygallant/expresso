@@ -340,7 +340,7 @@ $.extend(expresso.Labels, {
     noRecord: "Aucun enregistrement",
     record: "enregistrement",
     nbrSelectedRecord: "{count} sélectionnés",
-    requireApprovalNote: "Note pour le champ '{field}'",
+    requireApprovalNote: "Note pour '{field}'",
 
     january: "Janvier",
     february: "Février",
@@ -418,6 +418,7 @@ $.extend(expresso.Labels, {
     // Notifications
     notifications: "Vous avez {quantity} notification(s) en attente.",
     newNotifications: "Vous avez {quantity} nouvelle(s) notification(s).",
+    duties: "En devoir",
 
     // photo
     deletePictureWindowTitle: "Confirmation",

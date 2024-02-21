@@ -84,6 +84,10 @@ public class Util {
 		}
 	}
 
+	static public boolean isNotNull(String s) {
+		return !isNull(s);
+	}
+
 	static public String nullifyIfNeeded(String s) {
 		if (s == null || s.trim().length() == 0 || s.equals("null") || s.equals("undefined")) {
 			return null;

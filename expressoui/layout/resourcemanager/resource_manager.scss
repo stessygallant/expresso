@@ -107,20 +107,20 @@
 
     // all checkbox for selection must be as large as possible
     th.k-header:first-child, .k-grid-content td:first-child {
-        padding: 1px 2px 0 2px;
+        padding: 0.06em 0.1em 0 0;
         margin: 0;
 
         .k-checkbox {
-            width: 100%;
-            height: 20px;
+            width: calc(100% - 0.1em);
+            height: 1.5em;
         }
     }
 
     th.k-header:first-child {
-        padding: 0 0 0 2px;
+        padding: 0 0 0 0.1em;
 
         .k-checkbox {
-            margin-top: -8px;
+            margin-top: -1em;
         }
     }
 
@@ -286,7 +286,7 @@
             color: $themeTextColor;
             font-size: $gridHeaderFontSize;
             font-weight: bold;
-            line-height: 15px;
+            line-height: 1em;
             border: 0;
             padding-left: 0.2em;
 
@@ -297,7 +297,7 @@
 
             // remove space for filter icon and sort arrow
             .k-link {
-                margin-right: 16px;
+                margin-right: 1em;
                 padding-right: 0;
 
                 .k-i-sort-desc-sm, .k-i-sort-asc-sm {
@@ -407,11 +407,18 @@
 
             td {
                 white-space: nowrap;
-                line-height: 1.3;
+                // line-height: 1.5;
                 padding: 0.2em 0.2em;
 
                 &.center {
                     text-align: center;
+
+                    // boolean column
+                    input[type=checkbox] {
+                        margin: 0;
+                        padding: 0;
+                        vertical-align: middle;
+                    }
                 }
 
                 &.number {
@@ -528,7 +535,8 @@
         width: calc(100% - 0.2em) !important;
 
         .k-grid-toolbar {
-            .exp-grid-nbr-items, .exp-toolbar-separator, .exp-saveconfiguration-button, .exp-refresh-button, .exp-excel-button {
+            .exp-refresh-button, .exp-process-button,
+            .exp-grid-nbr-items, .exp-toolbar-separator, .exp-saveconfiguration-button, .exp-excel-button {
                 display: none;
             }
         }
@@ -1195,10 +1203,10 @@ k-widget k-window
 .exp-grid {
     .exp-picture {
         text-align: center;
-        padding-top: 0.1em;
+        padding-top: 2px;
 
         img {
-            max-height: 50px;
+            max-height: 47px;
             max-width: 70px;
         }
     }

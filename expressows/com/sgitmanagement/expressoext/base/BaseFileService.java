@@ -312,6 +312,23 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 		return file;
 	}
 
+	public File getFileForEmail(E e) throws Exception {
+		return getFileForEmail(e, 2000, 2000);
+	}
+
+	public File getFileForEmail(E e, Integer kbLimit, Integer maxWidth) throws Exception {
+		File file = getFile(e);
+
+		// shrink photo if needed
+		if (isImage(e.getFileName()) && file.length() > (kbLimit * 1024)) {
+			File targetImageFile = File.createTempFile(e.getFileNameNoSuffix(), "." + e.getSuffix());
+			ImageUtil.resizeImage(file, targetImageFile, maxWidth, null);
+			return targetImageFile;
+		} else {
+			return file;
+		}
+	}
+
 	/**
 	 * Remove invalid charaters from the filename and make sure it is only a file name (no path)
 	 *
@@ -338,7 +355,7 @@ abstract public class BaseFileService<E extends BaseFile> extends BaseEntityServ
 		if (fileName.indexOf('.') == -1) {
 			return false;
 		} else {
-			String[] allowedExtensions = new String[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
+			String[] allowedExtensions = new String[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" /* , ".heic" not supported */ };
 			String extension = fileName.substring(fileName.lastIndexOf('.'));
 			return Arrays.stream(allowedExtensions).anyMatch(extension::equalsIgnoreCase);
 		}

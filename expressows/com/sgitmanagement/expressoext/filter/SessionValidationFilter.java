@@ -71,7 +71,7 @@ public class SessionValidationFilter implements Filter {
 				UserManager.getInstance().setUser(user);
 
 				// validate the session (NOT for PROD for now)
-				if (SystemEnv.INSTANCE.isInProduction() || isSessionValid(session, request, response, user)) {
+				if (user != null && (SystemEnv.INSTANCE.isInProduction() || isSessionValid(session, request, response, user))) {
 					chain.doFilter(request, response);
 				} else {
 					try {
@@ -135,7 +135,7 @@ public class SessionValidationFilter implements Filter {
 
 			user = impersonatedUser != null ? impersonatedUser : user;
 		} catch (Exception ex) {
-			logger.error("Error getting user: " + ex);
+			logger.warn("Error getting user: " + ex);
 		}
 
 		return user;
@@ -158,6 +158,7 @@ public class SessionValidationFilter implements Filter {
 				// remove the domain
 				authName = authName.substring(0, authName.indexOf("@"));
 			}
+
 			if (authName != null) {
 				// load the user
 				try {
@@ -169,7 +170,7 @@ public class SessionValidationFilter implements Filter {
 						try {
 							user = autoCreatableUser.create(authName);
 						} catch (Exception ex1) {
-							logger.warn("Cannot create user with userName [" + authName + "]");
+							logger.warn("Cannot create user with userName [" + authName + "]: " + ex1);
 						}
 					}
 				}

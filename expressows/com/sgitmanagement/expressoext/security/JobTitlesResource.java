@@ -55,11 +55,6 @@ public class JobTitlesResource extends BaseOptionsResource<JobTitle, JobTitleSer
 			getService().removeRole(getId(), roleId);
 		}
 
-		@Path("approbationAmount")
-		public JobTitleApprobationAmountsResource getJobTitleApprobationAmounts() {
-			return new JobTitleApprobationAmountsResource(request, response, getId());
-		}
-
 		@Path("info")
 		public JobTitleInfosResource getJobTitleInfosResource() {
 			return new JobTitleInfosResource(request, response, getId());

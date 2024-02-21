@@ -48,6 +48,7 @@ import com.sgitmanagement.expresso.dto.Query.Filter.Logic;
 import com.sgitmanagement.expresso.dto.Query.Filter.Operator;
 import com.sgitmanagement.expresso.dto.Query.Sort;
 import com.sgitmanagement.expresso.dto.Query.Sort.Direction;
+import com.sgitmanagement.expresso.event.ResourceEventCentral;
 import com.sgitmanagement.expresso.exception.AttributeNotFoundException;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.exception.WrongVersionException;
@@ -106,6 +107,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	private boolean distinctNeeded = false;
 
 	private boolean refreshAfterMerge = true;
+
+	private boolean logLongRequest = true;
 
 	private boolean updateLastModified = true;
 
@@ -207,6 +210,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				flushAndRefresh(e);
 			}
 			onPostMerge(e);
+
+			// publish event
+			ResourceEventCentral.INSTANCE.publishResourceEvent(getResourceName(), ResourceEventCentral.Event.Create, e);
+
 		} catch (PersistenceException ex) {
 			// from now, the session is rollback only. Anything done previously will be rollbacked
 			// throw ExceptionUtils.getRootCause(ex);
@@ -379,6 +386,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		}
 
 		onPostMerge(e);
+
+		// publish event
+		ResourceEventCentral.INSTANCE.publishResourceEvent(getResourceName(), ResourceEventCentral.Event.Update, e);
+
 		return e;
 	}
 
@@ -702,6 +713,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		E e = get(id);
 
 		if (e != null) {
+			ResourceEventCentral.INSTANCE.publishResourceEvent(getResourceName(), ResourceEventCentral.Event.Delete, e);
 			getEntityManager().remove(e);
 			getEntityManager().flush();
 		}
@@ -891,19 +903,22 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				if (data.size() > 5000) {
-					logger.warn(
-							"Got a request that returns " + data.size() + " resources [" + getTypeOfE().getSimpleName() + " from: " + getUser().getFullName() + ". Query: " + new Gson().toJson(query));
+					logger.warn("Got a request that returns " + data.size() + " resources [" + getTypeOfE().getSimpleName() + "] from[" + getUser().getUserName() + "]. Query: "
+							+ new Gson().toJson(query));
 				}
 
 				Date endDate = new Date();
 				long delay = (endDate.getTime() - startDate.getTime());
 				if (delay > 500) {
-					String delayMessage = "Execution " + getTypeOfE().getSimpleName() + " SQL time: " + delay + " ms (" + data.size() + ") " + getTypeOfE().getSimpleName() + ": "
-							+ new Gson().toJson(query);
-					if (delay > 5000) {
-						logger.warn(delayMessage);
-					} else {
-						logger.info(delayMessage);
+					// do not print if the request is known to be long
+					if (logLongRequest) {
+						String delayMessage = "Execution " + getTypeOfE().getSimpleName() + " SQL time: " + delay + " ms (" + data.size() + ") " + getTypeOfE().getSimpleName() + ": "
+								+ new Gson().toJson(query);
+						if (delay > 5000) {
+							logger.warn(delayMessage);
+						} else {
+							logger.info(delayMessage);
+						}
 					}
 				}
 
@@ -1557,13 +1572,18 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	public Field getParentEntityField() {
 		if (!this.parentEntityLookup) {
 			this.parentEntityLookup = true;
-			for (Field field : getTypeOfE().getDeclaredFields()) {
-				if (field.isAnnotationPresent(ParentEntity.class)) {
-					field.setAccessible(true);
-					this.parentEntityField = field;
-					break;
+			Class<?> clazz = getTypeOfE();
+			while (clazz != null) {
+				for (Field field : clazz.getDeclaredFields()) {
+					if (field.isAnnotationPresent(ParentEntity.class)) {
+						field.setAccessible(true);
+						this.parentEntityField = field;
+						return this.parentEntityField;
+					}
 				}
+				clazz = clazz.getSuperclass();
 			}
+
 			// logger.debug("parentEntityField: " + parentEntityField);
 		}
 		return this.parentEntityField;
@@ -2165,6 +2185,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			case "double":
 			case "Double":
 				type = "Double";
+				break;
+
+			case "Date":
+			case "Timestamp":
+				type = "Date";
 				break;
 
 			}
@@ -2890,11 +2915,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 		sb.append(namespace + "." + managerName + " = " + "expresso.layout.resourcemanager.ResourceManager.extend({\n");
 		sb.append("\n");
-		sb.append("   // @override\n");
+		sb.append("    // @override\n");
 		sb.append("    init: function (applicationPath) {\n");
 		sb.append("        var fields = " + getAppClassFields(false) + ";\n");
 		sb.append("\n");
-		sb.append("       expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, \"" + resourcePath + "\", fields, {\n");
+		sb.append("        expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, \"" + resourcePath + "\", fields, {\n");
 		sb.append("            preview: false\n");
 		sb.append("        });\n");
 		sb.append("    }\n");
@@ -3114,9 +3139,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		Map<String, AppClassField> appClassFieldMap = getAppClassFieldMap(jsonCompliance);
 		String jsonString = new GsonBuilder().setPrettyPrinting().create().toJson(appClassFieldMap);
 		if (!jsonCompliance) {
-			// remove the " for key (it is not JSON compliant, but it is better for the
-			// app_class
+			// remove the " for key (it is not JSON compliant, but it is better for the app_class
 			jsonString = jsonString.replaceAll("\"([a-zA-Z0-9]+)\":", "$1:").replaceAll("\"NULL\"", "null");
+
+			// pad left with spaces
+			jsonString = jsonString.replaceAll("\n", "\n          ");
+
+			// last line, we need to remove 2 spaces
+			jsonString = jsonString.replaceAll("  }$", "}");
 		}
 		return jsonString;
 	}
@@ -3533,6 +3563,9 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 		case "java.lang.String":
 			type = "string";
 			break;
+		case "char":
+			type = "string";
+			break;
 		default:
 			type = null;
 			break;
@@ -3599,7 +3632,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 			return service;
 		} catch (Exception ex) {
-			// logger.error("Problem creating the service for resource [" + resourceName + "]", ex);
+			logger.warn("Problem creating the service for resource [" + resourceName + "]", ex);
 			return null;
 		}
 	}
@@ -3712,5 +3745,13 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			logger.error(msg, ex);
 			throw new ForbiddenException(msg + ": " + ex);
 		}
+	}
+
+	public boolean isLogLongRequest() {
+		return logLongRequest;
+	}
+
+	public void setLogLongRequest(boolean logLongRequest) {
+		this.logLongRequest = logLongRequest;
 	}
 }

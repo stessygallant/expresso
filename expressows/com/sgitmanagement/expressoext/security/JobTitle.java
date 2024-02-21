@@ -1,6 +1,5 @@
 package com.sgitmanagement.expressoext.security;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,9 +32,6 @@ public class JobTitle extends BaseExternalOption {
 
 	@Column(name = "job_type_id")
 	private Integer jobTypeId;
-
-	@OneToMany(mappedBy = "jobTitle")
-	private List<JobTitleApprobationAmount> jobTitleApprobationAmounts;
 
 	@OneToMany(mappedBy = "jobTitle")
 	private List<User> users;
@@ -83,13 +79,6 @@ public class JobTitle extends BaseExternalOption {
 	@XmlElement
 	public JobType getJobType() {
 		return jobType;
-	}
-
-	public List<JobTitleApprobationAmount> getJobTitleApprobationAmounts() {
-		if (jobTitleApprobationAmounts == null) {
-			jobTitleApprobationAmounts = new ArrayList<>();
-		}
-		return jobTitleApprobationAmounts;
 	}
 
 	public Set<Integer> getManagedJobTitleIds() {

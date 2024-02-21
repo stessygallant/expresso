@@ -1060,8 +1060,10 @@ expresso.util.UIUtil = (function () {
 
                     // by default, select the first input and set the focus
                     if (options.autoFocus) {
-                        //console.log("autoFocus"); // + $window.find(":input:visible:not([readonly]):enabled:first").attr("name"));
-                        $windowDiv.find(":input:visible:not([readonly]):enabled:first").focus();
+                        window.setTimeout(function () {
+                            var $firstInput = $windowDiv.find(":input:visible:not([readonly]):enabled:first");
+                            $firstInput.focus();
+                        }, 500);
                     }
                 },
 
@@ -1101,6 +1103,7 @@ expresso.util.UIUtil = (function () {
             // register a listener on the buttons
             $windowDiv.find(".k-edit-buttons button").on("click", function (e) {
                 e.preventDefault();
+                expresso.util.UIUtil.showLoadingMask($windowDiv, true, "exp-window-buttons");
                 var saveResult;
                 var $button = $(this);
                 if ($button.hasClass("exp-window-save-button")) {
@@ -1109,15 +1112,20 @@ expresso.util.UIUtil = (function () {
                         saveResult = options.save.call($windowDiv);
                         if (saveResult === false) {
                             // do not close
+                            expresso.util.UIUtil.showLoadingMask($windowDiv, false, "exp-window-buttons");
                         } else if (saveResult === true || !saveResult) {
+                            expresso.util.UIUtil.showLoadingMask($windowDiv, false, "exp-window-buttons");
                             kendoWindow.close();
                         } else { // promise
                             //  do not close
                             saveResult.done(function () {
                                 kendoWindow.close();
+                            }).always(function () {
+                                expresso.util.UIUtil.showLoadingMask($windowDiv, false, "exp-window-buttons");
                             });
                         }
                     } else {
+                        expresso.util.UIUtil.showLoadingMask($windowDiv, false, "exp-window-buttons");
                         kendoWindow.close();
                     }
                 } else {
@@ -1125,14 +1133,20 @@ expresso.util.UIUtil = (function () {
                         saveResult = options.buttonClicked.call($button, e, $windowDiv, options);
                         if (saveResult === false) {
                             // do not close
+                            expresso.util.UIUtil.showLoadingMask($windowDiv, false, "exp-window-buttons");
                         } else if (saveResult === true || !saveResult) {
+                            expresso.util.UIUtil.showLoadingMask($windowDiv, false, "exp-window-buttons");
                             kendoWindow.close();
                         } else { // promise
                             //  do not close
                             saveResult.done(function () {
                                 kendoWindow.close();
+                            }).always(function () {
+                                expresso.util.UIUtil.showLoadingMask($windowDiv, false, "exp-window-buttons");
                             });
                         }
+                    } else {
+                        expresso.util.UIUtil.showLoadingMask($windowDiv, false, "exp-window-buttons");
                     }
                 }
             });
@@ -2667,9 +2681,9 @@ expresso.util.UIUtil = (function () {
                             break;
                     }
                     menuButtons.push({
-                        text: expresso.Common.getLabel("report-" + report.name, labels, null, true) ||
-                            report.label || expresso.Common.getLabel(report.name, labels, null, true) || report.name,
-                        spriteCssClass: "fa fa-" + icon + " " + (classReportKey + report.name)
+                        text: report.label || expresso.Common.getLabel("report-" + report.name, labels, null, true) ||
+                            expresso.Common.getLabel(report.name, labels, null, true) || report.name,
+                        spriteCssClass: "fa fa-" + icon + " " + (classReportKey + (report.key || report.name))
                     });
                 });
 
@@ -2692,7 +2706,7 @@ expresso.util.UIUtil = (function () {
                                 }
                                 // find the report definition
                                 var report = $.grep(reports, function (r) {
-                                    return r.name == reportKey
+                                    return r.key ? r.key == reportKey : r.name == reportKey
                                 })[0];
                                 executeReportCallback(report);
                             }

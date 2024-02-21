@@ -7,7 +7,7 @@
             hidden: true
         }, {
             field: "name",
-            width: 200
+            width: 350
         }, {
             field: "masterResource.securityPath",
             filterable: false,

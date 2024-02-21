@@ -1,6 +1,5 @@
 package com.sgitmanagement.expresso.util;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.print.PrinterJob;
 import java.io.BufferedWriter;
@@ -127,7 +126,7 @@ public enum ZebraUtil {
 		File qrBarCodeFile = File.createTempFile("qrCode", ".svg");
 		OutputStream os = new FileOutputStream(qrBarCodeFile);
 		double magnification = 1.0;
-		SvgRenderer renderer = new SvgRenderer(os, magnification, Color.WHITE, Color.BLACK, false);
+		SvgRenderer renderer = new SvgRenderer(os, magnification, uk.org.okapibarcode.graphics.Color.WHITE, uk.org.okapibarcode.graphics.Color.BLACK, false);
 		renderer.render(barcode);
 		os.close();
 
@@ -151,6 +150,7 @@ public enum ZebraUtil {
 			// Convert PDF to PNG
 			int dpi = 203;// Zebra ZD420 DPI
 			pngFile = File.createTempFile(resourceName, ".png");
+
 			try (PDDocument document = PDDocument.load(pdfFile, MemoryUsageSetting.setupTempFileOnly())) {
 				PDFRenderer pdfRenderer = new PDFRenderer(document);
 				// only first page

@@ -274,45 +274,56 @@ public class NotificationService extends BaseEntityService<Notification> {
 
 			try {
 				Notification foundNotification = get(filter);
+				if (foundNotification.getDeactivationDate() == null) {
+					// // max 3 month?
+					// if (foundNotification.getCreationDate().before(DateUtil.addDays(new Date(), -90))) {
+					// foundNotification.setDeactivationDate(new Date());
+					// foundNotification.setNotes(notification.getNotes() + ". Cette notification a été annulée automatiquement après 3 mois");
+					// merge(foundNotification);
+					// notification = null;
+					// } else {
+					// update the foundNotification with the notification
+					foundNotification.setResourceTitle(notification.getResourceTitle());
+					foundNotification.setServiceDescription(notification.getServiceDescription());
+					foundNotification.setDescription(notification.getDescription());
+					foundNotification.setLastModifiedDate(notification.getLastModifiedDate());
+					foundNotification.setLastModifiedUserId(notification.getLastModifiedUserId());
+					foundNotification.setRequestedDate(notification.getRequestedDate());
+					foundNotification.setRequesterUserId(notification.getRequesterUserId());
+					foundNotification.setResourceUrl(notification.getResourceUrl());
+					foundNotification.setUserId(notification.getUserId());
+					foundNotification.setAvailableActions(notification.getAvailableActions());
+					foundNotification.setNotes(notification.getNotes());
+					notification = foundNotification;
+					// }
+				} else {
+					// notification has been deactivated, ignore the new notification
+					notification = null;
+				}
 
-				// update the foundNotification with the notification
-				foundNotification.setResourceTitle(notification.getResourceTitle());
-				foundNotification.setServiceDescription(notification.getServiceDescription());
-				foundNotification.setDescription(notification.getDescription());
-				foundNotification.setLastModifiedDate(notification.getLastModifiedDate());
-				foundNotification.setLastModifiedUserId(notification.getLastModifiedUserId());
-				foundNotification.setRequestedDate(notification.getRequestedDate());
-				foundNotification.setRequesterUserId(notification.getRequesterUserId());
-				foundNotification.setResourceUrl(notification.getResourceUrl());
-				foundNotification.setUserId(notification.getUserId());
-				foundNotification.setAvailableActions(notification.getAvailableActions());
-				foundNotification.setNotes(notification.getNotes());
-
-				// if deactivated, enable it
-				foundNotification.setDeactivationDate(null);
-
-				notification = foundNotification;
 			} catch (NoResultException ex) {
 				// ok a new one
 			}
 
-			// Make sure that the column width are respected
-			if (notification.getDescription() != null && notification.getDescription().length() > 2000) {
-				notification.setDescription(notification.getDescription().substring(0, 2000));
-			}
+			if (notification != null) {
+				// Make sure that the column width are respected
+				if (notification.getDescription() != null && notification.getDescription().length() > 2000) {
+					notification.setDescription(notification.getDescription().substring(0, 2000));
+				}
 
-			if (notification.getResourceTitle() != null && notification.getResourceTitle().length() > 255) {
-				notification.setResourceTitle(notification.getResourceTitle().substring(0, 255));
-			}
-			if (notification.getResourceName() != null && notification.getResourceName().length() > 200) {
-				notification.setResourceName(notification.getResourceName().substring(0, 200));
-			}
+				if (notification.getResourceTitle() != null && notification.getResourceTitle().length() > 255) {
+					notification.setResourceTitle(notification.getResourceTitle().substring(0, 255));
+				}
+				if (notification.getResourceName() != null && notification.getResourceName().length() > 200) {
+					notification.setResourceName(notification.getResourceName().substring(0, 200));
+				}
 
-			// save the notification
-			merge(notification);
+				// save the notification
+				merge(notification);
 
-			// then add it to the complete list
-			notifications.add(notification);
+				// then add it to the complete list
+				notifications.add(notification);
+			}
 		}
 
 		return notifications;

@@ -10,6 +10,7 @@ expresso.applications.security.resourcemanager.Labels = {
     path: "Chemin",
     publishButtonLabel: "Publier",
     publishButtonTitle: "Publier le gestionnaire de ressources",
+    serviceNotFound: "Le service n'existe pas pour la ressource [{resourceName}]",
 
     _: ""
 };
