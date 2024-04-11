@@ -13,4 +13,6 @@ public @interface ResourceEventListener {
 	String resourceName() default "";
 
 	String[] resourceNames() default "";
+
+	boolean priority() default false;
 }

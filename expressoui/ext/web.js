@@ -865,44 +865,68 @@ expresso.Main = function () {
     };
 
     /**
+     *
+     * @param resourceSecurityPath
+     * @returns {string}
+     */
+    var getResourceNameFromResourceSecurityPath = function (resourceSecurityPath) {
+        if (resourceSecurityPath && resourceSecurityPath.indexOf('/') != -1) {
+            if (resourceSecurityPath.startsWith("/")) {
+                resourceSecurityPath = resourceSecurityPath.substring(1);
+            }
+            var s = resourceSecurityPath.split("/");
+            var resourceName = s[0];
+            for (var i = 1; i < s.length; i++) {
+                resourceName += s[i].capitalize();
+            }
+            return resourceName;
+        } else {
+            return resourceSecurityPath;
+        }
+    };
+
+    /**
      * Send a request to the server to print the report
      * @param reportName
-     * @param resourceName
+     * @param resourceSecurityPath
      * @param params
      * @param [target] by default, blank
      * @param [useForm] by default, true
      */
-    var sendReportRequest = function (reportName, resourceName, params, target, useForm) {
+    var sendReportRequest = function (reportName, resourceSecurityPath, params, target, useForm) {
         var url, p;
 
         target = target || "_blank";
         params = params || {};
         params.format = params.format || "pdf";
+        var resourceName = getResourceNameFromResourceSecurityPath(resourceSecurityPath);
 
-        if (useForm !== false) {
-            url = expresso.Common.getWsResourcePathURL() + "/report?action=execute" +
-                "&_=" + new Date().getTime() + "&_format=." + params.format;
+        if (expresso.Security.isUserAllowed(resourceSecurityPath, "read" /* download */, true)) {
+            if (useForm !== false) {
+                url = expresso.Common.getWsResourcePathURL() + "/report?action=execute" +
+                    "&_=" + new Date().getTime() + "&_format=." + params.format;
 
-            var $form = $("<form method='post' action='" + url + "' target='" + target + "' hidden></form>");
-            for (p in params) {
-                $form.append("<input name='" + p + "' value='" + params[p] + "'>");
-            }
+                var $form = $("<form method='post' action='" + url + "' target='" + target + "' hidden></form>");
+                for (p in params) {
+                    $form.append("<input name='" + p + "' value='" + params[p] + "'>");
+                }
 
-            // add mandatory parameter
-            $form.append("<input name='reportName' value='" + reportName + "'>");
-            $form.append("<input name='resourceName' value='" + resourceName + "'>");
+                // add mandatory parameter
+                $form.append("<input name='reportName' value='" + reportName + "'>");
+                $form.append("<input name='resourceName' value='" + resourceName + "'>");
+                $form.append("<input name='resourceSecurityPath' value='" + resourceSecurityPath + "'>");
 
-            // now add the token as a param
-            $form.append("<input name='sessionToken' value='" + expresso.Security.getSessionToken() + "'>");
+                // now add the token as a param
+                $form.append("<input name='sessionToken' value='" + expresso.Security.getSessionToken() + "'>");
 
-            $form.appendTo("body").submit();
-            window.setTimeout(function () {
-                $form.remove();
-            }, 1000);
-        } else {
-            if (expresso.Security.isUserAllowed(resourceName, "read", true)) {
+                $form.appendTo("body").submit();
+                window.setTimeout(function () {
+                    $form.remove();
+                }, 1000);
+            } else {
                 url = expresso.Common.getWsResourcePathURL() + "/report/execute" + "?reportName=" +
-                    encodeURIComponent(reportName) + "&resourceName=" + encodeURIComponent(resourceName);
+                    encodeURIComponent(reportName) + "&resourceName=" + encodeURIComponent(resourceName)
+                    + "&resourceSecurityPath=" + encodeURIComponent(resourceSecurityPath);
                 for (p in params) {
                     url += "&" + p + "=" + encodeURIComponent(params[p]);
                 }
@@ -910,6 +934,7 @@ expresso.Main = function () {
                 // to help the browser, add the report format to the end of the url
                 params.format = params.format || "pdf";
                 url += "&_=" + new Date().getTime() + "&_format=." + params.format;
+                // console.log(url);
 
                 var $href = $("<a href='" + url + "' target='" + target + "' hidden></a>");
                 $href.appendTo("body")[0].click();

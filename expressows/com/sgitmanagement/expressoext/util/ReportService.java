@@ -17,7 +17,11 @@ public class ReportService extends BaseService {
 		User user = getUser();
 
 		String reportName = params.getFirst("reportName");
-		String resourceSecurityPath = params.getFirst("resourceName");
+		String resourceSecurityPath = params.getFirst("resourceSecurityPath");
+		if (resourceSecurityPath == null) {
+			// backward compatibility
+			resourceSecurityPath = params.getFirst("resourceName");
+		}
 		String[] resources = resourceSecurityPath.split("/");
 
 		boolean allowed = isUserAllowed("read", Arrays.asList(resources));

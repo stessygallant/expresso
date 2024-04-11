@@ -98,6 +98,10 @@ public class ImageUtil {
 		return createThumbnailImage(imageFile, thumbnailFile);
 	}
 
+	public static File getThumbnailImageFile(File imageFile) {
+		return getImageFile(imageFile, "thumbnail");
+	}
+
 	public static File getImageFile(File imageFile, String fileNameSuffix) {
 		String filePath = imageFile.getAbsolutePath();
 		String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);

@@ -121,7 +121,7 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 	 */
 	private void sendEmail(RequiredApproval requiredApproval, String template) throws Exception {
 		// if created by admin, do not send email
-		if (!requiredApproval.getCreationUser().getCreationUserId().equals(getSystemUser().getId())) {
+		if (!requiredApproval.getCreationUserId().equals(getSystemUser().getId())) {
 			Map<String, String> params = new HashMap<>();
 			params.put("resourceName", requiredApproval.getResourceName());
 			params.put("resourceNo", requiredApproval.getResourceNo());
@@ -145,8 +145,8 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 			case "update":
 			case "delete":
 				// only the creator can modify it and only if NEW
-				allowed = requiredApproval.getRequiredApprovalStatus().getPgmKey().equals("NEW")
-						&& (requiredApproval.getCreationUserId().equals(getUser().getId()) || isUserAllowedToApprove(requiredApproval) || isUserAdmin());
+				allowed = requiredApproval.getRequiredApprovalStatus().getPgmKey().equals("NEW");
+				// && (requiredApproval.getCreationUserId().equals(getUser().getId()) || isUserAllowedToApprove(requiredApproval) || isUserAdmin());
 				break;
 
 			case "approve":

@@ -12,7 +12,7 @@ import jakarta.ws.rs.core.Context;
 @Path("/requiredApprovalStatus")
 public class RequiredApprovalStatusesResource extends BaseOptionsResource<RequiredApprovalStatus, RequiredApprovalStatusService, RequiredApprovalStatusResource> {
 	public RequiredApprovalStatusesResource(@Context HttpServletRequest request, @Context HttpServletResponse response) {
-		super(RequiredApprovalStatus.class, request, response, new RequiredApprovalStatusResource(request, response));
+		super(RequiredApprovalStatus.class, request, response, new RequiredApprovalStatusResource(request, response), RequiredApprovalStatusService.class);
 	}
 
 	static public class RequiredApprovalStatusResource extends BaseOptionResource<RequiredApprovalStatus, RequiredApprovalStatusService> {

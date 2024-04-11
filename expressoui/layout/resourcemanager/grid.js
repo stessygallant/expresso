@@ -460,7 +460,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @param fieldName
      */
     fixObjectReferences: function (fieldName) {
-        //console.log("Fixing [" + fieldName + "]")
+        // console.log("Fixing [" + fieldName + "]");
         var model = this.resourceManager.model;
 
         // initialize the need columns to empty by default
@@ -696,6 +696,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (field && column.field.endsWith("Ids")) {
                     // display the labels, but filter on id
                     var labelColumn = column.field.substring(0, column.field.length - 3) + "Labels";
+                    column.attributes = column.attributes || {};
+                    column.attributes.class = (column.attributes.class || "") + " exp-grid-multiple-lines";
                     column.template = column.template ||
                         "<div class='exp-grid-multiple-lines' title='#=(" + labelColumn
                         + "||'').replace(/\\" + separator + "/g, \"\\r\\n\").replace(/'/g, \"&apos;\")#'>#=(" + labelColumn + "||'').replace(/\\" + separator + "/g, \"<br>\")#</div>";
@@ -708,6 +710,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                 // Labels column (usually references as persons, etc)
                 if (field && column.field.endsWith("Labels")) {
+                    column.attributes = column.attributes || {};
+                    column.attributes.class = (column.attributes.class || "") + " exp-grid-multiple-lines";
                     column.template = column.template ||
                         "<div class='exp-grid-multiple-lines' title='#=(" + column.field
                         + "||'').replace(/\\" + separator + "/g, \"\\r\\n\").replace(/'/g, \"&apos;\")#'>#=(" + column.field + "||'').replace(/\\" + separator + "/g, \"<br>\")#</div>";
@@ -797,6 +801,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                 if (field && field.type == "picture") {
                     _this.objectsNeededForColumns = _this.objectsNeededForColumns || {};
                     _this.objectsNeededForColumns[column.field] = {};
+
+                    // TODO if nullable is true, defaultValue is ignored!!!!!
                     field.defaultValue = field.defaultValue || {};
 
                     column.filterable = false;
@@ -2216,6 +2222,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
 
         // for each column, if there is a reference to an object, make sure the object exists to avoid null issue
+        // console.log("objectsNeededForColumns: ", this.objectsNeededForColumns);
         if (this.objectsNeededForColumns) {
             $.extend(true, resource, this.objectsNeededForColumns);
         }
@@ -3561,6 +3568,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             // DO NOT use (_this.multipleSelectionEnabled ? "multiple," : "")
             // because 1) you cannot select text anymore 2) grid not scrollable on mobile
             selectable: "row",
+            // allowCopy: { // new version?
+            //     delimeter: ","
+            // },
             // persistSelection does not work well with virtual scrolling
             // persistSelection: true, // persist selection across paging
             editable: _this.customForm ? {

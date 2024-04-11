@@ -407,7 +407,6 @@
 
             td {
                 white-space: nowrap;
-                // line-height: 1.5;
                 padding: 0.2em 0.2em;
 
                 &.center {
@@ -432,11 +431,16 @@
                     padding-right: 0.4em;
                 }
 
-                div.exp-grid-multiple-lines {
-                    display: -webkit-box;
-                    -webkit-line-clamp: 3;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
+                &.exp-grid-multiple-lines {
+                    height: 4.1em;
+                    line-height: 1.2em;
+
+                    & > div {
+                        display: -webkit-box;
+                        -webkit-line-clamp: 3;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                    }
                 }
 
                 .reference {

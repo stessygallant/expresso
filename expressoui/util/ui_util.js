@@ -2654,6 +2654,53 @@ expresso.util.UIUtil = (function () {
 
         /**
          *
+         * @param $input
+         * @param options
+         */
+        var buildInlineGrid = function ($input, options) {
+            var resourceManager = options.field ? options.field.inlineGridResourceManager.resourceManager : options.resourceManager;
+            var masterResourceManager = options.masterResourceManager;
+            var masterResource = options.masterResource;
+            var activeOnly = options.field ? options.field.inlineGridResourceManager.activeOnly : activeOnly;
+            var query = options.query || {};
+            var newResource = !(masterResource && masterResource.id !== undefined && masterResource.id !== null);
+
+            var $div = $("<div class='exp-grid-inline " + $input.attr("class") + "'></div>").appendTo($input.parent());
+            $input.appendTo($div);
+            $input.hide();
+
+            // if the parent is already created -> inline grid is online (auto sync ON)
+            // if the parent is not already created -> inline grid is offline (auto sync OFF)
+            expresso.Common.loadApplication(resourceManager, {
+                autoSyncGridDataSource: !newResource,
+                multipleSelectionEnabled: false,
+                activeOnly: activeOnly
+            }).done(function (appInstance) {
+                $div.data("resourceManager", appInstance);
+                if (masterResourceManager) {
+                    appInstance.masterResourceManager = masterResourceManager;
+
+                    // when there is a change in subresource (update or create or delete), publish an update on the current resource
+                    appInstance.eventCentral.subscribeEvent([appInstance.RM_EVENTS.RESOURCE_UPDATED, appInstance.RM_EVENTS.RESOURCE_CREATED,
+                        appInstance.RM_EVENTS.RESOURCE_DELETED], function () {
+                        // console.log("INLINEGRID - child has been changed (reloading master and refreshing counts)");
+                        if (appInstance.masterResourceManager.currentResource) {
+                            //force the refresh of the form
+                            // DO NOT DO IT MANUALLY -> appInstance.masterResourceManager.currentResource.dirty = true;
+                            appInstance.masterResourceManager.currentResource.set("makeCurrentResourceDirty", true);
+                            appInstance.masterResourceManager.sections.grid.reloadCurrentResource();
+                        }
+                    });
+                } else {
+                    // we must fake a master current resource
+                    appInstance.masterResourceManager.currentResource = {id: (newResource ? -1 : masterResource.id)};
+                }
+                appInstance.list($div, query);
+            });
+        };
+
+        /**
+         *
          * @param reports
          * @param $reportSelector
          * @param labels
@@ -3234,6 +3281,7 @@ expresso.util.UIUtil = (function () {
             buildRadioButton: buildRadioButton,
             buildUpload: buildUpload,
             buildNewUpload: buildNewUpload,
+            buildInlineGrid: buildInlineGrid,
             getDocumentUploadCustomData: getDocumentUploadCustomData,
 
             getKendoWidget: getKendoWidget,

@@ -108,10 +108,15 @@
             var el = $el[0];
 
             // make sure that the class does not have a k-class already
-            if ((clazz && clazz.match(/(^|\s)k-[\w-]*\b/) && !(clazz.indexOf("k-valid") != -1 || clazz.indexOf("k-invalid") != -1 || clazz.indexOf("k-textbox") != -1))
+            if ((clazz && clazz.match(/(^|\s)k-[\w-]*\b/) &&
+                    !(clazz.indexOf("k-valid") != -1 || clazz.indexOf("k-invalid") != -1 || clazz.indexOf("k-textbox") != -1))
                 || $el.data("role") || type == "hidden") {
                 // console.log("DO NOT enhance element [" + el.nodeName + "] Type [" + type + "]  Name [" + $el.attr("name") +
                 //     "] Classes [" + clazz + ":" + (clazz && clazz.match(/k-[\w-]*\b/)) + "] Role [" + $el.data("role") + "]");
+                return;
+            }
+
+            if ($el.hasClass("exp-no-convertion")) {
                 return;
             }
 
@@ -157,7 +162,11 @@
                 }, field.widgetOptions)
                 $el[field.widget](widgetOptions);
             } else if (field && field.inlineGridResourceManager) {
-                this.displayInlineGrid(resource, field, $el);
+                expresso.util.UIUtil.buildInlineGrid($el, {
+                    masterResource: resource,
+                    field: field,
+                    masterResourceManager: this.options.resourceManager
+                });
             } else if (field && field.reference) {
                 if (field.multipleSelection) {
                     if (field.lookupSelection) {
@@ -640,48 +649,6 @@
                 $label.attr("for", uniqueID);
                 $label.addClass("k-radio-label");
             }
-        },
-
-        /**
-         *
-         * @param resource
-         * @param field
-         * @param $input
-         */
-        displayInlineGrid: function (resource, field, $input) {
-            $input.hide();
-
-            var masterResourceManager = this.options.resourceManager;
-            var $div = $("<div class='exp-grid-inline'></div>").appendTo($input.parent());
-
-            // if the parent is already created -> inline grid is online (auto sync ON)
-            // if the parent is not already created -> inline grid is offline (auto sync OFF)
-            expresso.Common.loadApplication(field.inlineGridResourceManager.resourceManager, {
-                autoSyncGridDataSource: !!(resource && resource.id), // false,
-                multipleSelectionEnabled: false,
-                activeOnly: field.inlineGridResourceManager.activeOnly
-            }).done(function (appInstance) {
-                $div.data("resourceManager", appInstance);
-                if (masterResourceManager) {
-                    appInstance.masterResourceManager = masterResourceManager;
-
-                    // when there is a change in subresource (update or create or delete), publish an update on the current resource
-                    appInstance.eventCentral.subscribeEvent([appInstance.RM_EVENTS.RESOURCE_UPDATED, appInstance.RM_EVENTS.RESOURCE_CREATED,
-                        appInstance.RM_EVENTS.RESOURCE_DELETED], function () {
-                        // console.log("INLINEGRID - child has been changed (reloading master and refreshing counts)");
-                        if (appInstance.masterResourceManager.currentResource) {
-                            //force the refresh of the form
-                            // DO NOT DO IT MANUALLY -> appInstance.masterResourceManager.currentResource.dirty = true;
-                            appInstance.masterResourceManager.currentResource.set("makeCurrentResourceDirty", true);
-                            appInstance.masterResourceManager.sections.grid.reloadCurrentResource();
-                        }
-                    });
-                } else {
-                    // we must fake a master current resource
-                    appInstance.masterResourceManager.currentResource = {id: (resource && resource.id ? resource.id : -1)};
-                }
-                appInstance.list($div, {});
-            });
         },
 
         options: {

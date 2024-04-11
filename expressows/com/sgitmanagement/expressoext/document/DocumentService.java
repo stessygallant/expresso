@@ -132,6 +132,13 @@ public class DocumentService extends BaseFileService<Document> {
 		return list(query);
 	}
 
+	public Document get(String resourceName, Integer resourceId) throws Exception {
+		Query query = new Query();
+		query.addFilter(new Filter("resourceName", resourceName));
+		query.addFilter(new Filter("resourceId", resourceId));
+		return get(query);
+	}
+
 	@Override
 	public Document create(Document document) throws Exception {
 		Resource resource = newService(ResourceService.class, Resource.class).get(document.getResourceName());

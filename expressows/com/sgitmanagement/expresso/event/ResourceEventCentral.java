@@ -41,11 +41,12 @@ public enum ResourceEventCentral {
 			for (Class<?> serviceClass : serviceClasses) {
 				// logger.debug("Listening for event service [" + serviceClass.getSimpleName() + "]");
 
+				ResourceEventListener resourceEventListener = serviceClass.getAnnotation(ResourceEventListener.class);
 				List<String> resourceNames = new ArrayList<>();
-				if (Util.isNotNull(serviceClass.getAnnotation(ResourceEventListener.class).resourceName())) {
-					resourceNames.add(serviceClass.getAnnotation(ResourceEventListener.class).resourceName());
+				if (Util.isNotNull(resourceEventListener.resourceName())) {
+					resourceNames.add(resourceEventListener.resourceName());
 				} else {
-					resourceNames.addAll(Arrays.asList(serviceClass.getAnnotation(ResourceEventListener.class).resourceNames()));
+					resourceNames.addAll(Arrays.asList(resourceEventListener.resourceNames()));
 				}
 
 				for (String resourceName : resourceNames) {
@@ -57,7 +58,7 @@ public enum ResourceEventCentral {
 					// logger.debug("Adding event listener on [" + resourceName + "] for [" + serviceClass.getSimpleName() + "]");
 					String entityClassName = serviceClass.getCanonicalName().substring(0, serviceClass.getCanonicalName().length() - "Service".length());
 					Class<?> entityClass = Class.forName(entityClassName);
-					eventListeners.add(new ResourceEvent(resourceName, serviceClass, entityClass));
+					eventListeners.add(new ResourceEvent(resourceName, serviceClass, entityClass, resourceEventListener.priority()));
 				}
 			}
 		} catch (Exception ex) {
@@ -70,9 +71,20 @@ public enum ResourceEventCentral {
 		// logger.debug("publishResourceEvent [" + resourceName + "] event [" + event.name() + "]");
 		List<ResourceEvent<?, ?>> eventListeners = resourceEventListenerMap.get(resourceName);
 		if (eventListeners != null) {
+			// priority listeners
 			for (ResourceEvent<?, ?> eventListener : eventListeners) {
-				((ResourceEventListenable) AbstractBaseEntityService.newServiceStatic(eventListener.getServiceClass(), eventListener.getEntityClass())).listenResourceEvent(eventListener, event,
-						entity);
+				if (eventListener.isPriority()) {
+					((ResourceEventListenable) AbstractBaseEntityService.newServiceStatic(eventListener.getServiceClass(), eventListener.getEntityClass())).listenResourceEvent(eventListener, event,
+							entity);
+				}
+			}
+
+			// other listeners
+			for (ResourceEvent<?, ?> eventListener : eventListeners) {
+				if (!eventListener.isPriority()) {
+					((ResourceEventListenable) AbstractBaseEntityService.newServiceStatic(eventListener.getServiceClass(), eventListener.getEntityClass())).listenResourceEvent(eventListener, event,
+							entity);
+				}
 			}
 		}
 	}

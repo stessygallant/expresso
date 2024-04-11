@@ -25,7 +25,7 @@ expresso.applications.security.rolemanager.RoleManager = expresso.layout.resourc
             pgmKey: {
                 type: "string",
                 unique: true,
-                maxLength: 50
+                maxLength: 100
             },
             description: {
                 type: "string",

@@ -197,6 +197,12 @@ expresso.util.Model = (function () {
                             field.setNewDate = true;
                         }
 
+                        // patch for the widget (see widget for the problem)
+                        if (field.widget == "kendoExpressoMultiLookupSelection" && field.nullable) {
+                            field.nullable = false;
+                            field.customNullable = true;
+                        }
+
                         // if nullable is true, the defaultValue is ignored
                         if (field.nullable && field.defaultValue !== undefined && field.defaultValue !== null) {
                             console.warn("When field [" + f + "] is nullable, default value [" + field.defaultValue + "] is ignored. Setting nullable=false");

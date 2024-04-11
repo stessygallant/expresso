@@ -43,10 +43,11 @@
             /*
              * WARNING: this widget does not work well when the field is nullable: true.
              * The first save will result in only 1 item regardless of the selection
+             * Instead we use customNullable: true
              */
-            if (options && options.field && options.field.nullable) {
-                alert("ExpressoMultiLookupSelection widget does not work well when the field is nullable: true");
-            }
+            // if (options && options.field && options.field.nullable) {
+            //     alert("ExpressoMultiLookupSelection widget does not work well when the field is nullable: true");
+            // }
 
             Widget.fn.init.call(this, element, options);
 

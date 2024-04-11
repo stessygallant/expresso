@@ -536,7 +536,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public E duplicate(E e) throws Exception {
+	public E duplicate(E e, boolean autoCreate) throws Exception {
 		if (getEntityManager().contains(e)) {
 			getEntityManager().detach(e);
 		}
@@ -557,7 +557,15 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			((ExternalEntity<I>) e).setExtKey(null);
 		}
 
-		return create(e);
+		if (autoCreate) {
+			return create(e);
+		} else {
+			return e;
+		}
+	}
+
+	public E duplicate(E e) throws Exception {
+		return duplicate(e, true);
 	}
 
 	/**

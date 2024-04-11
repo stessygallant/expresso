@@ -164,6 +164,8 @@
                 });
             }
             img.src = "";
+            this.imgURL = null;
+            this.file = null;
             $trash.hide();
             $add.show();
         },
@@ -176,10 +178,8 @@
          * @returns {Promise}
          */
         savePicture: function (imgURL, file, resourceId) {
-
             var $pictureDiv = this.$wrapper.find(".exp-picture");
             var $img = $pictureDiv.find("img");
-            var img = $img[0];
 
             var pictureDocument = $img.data("pictureDocument");
 
@@ -244,7 +244,7 @@
         value: function (v) {
             if (v === undefined) {
                 // getter
-                return this.$wrapper.find(".exp-picture img").data("pictureDocument");
+                return this.$wrapper.find(".exp-picture img").data("pictureDocument") || this.file;
             } else {
                 //setter
                 if (v) {

@@ -855,6 +855,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
     verifyMissingRequiredField: function ($window, resource, fieldName) {
         var missingRequired = false;
         var field = this.resourceManager.model.fields[fieldName];
+
         if (field && field.inlineGridResourceManager) {
             // verify if there is at least one row in the grid
             var $div = $window.find("[name='" + fieldName + "']").siblings(".exp-grid-inline");
@@ -869,12 +870,21 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
                 return true;
             }
         } else if (field && field.type == "document") {
-            var $input = $window.find("[data-name='" + fieldName + "']");
-            var kendoUpload = $input.data("kendoUpload");
+            var $document = $window.find("[data-name='" + fieldName + "']");
+            var kendoUpload = $document.data("kendoUpload");
             if (kendoUpload && !kendoUpload.getFiles().length) {
-                expresso.util.UIUtil.highlightField($input);
+                expresso.util.UIUtil.highlightField($document);
                 missingRequired = true;
             }
+        } else if (field && field.type == "picture") {
+            var $picture = $window.find("[name='" + fieldName + "']");
+            if (!$picture.getval()) {
+                expresso.util.UIUtil.highlightField($picture);
+                missingRequired = true;
+            }
+        } else if (field && field.widget == "kendoExpressoMultiLookupSelection" && field.customNullable === true) {
+            // there is a problem with this widget when setting nullable true (refer to the widget)
+            // ok
         } else {
             var value = resource[fieldName];
             if (value === undefined || value === null || value === "" || (value && value.length == 0)) {

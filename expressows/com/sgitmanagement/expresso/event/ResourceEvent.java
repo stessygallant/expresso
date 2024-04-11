@@ -6,6 +6,7 @@ import com.sgitmanagement.expresso.base.IEntity;
 @SuppressWarnings("rawtypes")
 public class ResourceEvent<S extends AbstractBaseEntityService & ResourceEventListenable, E extends IEntity<Integer>> {
 	private String resourceName;
+	private boolean priority;
 
 	private Class<S> serviceClass;
 	private Class<E> entityClass;
@@ -14,11 +15,12 @@ public class ResourceEvent<S extends AbstractBaseEntityService & ResourceEventLi
 		super();
 	}
 
-	public ResourceEvent(String resourceName, Class<S> serviceClass, Class<E> entityClass) {
+	public ResourceEvent(String resourceName, Class<S> serviceClass, Class<E> entityClass, boolean priority) {
 		this();
 		this.resourceName = resourceName;
 		this.serviceClass = serviceClass;
 		this.entityClass = entityClass;
+		this.priority = priority;
 	}
 
 	public Class<S> getServiceClass() {
@@ -43,5 +45,13 @@ public class ResourceEvent<S extends AbstractBaseEntityService & ResourceEventLi
 
 	public void setEntityClass(Class<E> entityClass) {
 		this.entityClass = entityClass;
+	}
+
+	public boolean isPriority() {
+		return priority;
+	}
+
+	public void setPriority(boolean priority) {
+		this.priority = priority;
 	}
 }
