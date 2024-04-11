@@ -138,7 +138,7 @@ public class PrintUtil {
 						return null;
 					}
 				}
-			}).get(2, TimeUnit.MINUTES);
+			}).get(5, TimeUnit.MINUTES);
 		} finally {
 			executor.shutdown();
 		}

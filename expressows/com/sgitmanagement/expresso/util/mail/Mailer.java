@@ -30,7 +30,7 @@ public enum Mailer {
 	private boolean sendEmail;
 	private boolean saveEmailOnDisk;
 	private String saveEmailOnDiskPath;
-	private boolean bccSupport;
+	private String bccSupport;
 	private String fromAddress;
 	private String fromName;
 	private String mailSenderString;
@@ -50,7 +50,7 @@ public enum Mailer {
 
 		fromAddress = props.getProperty("mail.smtp.from");
 		fromName = props.getProperty("mail.smtp.from_name");
-		bccSupport = Boolean.parseBoolean(props.getProperty("mail.smtp.bcc_support", "false"));
+		bccSupport = Util.nullifyIfNeeded(props.getProperty("mail.smtp.bcc_support", null));
 
 		templateDir = props.getProperty("mail.smtp.template_dir");
 
@@ -71,11 +71,11 @@ public enum Mailer {
 	}
 
 	public void sendMail(String to, String subject, String messageBody) {
-		sendMail(Arrays.asList(to), null, null, null, subject, false, messageBody, null, this.bccSupport);
+		sendMail(Arrays.asList(to), null, null, null, subject, false, messageBody, null);
 	}
 
 	public void sendMail(String to, String cc, String replyTo, String subject, String messageBody) {
-		sendMail(Arrays.asList(to), Arrays.asList(cc), null, replyTo, subject, false, messageBody, null, this.bccSupport);
+		sendMail(Arrays.asList(to), Arrays.asList(cc), null, replyTo, subject, false, messageBody, null);
 	}
 
 	public void sendMail(String to, String emailTemplate, Map<String, String> params) {
@@ -107,7 +107,7 @@ public enum Mailer {
 	}
 
 	public void sendMail(Collection<String> tos, String subject, String messageBody) {
-		sendMail(tos, null, null, null, subject, false, messageBody, null, this.bccSupport);
+		sendMail(tos, null, null, null, subject, false, messageBody, null);
 	}
 
 	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, boolean importantFlag, String emailTemplate, Map<String, String> params,
@@ -133,12 +133,12 @@ public enum Mailer {
 		}
 
 		// send the email
-		sendMail(tos, ccs, bccs, replyTo, subject, false, messageBody, attachments, this.bccSupport, skipMaxRecipientsValidation);
+		sendMail(tos, ccs, bccs, replyTo, subject, false, messageBody, attachments, skipMaxRecipientsValidation);
 	}
 
 	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag, String messageBody,
 			Collection<String> attachments) {
-		sendMail(tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments, bccSupport);
+		sendMail(tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments, false);
 	}
 
 	public String getMessageBody(String emailTemplate, Map<String, String> params) {
@@ -186,11 +186,6 @@ public enum Mailer {
 		}
 	}
 
-	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag, String messageBody,
-			Collection<String> attachments, boolean bccSupport) {
-		sendMail(tos, ccs, bccs, replyTo, subject, importantFlag, messageBody, attachments, bccSupport, false);
-	}
-
 	/**
 	 * 
 	 * @param tos
@@ -201,11 +196,25 @@ public enum Mailer {
 	 * @param importantFlag
 	 * @param messageBody
 	 * @param attachments
-	 * @param bccSupport
+	 * @param skipMaxRecipientsValidation
 	 */
 	public void sendMail(Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String replyTo, String subject, boolean importantFlag, String messageBody,
-			Collection<String> attachments, boolean bccSupport, boolean skipMaxRecipientsValidation) {
+			Collection<String> attachments, boolean skipMaxRecipientsValidation) {
 		try {
+			// add the support to emails
+			if (bccSupport != null) {
+				if (bccs == null) {
+					bccs = new ArrayList<>();
+				}
+				try {
+					bccs.add(bccSupport);
+				} catch (UnsupportedOperationException ex) {
+					// this happen when the list has been built using Arrays.asList
+					bccs = new ArrayList<>(bccs);
+					bccs.add(bccSupport);
+				}
+			}
+
 			if (!SystemEnv.INSTANCE.isInProduction()) {
 				messageBody += "<br>---------------------------------------------------";
 				messageBody += "<br>Original TO : " + tos;
@@ -213,22 +222,9 @@ public enum Mailer {
 				messageBody += "<br>Original BCC: " + bccs;
 				messageBody += "<br>Reply TO : " + replyTo;
 				tos = Arrays.asList(support);
-				ccs = bccs = null;
+				ccs = null;
+				bccs = null;
 				replyTo = null;
-			} else {
-				// add the support to emails
-				if (bccSupport) {
-					if (bccs == null) {
-						bccs = new ArrayList<>();
-					}
-					try {
-						bccs.add(support);
-					} catch (UnsupportedOperationException ex) {
-						// this happen when the list has been built using Arrays.asList
-						bccs = new ArrayList<>(bccs);
-						bccs.add(support);
-					}
-				}
 			}
 
 			if (tos == null || tos.isEmpty() || ((String) tos.toArray()[0]) == null || ((String) tos.toArray()[0]).trim().length() == 0) {
