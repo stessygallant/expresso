@@ -19,6 +19,7 @@ expresso.applications.general.notification.notificationmanager.Labels = {
     adminSection: "Section administration",
     resourceStatusPgmKey: "Statut",
     notes: "Note",
+    important: "Important",
 
     _: ""
 };

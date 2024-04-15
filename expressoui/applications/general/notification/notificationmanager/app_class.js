@@ -35,12 +35,16 @@ expresso.applications.general.notification.notificationmanager.NotificationManag
                 type: "string",
                 maxLength: 2000
             },
+            important: {
+                type: "boolean"
+            },
             resourceStatusPgmKey: {
                 type: "string",
                 maxLength: 50
             },
             notes: {
                 type: "string",
+                nullable: true,
                 maxLength: 200
             },
             serviceDescription: {

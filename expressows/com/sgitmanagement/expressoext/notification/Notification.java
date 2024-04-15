@@ -24,6 +24,9 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 	@Column(name = "resource_name")
 	private String resourceName;
 
+	@Column(name = "important_flag")
+	private boolean important;
+
 	@Column(name = "resource_id")
 	private Integer resourceId;
 
@@ -273,5 +276,13 @@ public class Notification extends BaseUpdatableDeactivableEntity {
 
 	public void setResourceTitle(String resourceTitle) {
 		this.resourceTitle = resourceTitle;
+	}
+
+	public boolean isImportant() {
+		return important;
+	}
+
+	public void setImportant(boolean important) {
+		this.important = important;
 	}
 }

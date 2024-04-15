@@ -417,7 +417,8 @@ $.extend(expresso.Labels, {
     notifications: "You have {quantity} pending notification(s).",
     newNotifications: "You have {quantity} new notification(s).",
     duties: "On Duty",
-
+    notification: "Notification",
+    
     // photo
     deletePictureWindowTitle: "Confirmation",
     deletePicture: "Are you sure you want to delete this picture ?",

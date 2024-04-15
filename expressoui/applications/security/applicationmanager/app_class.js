@@ -1,16 +1,11 @@
-﻿var expresso = expresso || {};
-expresso.applications = expresso.applications || {};
-expresso.applications.security = expresso.applications.security || {};
-expresso.applications.security.applicationmanager = expresso.applications.security.applicationmanager || {};
-
-expresso.applications.security.applicationmanager.ApplicationManager = expresso.layout.resourcemanager.ResourceManager.extend({
+﻿expresso.applications.security.applicationmanager.ApplicationManager = expresso.layout.resourcemanager.ResourceManager.extend({
     // @override
     init: function (applicationPath) {
         var fields = {
             pgmKey: {
                 type: "string",
                 unique: true,
-                maxLength: 50
+                maxLength: 1000
             },
             description: {
                 type: "string",

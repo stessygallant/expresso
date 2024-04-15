@@ -596,6 +596,13 @@ expresso.Main = function () {
                         }, 2 * 1000);
                     }, 5 * 1000);
                 }
+
+                $.each(notifications, function () {
+                    var notification = this;
+                    if (notification.important) {
+                        expresso.util.UIUtil.buildMessageWindow(notification.resourceTitle + " - " + notification.description);
+                    }
+                });
             } else {
                 if ($notificationBell.hasClass("fa-bell")) {
                     $notificationBell.removeClass("fa-bell").addClass("fa-bell-o");

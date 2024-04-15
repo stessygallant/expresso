@@ -681,7 +681,32 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			}
 		}
 		// logger.debug("Search query: " + query);
-		return list(query);
+		return search(query);
+	}
+
+	/**
+	 * YOU MUST OVERRIDE THIS METHOD IF YOU OVERRIDE THE LIST METHOD<br>
+	 * This method is faster for a simple search than the list() method because it does not execute subselect for all rows
+	 * 
+	 * @param query
+	 * @return
+	 * @throws Exception
+	 */
+	public List<E> search(Query query) throws Exception {
+		boolean optimizeSearch = true;
+		if (optimizeSearch) {
+			// execute the query
+			List<Integer> ids = list(query, Integer.class);
+
+			// then select all entities for these ids
+			Query listQuery = new Query();
+			listQuery.setFilter(new Filter("id", Operator.inIds, ids));
+			listQuery.setSort(query.getSort());
+			return list(listQuery);
+		} else {
+			// no optimization.
+			return list(query);
+		}
 	}
 
 	/**
@@ -791,41 +816,53 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 * @throws Exception
 	 */
-
 	public List<E> list(Query query) throws Exception {
+		return list(query, getTypeOfE());
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> List<T> list(Query query, Class<T> selectClauseType) throws Exception {
 		try {
 			query = verifyQuery(query);
 			// logger.debug("List query: " + new Gson().toJson(query));
+
+			boolean selectIdOnly = selectClauseType.equals(Integer.class);
 
 			EntityManager entityManager = getEntityManager(false);
 
 			// use the CriteriaBuilder to create the query
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-			CriteriaQuery<E> q = cb.createQuery(getTypeOfE());
+			CriteriaQuery<T> q = cb.createQuery(selectClauseType);
+
 			Root<E> root = q.from(getTypeOfE());
-			q.select(root);
+			if (selectIdOnly) {
+				q.select(root.get("id"));
+			} else {
+				q.select((Root<T>) root);
+			}
 
 			if (!query.hasFilters() && !query.hasSort() && query.getPageSize() == null) {
 				// use a simple query
 				// by default, sort by the id
 				q.orderBy(cb.desc(root.get(getKeyField())));
-				TypedQuery<E> typedQuery = entityManager.createQuery(q);
+				TypedQuery<T> typedQuery = entityManager.createQuery(q);
 				return typedQuery.getResultList();
 			} else {
 				// create the query using filters, paging and sort
+				boolean fetchJoin = !selectIdOnly;
 
 				// this must be called first. It will set distinctNeeded
 				Map<String, Join<?, ?>> joinMap = new HashMap<>();
-				Predicate predicate = buildPredicates(cb, root, query.getFilter(), joinMap, true);
+				Predicate predicate = buildPredicates(cb, root, query.getFilter(), joinMap, fetchJoin);
 
 				// sorts may also trigger a distinct select
 				List<Order> orders = new ArrayList<>();
 				if (query.getSort() != null && query.getSort().size() > 0 && !query.countOnly()) {
 					for (Sort sort : query.getSort()) {
 						if (sort.getDir() != null && sort.getDir().equals(Direction.asc)) {
-							orders.add(cb.asc(retrieveProperty(root, sort.getField(), joinMap, true)));
+							orders.add(cb.asc(retrieveProperty(root, sort.getField(), joinMap, fetchJoin)));
 						} else {
-							orders.add(cb.desc(retrieveProperty(root, sort.getField(), joinMap, true)));
+							orders.add(cb.desc(retrieveProperty(root, sort.getField(), joinMap, fetchJoin)));
 						}
 					}
 				}
@@ -863,7 +900,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// add the sort to the query
 				q.orderBy(orders);
 
-				TypedQuery<E> typedQuery = entityManager.createQuery(q);
+				TypedQuery<T> typedQuery = entityManager.createQuery(q);
 
 				if (query.getSkip() != null) {
 					typedQuery.setFirstResult(query.getSkip());
@@ -873,16 +910,18 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					typedQuery.setMaxResults(query.getPageSize());
 				}
 
-				// This is mandatory to eagerly fetch the data using CriteriaBuilder
-				// jakarta.persistence.fetchgraph: all relationships are considered to be lazy regardless of annotation, and only the elements of the provided graph are loaded.
-				// jakarta.persistence.loadgraph: add lazy entities (eager entities are loaded as defined)
-				EntityGraph<E> entityGraph = entityManager.createEntityGraph(getTypeOfE());
-				buildEntityGraph(entityGraph, getTypeOfE(), query, null);
-				typedQuery.setHint("jakarta.persistence.loadgraph", entityGraph);
+				if (!selectIdOnly) {
+					// This is mandatory to eagerly fetch the data using CriteriaBuilder
+					// jakarta.persistence.fetchgraph: all relationships are considered to be lazy regardless of annotation, and only the elements of the provided graph are loaded.
+					// jakarta.persistence.loadgraph: add lazy entities (eager entities are loaded as defined)
+					EntityGraph<E> entityGraph = entityManager.createEntityGraph(getTypeOfE());
+					buildEntityGraph(entityGraph, getTypeOfE(), query, null);
+					typedQuery.setHint("jakarta.persistence.loadgraph", entityGraph);
+				}
 
 				// then issue the SQL query
 				Date startDate = new Date();
-				List<E> data;
+				List<T> data;
 				try {
 					data = typedQuery.getResultList();
 				} catch (IllegalArgumentException ex) {
@@ -899,14 +938,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				if (data.size() == 0 && (query.getCreateIfNotFound() != null && query.getCreateIfNotFound().booleanValue())) {
 					E e = createEntityFromUniqueConstraints(query);
 					if (e != null) {
-						data.add(e);
+						data.add((T) e);
 					}
 				}
 
 				// if the query is for an hierarchical list, we need to include all parents and children
 				if (query.hierarchical()) {
 					int beforeDataSize = data.size();
-					int sqlQueryCount = appendHierarchicalEntities(data, query) + 1;
+					int sqlQueryCount = appendHierarchicalEntities((List<E>) data, query) + 1;
 					logger.debug("Number of SQL Queries for hierarchical: " + sqlQueryCount + " Total entities: " + data.size() + " (before: " + beforeDataSize + ")");
 				}
 

@@ -2658,6 +2658,7 @@ expresso.util.UIUtil = (function () {
          * @param options
          */
         var buildInlineGrid = function ($input, options) {
+            var $deferred = $.Deferred();
             var resourceManager = options.field ? options.field.inlineGridResourceManager.resourceManager : options.resourceManager;
             var masterResourceManager = options.masterResourceManager;
             var masterResource = options.masterResource;
@@ -2695,8 +2696,11 @@ expresso.util.UIUtil = (function () {
                     // we must fake a master current resource
                     appInstance.masterResourceManager.currentResource = {id: (newResource ? -1 : masterResource.id)};
                 }
-                appInstance.list($div, query);
+                appInstance.list($div, query).done(function () {
+                    $deferred.resolve(appInstance);
+                });
             });
+            return $deferred;
         };
 
         /**

@@ -802,7 +802,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                     _this.objectsNeededForColumns = _this.objectsNeededForColumns || {};
                     _this.objectsNeededForColumns[column.field] = {};
 
-                    // TODO if nullable is true, defaultValue is ignored!!!!!
+                    // if nullable is true, defaultValue is ignored (and the grid will crash on create)
+                    if (field.nullable) {
+                        field.nullable = false;
+                    }
                     field.defaultValue = field.defaultValue || {};
 
                     column.filterable = false;
