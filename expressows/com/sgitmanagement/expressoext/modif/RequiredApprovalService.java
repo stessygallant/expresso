@@ -17,9 +17,19 @@ import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expresso.util.mail.Mailer;
 import com.sgitmanagement.expressoext.base.BaseEntity;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
+import com.sgitmanagement.expressoext.notification.Notifiable;
+import com.sgitmanagement.expressoext.notification.Notification;
+import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.util.MainUtil;
 
-public class RequiredApprovalService extends BaseEntityService<RequiredApproval> {
+public class RequiredApprovalService extends BaseEntityService<RequiredApproval> implements Notifiable {
+	public static void main(String[] args) throws Exception {
+		RequiredApprovalService service = newServiceStatic(RequiredApprovalService.class, RequiredApproval.class);
+		service.list();
+
+		MainUtil.close();
+	}
+
 	@Override
 	public RequiredApproval create(RequiredApproval e) throws Exception {
 		e.setRequiredApprovalStatusId(newService(RequiredApprovalStatusService.class, RequiredApprovalStatus.class).get("NEW").getId());
@@ -201,11 +211,53 @@ public class RequiredApprovalService extends BaseEntityService<RequiredApproval>
 		return allowed;
 	}
 
-	public static void main(String[] args) throws Exception {
-		RequiredApprovalService service = newServiceStatic(RequiredApprovalService.class, RequiredApproval.class);
-		service.list();
-
-		MainUtil.close();
+	@Override
+	public String[] getNotificationServiceDescriptions() throws Exception {
+		return new String[] { "Demandes de modifications" };
 	}
 
+	@Override
+	public List<Notification> getNotifications(User user) throws Exception {
+		boolean use = false;
+		List<Notification> notifications = new ArrayList<>();
+		if (use) {
+			for (RequiredApproval requiredApproval : super.list(new Query().setActiveOnly(true))) {
+				if (isUserAllowedToApprove(requiredApproval) && !isUserAdmin()) {
+					Notification notification = new Notification();
+					notification.setServiceDescription("Demandes de modifications");
+					notification.setResourceName("requiredApproval");
+					notification.setResourceId(requiredApproval.getId());
+					notification.setResourceTitle(requiredApproval.getResourceNo() + " - " + requiredApproval.getResourceDescription());
+					notification.setResourceStatusPgmKey(requiredApproval.getRequiredApprovalStatus().getPgmKey());
+					notification.setDescription("Champ [" + requiredApproval.getResourceFieldName() + "] a été modifié de [" + requiredApproval.getOldValue() + "] à [" + requiredApproval.getNewValue()
+							+ "]" + (requiredApproval.getAdditionnalInfo() != null ? " (" + requiredApproval.getAdditionnalInfo() + ")" : "") + ". " + "<br>"
+							+ (requiredApproval.getNotes() != null ? requiredApproval.getNotes() : ""));
+					notification.setResourceUrl(getLink(requiredApproval));
+					notification.setRequesterUserId(requiredApproval.getCreationUserId());
+					notification.setRequestedDate(requiredApproval.getCreationDate());
+					notification.setUserId(user.getId());
+					notification.setAvailableActions("approve,reject");
+
+					notifications.add(notification);
+				}
+			}
+		}
+		return notifications;
+	}
+
+	@Override
+	public void performNotificationAction(User user, String action, Notification notification) throws Exception {
+		RequiredApproval requiredApproval = get(notification.getResourceId());
+
+		switch (action) {
+		case "approve":
+			verifyActionRestrictions("approve", requiredApproval);
+			approve(requiredApproval);
+			break;
+		case "reject":
+			verifyActionRestrictions("reject", requiredApproval);
+			reject(requiredApproval, "");
+			break;
+		}
+	}
 }

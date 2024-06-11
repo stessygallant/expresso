@@ -308,14 +308,15 @@ public class ExchangeMessageUtil implements MailSender {
 		boolean validEmail = true;
 
 		// verify invalid email
-		if (subject == null || subject.trim().length() == 0 || subject.startsWith("Réponse automatique :") || subject.startsWith("Réponse automatique :") || subject.startsWith("Automatic")
-				|| subject.startsWith("Fwd:") || subject.startsWith("Re:") || subject.startsWith("RE:") || subject.startsWith("Out of Office")) {
+		if (subject == null || subject.trim().length() == 0 || subject.startsWith("Réponse automatique") || subject.startsWith("Automatic") || subject.startsWith("Fwd:") || subject.startsWith("Re:")
+				|| subject.startsWith("RE:") || subject.startsWith("Out of Office") || subject.startsWith("out of the office")) {
 			validEmail = false;
 		} else if (subject.startsWith("Undeliverable:") || subject.startsWith("Message undeliverable:") || subject.startsWith("Failure") || subject.startsWith("Mail Delivery Subsystem")
 				|| subject.startsWith("Non remis :") || subject.startsWith("Undelivered Mail") || subject.startsWith("Delivery Status Notification (Failure)")) {
 			// logger.warn("Undeliverable email Subject [" + subject + "] Sent: " + message.getSentDate());
 			validEmail = false;
-		} else if (subject.startsWith("Microsoft 365 Message center") || subject.startsWith("Weekly digest: Microsoft service updates") || subject.startsWith("Major update from Message center")) {
+		} else if (subject.startsWith("Microsoft 365 Message center") || subject.startsWith("Weekly digest: Microsoft service updates") || subject.startsWith("Major update from Message center")
+				|| subject.startsWith("Your Case has been submitted") || subject.startsWith("Messages mis en quaranatine")) {
 			// spam
 			validEmail = false;
 		}

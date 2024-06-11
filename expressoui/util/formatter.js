@@ -9,6 +9,7 @@ expresso.util.Formatter = (function () {
     var DATE_FORMAT = {
         DATE_ONLY: "yyyy-MM-dd",
         DATE_TIME: "yyyy-MM-dd HH:mm",
+        TEXTUAL_DATE_ONLY: "dddd, yyyy-MM-dd",
         TEXTUAL_DATE_TIME: "dddd, dd MMMM HH:mm:ss",
         DATE_TIME_SEC: "yyyy-MM-dd HH:mm:ss",
         TIME_ONLY: "HH:mm",
@@ -32,6 +33,7 @@ expresso.util.Formatter = (function () {
                 d = parseDateTime(d);
             }
         }
+
         return kendo.toString(d, format);
     };
 

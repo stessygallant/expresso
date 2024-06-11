@@ -299,31 +299,29 @@ public class POP3MailboxUtil {
 
 		for (Message message : messages) {
 			String subject = message.getSubject();
-			boolean deleteEmail = false;
+			boolean validEmail = true;
 
 			// verify invalid email
-			if (subject.startsWith("Réponse automatique :") || subject.startsWith("Réponse automatique :") || subject.startsWith("Automatic") || subject.startsWith("Fwd:") || subject.startsWith("Re:")
-					|| subject.startsWith("RE:") || subject.startsWith("Out of Office")) {
-				deleteEmail = true;
+			if (subject == null || subject.trim().length() == 0 || subject.startsWith("Réponse automatique") || subject.startsWith("Automatic") || subject.startsWith("Fwd:")
+					|| subject.startsWith("Re:") || subject.startsWith("RE:") || subject.startsWith("Out of Office") || subject.startsWith("out of the office")) {
+				validEmail = false;
 			} else if (subject.startsWith("Undeliverable:") || subject.startsWith("Message undeliverable:") || subject.startsWith("Failure") || subject.startsWith("Mail Delivery Subsystem")
 					|| subject.startsWith("Non remis :") || subject.startsWith("Undelivered Mail") || subject.startsWith("Delivery Status Notification (Failure)")) {
 				// logger.warn("Undeliverable email Subject [" + subject + "] Sent: " + message.getSentDate());
-				deleteEmail = true;
-			} else if (subject.startsWith("Microsoft 365 Message center") || subject.startsWith("Weekly digest: Microsoft service updates") || subject.startsWith("Major update from Message center")) {
+				validEmail = false;
+			} else if (subject.startsWith("Microsoft 365 Message center") || subject.startsWith("Weekly digest: Microsoft service updates") || subject.startsWith("Major update from Message center")
+					|| subject.startsWith("Your Case has been submitted") || subject.startsWith("Messages mis en quaranatine")) {
 				// spam
-				deleteEmail = true;
-
-			} else {
-				// valid emails
+				validEmail = false;
 			}
 
-			if (deleteEmail) {
+			if (validEmail) {
+				logger.debug("Valid email based on subject [" + subject + "]");
+			} else {
 				logger.info("Deleting invalid email based on subject [" + subject + "]");
 				if (SystemEnv.INSTANCE.isInProduction()) {
 					message.setFlag(Flags.Flag.DELETED, true);
 				}
-			} else {
-				logger.debug("Valid email based on subject [" + subject + "]");
 			}
 		}
 	}

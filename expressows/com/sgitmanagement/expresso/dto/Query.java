@@ -1,6 +1,7 @@
 package com.sgitmanagement.expresso.dto;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
@@ -61,8 +62,20 @@ public class Query {
 		return sort;
 	}
 
-	public Query setSort(List<Sort> sort) {
-		this.sort = sort;
+	public Query setSort(List<Sort> sorts) {
+		this.sort = sorts;
+		return this;
+	}
+
+	public Query setSort(Sort[] sorts) {
+		this.sort = Arrays.asList(sorts);
+		return this;
+	}
+
+	public Query setSort(Sort sort) {
+		List<Sort> sorts = new ArrayList<>();
+		sorts.add(sort);
+		this.sort = sorts;
 		return this;
 	}
 

@@ -539,7 +539,8 @@
         width: calc(100% - 0.2em) !important;
 
         .k-grid-toolbar {
-            .exp-refresh-button, .exp-process-button,
+           // .exp-refresh-button,
+           .exp-process-button,
             .exp-grid-nbr-items, .exp-toolbar-separator, .exp-saveconfiguration-button, .exp-excel-button {
                 display: none;
             }

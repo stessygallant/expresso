@@ -699,6 +699,11 @@ expresso.Main = function () {
         var $versionDiv = $body.find(".version");  // 2 versions: in the title (tablet) and the footer (desktop)
         $versionDiv.html("v" + expresso.Common.getSiteNamespace().config.Configurations.version);
 
+        $versionDiv.on("click", function () {
+            // display release notes report
+            expresso.Main.sendReportRequest("releasenotes", "request", null);
+        });
+
         // initialize the user profile section
         var userName = expresso.Security.getUserProfile().firstName + " " + expresso.Security.getUserProfile().lastName;
         if (userName.length > 18) {
@@ -1166,6 +1171,7 @@ expresso.Main = function () {
     return {
         // PUBLIC methods
         init: init,
+        loadMainApplication: loadMainApplication,
         executeReport: executeReport,
         sendReportRequest: sendReportRequest,
         getCurrentAppName: getCurrentAppName

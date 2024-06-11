@@ -316,7 +316,12 @@ div.main {
         }
 
         .version {
+            text-decoration: underline;
 
+            &:hover {
+                color: $themeColorDark;
+                cursor: pointer;
+            }
         }
     }
 

@@ -146,7 +146,7 @@ public class AuthorizationFilter implements Filter {
 						}
 
 						if (user.getTerminationDate() != null && user.getTerminationDate().before(new Date())) {
-							logger.warn("User [" + user.getUserName() + "] is terminated");
+							// logger.warn("User [" + user.getUserName() + "] is terminated");
 							// throw new InvalidCredentialsException("User is terminated");
 						}
 
@@ -194,17 +194,21 @@ public class AuthorizationFilter implements Filter {
 						logger.info(String.format("%s (ms:%d)", msg, (endTime - startTime)));
 					}
 				} else {
-					msg = String.format("INVALID %s (%s)", msg, (action + " -> " + resources + ": FORBIDDEN"));
-
-					String[] pentestIPs = new String[] { "147.253.144.195", "144.217.204.215" };
-					if (ip != null && Arrays.stream(pentestIPs).anyMatch(ip::equals)) {
-						logger.warn(msg);
-					} else {
-						logger.error(msg);
-					}
-
 					HttpServletResponse resp = (HttpServletResponse) servletResponse;
-					resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+					if (user.getTerminationDate() != null) {
+						resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+					} else {
+						msg = String.format("INVALID %s (%s)", msg, (action + " -> " + resources + ": FORBIDDEN"));
+
+						String[] pentestIPs = new String[] { "147.253.144.195", "144.217.204.215" };
+						if (ip != null && Arrays.stream(pentestIPs).anyMatch(ip::equals)) {
+							logger.warn(msg);
+						} else {
+							logger.error(msg);
+						}
+
+						resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+					}
 				}
 
 			} finally {

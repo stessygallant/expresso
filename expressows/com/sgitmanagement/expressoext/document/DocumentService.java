@@ -15,11 +15,22 @@ import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expressoext.base.BaseFileService;
 import com.sgitmanagement.expressoext.security.Resource;
 import com.sgitmanagement.expressoext.security.ResourceService;
+import com.sgitmanagement.expressoext.util.MainUtil;
 
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class DocumentService extends BaseFileService<Document> {
+
+	public static void main(String[] args) throws Exception {
+		DocumentService service = newServiceStatic(DocumentService.class, Document.class);
+		// service.list();
+
+		service.get("containerDamageItem", 438);
+
+		MainUtil.close();
+	}
 
 	@Override
 	protected Document merge(Document document, Map<String, String> params) throws Exception {
@@ -88,6 +99,8 @@ public class DocumentService extends BaseFileService<Document> {
 				document = documents.get(0);
 				verifyUserPrivileges(document, "read");
 				return document;
+			} else if (documents.size() > 1) {
+				throw new NonUniqueResultException();
 			} else {
 				throw new NoResultException();
 			}

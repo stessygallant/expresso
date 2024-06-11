@@ -96,6 +96,14 @@ public class Util {
 		}
 	}
 
+	static public Integer parseInt(String s) {
+		try {
+			return Integer.parseInt(Util.nullifyIfNeeded(s.replace(",", "")));
+		} catch (Exception ex) {
+			return null;
+		}
+	}
+
 	static public String urlEncodeUTF8(String s) {
 		try {
 			return URLEncoder.encode(s, "UTF-8");
@@ -990,26 +998,26 @@ public class Util {
 	 * @param rows      and rows values
 	 *
 	 */
-	public static String writeCSVContent(String separator, List<String> headerRow, List<List<String>> rows, String enclosingChar) {
+	public static String writeCSVContent(String separator, String[] headerRow, List<String[]> rows, String enclosingChar) {
 		String content = "";
 
 		if (headerRow != null) {
 
 			// 1 - enclose header
 			if (enclosingChar != null) {
-				for (int i = 0; i < headerRow.size(); i++) {
-					headerRow.set(i, StringUtils.wrap(headerRow.get(i), enclosingChar));
+				for (int i = 0; i < headerRow.length; i++) {
+					headerRow[i] = StringUtils.wrap(headerRow[i], enclosingChar);
 				}
 			}
 			// 2 - separator header
 			content = String.join(separator, headerRow) + "\r\n";
 		}
 
-		for (List<String> column : rows) {
+		for (String[] column : rows) {
 			// 1 - enclose
 			if (enclosingChar != null) {
-				for (int i = 0; i < column.size(); i++) {
-					column.set(i, StringUtils.wrap(column.get(i), enclosingChar));
+				for (int i = 0; i < column.length; i++) {
+					column[i] = StringUtils.wrap(column[i], enclosingChar);
 				}
 			}
 
@@ -1025,8 +1033,12 @@ public class Util {
 		return content;
 	}
 
-	public static String writeCSVContent(String separator, List<String> headerRow, List<List<String>> rows) {
+	public static String writeCSVContent(String separator, String[] headerRow, List<String[]> rows) {
 		return writeCSVContent(separator, headerRow, rows, null);
+	}
+
+	public static String writeCSVContent(String[] headerRow, List<String[]> rows) {
+		return writeCSVContent(",", headerRow, rows, null);
 	}
 
 	/**

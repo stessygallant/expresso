@@ -334,6 +334,21 @@ expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
     },
 
     /**
+     *
+     * @param appName
+     * @param appOptions
+     */
+    addSwitchApplicationButton: function (appName, appOptions) {
+        // add a button to switch application
+        $("<button class='k-button exp-switch-application'>" +
+            "<span class='fa fa-arrow-right' tabindex='-1'></span>" +
+            expresso.Common.getLabel(appName, expresso.Common.getSiteNamespace().config.menu.Labels) +
+            "</button>").appendTo(this.$domElement).on("click", function () {
+            expresso.Common.loadMainApplication(appName, appOptions);
+        });
+    },
+
+    /**
      * Helper method to update the values array
      * @param va array to push the values
      * @param data array of data

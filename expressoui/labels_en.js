@@ -233,7 +233,7 @@ $.extend(expresso.Labels, {
     expandHierarchical: "Expand/Collapse all",
 
     confirmTitle: "Confirmation",
-    confirmAction: "Are you sure you want to execute this action: ",
+    confirmAction: "Are you sure you want to: ",
     confirmDeleteElement: "Are you sure you want to delete this item?",
 
     deleteConfirmation: "Are you sure you want to delete this record ?",
@@ -316,6 +316,9 @@ $.extend(expresso.Labels, {
     validateButtonTitle: "Validate selected records",
     reviseButtonLabel: "Revise",
     reviseButtonTitle: "Revise selected records",
+
+    refreshButtonLabel: "Refresh",
+    refreshButtonTitle: "Refresh content",
 
     uniqueValidation: " The value [{fieldValue}] must be unique for the field",
     userUnauthorized: "User is unauthorized to execute this action on the resource",
@@ -418,7 +421,7 @@ $.extend(expresso.Labels, {
     newNotifications: "You have {quantity} new notification(s).",
     duties: "On Duty",
     notification: "Notification",
-    
+
     // photo
     deletePictureWindowTitle: "Confirmation",
     deletePicture: "Are you sure you want to delete this picture ?",

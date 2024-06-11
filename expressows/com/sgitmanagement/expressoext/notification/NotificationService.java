@@ -49,7 +49,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 
 	static {
 		// get the list of notification service
-		Reflections reflections = new Reflections("com.sgitmanagement.termont");
+		Reflections reflections = new Reflections("com.sgitmanagement");
 		notifiableServiceClasses = reflections.getSubTypesOf(Notifiable.class);
 
 		// Create cache
@@ -252,6 +252,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 		List<Notification> notifications = new ArrayList<>();
 
 		// get the notifications
+		logger.debug("retrieveNotifications: " + notifiableService.getClass().getSimpleName());
 		List<Notification> notificationsFromService = notifiableService.getNotifications(user);
 
 		// complete/merge notifications
@@ -369,6 +370,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 		notification.setPerformedAction(action);
 		notification.setPerformedActionDate(new Date());
 		notification.setPerformedActionUserId(getUser().getId());
+		notification.setDeactivationDate(new Date());
 		update(notification);
 
 		notifiableService.performNotificationAction(getUser(), action, notification);

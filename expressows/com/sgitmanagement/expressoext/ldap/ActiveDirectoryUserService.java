@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.directory.api.ldap.model.entry.Attribute;
 import org.apache.directory.api.ldap.model.entry.DefaultEntry;
@@ -15,8 +18,11 @@ import org.apache.directory.api.ldap.model.entry.Value;
 import org.apache.directory.api.ldap.model.message.SearchScope;
 
 import com.sgitmanagement.expresso.dto.Query;
+import com.sgitmanagement.expresso.dto.Query.Filter;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expressoext.base.BaseService;
+import com.sgitmanagement.expressoext.security.User;
+import com.sgitmanagement.expressoext.security.UserService;
 import com.sgitmanagement.expressoext.util.MainUtil;
 
 public class ActiveDirectoryUserService extends BaseService {
@@ -30,8 +36,26 @@ public class ActiveDirectoryUserService extends BaseService {
 			// the only reliable strategy to get the real last login: get lastLogon on EACH controller
 			"lastLogonTimeStamp" };
 
+	public static void main(String[] args) throws Exception {
+		ActiveDirectoryUserService service = newServiceStatic(ActiveDirectoryUserService.class);
+
+		// List<ActiveDirectoryUser> activeDirectoryUsers = service.list(new Query().setActiveOnly(true));
+		// for (ActiveDirectoryUser activeDirectoryUser : activeDirectoryUsers) {
+		// System.out.println(activeDirectoryUser);
+		// }
+		service.process();
+
+		MainUtil.close();
+	}
+
 	public ActiveDirectoryUser get(String userName) {
-		return get(userName, ActiveDirectoryLDAPClient.INSTANCE.getUsersOU());
+		for (String ou : ActiveDirectoryLDAPClient.INSTANCE.getUsersOU()) {
+			ActiveDirectoryUser activeDirectoryUser = get(userName, ou);
+			if (activeDirectoryUser != null) {
+				return activeDirectoryUser;
+			}
+		}
+		return null;
 	}
 
 	public ActiveDirectoryUser get(String userName, String ou) {
@@ -79,7 +103,7 @@ public class ActiveDirectoryUserService extends BaseService {
 		if (query != null && query.getFilter("ou") != null) {
 			ous = new String[] { (String) query.getFilter("ou").getValue() };
 		} else {
-			ous = new String[] { ActiveDirectoryLDAPClient.INSTANCE.getUsersOU() };
+			ous = ActiveDirectoryLDAPClient.INSTANCE.getUsersOU();
 		}
 
 		for (String ou : ous) {
@@ -114,7 +138,7 @@ public class ActiveDirectoryUserService extends BaseService {
 			if (query != null && query.getFilter("ou") != null) {
 				ous = new String[] { (String) query.getFilter("ou").getValue() };
 			} else {
-				ous = new String[] { ActiveDirectoryLDAPClient.INSTANCE.getUsersOU() };
+				ous = ActiveDirectoryLDAPClient.INSTANCE.getUsersOU();
 			}
 
 			for (String ou : ous) {
@@ -583,14 +607,23 @@ public class ActiveDirectoryUserService extends BaseService {
 		return activeDirectoryUser;
 	}
 
-	public static void main(String[] args) throws Exception {
-		ActiveDirectoryUserService service = newServiceStatic(ActiveDirectoryUserService.class);
+	@Override
+	public void process(String operation) throws Exception {
 
-		List<ActiveDirectoryUser> activeDirectoryUsers = service.list(new Query().setActiveOnly(true));
-		for (ActiveDirectoryUser activeDirectoryUser : activeDirectoryUsers) {
-			System.out.println(activeDirectoryUser);
+		// get all actives users in AD
+		List<ActiveDirectoryUser> activeDirectoryUsers = list(new Query().setActiveOnly(true));
+		Map<String, ActiveDirectoryUser> activeDirectoryUserMap = activeDirectoryUsers.stream().collect(Collectors.toMap(ActiveDirectoryUser::getsAMAccountName, Function.identity()));
+		activeDirectoryUserMap = activeDirectoryUserMap.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().toLowerCase(), entry -> entry.getValue()));
+
+		// Vérifier que le compte AD est toujours dans OU=USERS,OU=TERMONT,DC=termont,DC=local
+		// Si absent -> désactivé le compte dans Sherpa
+		// Si présent -> vérifier le userAccountControl (si bit ACCOUNTDISABLE -> désactivé le compte dans Sherpa)
+		UserService userService = newService(UserService.class, User.class);
+		for (User user : userService.list(new Query().setActiveOnly(true).addFilter(new Filter("localAccount", false)))) {
+			if (!activeDirectoryUserMap.containsKey(user.getUserName().toLowerCase())) {
+				logger.warn("User [" + user.getUserName() + "] is disabled in AD. Disabling user in Sherpa");
+				userService.deactivate(user);
+			}
 		}
-
-		MainUtil.close();
 	}
 }

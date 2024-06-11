@@ -635,50 +635,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 */
 	public List<E> search(Query query, String searchText) throws Exception {
 		if (searchText != null) {
-			// if activeOnly and there is a keyField for the entity
-			// add a filter to search the keyField only
-			// if active only is requested, get the active only filter
-			if (query.activeOnly() && getKeyFields().length > 1 /* ignore ID */) {
-
-				// make sure there is a filter and the logic is And
-				Filter originalFilter = new Filter(Logic.and);
-
-				// add the original query filter
-				originalFilter.addFilter(query.getFilter());
-
-				// add active only flag
-				Filter activeOnlyFilter = getActiveOnlyFilter();
-				if (activeOnlyFilter != null) {
-					originalFilter.addFilter(activeOnlyFilter);
-				} else if (Deactivable.class.isAssignableFrom(getTypeOfE())) {
-					originalFilter.addFilter(getDeactivableFilter());
-				}
-
-				// add the search Filter to the original filter
-				originalFilter.addFilter(getSearchFilter(searchText));
-
-				// create a new top filter
-				Filter newQueryFilter = new Filter(Logic.or);
-				query.setFilter(newQueryFilter);
-
-				// add previous filter
-				newQueryFilter.addFilter(originalFilter);
-
-				// now allow all (activeOnly for the original filter)
-				query.setActiveOnly(false);
-
-				// add search by keyField
-				Filter keyFieldFilter = new Filter(Logic.or);
-				newQueryFilter.addFilter(keyFieldFilter);
-				for (String keyField : getKeyFields()) {
-					if (!keyField.equals("id")) {
-						keyFieldFilter.addFilter(new Filter(keyField, formatKeyField(keyField, searchText)));
-					}
-				}
-			} else {
-				// only add the search filter
-				query.addFilter(getSearchFilter(searchText));
-			}
+			// add the search filter
+			query.addFilter(getSearchFilter(searchText));
 		}
 		// logger.debug("Search query: " + query);
 		return search(query);
@@ -857,7 +815,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				// sorts may also trigger a distinct select
 				List<Order> orders = new ArrayList<>();
-				if (query.getSort() != null && query.getSort().size() > 0 && !query.countOnly()) {
+				if (query.getSort() != null && !query.countOnly()) {
 					for (Sort sort : query.getSort()) {
 						if (sort.getDir() != null && sort.getDir().equals(Direction.asc)) {
 							orders.add(cb.asc(retrieveProperty(root, sort.getField(), joinMap, fetchJoin)));
@@ -890,7 +848,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				if (distinctNeeded) {
-					q.distinct(true);
+					if (selectIdOnly) {
+						// cannot use distinct otherwise we must have the sort clause in the select clause
+					} else {
+						q.distinct(true);
+					}
 				}
 
 				if (predicate != null) {
@@ -950,8 +912,10 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				}
 
 				if (data.size() > 5000) {
-					logger.warn("Got a request that returns " + data.size() + " resources [" + getTypeOfE().getSimpleName() + "] from[" + getUser().getUserName() + "]. Query: "
-							+ new Gson().toJson(query));
+					if (logLongRequest) {
+						logger.warn("Got a request that returns " + data.size() + " resources [" + getTypeOfE().getSimpleName() + "] from[" + getUser().getUserName() + "]. Query: "
+								+ new Gson().toJson(query));
+					}
 				}
 
 				Date endDate = new Date();
@@ -2875,17 +2839,21 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	public String getLink(E e, Map<String, String> params) throws Exception {
-		String keyField = getKeyField();
-		Object keyValue = BeanUtils.getProperty(e, keyField);
 		String url = SystemEnv.INSTANCE.getDefaultProperties().getProperty("base_url");
-		if (params != null) {
-			for (String name : params.keySet()) {
-				String value = params.get(name);
-				url += (url.contains("?") ? "&" : "?") + (name + "=" + value);
+		String urlSuffix = "";
+		if (e != null) {
+			String keyField = getKeyField();
+			Object keyValue = BeanUtils.getProperty(e, keyField);
+			if (params != null) {
+				for (String name : params.keySet()) {
+					String value = params.get(name);
+					url += (url.contains("?") ? "&" : "?") + (name + "=" + value);
+				}
 			}
+			urlSuffix = "(" + getKeyField() + "-" + keyValue + ")(" + e.getId() + ")";
 		}
 
-		return url + "#" + getApplicationName() + "(" + getKeyField() + "-" + keyValue + ")(" + e.getId() + ")";
+		return url + "#" + getApplicationName() + urlSuffix;
 	}
 
 	/**

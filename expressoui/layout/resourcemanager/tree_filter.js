@@ -49,7 +49,7 @@ expresso.layout.resourcemanager.TreeFilter = expresso.layout.resourcemanager.Fil
      *
      */
     reloadGrid: function () {
-        this.resourceManager.sections.grid.loadResources();
+        this.resourceManager.reloadGrid();
     },
 
     /**

@@ -1636,6 +1636,14 @@ expresso.Common = (function () {
         return $deferred;
     };
 
+    var loadMainApplication = function (appName, options) {
+        if (expresso.Main) {
+            return expresso.Main.loadMainApplication(appName, options);
+        } else {
+            return siteNamespace.Main.loadMainApplication(appName, options);
+        }
+    };
+
     /**
      * Load the application at the path. Then instantiate the application and
      * pass the new instance to the callback
@@ -2420,6 +2428,7 @@ expresso.Common = (function () {
 
         // PUBLIC methods
         init: init,
+        loadMainApplication: loadMainApplication,
         loadApplication: loadApplication,
         loadResourceManager: loadResourceManager,
         addApplicationToHistory: addApplicationToHistory,

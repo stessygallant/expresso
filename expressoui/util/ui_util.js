@@ -1281,9 +1281,10 @@ expresso.util.UIUtil = (function () {
                         // perform only if done by a user (otherwise the object is already loaded by default)
                         // console.log("triggerChange: " + attName, ev);
                         if (ev.userTriggered) {
-                            //console.log("Setting [" + attName + "]", dataItem);
+                            // console.log("Setting [" + attName + "]", dataItem);
+                            // console.log("Setting [" + attName + "]", objectDefaultValue);
                             // do not allow to set null: it will crash the grid (ex: equipment.equipmentNo)
-                            resource.set(attName, dataItem || objectDefaultValue);
+                            resource.set(attName, $.extend(true, dataItem || {}, objectDefaultValue));
                         }
                     }
 

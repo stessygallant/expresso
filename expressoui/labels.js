@@ -237,7 +237,7 @@ $.extend(expresso.Labels, {
     expandHierarchical: "Ouvrir/fermer tous les niveaux",
 
     confirmTitle: "Confirmation",
-    confirmAction: "Êtes-vous sûr de vouloir exécuter l'action suivante: ",
+    confirmAction: "Êtes-vous sûr de vouloir: ",
     confirmDeleteElement: "Êtes-vous sûr de vouloir effacer cet élément?",
 
     deleteConfirmation: "Êtes-vous sûr de vouloir effacer l'enregistrement sélectionné ?",
@@ -319,6 +319,9 @@ $.extend(expresso.Labels, {
     validateButtonTitle: "Valider les enregistrements sélectionnés",
     reviseButtonLabel: "Réviser",
     reviseButtonTitle: "Réviser les enregistrements sélectionnés",
+
+    refreshButtonLabel: "Rafraîchir",
+    refreshButtonTitle: "Rafraîchir le contenu",
 
     uniqueValidation: "La valeur [{fieldValue}] doit être unique pour ce champ",
     userUnauthorized: "Utilisateur non autorisé à exécuter l'action sur la resource.",

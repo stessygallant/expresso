@@ -90,9 +90,19 @@ public class ActiveDirectoryLDAPClient {
 		}
 	}
 
-	public String getUsersOU() {
+	public String getDisabledUsersOU() {
 		Properties properties = SystemEnv.INSTANCE.getDefaultProperties();
-		return properties.getProperty("active_directory_users_ou");
+		return properties.getProperty("active_directory_disabled_users_ou");
+	}
+
+	public String[] getUsersOU() {
+		Properties properties = SystemEnv.INSTANCE.getDefaultProperties();
+		String ous = properties.getProperty("active_directory_users_ou");
+		if (ous == null) {
+			return new String[0];
+		} else {
+			return ous.split(";");
+		}
 	}
 
 	public String getBaseOU() {

@@ -99,6 +99,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     // reference to the context menu for column
     $columnMenu: undefined,
 
+    // for grid displayed
+    displayedAsMaster: undefined,
+
     /**
      * Set the reference to the jquery object for the DOM element
      * @param $domElement reference to the jquery object for the DOM element
@@ -142,6 +145,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
             var tooltip = $(this).attr("title");
             expresso.util.UIUtil.buildMessageWindow(tooltip);
         });
+
+        // for grid displayed
+        this.displayedAsMaster = this.resourceManager.siblingResourceManager || this.resourceManager.displayAsMaster
 
         // support auto refresh
         // only for main grid
@@ -434,6 +440,7 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         }
 
         // wait promises (wait for the subclass to terminate before getting ready)
+        // must be executed before the resourceManager.list() - it waits 10 ms also
         window.setTimeout(function () {
             _this.isReady().done(function () {
                 // verify if there is a favorite grid preferences to be loaded
@@ -1316,8 +1323,8 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
                                 // assume a promise
                                 $windowDeferred = result;
                             }
-                        } else if (expresso.Common.getScreenMode() != expresso.Common.SCREEN_MODES.DESKTOP &&
-                            !action.skipConfirmationOnMobile) {
+                        } else if ((expresso.Common.getScreenMode() != expresso.Common.SCREEN_MODES.DESKTOP &&
+                            !action.skipConfirmationOnMobile) || action.forceConfirmation) {
                             // display a confirmation window
                             $windowDeferred = expresso.util.UIUtil.buildYesNoWindow(_this.getLabel("confirmTitle"),
                                 _this.getLabel("confirmAction") +
@@ -1909,10 +1916,11 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
 
                 // if inside the gridPreferences, show it
                 var visible = ($.grep(columns, function (gridColumn) {
-                    return (gridColumn.field == column.field) && (!forceHidden || !gridColumn.hidden);
+                    return (gridColumn.field == column.field) &&
+                        (!forceHidden && !gridColumn.hidden);
                 }).length > 0);
 
-                //console.log("Column " + column.field + " hidden:" + column.hidden + " visible:" + visible + " index:" + index);
+                // console.log("Column " + column.field + " hidden:" + column.hidden + " visible:" + visible + " index:" + index);
                 if (column.hidden && visible) {
                     _this.kendoGrid.showColumn(column);
                 } else if (!column.hidden && !visible) {
