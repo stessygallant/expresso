@@ -54,10 +54,10 @@
                 _this._validateInputValue(value).done(function (validatedValue) {
                     if (validatedValue) {
                         value = validatedValue;
+                        _this._addInputValue(value);
+                        _this.$input.val(null);
+                        _this.$input.focus();
                     }
-                    _this._addInputValue(value);
-                    _this.$input.val(null);
-                    _this.$input.focus();
                 });
             });
 

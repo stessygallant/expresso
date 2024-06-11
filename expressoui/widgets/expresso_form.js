@@ -595,7 +595,7 @@
                 }
 
                 // wrap the input in a DIV
-                if (!$input.closest(".input-wrap").length) {
+                if (!$input.closest(".input-wrap").length && !$input.closest(".exp-input-wrap").length) {
                     $input.wrap("<div class='exp-input-wrap input-wrap " +
                         ($input.hasClass("exp-full-length") || $input.hasClass("full-length") || ($input.is("textarea") &&
                             !$input.hasClass("exp-half-length") && !$input.hasClass("half-length")) ? "exp-full-length" : "") +
