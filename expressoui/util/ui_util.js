@@ -1284,7 +1284,7 @@ expresso.util.UIUtil = (function () {
                             // console.log("Setting [" + attName + "]", dataItem);
                             // console.log("Setting [" + attName + "]", objectDefaultValue);
                             // do not allow to set null: it will crash the grid (ex: equipment.equipmentNo)
-                            resource.set(attName, $.extend(true, dataItem || {}, objectDefaultValue));
+                            resource.set(attName, $.extend(true, JSON.parse(JSON.stringify(dataItem || {})), objectDefaultValue));
                         }
                     }
 

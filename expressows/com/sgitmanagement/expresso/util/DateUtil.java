@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
@@ -505,6 +506,14 @@ public class DateUtil {
 			return d1;
 		}
 		return (d1.before(d2)) ? d1 : d2;
+	}
+
+	public static Date asDate(LocalDate localDate) {
+		return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+	}
+
+	public static Date asDate(LocalDateTime localDateTime) {
+		return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 	}
 
 	static public void main(String[] args) {

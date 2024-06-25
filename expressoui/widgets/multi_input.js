@@ -52,12 +52,10 @@
             this.$input.on("change", function () {
                 var value = $(this).val();
                 _this._validateInputValue(value).done(function (validatedValue) {
-                    if (validatedValue) {
-                        value = validatedValue;
-                        _this._addInputValue(value);
-                        _this.$input.val(null);
-                        _this.$input.focus();
-                    }
+                    _this._addInputValue(validatedValue);
+                }).always(function () {
+                    _this.$input.val(null);
+                    _this.$input.focus();
                 });
             });
 
@@ -82,13 +80,15 @@
             if (this.options.validate) {
                 var valid = this.options.validate(value);
                 if (valid === true || valid === undefined) {
-                    $deferred = $.Deferred().resolve();
+                    $deferred = $.Deferred().resolve(value);
+                } else if (valid === false) {
+                    $deferred = $.Deferred().reject();
                 } else {
                     expresso.util.UIUtil.showLoadingMask(this.$input.closest("div"), true);
                     $deferred = valid;
                 }
             } else {
-                $deferred = $.Deferred().resolve();
+                $deferred = $.Deferred().resolve(value);
             }
             $deferred.always(function () {
                 expresso.util.UIUtil.showLoadingMask(_this.$input.closest("div"), false);
