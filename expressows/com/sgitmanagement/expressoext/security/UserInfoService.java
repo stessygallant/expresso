@@ -12,7 +12,7 @@ public class UserInfoService extends BaseEntityService<UserInfo> {
 		if (v.getPassword() != null) {
 			// special case: only set the password to the user if it is the same user
 			if (v.getUserId() != null && v.getUserId().equals(getUser().getId())) {
-				getUser().setPassword(Util.hashPassword(v.getPassword()));
+				getUser().getExtended().setPassword(Util.hashPassword(v.getPassword()));
 			}
 
 			return v;

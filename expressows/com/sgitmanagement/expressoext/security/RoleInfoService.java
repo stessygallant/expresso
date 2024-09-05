@@ -13,9 +13,9 @@ public class RoleInfoService extends BaseEntityService<RoleInfo> {
 
 		// when a role info is created, we need to add the user info to each user with this role
 		UserService userService = newService(UserService.class, User.class);
-		List<User> users = userService.getUsersInRole(roleInfo.getRoleId());
-		for (User user : users) {
-			userService.addRoleInfo(user, roleInfo);
+		List<BasicUser> users = AuthorizationHelper.getUsersInRole(roleInfo.getRole().getPgmKey());
+		for (BasicUser user : users) {
+			userService.addRoleInfo(user.getExtended(), roleInfo);
 		}
 		return roleInfo;
 	}

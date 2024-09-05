@@ -1,18 +1,14 @@
 package com.sgitmanagement.expressoext.websocket;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-
 import jakarta.websocket.EncodeException;
 import jakarta.websocket.Encoder;
 import jakarta.websocket.EndpointConfig;
 
-public class WebSocketMessageEncoder implements Encoder.Text<JsonElement> {
-	private static Gson gson = new Gson();
+public class WebSocketMessageEncoder implements Encoder.Text<String> {
 
 	@Override
-	public String encode(JsonElement message) throws EncodeException {
-		return gson.toJson(message);
+	public String encode(String message) throws EncodeException {
+		return message;
 	}
 
 	@Override

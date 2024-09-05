@@ -33,6 +33,8 @@ import com.sgitmanagement.expresso.dto.Query.Sort;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.base.BaseEntityService;
+import com.sgitmanagement.expressoext.security.AuthorizationHelper;
+import com.sgitmanagement.expressoext.security.BasicUser;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
 import com.sgitmanagement.expressoext.util.MainUtil;
@@ -175,7 +177,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 	 * @return
 	 * @throws Exception
 	 */
-	private Collection<Notification> retrieveNotifications(User user) throws Exception {
+	private Collection<Notification> retrieveNotifications(BasicUser user) throws Exception {
 		logger.debug("Retrieving notifications for user [" + user.getUserName() + "]");
 		Date startTime = new Date();
 
@@ -187,11 +189,14 @@ public class NotificationService extends BaseEntityService<Notification> {
 		// for each provider, get the notifications
 		for (Class<? extends Notifiable> notifiableServiceClass : notifiableServiceClasses) {
 			final String notifiableServiceClassName = notifiableServiceClass.getName();
+			final String userName = user.getUserName();
 
 			taskExecutor.execute(new Runnable() {
 				@Override
 				public void run() {
 					// retrieve the notifications for the service
+					// must use the current user
+					BasicUser user = AuthorizationHelper.getUser(userName);
 					NotificationService notificationService = newServiceStatic(NotificationService.class, Notification.class, user);
 					try {
 
@@ -201,7 +206,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 
 						// do not use retrieveNotifications from the main thread, it needs to use the new session to
 						// avoid unsafe use of the session org.hibernate.AssertionFailure
-						notifications.addAll(notificationService.retrieveNotifications(notifiableService, user));
+						notifications.addAll(notificationService.retrieveNotifications(notifiableService, user.getExtended()));
 
 						// logger.debug("Got notification from [" + notifiableServiceClassName + "]");
 					} catch (Exception ex) {
@@ -373,7 +378,7 @@ public class NotificationService extends BaseEntityService<Notification> {
 		notification.setDeactivationDate(new Date());
 		update(notification);
 
-		notifiableService.performNotificationAction(getUser(), action, notification);
+		notifiableService.performNotificationAction(getUser().getExtended(), action, notification);
 		return notification;
 	}
 

@@ -16,7 +16,7 @@ public class AuthenticationResource extends BaseResource<AuthenticationService> 
 	}
 
 	public void login(MultivaluedMap<String, String> formParams) throws Exception {
-		getService().login(getUser());
+		getService().login(getUser().getExtended());
 	}
 
 	public void logout(MultivaluedMap<String, String> formParams) throws Exception {
@@ -33,5 +33,11 @@ public class AuthenticationResource extends BaseResource<AuthenticationService> 
 		String newPassword = formParams.getFirst("newPassword");
 		String securityTokenNo = formParams.getFirst("securityToken");
 		getService().setNewPassword(userName, newPassword, securityTokenNo);
+	}
+
+	public void transfer(MultivaluedMap<String, String> formParams) throws Exception {
+		String userName = formParams.getFirst("userName");
+		String securityTokenNo = formParams.getFirst("securityToken");
+		getService().switchUser(userName, securityTokenNo);
 	}
 }

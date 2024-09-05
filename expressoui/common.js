@@ -588,7 +588,16 @@ expresso.Common = (function () {
                     if (key) {
                         // get the label text
                         var labelText = getLabel(key, labels);
-                        $label.text(labelText);
+
+                        if ($label.children("span.label").length) {
+                            $label.children("span.label").text(labelText);
+                            var instructionsText = getLabel(key, labels, null, true, "instructions");
+                            if (instructionsText) {
+                                $label.children("span.instructions").text("(" + instructionsText + ")");
+                            }
+                        } else {
+                            $label.text(labelText);
+                        }
 
                         // if the label has a text for the title, use it
                         if (!$label.attr("title") && getLabel(key + "Help", labels, null, true)) {
@@ -1104,6 +1113,7 @@ expresso.Common = (function () {
         var progressFailure;
         var $deferredComplete = options.$retryDeferredComplete || $.Deferred();
         $deferredLogin.done(function () {
+            var startTime = new Date().getTime();
             var $deferred = $.ajax(url, {
                 method: method,
                 contentType: contentType,
@@ -1159,7 +1169,7 @@ expresso.Common = (function () {
 
             // remove the progress bar when request is completed (success or fail)
             $deferred
-                .done(function (result) {
+                .done(function (result, textStatus, jqXHR) {
                     expresso.util.UIUtil.showLoadingMask($domElement, false);
                     if (options.showProgress) {
                         if (progressFailure) {
@@ -1168,6 +1178,7 @@ expresso.Common = (function () {
                             kendoProgressBarText.text = expresso.Common.getLabel("requestSuccess", options.labels);
                         }
                     }
+                    detectSlowNetwork(jqXHR, options.labels);
                     $deferredComplete.resolve(result);
                 })
                 .fail(function (jqXHR) {
@@ -1194,7 +1205,6 @@ expresso.Common = (function () {
                     }
                 })
                 .always(function () {
-
                     // DO NOT hide the loading mask here otherwise the if the application
                     // call a sendRequest in the .done(), the second loading mask will not appear
 
@@ -1230,6 +1240,130 @@ expresso.Common = (function () {
 
         return $deferredComplete;
     };
+
+    /**
+     *
+     * @param jqXHR
+     * @param labels
+     */
+    var resourceTimingAPIInitialized = false;
+    var detectSlowNetwork = function (jqXHR, labels) {
+        try {
+            var MAX_CALLS = 50;
+            if (!resourceTimingAPIInitialized) {
+                resourceTimingAPIInitialized = true;
+                performance.setResourceTimingBufferSize(MAX_CALLS);
+            }
+            var calls = performance.getEntriesByType("resource");
+            var lastCall = calls[calls.length - 1];
+
+            // once the buffer is full, no more entries are allowed. We need to clear it
+            if (calls.length >= MAX_CALLS) {
+                performance.clearResourceTimings();
+            }
+
+            // {
+            //     "name": "http://localhost:63342/sherpa/applications/finance/accountitemmanager/form.js",
+            //     "entryType": "resource",
+            //     "startTime": 3493.7000000029802,
+            //     "duration": 2.7000000029802322,
+            //     "initiatorType": "xmlhttprequest",
+            //     "deliveryType": "",
+            //     "nextHopProtocol": "http/1.1",
+            //     "renderBlockingStatus": "non-blocking",
+            //     "workerStart": 0,
+            //     "redirectStart": 0,
+            //     "redirectEnd": 0,
+            //     "fetchStart": 3493.7000000029802,
+            //     "domainLookupStart": 3493.7000000029802,
+            //     "domainLookupEnd": 3493.7000000029802,
+            //     "connectStart": 3493.7000000029802,
+            //     "secureConnectionStart": 0,
+            //     "connectEnd": 3493.7000000029802,
+            //     "requestStart": 3495,
+            //     "responseStart": 3495.9000000059605,
+            //     "firstInterimResponseStart": 0,
+            //     "responseEnd": 3496.4000000059605,
+            //     "transferSize": 705,
+            //     "encodedBodySize": 405,
+            //     "decodedBodySize": 405,
+            //     "responseStatus": 200,
+            //     "serverTiming": []
+            // }
+            var serverDelay = getServerDelay(lastCall);
+            if (serverDelay > 0) {
+                var $div = $("body");
+                var waitingTime = Math.round(lastCall.responseEnd - lastCall.requestStart);
+                var networkDelay = Math.max(0, waitingTime - serverDelay);
+                // console.log("ServerDelay:  " + serverDelay + " NetworkDelay: " + networkDelay);
+                if (networkDelay > 500) {
+                    console.log("ServerDelay:  " + serverDelay + " NetworkDelay: " + networkDelay, lastCall);
+
+                    // create the notification
+                    var $notification = $div.find(".exp-slow-network-detected");
+                    if ($notification.length == 0) {
+                        $notification = $("<span class='exp-slow-network-detected'></span>").appendTo($div);
+                        $notification.kendoNotification({});
+                    }
+
+                    // display only one at a time
+                    var $notifications = $notification.data("kendoNotification").getNotifications();
+                    if (!$notifications.length) {
+                        if (expresso.Security.isUserInRole("SlowNetworkDetected.viewer")) {
+                            $notification.data("kendoNotification").show(
+                                expresso.Common.getLabel("slowNetworkDetected", labels, {time: networkDelay})
+                                , "warning");
+                        }
+                    }
+                }
+
+                // display average
+                var $latencyParent = $div.find(".main-footer p .version").parent();
+                var $avgLatency = $latencyParent.find(".latency");
+                if (!$avgLatency.length) {
+                    $avgLatency = $("<span class='latency'></span>").appendTo($latencyParent);
+                }
+                var count = 0;
+                var totalLatency = 0;
+                calls.forEach(function (call) {
+                    var serverDelay = getServerDelay(call);
+                    if (serverDelay) {
+                        var waitingTime = Math.round(call.responseEnd - call.requestStart);
+                        var networkDelay = Math.max(0, waitingTime - serverDelay);
+
+                        count++;
+                        totalLatency += networkDelay;
+                    }
+                });
+                var avgLatency = totalLatency / count;
+                $avgLatency.text(expresso.Common.getLabel("latency", labels, {latency: kendo.toString(avgLatency, "n0")}));
+                if (avgLatency > 100) {
+                    $avgLatency.addClass("red");
+                } else {
+                    $avgLatency.removeClass("red");
+                }
+            }
+        } catch (ex) {
+            // console.warn("Resource API not supported", ex);
+        }
+    };
+
+    /**
+     *
+     * @param call
+     * @returns {number}
+     */
+    var getServerDelay = function (call) {
+        var serverDelay = 0;
+        if (call && call.requestStart > 0 && call.serverTiming && call.serverTiming.length) {
+            for (var i = 0; i < call.serverTiming.length; i++) {
+                if (call.serverTiming[i].name == "Total") {
+                    serverDelay = call.serverTiming[i].duration;
+                }
+            }
+        }
+        return serverDelay;
+    }
 
     /**
      *
@@ -1422,13 +1556,13 @@ expresso.Common = (function () {
     };
 
     var clearApplicationCache = function () {
-        try {
-            Object.keys().forEach(function (key) {
+        Object.keys(applicationsCache).forEach(function (key) {
+            try {
                 applicationsCache[key].destroy();
-            });
-        } catch (err) {
-            // ignore
-        }
+            } catch (err) {
+                // ignore
+            }
+        });
         applicationsCache = {};
     };
 
@@ -1436,17 +1570,20 @@ expresso.Common = (function () {
      *
      * @param appName
      * @param [resource] {id:?} if you want to open a resource. No id means a new resource
-     * @param [cacheApplication] by default, false. If true, application will not be destroyed
+     * @param [cacheApplication] by default, true. If true, application will not be destroyed
+     * @param options options for the resource manager
      * @returns {{}|jQuery}
      */
-    var displayForm = function (appName, resource, cacheApplication) {
+    var displayForm = function (appName, resource, cacheApplication, options) {
         var $deferred = $.Deferred();
         var $applicationDeferred = $.Deferred();
+
+        cacheApplication = (cacheApplication !== false);
 
         if (cacheApplication && applicationsCache[appName]) {
             $applicationDeferred.resolve(applicationsCache[appName]);
         } else {
-            loadApplication(appName).done(function (resourceManager) {
+            loadApplication(appName, options).done(function (resourceManager) {
                 if (resourceManager) {
                     if (cacheApplication) {
                         applicationsCache[appName] = resourceManager;
@@ -1512,6 +1649,7 @@ expresso.Common = (function () {
                 $div.css("height", "100%");
                 expresso.Common.loadApplication(appName, appOptions).done(function (rm) {
                     resourceManager = rm;
+                    resourceManager.displayAsMaster = true;
                     if (appOptions.labels) {
                         resourceManager.labels = $.extend({}, resourceManager.labels, appOptions.labels);
                     }
@@ -1957,10 +2095,20 @@ expresso.Common = (function () {
             }
         }
 
+        if (shortLabel) {
+            if (typeof label == "string") {
+                label = {label: label};
+            }
+        }
+
         if (label && typeof label !== "string") {
             // label could be an object with a short and a long label
-            if (label.shortLabel) {
-                label = (shortLabel ? label.shortLabel : label.label);
+            if (shortLabel === true) {
+                label = (label.shortLabel || label.label);
+            } else if (shortLabel == "instructions") {
+                label = label.instructions || null;
+            } else {
+                label = label.label;
             }
         }
 
@@ -2325,7 +2473,9 @@ expresso.Common = (function () {
         // only for production environment
         if (expresso.Common.isProduction()) {
             // if the main application if fullScreen, message cannot be displayed
-            if (!doNotDisplayAjaxErrorMessageFlag && !expresso.util.Util.getUrlParameter("nomenu")) {
+            if (!doNotDisplayAjaxErrorMessageFlag
+                && !expresso.util.Util.getUrlParameter("noMenu")
+                && !expresso.util.Util.getUrlParameter("fullScreen")) {
                 // get the configuration file on the server
                 var currentVersion = expresso.Common.getSiteNamespace().config.Configurations.version;
                 $.ajax({

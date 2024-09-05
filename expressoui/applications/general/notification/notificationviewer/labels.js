@@ -7,17 +7,13 @@ expresso.applications.general.notification.notificationviewer.Labels = {
 
     userTaskStartButtonLabel: "Démarrer",
     userTaskStartButtonTitle: "Démarrer la tâche",
-    // userTaskTerminateButtonLabel: "Compléter",
-    // userTaskTerminateButtonTitle: "Compléter la tâche",
-    // userTaskCloseButtonLabel: "Fermer",
-    // userTaskCloseButtonTitle: "Fermer la tâche",
-
 
     NEW: "Nouveau/Nouvelle",
     APPROVED: "Approuvé(e)",
     INPROGRESS: "En cours",
     COMPLETED: "Complété(e)",
     ACCEPTED: "Accepté(e)",
+    ESTIMATED: "Estimé(e)",
 
     _: ""
 };

@@ -51,7 +51,6 @@ expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
 
     // web socket to listen to update
     webSocket: undefined,
-    webSocketReconnectionDelay: undefined, // n seconds
 
 
     /**
@@ -99,14 +98,14 @@ expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
             _this.resizeContent();
         });
 
-        // handle the ESC (it will get out of the fullscreen mode)
-        $(document).on("keyup.app", function (e) {
-            if (e.keyCode == 27) { // escape key maps to keycode `27`
-                if (_this.fullScreen === true) {
-                    _this.setFullScreenMode(false);
-                }
-            }
-        });
+        // handle the ESC (it will get out of the fullScreen mode)
+        // $(document).on("keyup.app", function (e) {
+        //    if (e.keyCode == 27) { // escape key maps to keycode `27`
+        //        if (_this.fullScreen === true) {
+        //             _this.setFullScreenMode(false);
+        //        }
+        //    }
+        // });
 
         // add a button if the flag is defined
         if (this.fullScreen === true) {
@@ -276,7 +275,22 @@ expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
      * Must be implemented by the subclass
      */
     refreshView: function () {
-        alert("Application that supports fullscreen mode must implement this method");
+        alert("Application that supports full screen mode must implement this method");
+    },
+
+    /**
+     *
+     */
+    hideMenu: function () {
+        // hide sections
+        $(".main-header").hide();
+        $(".main-menu").hide();
+        $(".user-div").hide();
+        $(".main-footer").hide();
+        $(".main-div .main-title").hide();
+        $(".main-div").css("top", 0).css("left", 0).height("100%").width("100%");
+        $(".main-content").height("100%").width("100%");
+        $("body").addClass("exp-no-menu");
     },
 
     /**
@@ -285,12 +299,15 @@ expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
      */
     setFullScreenMode: function (fullScreen) {
         var _this = this;
+        var userTriggerred = fullScreen !== undefined;
+        // default is true
+        fullScreen = fullScreen === undefined ? true : fullScreen;
 
         if (!fullScreen && this.fullScreen) {
             this.fullScreen = false;
 
             // request full screen only if not in an iframe
-            if (window.self == window.top) {
+            if (window.self == window.top && userTriggerred) {
                 _this.exitFullScreen();
             }
 
@@ -299,18 +316,11 @@ expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
         } else if (fullScreen && !this.fullScreen) {
             this.fullScreen = true;
             // request full screen only if not in an iframe
-            if (window.self == window.top) {
+            if (window.self == window.top && userTriggerred) {
                 _this.requestFullScreen();
             }
 
-            // hide sections
-            $(".main-header").hide();
-            $(".main-menu").hide();
-            $(".user-div").hide();
-            $(".main-footer").hide();
-            $(".main-div .main-title").hide();
-            $(".main-div").css("top", 0).css("left", 0).height("100%").width("100%");
-            $(".main-content").height("100%").width("100%");
+            this.hideMenu();
 
             // make sure never to display an error message
             expresso.Common.doNotDisplayAjaxErrorMessage(true);
@@ -465,28 +475,42 @@ expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
      */
     connectWebSocket: function (resourceSecurityPath) {
         var _this = this;
-        if (!this.webSocketReconnectionDelay) {
-            this.webSocketReconnectionDelay = 20; // n seconds
-        }
+        var refreshWebSocketAfterSeconds = (expresso.Common.isProduction() ? 2 * 60 * 60 : 60);
+        var keepAliveEverySeconds = (expresso.Common.isProduction() ? 2 * 60 : 30);
+        var webSocketReconnectionSeconds = (expresso.Common.isProduction() ? 5 : 5);
+        var timeoutId = undefined;
+        var reopening = false;
 
-        try {
-
-            /**
-             * Utility method to keep the web socket opened
-             */
-            function webSocketKeepAlive() {
+        /**
+         * Utility method to keep the web socket opened
+         */
+        var webSocketKeepAlive = function () {
+            if (_this.webSocket && !reopening) {
                 try {
+                    if (timeoutId) {
+                        // if already a timer, clear it
+                        window.clearTimeout(timeoutId);
+                        timeoutId = null;
+                    }
+
                     // console.log("webSocketKeepAlive at" + new Date());
                     _this.webSocket.send(JSON.stringify({message: "keepAlive"}));
-                } catch (ex1) {
-                    // this will trigger a reconnect
-                    _this.webSocket.close();
-                }
-                window.setTimeout(function () {
-                    webSocketKeepAlive();
-                }, 30 * 1000);
-            }
 
+                    // add a timer for the next ping
+                    timeoutId = window.setTimeout(function () {
+                        timeoutId = null;
+                        webSocketKeepAlive();
+                    }, keepAliveEverySeconds * 1000);
+                } catch (ex1) {
+                    if (!reopening) {
+                        // this will trigger a reconnect
+                        _this.webSocket.close();
+                    }
+                }
+            }
+        };
+
+        try {
             var path = expresso.Common.getWsBasePathURL();
             path = path.substring("http".length); // keep the "s" is any
             this.webSocket = new WebSocket("ws" + path + "/websocket/" + resourceSecurityPath);
@@ -505,16 +529,28 @@ expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
             }
 
             this.webSocket.onclose = function () {
-                if (_this.webSocketReconnectionDelay) {
-                    console.warn("Web socket closed at " + new Date() + ". Reconnecting web socket in " + _this.webSocketReconnectionDelay + " seconds");
-                    window.setTimeout(function () {
-                        _this.connectWebSocket(resourceSecurityPath);
-                    }, _this.webSocketReconnectionDelay * 1000);
+                if (_this.webSocket) {
+                    if (!reopening) {
+                        reopening = true;
+                        console.log("Web socket closed at " + new Date() + ". Reconnecting web socket in " + webSocketReconnectionSeconds + " seconds");
+                        window.setTimeout(function () {
+                            _this.connectWebSocket(resourceSecurityPath);
+                            reopening = false;
+                        }, webSocketReconnectionSeconds * 1000);
+                    }
                 } else {
                     console.log("Web socket closed." + new Date());
                 }
             }
 
+            // every n hours, disconnect and reconnect the WebSocket (otherwise Apache will keep the connections in
+            // "Gracefully exiting" state forever and stalled 25 connections)
+            window.setTimeout(function () {
+                console.log("Autorefreshing websocket");
+                if (_this.webSocket) {
+                    _this.webSocket.close();
+                }
+            }, refreshWebSocketAfterSeconds * 1000);
 
         } catch (ex) {
             console.error("Cannot establish web socket connection: " + ex);
@@ -527,12 +563,12 @@ expresso.layout.applicationbase.ApplicationBase = kendo.Class.extend({
     closeWebSocket: function () {
         if (this.webSocket) {
             try {
-                this.webSocketReconnectionDelay = null;
-                this.webSocket.close();
+                var ws = this.webSocket;
+                this.webSocket = null;
+                ws.close(); // if this.webSocket != null, it will reconnect
             } catch (ex) {
                 // ignore
             }
-            this.webSocket = null;
         }
     },
 

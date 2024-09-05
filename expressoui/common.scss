@@ -919,28 +919,27 @@ label input + span {
 
 .exp-toolbar {
     border: 0;
-    margin: 0 0 0.5em 0;
-    padding: 0.2em 0.5em 0.5em 0.5em;
+    margin: 0 0 0.4em 0;
+    padding: 0.2em 0.5em 0.4em 0.5em;
     background-color: transparent;
     width: calc(100% - 1em);
     border-bottom: 0.1em solid $themeBorderColor;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.2em 1.5em;
+    align-items: center;
 
     & > * {
-        display: inline-block;
-        margin: 0.4em 2em 0 0 !important;
-        vertical-align: middle;
+        background: transparent;
     }
 
-    & > button {
-        margin-right: 0.5em !important;
-
-        &.exp-button {
-            padding-top: 0.4em;
-        }
+    .exp-button {
+        padding: 0 1.9em 0 1.9em;
     }
 
     .k-datepicker {
-        width: 8.5em;
+        width: 8em;
     }
 
     .exp-input-wrap, .input-wrap {
@@ -955,6 +954,25 @@ label input + span {
             &:after {
                 content: ":"
             }
+        }
+    }
+}
+
+.exp-no-menu {
+    .exp-toolbar {
+        background: $themeBackground;
+
+        .exp-button {
+            background-color: white;
+
+            &:not([disabled]):hover {
+                border: 0.1em solid $themeIconColor;
+                background-color: white;
+            }
+        }
+
+        .exp-label, label, .title {
+            color: white;
         }
     }
 }
@@ -1148,6 +1166,16 @@ label input + span {
     }
 }
 
+// issue with kendo.common.css
+.k-textbox .k-icon {
+    // top: 50%;
+    // margin: -8px 0 0;
+    // position: absolute;
+    position: relative;
+    top: 0.1em;
+    margin: 0;
+}
+
 // do not display the KendoUI loading mask as Expresso will display one
 .exp-loading {
     .k-loading-mask {
@@ -1179,6 +1207,10 @@ label input + span {
     .fa {
         margin-right: 0.2em;
     }
+}
+
+.exp-slow-network-detected {
+
 }
 
 /*

@@ -605,7 +605,7 @@
                 // add a label if not defined
                 var $label = $input.parent().children("label");
                 if (!$label.length && !$input.parent().hasClass("exp-no-label")) {
-                    $label = $("<label></label>");
+                    $label = $("<label><span class='label'></span><span class='instructions'></span></label>");
                     $input.before($label);
                 }
 

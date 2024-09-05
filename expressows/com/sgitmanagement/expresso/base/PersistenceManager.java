@@ -1,6 +1,7 @@
 package com.sgitmanagement.expresso.base;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -8,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sgitmanagement.expresso.util.ServerTimingUtil;
 import com.sgitmanagement.expresso.util.SystemEnv;
 
 import jakarta.persistence.EntityManager;
@@ -59,6 +61,8 @@ public class PersistenceManager implements AutoCloseable {
 	 * @return
 	 */
 	public EntityManager getEntityManager(String persistenceUnitName, boolean startTransaction) {
+		ServerTimingUtil.startTiming("dbConnection");
+		Date startTime = new Date();
 		String persistenceUnit = "persistence_unit" + (persistenceUnitName == null ? "" : "_" + persistenceUnitName);
 		EntityManagerFactory entityManagerFactory = emFactoryMap.get(persistenceUnit);
 		if (entityManagerFactory == null) {
@@ -98,6 +102,13 @@ public class PersistenceManager implements AutoCloseable {
 			startTransaction(entityManager);
 		}
 
+		Date endTime = new Date();
+		long delay = endTime.getTime() - startTime.getTime();
+		if (delay > 100) {
+			logger.warn("Long delay to get the database connection[" + persistenceUnitName + "]: " + delay);
+		}
+
+		ServerTimingUtil.endTiming();
 		return entityManager;
 	}
 
@@ -171,9 +182,11 @@ public class PersistenceManager implements AutoCloseable {
 	 */
 	public void commit() throws Exception {
 		if (entityManagersThreadLocal.get() != null) {
+			ServerTimingUtil.startTiming("dbCommit");
 			for (EntityManager entityManager : entityManagersThreadLocal.get().values()) {
 				commit(entityManager);
 			}
+			ServerTimingUtil.endTiming();
 		}
 	}
 

@@ -65,8 +65,8 @@ public class DocumentService extends BaseFileService<Document> {
 
 	private void verifyUserPrivileges(Document document, String action) throws ForbiddenException {
 		if (document == null) {
-			logger.error("Cannot validate document privileges: document is null");
-			throw new ForbiddenException();
+			// logger.error("Cannot validate document privileges: document is null");
+			// throw new ForbiddenException();
 		} else {
 			try {
 				// verify if the user can perform this action on this resource
@@ -75,7 +75,7 @@ public class DocumentService extends BaseFileService<Document> {
 			} catch (ForbiddenException ex) {
 				throw ex;
 			} catch (Exception ex) {
-				logger.error("Cannot validate document privileges", ex);
+				logger.warn("Cannot validate document privileges: " + document.getId() + " for user [" + getUser().getUserName() + "]: " + ex);
 				throw new ForbiddenException();
 			}
 		}

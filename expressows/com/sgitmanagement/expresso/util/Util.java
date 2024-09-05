@@ -1443,6 +1443,9 @@ public class Util {
 
 		// Close the audit trail
 		AbstractAuditTrailInterceptor.close();
+
+		// clear the ServerTiming
+		ServerTimingUtil.clear();
 	}
 
 	static public void main(String[] args) throws Exception {

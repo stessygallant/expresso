@@ -21,9 +21,9 @@ import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sgitmanagement.expresso.base.IUser;
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.util.SystemEnv;
-import com.sgitmanagement.expressoext.security.User;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -49,7 +49,7 @@ public enum ReportUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	public File executeReport(User user, String reportName, String fileName, Map<String, String> formParams) throws Exception {
+	public File executeReport(IUser user, String reportName, String fileName, Map<String, String> formParams) throws Exception {
 		// create a temp file
 		File file = File.createTempFile(fileName + ".", "." + getFormat(formParams));
 		// System.out.println("Temp file [" + file.getAbsolutePath() + "]");
@@ -58,7 +58,7 @@ public enum ReportUtil {
 		return file;
 	}
 
-	public void executeReport(User user, String reportName, String fileName, Map<String, String> reportParams, HttpServletResponse httpServletResponse, OutputStream os) {
+	public void executeReport(IUser user, String reportName, String fileName, Map<String, String> reportParams, HttpServletResponse httpServletResponse, OutputStream os) {
 		try {
 			if (reportName == null) {
 				reportName = reportParams.get("reportName");

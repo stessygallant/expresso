@@ -24,6 +24,7 @@ import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.modif.RequiredApproval;
 import com.sgitmanagement.expressoext.modif.RequiredApprovalService;
 import com.sgitmanagement.expressoext.security.AuthorizationHelper;
+import com.sgitmanagement.expressoext.security.BasicUser;
 import com.sgitmanagement.expressoext.security.Resource;
 import com.sgitmanagement.expressoext.security.ResourceService;
 import com.sgitmanagement.expressoext.security.User;
@@ -35,7 +36,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.servlet.http.HttpServletResponse;
 
-public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityService<E, User, Integer> {
+public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityService<E, BasicUser, Integer> {
 	@Override
 	final public boolean isUserInRole(String rolePgmKey) {
 		return AuthorizationHelper.isUserInRole(getUser(), rolePgmKey);
@@ -70,22 +71,18 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 		}
 	}
 
-	final public List<User> getUsersInRole(String rolePgmKey) {
-		return AuthorizationHelper.getUsersInRole(rolePgmKey);
-	}
-
 	@Override
-	final public User getUser(String userName) {
+	final public BasicUser getUser(String userName) {
 		return AuthorizationHelper.getUser(userName);
 	}
 
 	@Override
-	final public User getSystemUser() {
+	final public BasicUser getSystemUser() {
 		return AuthorizationHelper.getSystemUser();
 	}
 
 	@Override
-	final public User getPublicUser() {
+	final public BasicUser getPublicUser() {
 		return AuthorizationHelper.getPublicUser();
 	}
 
@@ -244,7 +241,7 @@ public class BaseEntityService<E extends BaseEntity> extends AbstractBaseEntityS
 	}
 
 	public Set<String> getEmailsForRole(String rolePgmKey) throws Exception {
-		return AuthorizationHelper.getUsersInRole(rolePgmKey).stream().map(User::getEmail).collect(Collectors.toSet());
+		return AuthorizationHelper.getUsersInRole(rolePgmKey).stream().map(BasicUser::getEmail).collect(Collectors.toSet());
 	}
 
 	public void refreshWebSocket() throws Exception {

@@ -1,9 +1,4 @@
-﻿var expresso = expresso || {};
-expresso.applications = expresso.applications || {};
-expresso.applications.security = expresso.applications.security || {};
-expresso.applications.security.rolemanager = expresso.applications.security.rolemanager || {};
-
-expresso.applications.security.rolemanager.RoleManager = expresso.layout.resourcemanager.ResourceManager.extend({
+﻿expresso.applications.security.rolemanager.RoleManager = expresso.layout.resourcemanager.ResourceManager.extend({
 
     ROLE_USER_ID: 1,
 
@@ -97,6 +92,17 @@ expresso.applications.security.rolemanager.RoleManager = expresso.layout.resourc
         };
 
         expresso.layout.resourcemanager.ResourceManager.fn.init.call(this, applicationPath, "role", fields);
+    },
+
+    // @override
+    getAvailableActions: function () {
+        return [
+            {
+                name: "reset",
+                icon: "fa-unlock-alt",
+                resourceCollectionAction: true
+            }
+        ];
     }
 });
                                                                                                                                                                                                                                                                                                                                                                   

@@ -31,15 +31,23 @@ public class UsersResource extends BaseEntitiesResource<User, UserService, UserR
 	@Path("me")
 	@Produces(MediaType.APPLICATION_JSON)
 	public User getMyUser() {
-		return getUser();
+		return getUser().getExtended();
 	}
 
 	@GET
 	@Path("inrole")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<User> getUsersInRole(@QueryParam("roleId") int roleId) throws Exception {
-		return getService().getUsersInRole(roleId);
+	public List<BasicUser> getUsersInRole(@QueryParam("roleId") int roleId) throws Exception {
+		return AuthorizationHelper.getUsersInRole(getService().newService(RoleService.class, Role.class).get(roleId).getPgmKey());
 	}
+
+    // DO NOT DO IT (it takes precedence over {id}
+	// @GET
+	// @Path("{userName}")
+	// @Produces(MediaType.APPLICATION_JSON)
+	// public User getUserByUserName(@PathParam("userName") String userName) throws Exception {
+	// return getService().getByKeyField(userName);
+	// }
 
 	static public class UserResource extends BaseDeactivableEntityResource<User, UserService> {
 		public UserResource(HttpServletRequest request, HttpServletResponse response) {
@@ -85,7 +93,7 @@ public class UsersResource extends BaseEntitiesResource<User, UserService, UserR
 		@GET
 		@Path("privilege")
 		@Produces(MediaType.APPLICATION_JSON)
-		public List<Privilege> getPrivileges() throws Exception {
+		public Set<Privilege> getPrivileges() throws Exception {
 			if (getUser().getId().equals(getId()) || getService().isUserAdmin() || getService().isUserInRole("UserManager.user")) {
 				return getService().getPrivileges(getId());
 			} else {

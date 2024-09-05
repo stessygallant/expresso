@@ -7,11 +7,11 @@ import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.base.ExternalEntity;
 import com.sgitmanagement.expresso.util.ProgressSender;
-import com.sgitmanagement.expressoext.security.User;
+import com.sgitmanagement.expressoext.security.BasicUser;
 
 import jakarta.persistence.EntityManager;
 
-public class BaseExternalInterface<E extends BaseUpdatableEntity & ExternalEntity<Integer>, S extends BaseExternalEntityService<E>> implements ExternalInterface<E, S, User, Integer> {
+public class BaseExternalInterface<E extends BaseUpdatableEntity & ExternalEntity<Integer>, S extends BaseExternalEntityService<E>> implements ExternalInterface<E, S, BasicUser, Integer> {
 	final static protected Logger logger = LoggerFactory.getLogger(BaseExternalInterface.class);
 
 	private EntityManager entityManager;

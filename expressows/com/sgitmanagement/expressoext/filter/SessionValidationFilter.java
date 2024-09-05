@@ -1,16 +1,23 @@
 package com.sgitmanagement.expressoext.filter;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sgitmanagement.expresso.base.IUser;
 import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.exception.InvalidCredentialsException;
-import com.sgitmanagement.expresso.util.SystemEnv;
+import com.sgitmanagement.expresso.util.ServerTimingUtil;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.security.AuthorizationHelper;
-import com.sgitmanagement.expressoext.security.User;
+import com.sgitmanagement.expressoext.security.BasicUser;
+import com.sgitmanagement.expressoext.security.BlockedIPAddress;
+import com.sgitmanagement.expressoext.security.BlockedIPAddressService;
 
 import jakarta.persistence.NoResultException;
 import jakarta.servlet.Filter;
@@ -29,6 +36,8 @@ public class SessionValidationFilter implements Filter {
 	final private static String HEADER_TOKEN = "X-Session-Token";
 	final private static String HEADER_IMPERSONATE = "X-Impersonate-User";
 	private AutoCreatableUser autoCreatableUser = null;
+
+	private static Set<String> blockedIpAddresses = null;
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
@@ -55,32 +64,28 @@ public class SessionValidationFilter implements Filter {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
 
+		ServerTimingUtil.startTiming("SessionValidationFilter");
+
 		// if the user is not logged yet, session is null
 		HttpSession session = request.getSession(false);
 
 		if (session == null) {
 			// Session is null. Only public call will go through this
-			chain.doFilter(request, response);
+			if (isIPAddressValid(session, request, response)) {
+				chain.doFilter(request, response);
+			}
 		} else {
 			// user is authenticated
-			User user;
+			IUser user;
 			if (session.getAttribute("userName") != null) {
 				user = getUser(session, request, response);
 
 				// store the user in the request
 				UserManager.getInstance().setUser(user);
 
-				// validate the session (NOT for PROD for now)
-				if (user != null && (SystemEnv.INSTANCE.isInProduction() || isSessionValid(session, request, response, user))) {
+				// validate the session
+				if (isSessionValid(session, request, response, user) && isIPAddressValid(session, request, response)) {
 					chain.doFilter(request, response);
-				} else {
-					try {
-						session.invalidate();
-						request.logout();
-					} catch (Exception ex) {
-						// ignore
-					}
-					response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalidSession");
 				}
 
 			} else {
@@ -88,21 +93,19 @@ public class SessionValidationFilter implements Filter {
 				user = storeUserInfoInSession(session, request, response);
 
 				if (user == null) {
-					try {
-						session.invalidate();
-					} catch (Exception ex) {
-						// ignore
-					}
-					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+					invalidateSession(session, request, response, HttpServletResponse.SC_UNAUTHORIZED);
 				} else {
-					// store the user in the request
-					UserManager.getInstance().setUser(user);
+					if (isIPAddressValid(session, request, response)) {
+						// store the user in the request
+						UserManager.getInstance().setUser(user);
 
-					// continue
-					chain.doFilter(request, response);
+						// continue
+						chain.doFilter(request, response);
+					}
 				}
 			}
 		}
+		ServerTimingUtil.endTiming();
 	}
 
 	/**
@@ -115,15 +118,16 @@ public class SessionValidationFilter implements Filter {
 	 * @throws Exception
 	 * @throws InvalidCredentialsException
 	 */
-	private User getUser(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
-		User user = null;
+	private IUser getUser(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
+		ServerTimingUtil.startTiming("getUser");
+		IUser user = null;
 
 		try {
 			// get the user from the session
 			user = AuthorizationHelper.getUser((String) session.getAttribute("userName"));
 
 			// if a user is impersonating another user. Only admin user can do it
-			User impersonatedUser = null;
+			IUser impersonatedUser = null;
 			if (AuthorizationHelper.isUserAdmin(user) && request.getHeader(HEADER_IMPERSONATE) != null) {
 				String impersonatedUserName = request.getHeader(HEADER_IMPERSONATE);
 				try {
@@ -137,7 +141,7 @@ public class SessionValidationFilter implements Filter {
 		} catch (Exception ex) {
 			logger.warn("Error getting user: " + ex);
 		}
-
+		ServerTimingUtil.endTiming();
 		return user;
 	}
 
@@ -148,8 +152,8 @@ public class SessionValidationFilter implements Filter {
 	 * @param response
 	 * @throws Exception
 	 */
-	private User storeUserInfoInSession(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
-		User user = null;
+	private BasicUser storeUserInfoInSession(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
+		BasicUser user = null;
 
 		try {
 			// first retrieve the user
@@ -168,7 +172,8 @@ public class SessionValidationFilter implements Filter {
 
 					if (autoCreatableUser != null) {
 						try {
-							user = autoCreatableUser.create(authName);
+							autoCreatableUser.create(authName);
+							user = AuthorizationHelper.getUser(authName);
 						} catch (Exception ex1) {
 							logger.warn("Cannot create user with userName [" + authName + "]: " + ex1);
 						}
@@ -203,8 +208,11 @@ public class SessionValidationFilter implements Filter {
 	 * @param user
 	 * @return
 	 */
-	private boolean isSessionValid(HttpSession session, HttpServletRequest request, HttpServletResponse response, User user) {
-		boolean valid = true;
+	private boolean isSessionValid(HttpSession session, HttpServletRequest request, HttpServletResponse response, IUser user) {
+		if (user == null) {
+			invalidateSession(session, request, response, HttpServletResponse.SC_UNAUTHORIZED);
+			return false;
+		}
 
 		// verify if the info in the session is the same
 		// String userName = (String) session.getAttribute("userName");
@@ -216,7 +224,7 @@ public class SessionValidationFilter implements Filter {
 			if (request.getMethod().equals("GET")) {
 				// for GET method, no need for the token (we cannot set the HTTP header from a link)
 				requestToken = sessionToken;
-			} else if (request.getContentType().toLowerCase().indexOf("multipart") != -1) {
+			} else if (request.getContentType() != null && request.getContentType().toLowerCase().indexOf("multipart") != -1) {
 				// multipart request contains the token inside the body
 				// it will be validated by the multipart parser
 				requestToken = sessionToken;
@@ -228,10 +236,67 @@ public class SessionValidationFilter implements Filter {
 			}
 		}
 
-		if (!Util.equals(Util.getIpAddress(request), ipAddress) || !Util.equals(sessionToken, requestToken)) {
-			// valid = false;
-			logger.warn("Possible hacking detected [" + user.getUserName() + "] [" + ipAddress + " -> " + Util.getIpAddress(request) + "] [" + sessionToken + " -> " + requestToken + "]");
+		String actualIPAddress = Util.getIpAddress(request);
+		if (!Util.equals(actualIPAddress, ipAddress) || !Util.equals(sessionToken, requestToken)) {
+			logger.debug("Possible hacking detected [" + user.getUserName() + "] [" + ipAddress + " -> " + actualIPAddress + "] [" + sessionToken + " -> " + requestToken + "]");
+			// invalidSession(session, request, response,HttpServletResponse.SC_UNAUTHORIZED);
+			// return false;
+		}
+		return true;
+	}
+
+	private boolean isIPAddressValid(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
+		boolean valid = true;
+		try {
+			String ipAddress = Util.getIpAddress(request);
+			if (Util.isNotNull(ipAddress)) {
+				if (blockedIpAddresses == null) {
+					synchronized (this.getClass()) {
+						if (blockedIpAddresses == null) {
+							blockedIpAddresses = new HashSet<>();
+							BlockedIPAddressService blockedIPAddressService = BlockedIPAddressService.newServiceStatic(BlockedIPAddressService.class, BlockedIPAddress.class, false);
+							List<BlockedIPAddress> blockedIPAddresses = blockedIPAddressService.list(true);
+							blockedIpAddresses.addAll(blockedIPAddresses.stream().map(BlockedIPAddress::getIpAddress).collect(Collectors.toSet()));
+						}
+					}
+				}
+
+				// full IP address
+				if (blockedIpAddresses.contains(ipAddress)) {
+					valid = false;
+				}
+
+				// subnet
+				if (ipAddress.indexOf('.') != -1) {
+					String subnet = ipAddress.substring(0, ipAddress.lastIndexOf('.')) + ".*";
+					if (blockedIpAddresses.contains(subnet)) {
+						valid = false;
+					}
+				}
+			}
+		} catch (Exception ex) {
+			logger.warn("Cannot validate IP Address: " + ex);
 		}
 		return valid;
+	}
+
+	private void invalidateSession(HttpSession session, HttpServletRequest request, HttpServletResponse response, int httpCode) {
+		try {
+			request.logout();
+		} catch (Exception ex) {
+			// ignore
+		}
+		try {
+			if (session != null) {
+				session.invalidate();
+			}
+		} catch (Exception ex) {
+			// ignore
+		}
+		try {
+			response.sendError(httpCode, "");
+		} catch (Exception ex) {
+			// ignore
+		}
 	}
 }

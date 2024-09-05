@@ -56,6 +56,7 @@ import com.sgitmanagement.expresso.util.DateUtil;
 import com.sgitmanagement.expresso.util.DeserializeOnlyStringAdapter;
 import com.sgitmanagement.expresso.util.FieldRestrictionUtil;
 import com.sgitmanagement.expresso.util.ProgressSender;
+import com.sgitmanagement.expresso.util.ServerTimingUtil;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expresso.util.ZipUtil;
@@ -122,6 +123,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	private String[] keyFields = null;
 	private Boolean parentUpdatable = null;
 	private static final Map<Query, Object> creationQueryMap = Collections.synchronizedMap(new HashMap<>());
+	private static final Map<String, Map<String, AppClassField>> appClassFieldMaps = Collections.synchronizedMap(new HashMap<>());
 
 	private Class<E> typeOfE;
 
@@ -339,7 +341,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				// update last modified date
 				if (updateLastModified) {
 					if (!NotVersionable.class.isAssignableFrom(getTypeOfE())) {
-						if (!Util.equals(updatable.getLastModifiedDate(), updatableNew.getLastModifiedDate())) {
+						if (updatableNew.getLastModifiedDate() != null && !Util.equals(updatable.getLastModifiedDate(), updatableNew.getLastModifiedDate())) {
 							logger.info("WrongVersionException: " + getTypeOfE().getSimpleName() + ":" + e.getId() + ":" + updatable.getLastModifiedDate() + ":" + updatableNew.getLastModifiedDate()
 									+ ":" + updatable.getLastModifiedUserId());
 							throw new WrongVersionException();
@@ -781,6 +783,8 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	@SuppressWarnings("unchecked")
 	private <T> List<T> list(Query query, Class<T> selectClauseType) throws Exception {
 		try {
+			ServerTimingUtil.startTiming("dbQuery");
+
 			query = verifyQuery(query);
 			// logger.debug("List query: " + new Gson().toJson(query));
 
@@ -933,6 +937,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 				}
 
+				ServerTimingUtil.endTiming();
 				return data;
 			}
 		} catch (Exception ex) {
@@ -2165,10 +2170,26 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 				predicate = cb.isNull(path);
 				break;
 
+			case inIds:
+			case in:
+			case trimIn:
+			case notIn:
+				// empty list. Always false
+				predicate = cb.or();
+				break;
+
+			case lte:
+			case gte:
+			case lt:
+			case gt:
+				// Always false
+				predicate = cb.or();
+				break;
+
 			default:
-				// throw new Exception("Operator [" + filter.getOperator() + "] not supported
-				// for null value");
-				predicate = null;
+				// throw new Exception("Operator [" + filter.getOperator() + "] not supported for null value");
+				// logger.warn("Operator [" + filter.getOperator() + "] not supported for null value");
+				predicate = cb.or();
 				break;
 			}
 		} else {
@@ -2176,6 +2197,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			// need to get the type of the field
 			String type = path.getJavaType().getSimpleName();
 			String valueType = filter.getValue() != null ? filter.getValue().getClass().getSimpleName() : null;
+			Class valueClass = filter.getValue() != null ? filter.getValue().getClass() : null;
 
 			// logger.debug("Field: " + path.getAlias() + " Type: " + type + " ValueType: "
 			// + valueType);
@@ -2273,7 +2295,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 
 					// if integerValues is empty -> no result
-					predicate = cb.or(getInPredicate(inMaxValues, integerValues, path, cb, false).toArray(new Predicate[0]));
+					predicate = getInPredicate(inMaxValues, integerValues, path, cb, false);
 					break;
 
 				case in:
@@ -2286,7 +2308,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 					}
 
 					// if integerValues is empty -> no result
-					predicate = cb.or(getInPredicate(inMaxValues, integerValues, path, cb, false).toArray(new Predicate[0]));
+					predicate = getInPredicate(inMaxValues, integerValues, path, cb, false);
 					break;
 
 				case notIn:
@@ -2298,7 +2320,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						}
 					}
 
-					predicate = cb.not(cb.or(getInPredicate(inMaxValues, integerValues, path, cb, false).toArray(new Predicate[0])));
+					predicate = cb.not(getInPredicate(inMaxValues, integerValues, path, cb, false));
 					break;
 
 				default:
@@ -2571,14 +2593,15 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 				if (valueType.equals("String") && (filter.getOperator().equals(Operator.eq) || filter.getOperator().equals(Operator.neq) || !caseSensitive)) {
 					stringValue = (String) filter.getValue();
-				} else if (valueType.equals("ArrayList")) {
+				} else if (valueClass != null && List.class.isAssignableFrom(valueClass)) {
 					stringValues = (List<String>) filter.getValue();
-				} else if (valueType.equals("HashSet")) {
+				} else if (valueClass != null && Set.class.isAssignableFrom(valueClass)) {
 					stringValues = new ArrayList<>((Set<String>) filter.getValue());
 				} else if (valueType.equals("String[]")) {
 					stringValues = Arrays.asList((String[]) filter.getValue());
 				} else { // valueType.equals("String")
 					// compare lowercase only
+					// CAUTION: this will not use the indexes
 					stringValue = ((String) filter.getValue()).toLowerCase();
 					stringPath = cb.lower(path);
 				}
@@ -2625,15 +2648,14 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						predicate = cb.like(stringPath, "%" + stringValue.trim() + "%");
 					}
 					break;
-
 				case trimCompare:
+					// CAUTION: this will not use the indexes
 					predicate = cb.equal(cb.trim(stringPath), stringValue.trim());
 					break;
-
 				case neqTrimCompare:
+					// CAUTION: this will not use the indexes
 					predicate = cb.notEqual(cb.trim(stringPath), stringValue.trim());
 					break;
-
 				case in:
 					distinctNeeded = true;
 					if (stringValues == null) {
@@ -2642,7 +2664,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							stringValues.add(stringValue);
 						}
 					}
-					predicate = cb.or(getInPredicate(inMaxValues, stringValues, path, cb, false).toArray(new Predicate[0]));
+					predicate = getInPredicate(inMaxValues, stringValues, path, cb, false);
 					break;
 				case notIn:
 					distinctNeeded = true;
@@ -2652,7 +2674,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 							stringValues.add(stringValue);
 						}
 					}
-					predicate = cb.not(cb.or(getInPredicate(inMaxValues, stringValues, path, cb, false).toArray(new Predicate[0])));
+					predicate = cb.not(getInPredicate(inMaxValues, stringValues, path, cb, false));
 					break;
 				case trimIn:
 					distinctNeeded = true;
@@ -2663,7 +2685,7 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 						}
 					}
 					stringValues.replaceAll(String::trim);
-					predicate = cb.or(getInPredicate(inMaxValues, stringValues, path, cb, true).toArray(new Predicate[0]));
+					predicate = getInPredicate(inMaxValues, stringValues, path, cb, true);
 					break;
 				default:
 					throw new Exception("Operator [" + filter.getOperator() + "] not supported for type [" + type + "]");
@@ -2758,18 +2780,23 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private List<Predicate> getInPredicate(Integer inMaxValues, List<? extends Object> values, Path path, CriteriaBuilder cb, boolean trim) {
+	private Predicate getInPredicate(Integer inMaxValues, List<? extends Object> values, Path path, CriteriaBuilder cb, boolean trim) {
 		List<Predicate> partitionPredicates = new ArrayList<>();
-		if (inMaxValues != null) {
-			List<?> partition = ListUtils.partition(values, inMaxValues);
-			for (Object object : partition) {
-				List<Object> objects = (List<Object>) object;
-				partitionPredicates.add(trim ? cb.trim(path).in(objects) : path.in(objects));
-			}
+		if (values == null || values.isEmpty()) {
+			// not values -> empty. Always false
+			return cb.or();
 		} else {
-			partitionPredicates.add(trim ? cb.trim(path).in(values) : path.in(values));
+			if (inMaxValues != null) {
+				List<?> partition = ListUtils.partition(values, inMaxValues);
+				for (Object object : partition) {
+					List<Object> objects = (List<Object>) object;
+					partitionPredicates.add(trim ? cb.trim(path).in(objects) : path.in(objects));
+				}
+				return cb.or(partitionPredicates.toArray(new Predicate[0]));
+			} else {
+				return trim ? cb.trim(path).in(values) : path.in(values);
+			}
 		}
-		return partitionPredicates;
 	}
 
 	/**
@@ -2883,11 +2910,6 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 			resourcePath = StringUtils.uncapitalize(resourcePath.substring(parentEntityField.getName().length()));
 		}
 
-		Map<String, AppClassField> appClassFieldMap = getAppClassFieldMap(false);
-
-		// remove type
-		appClassFieldMap.remove("type");
-
 		StringBuilder sb = new StringBuilder();
 
 		// create a temp directory
@@ -2942,6 +2964,11 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 
 		File appClassFile = new File(resourceManagerPath.toFile().getAbsolutePath() + File.separator + "app_class.js");
 		FileUtils.write(appClassFile, sb.toString(), StandardCharsets.UTF_8);
+
+		// get the list of fields
+		Map<String, AppClassField> appClassFieldMap = getAppClassFieldMap();
+		// remove type
+		appClassFieldMap.remove("type");
 
 		// form.html
 		sb = new StringBuilder();
@@ -3151,11 +3178,18 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @throws Exception
 	 */
 	public String getAppClassFields(boolean jsonCompliance) throws Exception {
-		Map<String, AppClassField> appClassFieldMap = getAppClassFieldMap(jsonCompliance);
+		Map<String, AppClassField> appClassFieldMap = getAppClassFieldMap();
+
 		String jsonString = new GsonBuilder().setPrettyPrinting().create().toJson(appClassFieldMap);
 		if (!jsonCompliance) {
+			// remove name for each fields
+			jsonString = jsonString.replaceAll(".*\"name\":.*\n", "");
+
 			// remove the " for key (it is not JSON compliant, but it is better for the app_class
-			jsonString = jsonString.replaceAll("\"([a-zA-Z0-9]+)\":", "$1:").replaceAll("\"NULL\"", "null");
+			jsonString = jsonString.replaceAll("\"([a-zA-Z0-9]+)\":", "$1:");
+
+			// replace NULL
+			jsonString = jsonString.replaceAll("\"NULL\"", "null");
 
 			// pad left with spaces
 			jsonString = jsonString.replaceAll("\n", "\n          ");
@@ -3172,382 +3206,386 @@ abstract public class AbstractBaseEntityService<E extends IEntity<I>, U extends 
 	 * @return
 	 * @throws Exception
 	 */
-	public Map<String, AppClassField> getAppClassFieldMap(boolean includeName) throws Exception {
-		Map<String, AppClassField> appClassFieldMap = new LinkedHashMap<>();
+	public Map<String, AppClassField> getAppClassFieldMap() throws Exception {
+		Map<String, AppClassField> appClassFieldMap = appClassFieldMaps.get(getResourceName());
+		if (appClassFieldMap == null) {
+			// generate only once (it cannot change without a redeploy of the code)
+			synchronized (this.getClass()) {
+				if (appClassFieldMap == null) {
+					appClassFieldMap = new LinkedHashMap<>();
+					appClassFieldMaps.put(getResourceName(), appClassFieldMap);
 
-		// inner class to store column meta data
-		class ColumnMetaData {
-			String columnsize;
-			String isNullable;
-			String datatype;
-			String decimals;
+					// inner class to store column meta data
+					class ColumnMetaData {
+						String columnsize;
+						String isNullable;
+						String datatype;
+						String decimals;
 
-			@Override
-			public String toString() {
-				return "ColumnMetaData [columnsize=" + columnsize + ", isNullable=" + isNullable + ", datatype=" + datatype + ", decimals=" + decimals + "]";
-			}
-		}
-		Map<String, ColumnMetaData> columnMap = new HashMap<>();
-
-		Class<?> c = getTypeOfE();
-		Connection connection = getConnection(false);
-		Table table = c.getAnnotation(Table.class);
-		if (table == null) {
-			// not an entity based
-			return null;
-		}
-		DatabaseMetaData databaseMetaData = connection.getMetaData();
-		boolean usingSchema = table.schema() != null && table.schema().length() > 0;
-
-		// logger.info("Getting Database meta data for [" + (usingSchema ? table.schema() + "." : "") + table.name() + "]");
-
-		// NOTE: Oracle is case sensitive for schema and table names
-		ResultSet columns = databaseMetaData.getColumns(null, usingSchema ? table.schema().toUpperCase() : null, usingSchema ? table.name().toUpperCase() : table.name(), null);
-		boolean found = false;
-		while (columns.next()) {
-			found = true;
-			ColumnMetaData columnMetaData = new ColumnMetaData();
-			String columnName = columns.getString("COLUMN_NAME");
-			columnMetaData.columnsize = columns.getString("COLUMN_SIZE");
-			columnMetaData.isNullable = columns.getString("IS_NULLABLE");
-			columnMetaData.datatype = columns.getString("DATA_TYPE");
-			columnMetaData.decimals = columns.getString("DECIMAL_DIGITS");
-			// logger.debug(columnName + "= " + columnMetaData);
-			columnMap.put(columnName.toLowerCase(), columnMetaData);
-		}
-
-		if (!found) {
-			throw new Exception("Table not found [" + (usingSchema ? table.schema() + "." : "") + table.name() + "]");
-		}
-
-		// Get Bean info
-		BeanInfo info = Introspector.getBeanInfo(c);
-		PropertyDescriptor[] props = info.getPropertyDescriptors();
-
-		// Create the mandatory "type"
-		AppClassField appClassField = new AppClassField();
-		appClassField.setType("string");
-		if (includeName) {
-			appClassField.setName("type");
-		}
-		appClassField.setEditable(false);
-		appClassField.setDefaultValue(StringUtils.uncapitalize(c.getSimpleName()));
-		appClassFieldMap.put("type", appClassField);
-
-		// get the list of fields
-		do {
-			Field[] allFields = c.getDeclaredFields();
-			for (Field field : allFields) {
-				String fieldName = field.getName();
-
-				// those fields are defined by default in the app_class
-				switch (fieldName) {
-				case "derived":
-				case "creationDate":
-				case "lastModifiedDate":
-				case "creationUser":
-				case "creationUserId":
-				case "lastModifiedUser":
-				case "lastModifiedUserId":
-				case "lastModifiedUserFullName":
-				case "creationUserFullName":
-					continue;
-				}
-
-				// do not export static field
-				if (Modifier.isStatic(field.getModifiers())) {
-					continue;
-				}
-
-				Class<?> type = field.getType();
-				if (fieldName.equals("id") && type.getCanonicalName().equals("java.lang.Integer")) {
-					continue; // no need. This is the Expresso default
-				}
-
-				// if there is no getter, do not output them
-				boolean getterFound = false;
-				for (PropertyDescriptor pd : Introspector.getBeanInfo(c, Object.class).getPropertyDescriptors()) {
-					String name = pd.getName();
-					Method getter = pd.getReadMethod();
-					if (name.equals(fieldName) && getter != null) {
-						getterFound = true;
-						break;
-					}
-				}
-				if (!getterFound) {
-					if (fieldName.endsWith("StringIds")) {
-						// ok
-					} else {
-						logger.debug("Skipping [" + fieldName + "] from [" + getResourceName() + "] No getter method");
-					}
-					continue;
-				}
-
-				appClassField = null;
-
-				// if the field is an Id, try to get the Object appClassField
-				if (fieldName.endsWith("Id")) {
-					appClassField = appClassFieldMap.get(fieldName);
-				} else {
-					// if the first is an Object, try to get the Id
-					appClassField = appClassFieldMap.get(fieldName + "Id");
-				}
-
-				if (appClassField == null) {
-					appClassField = new AppClassField();
-				}
-
-				Column column = field.getAnnotation(Column.class);
-				// Id id = field.getAnnotation(Id.class);
-
-				ColumnMetaData columnMetaData = null;
-				if (column != null) {
-					columnMetaData = columnMap.get(column.name().toLowerCase());
-					// logger.debug(column.name().toLowerCase() + ":" + columnMetaData);
-				}
-
-				String appClassFieldType = getAppClassFieldType(type);
-				if (appClassFieldType == null) {
-
-					// Object: not a primitive type
-					OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-					ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-					ManyToMany manyToMany = field.getAnnotation(ManyToMany.class);
-					JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
-
-					if (manyToOne != null) {
-						Object ref = true;
-						if (field.getGenericType() != null) {
-							// ex: ca.cezinc.expressoservice.resources.humanresources.person.User
-							String refString = getEntityFromBasicEntity((Class<?>) field.getGenericType()).getSimpleName();
-							refString = StringUtils.uncapitalize(refString);
-							if (!fieldName.equals(refString)) {
-								ref = refString;
-							}
-						}
-
-						if (manyToOne.fetch() != null && manyToOne.fetch() == FetchType.EAGER) {
-							// Only BaseType or
-							if (IBaseType.class.isAssignableFrom(type)) {
-								appClassField.setValues(ref);
-							} else {
-								appClassField.setReference(ref);
-							}
-						} else {
-							appClassField.setReference(ref);
-						}
-
-						// we do not export the Object for the app_class
-						// Only the Id
-
-						// verify if the ID exist
-						fieldName += "Id";
-						appClassField.setType("number");
-						if (Util.getField(getTypeOfE(), fieldName) == null) {
-							// this could happen when using a Formula or JoinFormula to an transient object
-							continue;
-						}
-
-						if (joinColumn != null) {
-							columnMetaData = columnMap.get(joinColumn.name().toLowerCase());
-						}
-					} else if (oneToOne != null) {
-						// ok
-					} else if (manyToMany != null) {
-						// get the Set<?> and if it is not the name of
-						// the attribute, then set the name of the reference
-						Object ref = true;
-						if (field.getGenericType() != null) {
-							// ex:
-							// java.util.Set<ca.cezinc.expressoservice.resources.humanresources.person.User>
-
-							String refString = field.getGenericType().toString();
-							refString = refString.substring(refString.lastIndexOf('.') + 1);
-							refString = refString.substring(0, refString.length() - 1);
-							refString = StringUtils.uncapitalize(refString);
-							if (!fieldName.equals(refString)) {
-								ref = refString;
-							}
-						}
-
-						appClassField.setReference(ref);
-						appClassField.setMultipleSelection(true);
-						if (fieldName.endsWith("ies")) {
-							// remove the "ies" and add "yIds"
-							fieldName = fieldName.substring(0, fieldName.length() - 3) + "yIds";
-						} else {
-							// remove the "s" and add "Ids"
-							fieldName = fieldName.substring(0, fieldName.length() - 1) + "Ids";
-						}
-
-						// if there is no getter/setter, do not export
-						if (Util.getField(getTypeOfE(), fieldName) == null) {
-							// this could happen when using a Formula or JoinFormula to an transient object
-							continue;
-						}
-
-					} else {
-						// logger.warn(String.format("Type [%s] not supported",
-						// type.getCanonicalName()));
-						continue;
-					}
-				} else {
-					appClassField.setType(appClassFieldType);
-
-					if (appClassFieldType.equals("string")) {
-						if (columnMetaData != null && columnMetaData.columnsize != null) {
-							appClassField.setMaxLength(Integer.parseInt(columnMetaData.columnsize));
-						}
-					} else if (appClassFieldType.equals("number") && !fieldName.endsWith("Id")) {
-						int decimals;
-						if (columnMetaData != null && columnMetaData.decimals != null && columnMetaData.decimals.length() > 0) {
-							try {
-								decimals = Integer.parseInt(columnMetaData.decimals);
-								if (decimals == -127) {
-									// in Oracle, it means no decimal
-									decimals = 0;
-								}
-							} catch (Exception e) {
-								decimals = 0;
-							}
-						} else {
-							// try to determine the number of decimals from the type
-							switch (type.getCanonicalName()) {
-							case "float":
-							case "double":
-							case "java.lang.Float":
-							case "java.lang.Double":
-							case "java.lang.BigDecimal":
-								decimals = 2;
-								break;
-
-							case "short":
-							case "int":
-							case "long":
-							case "java.lang.Short":
-							case "java.lang.Integer":
-							case "java.lang.Long":
-							default:
-								decimals = 0;
-								break;
-							}
-						}
-						appClassField.setDecimals(decimals);
-						// appClassField.setAllowNegative(false); // Default is false
-						appClassField.setDefaultValue("NULL");
-					} else if (appClassFieldType.equals("date")) {
-						Temporal temporal = field.getAnnotation(Temporal.class);
-						if (temporal != null && temporal.value() != null) {
-							if (temporal.value().equals(TemporalType.TIMESTAMP)) {
-								appClassField.setTimestamp(true);
-							} else if (temporal.value().equals(TemporalType.TIME)) {
-								appClassField.setTimeOnly(true);
-							}
+						@Override
+						public String toString() {
+							return "ColumnMetaData [columnsize=" + columnsize + ", isNullable=" + isNullable + ", datatype=" + datatype + ", decimals=" + decimals + "]";
 						}
 					}
-				}
+					Map<String, ColumnMetaData> columnMap = new HashMap<>();
 
-				// if it is a formula, it cannot be saved, set it transient
-				if (field.isAnnotationPresent(Formula.class)) {
-					appClassField.setTransient(true);
-				}
+					Class<?> c = getTypeOfE();
+					Connection connection = getConnection(false);
+					Table table = c.getAnnotation(Table.class);
+					if (table == null) {
+						// not an entity based
+						return null;
+					}
+					DatabaseMetaData databaseMetaData = connection.getMetaData();
+					boolean usingSchema = table.schema() != null && table.schema().length() > 0;
 
-				if (columnMetaData != null) {
-					boolean nullable = columnMetaData.isNullable != null && columnMetaData.isNullable.equals("YES");
-					if (nullable) {
-						appClassField.setNullable(true);
+					// logger.info("Getting Database meta data for [" + (usingSchema ? table.schema() + "." : "") + table.name() + "]");
+
+					// NOTE: Oracle is case sensitive for schema and table names
+					ResultSet columns = databaseMetaData.getColumns(null, usingSchema ? table.schema().toUpperCase() : null, usingSchema ? table.name().toUpperCase() : table.name(), null);
+					boolean found = false;
+					while (columns.next()) {
+						found = true;
+						ColumnMetaData columnMetaData = new ColumnMetaData();
+						String columnName = columns.getString("COLUMN_NAME");
+						columnMetaData.columnsize = columns.getString("COLUMN_SIZE");
+						columnMetaData.isNullable = columns.getString("IS_NULLABLE");
+						columnMetaData.datatype = columns.getString("DATA_TYPE");
+						columnMetaData.decimals = columns.getString("DECIMAL_DIGITS");
+						// logger.debug(columnName + "= " + columnMetaData);
+						columnMap.put(columnName.toLowerCase(), columnMetaData);
 					}
 
-					// verify is the field is not nullable but the database is nullable (or
-					// vice-versa)
-					if (type.isPrimitive() && nullable) {
-						appClassField.addNote("Class type is a primitive [" + type.getSimpleName() + "] but column is nullable");
-					} else if (!type.isPrimitive() && !nullable) {
-						if (fieldName.endsWith("Id")) {
-							// ok, this is by design: all IDs are mapped as Integer
-						} else if (type.getSimpleName().equals("String") || type.getSimpleName().equals("Date")) {
-							// String and Date cannot be a primitive, so there is no way to know
-						} else {
-							appClassField.addNote("Class type is NOT a primitive [" + type.getSimpleName() + "] but column is NOT nullable");
-						}
+					if (!found) {
+						throw new Exception("Table not found [" + (usingSchema ? table.schema() + "." : "") + table.name() + "]");
 					}
-				}
 
-				// set the name
-				if (includeName) {
-					appClassField.setName(fieldName);
-				}
+					// Get Bean info
+					BeanInfo info = Introspector.getBeanInfo(c);
+					PropertyDescriptor[] props = info.getPropertyDescriptors();
 
-				if (fieldName.endsWith("Key")) {
-					appClassField.setUnique(true);
-				}
-
-				if (/* fieldName.endsWith("No") && */ Arrays.asList(getKeyFields()).contains(fieldName) && !fieldName.endsWith("id")) {
-					appClassField.setKeyField(true);
+					// Create the mandatory "type"
+					AppClassField appClassField = new AppClassField();
+					appClassField.setType("string");
+					appClassField.setName("type");
 					appClassField.setEditable(false);
-				}
+					appClassField.setDefaultValue(StringUtils.uncapitalize(c.getSimpleName()));
+					appClassFieldMap.put("type", appClassField);
 
-				if (fieldName.equals("sortOrder")) {
-					appClassField.setDefaultValue(1);
-				}
+					// get the list of fields
+					do {
+						Field[] allFields = c.getDeclaredFields();
+						for (Field field : allFields) {
+							String fieldName = field.getName();
 
-				if (field.isAnnotationPresent(HierarchicalParentEntity.class)) {
-					appClassField.setHierarchicalParent(true);
-				}
+							// those fields are defined by default in the app_class
+							switch (fieldName) {
+							case "derived":
+							case "creationDate":
+							case "lastModifiedDate":
+							case "creationUser":
+							case "creationUserId":
+							case "lastModifiedUser":
+							case "lastModifiedUserId":
+							case "lastModifiedUserFullName":
+							case "creationUserFullName":
+								continue;
+							}
 
-				// verify if the field is protected by a restricted role
-				if (field.isAnnotationPresent(FieldRestriction.class)) {
-					appClassField.setRestrictedRole(FieldRestrictionUtil.INSTANCE.getFieldRestrictionRole(getResourceName(), fieldName));
-				}
+							// do not export static field
+							if (Modifier.isStatic(field.getModifiers())) {
+								continue;
+							}
 
-				// verify if the field is protected by approbation for modification
-				if (getTypeOfE().getAnnotation(RequireApproval.class) != null && field.isAnnotationPresent(RequireApproval.class)) {
-					String requireApprovalRole = field.getAnnotation(RequireApproval.class).role();
-					if (requireApprovalRole == null || requireApprovalRole.length() == 0) {
-						// get it from the resource
-						requireApprovalRole = getTypeOfE().getAnnotation(RequireApproval.class).role();
-					}
-					appClassField.setRequireApprovalRole(requireApprovalRole);
-				}
+							Class<?> type = field.getType();
+							if (fieldName.equals("id") && type.getCanonicalName().equals("java.lang.Integer")) {
+								continue; // no need. This is the Expresso default
+							}
 
-				// add the new field to the map
-				appClassFieldMap.put(fieldName, appClassField);
-			}
-
-			// then get all method with @XmlElement that are primitive
-			Method[] methods = c.getDeclaredMethods();
-			for (Method method : methods) {
-				XmlElement xmlElement = method.getAnnotation(XmlElement.class);
-				if (xmlElement != null) {
-					String fieldName = null;
-					for (PropertyDescriptor pd : props) {
-						if (method.equals(pd.getReadMethod())) {
-							fieldName = pd.getName();
-						}
-					}
-					if (fieldName != null) {
-						// if the appClassFieldMap already contains the fieldName, skip it
-						if (!appClassFieldMap.containsKey(fieldName + "Id") && !appClassFieldMap.containsKey(fieldName) && !fieldName.equals("creationUser") && !fieldName.equals("lastModifiedUser")
-								&& !fieldName.equals("label") && !fieldName.equals("lastModifiedUserFullName") && !fieldName.equals("creationUserFullName")) {
-							String appClassFieldType = getAppClassFieldType(method.getReturnType());
-							if (appClassFieldType != null) {
-								appClassField = new AppClassField();
-								appClassField.setType(appClassFieldType);
-								if (includeName) {
-									appClassField.setName(fieldName);
+							// if there is no getter, do not output them
+							boolean getterFound = false;
+							for (PropertyDescriptor pd : Introspector.getBeanInfo(c, Object.class).getPropertyDescriptors()) {
+								String name = pd.getName();
+								Method getter = pd.getReadMethod();
+								if (name.equals(fieldName) && getter != null) {
+									getterFound = true;
+									break;
 								}
-								appClassField.setTransient(true);
-								appClassField.setFilterable(false);
-								appClassFieldMap.put(fieldName, appClassField);
+							}
+							if (!getterFound) {
+								if (fieldName.endsWith("StringIds")) {
+									// ok
+								} else {
+									logger.debug("Skipping [" + fieldName + "] from [" + getResourceName() + "] No getter method");
+								}
+								continue;
+							}
+
+							appClassField = null;
+
+							// if the field is an Id, try to get the Object appClassField
+							if (fieldName.endsWith("Id")) {
+								appClassField = appClassFieldMap.get(fieldName);
 							} else {
-								// what to do with object?
-								// for now, ignore them
+								// if the first is an Object, try to get the Id
+								appClassField = appClassFieldMap.get(fieldName + "Id");
+							}
+
+							if (appClassField == null) {
+								appClassField = new AppClassField();
+							}
+
+							Column column = field.getAnnotation(Column.class);
+							// Id id = field.getAnnotation(Id.class);
+
+							ColumnMetaData columnMetaData = null;
+							if (column != null) {
+								columnMetaData = columnMap.get(column.name().toLowerCase());
+								// logger.debug(column.name().toLowerCase() + ":" + columnMetaData);
+							}
+
+							String appClassFieldType = getAppClassFieldType(type);
+							if (appClassFieldType == null) {
+
+								// Object: not a primitive type
+								OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+								ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+								ManyToMany manyToMany = field.getAnnotation(ManyToMany.class);
+								JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
+
+								if (manyToOne != null) {
+									Object ref = true;
+									if (field.getGenericType() != null) {
+										// ex: ca.cezinc.expressoservice.resources.humanresources.person.User
+										String refString = getEntityFromBasicEntity((Class<?>) field.getGenericType()).getSimpleName();
+										refString = StringUtils.uncapitalize(refString);
+										if (!fieldName.equals(refString)) {
+											ref = refString;
+										}
+									}
+
+									if (manyToOne.fetch() != null && manyToOne.fetch() == FetchType.EAGER) {
+										// Only BaseType or
+										if (IBaseType.class.isAssignableFrom(type)) {
+											appClassField.setValues(ref);
+										} else {
+											appClassField.setReference(ref);
+										}
+									} else {
+										appClassField.setReference(ref);
+									}
+
+									// we do not export the Object for the app_class
+									// Only the Id
+
+									// verify if the ID exist
+									fieldName += "Id";
+									appClassField.setType("number");
+									if (Util.getField(getTypeOfE(), fieldName) == null) {
+										// this could happen when using a Formula or JoinFormula to an transient object
+										continue;
+									}
+
+									if (joinColumn != null) {
+										columnMetaData = columnMap.get(joinColumn.name().toLowerCase());
+									}
+								} else if (oneToOne != null) {
+									// ok
+								} else if (manyToMany != null) {
+									// get the Set<?> and if it is not the name of
+									// the attribute, then set the name of the reference
+									Object ref = true;
+									if (field.getGenericType() != null) {
+										// ex:
+										// java.util.Set<ca.cezinc.expressoservice.resources.humanresources.person.User>
+
+										String refString = field.getGenericType().toString();
+										refString = refString.substring(refString.lastIndexOf('.') + 1);
+										refString = refString.substring(0, refString.length() - 1);
+										refString = StringUtils.uncapitalize(refString);
+										if (!fieldName.equals(refString)) {
+											ref = refString;
+										}
+									}
+
+									appClassField.setReference(ref);
+									appClassField.setMultipleSelection(true);
+									if (fieldName.endsWith("ies")) {
+										// remove the "ies" and add "yIds"
+										fieldName = fieldName.substring(0, fieldName.length() - 3) + "yIds";
+									} else {
+										// remove the "s" and add "Ids"
+										fieldName = fieldName.substring(0, fieldName.length() - 1) + "Ids";
+									}
+
+									// if there is no getter/setter, do not export
+									if (Util.getField(getTypeOfE(), fieldName) == null) {
+										// this could happen when using a Formula or JoinFormula to an transient object
+										continue;
+									}
+
+								} else {
+									// logger.warn(String.format("Type [%s] not supported",
+									// type.getCanonicalName()));
+									continue;
+								}
+							} else {
+								appClassField.setType(appClassFieldType);
+
+								if (appClassFieldType.equals("string")) {
+									if (columnMetaData != null && columnMetaData.columnsize != null) {
+										appClassField.setMaxLength(Integer.parseInt(columnMetaData.columnsize));
+									}
+								} else if (appClassFieldType.equals("number") && !fieldName.endsWith("Id")) {
+									int decimals;
+									if (columnMetaData != null && columnMetaData.decimals != null && columnMetaData.decimals.length() > 0) {
+										try {
+											decimals = Integer.parseInt(columnMetaData.decimals);
+											if (decimals == -127) {
+												// in Oracle, it means no decimal
+												decimals = 0;
+											}
+										} catch (Exception e) {
+											decimals = 0;
+										}
+									} else {
+										// try to determine the number of decimals from the type
+										switch (type.getCanonicalName()) {
+										case "float":
+										case "double":
+										case "java.lang.Float":
+										case "java.lang.Double":
+										case "java.lang.BigDecimal":
+											decimals = 2;
+											break;
+
+										case "short":
+										case "int":
+										case "long":
+										case "java.lang.Short":
+										case "java.lang.Integer":
+										case "java.lang.Long":
+										default:
+											decimals = 0;
+											break;
+										}
+									}
+									appClassField.setDecimals(decimals);
+									// appClassField.setAllowNegative(false); // Default is false
+									appClassField.setDefaultValue("NULL");
+								} else if (appClassFieldType.equals("date")) {
+									Temporal temporal = field.getAnnotation(Temporal.class);
+									if (temporal != null && temporal.value() != null) {
+										if (temporal.value().equals(TemporalType.TIMESTAMP)) {
+											appClassField.setTimestamp(true);
+										} else if (temporal.value().equals(TemporalType.TIME)) {
+											appClassField.setTimeOnly(true);
+										}
+									}
+								}
+							}
+
+							// if it is a formula, it cannot be saved, set it transient
+							if (field.isAnnotationPresent(Formula.class)) {
+								appClassField.setTransient(true);
+							}
+
+							if (columnMetaData != null) {
+								boolean nullable = columnMetaData.isNullable != null && columnMetaData.isNullable.equals("YES");
+								if (nullable) {
+									appClassField.setNullable(true);
+								}
+
+								// verify is the field is not nullable but the database is nullable (or
+								// vice-versa)
+								if (type.isPrimitive() && nullable) {
+									appClassField.addNote("Class type is a primitive [" + type.getSimpleName() + "] but column is nullable");
+								} else if (!type.isPrimitive() && !nullable) {
+									if (fieldName.endsWith("Id")) {
+										// ok, this is by design: all IDs are mapped as Integer
+									} else if (type.getSimpleName().equals("String") || type.getSimpleName().equals("Date")) {
+										// String and Date cannot be a primitive, so there is no way to know
+									} else {
+										appClassField.addNote("Class type is NOT a primitive [" + type.getSimpleName() + "] but column is NOT nullable");
+									}
+								}
+							}
+
+							// set the name
+							appClassField.setName(fieldName);
+
+							if (fieldName.endsWith("Key")) {
+								appClassField.setUnique(true);
+							}
+
+							if (/* fieldName.endsWith("No") && */ Arrays.asList(getKeyFields()).contains(fieldName) && !fieldName.endsWith("id")) {
+								appClassField.setKeyField(true);
+								appClassField.setEditable(false);
+							}
+
+							if (fieldName.equals("sortOrder")) {
+								appClassField.setDefaultValue(1);
+							}
+
+							if (field.isAnnotationPresent(HierarchicalParentEntity.class)) {
+								appClassField.setHierarchicalParent(true);
+							}
+
+							// verify if the field is protected by a restricted role
+							if (field.isAnnotationPresent(FieldRestriction.class)) {
+								appClassField.setRestrictedRole(FieldRestrictionUtil.INSTANCE.getFieldRestrictionRole(getResourceName(), fieldName));
+							}
+
+							// verify if the field is protected by approbation for modification
+							if (getTypeOfE().getAnnotation(RequireApproval.class) != null && field.isAnnotationPresent(RequireApproval.class)) {
+								String requireApprovalRole = field.getAnnotation(RequireApproval.class).role();
+								if (requireApprovalRole == null || requireApprovalRole.length() == 0) {
+									// get it from the resource
+									requireApprovalRole = getTypeOfE().getAnnotation(RequireApproval.class).role();
+								}
+								appClassField.setRequireApprovalRole(requireApprovalRole);
+							}
+
+							// add the new field to the map
+							appClassFieldMap.put(fieldName, appClassField);
+						}
+
+						// then get all method with @XmlElement that are primitive
+						Method[] methods = c.getDeclaredMethods();
+						for (Method method : methods) {
+							XmlElement xmlElement = method.getAnnotation(XmlElement.class);
+							if (xmlElement != null) {
+								String fieldName = null;
+								for (PropertyDescriptor pd : props) {
+									if (method.equals(pd.getReadMethod())) {
+										fieldName = pd.getName();
+									}
+								}
+								if (fieldName != null) {
+									// if the appClassFieldMap already contains the fieldName, skip it
+									if (!appClassFieldMap.containsKey(fieldName + "Id") && !appClassFieldMap.containsKey(fieldName) && !fieldName.equals("creationUser")
+											&& !fieldName.equals("lastModifiedUser") && !fieldName.equals("label") && !fieldName.equals("lastModifiedUserFullName")
+											&& !fieldName.equals("creationUserFullName")) {
+										String appClassFieldType = getAppClassFieldType(method.getReturnType());
+										if (appClassFieldType != null) {
+											appClassField = new AppClassField();
+											appClassField.setType(appClassFieldType);
+											appClassField.setName(fieldName);
+											appClassField.setTransient(true);
+											appClassField.setFilterable(false);
+											appClassFieldMap.put(fieldName, appClassField);
+										} else {
+											// what to do with object?
+											// for now, ignore them
+										}
+									}
+								}
 							}
 						}
-					}
+					} while ((c = c.getSuperclass()) != null);
 				}
 			}
-		} while ((c = c.getSuperclass()) != null);
+		}
 
 		return appClassFieldMap;
 	}

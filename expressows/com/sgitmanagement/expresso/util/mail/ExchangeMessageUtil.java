@@ -110,23 +110,59 @@ public class ExchangeMessageUtil implements MailSender {
 
 	/**
 	 * 
-	 * @param id
+	 * @param messageId
 	 * @throws Exception
 	 */
-	public void deleteMessage(String id) throws Exception {
-		deleteMessage(defaultUserPrincipalName, id);
+	public void deleteMessage(String messageId) throws Exception {
+		deleteMessage(defaultUserPrincipalName, messageId);
 	}
 
 	/**
 	 * 
 	 * @param userPrincipalName
-	 * @param id
+	 * @param messageId
 	 * @throws Exception
 	 */
-	private void deleteMessage(String userPrincipalName, String id) throws Exception {
+	private void deleteMessage(String userPrincipalName, String messageId) throws Exception {
 		if (SystemEnv.INSTANCE.isInProduction()) {
-			String path = "/users/" + userPrincipalName + "/messages/" + id;
+			String path = "/users/" + userPrincipalName + "/messages/" + messageId;
 			msGraphClient.callMicrosoftGraph(path, "DELETE", null, null, null);
+		}
+	}
+
+	/**
+	 * 
+	 * @param messageId
+	 * @throws Exception
+	 */
+	public void moveMessagetoDeletedFolder(String messageId) throws Exception {
+		moveMessage(defaultUserPrincipalName, messageId, "deleteditems");
+	}
+
+	/**
+	 * 
+	 * @param messageId
+	 * @param destinationFolderId
+	 * @throws Exception
+	 */
+	public void moveMessage(String messageId, String destinationFolderId) throws Exception {
+		moveMessage(defaultUserPrincipalName, messageId, destinationFolderId);
+	}
+
+	/**
+	 * 
+	 * @param userPrincipalName
+	 * @param messageId
+	 * @param destinationFolderI
+	 * @throws Exception
+	 */
+	private void moveMessage(String userPrincipalName, String messageId, String destinationFolderId) throws Exception {
+		if (SystemEnv.INSTANCE.isInProduction()) {
+			String path = "/users/" + userPrincipalName + "/messages/" + messageId + "/move";
+			JsonObject rootJsonObject = new JsonObject();
+			rootJsonObject.addProperty("destinationId", destinationFolderId);
+			String jsonBody = new GsonBuilder().create().toJson(rootJsonObject);
+			msGraphClient.callMicrosoftGraph(path, jsonBody);
 		}
 	}
 
@@ -322,7 +358,7 @@ public class ExchangeMessageUtil implements MailSender {
 		}
 
 		if (validEmail) {
-			logger.debug("Valid email based on subject [" + subject + "]");
+			// logger.debug("Valid email based on subject [" + subject + "]");
 		} else {
 			logger.debug("Deleting invalid email based on subject [" + subject + "]");
 			try {
@@ -351,8 +387,6 @@ public class ExchangeMessageUtil implements MailSender {
 		try {
 			mu.connect();
 
-			// mu.sendMessage("stessygallant@gmail.com", "test1", "allo test1");
-
 			// List<Message> messages = mu.getMessages();
 			// for (Message message : messages) {
 			// System.out.println(message);
@@ -368,7 +402,7 @@ public class ExchangeMessageUtil implements MailSender {
 			// // mu.deleteMessage(message.getId());
 			// }
 
-			mu.cleanMailbox();
+			// mu.cleanMailbox();
 		} finally {
 			mu.disconnect();
 		}

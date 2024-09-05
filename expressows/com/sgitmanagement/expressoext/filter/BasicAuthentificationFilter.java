@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sgitmanagement.expresso.base.PersistenceManager;
 import com.sgitmanagement.expresso.dto.Query;
+import com.sgitmanagement.expresso.util.ServerTimingUtil;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.security.User;
@@ -45,27 +46,29 @@ public class BasicAuthentificationFilter implements Filter {
 
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
-		HttpServletRequest request = (HttpServletRequest) req;
-		HttpServletResponse response = (HttpServletResponse) resp;
+		HttpServletRequest httpServletRequest = (HttpServletRequest) req;
+		HttpServletResponse httpServletResponse = (HttpServletResponse) resp;
+
+		ServerTimingUtil.startTiming("BasicAuthentificationFilter");
 
 		// do not create a session if not
-		HttpSession httpSession = request.getSession(false);
+		HttpSession httpSession = httpServletRequest.getSession(false);
 
 		// if there is no valid session, authenticate the user again
 		if (httpSession != null && httpSession.getAttribute(WWW_AUTHORIZATION) != null) {
 			// logger.debug("Session is active [" + httpSession.getId() + "]");
-			chain.doFilter(request, response);
+			chain.doFilter(httpServletRequest, httpServletResponse);
 		} else {
 			String authUser = null;
 
 			// get username and password from the Authorization header
-			String authHeader = request.getHeader(WWW_AUTHORIZATION);
+			String authHeader = httpServletRequest.getHeader(WWW_AUTHORIZATION);
 			// logger.debug("authHeader [" + authHeader + "]");
 
 			if (authHeader == null || !authHeader.startsWith(BASIC_PREFIX)) {
 				// this will prompt the basic auth dialog on the browser
 				// setBasicAuthRequired(response);
-				setBasicAuthFailed(response);
+				setBasicAuthFailed(httpServletResponse);
 			} else {
 				try {
 					String userPassBase64 = authHeader.substring(BASIC_PREFIX.length());
@@ -74,15 +77,18 @@ public class BasicAuthentificationFilter implements Filter {
 
 					// Finally userPassDecoded must contain readable "username:password"
 					if (!userPassDecoded.contains(":")) {
-						setBasicAuthRequired(response);
+						setBasicAuthRequired(httpServletResponse);
 					} else {
 						authUser = userPassDecoded.substring(0, userPassDecoded.indexOf(':'));
 						String authPass = Util.nullifyIfNeeded(userPassDecoded.substring(userPassDecoded.indexOf(':') + 1));
 
 						// of the authPass is null, verify if it is an autologin user
 						if (authPass == null) {
-							authPass = SystemEnv.INSTANCE.getDefaultProperties().getProperty("autologinuser_" + authUser);
-							// logger.debug("Got password for [" + authUser + "]: [" + authPass + "]");
+							// only on internal network
+							if (Util.isInternalIpAddress(Util.getIpAddress(httpServletRequest))) {
+								authPass = SystemEnv.INSTANCE.getDefaultProperties().getProperty("autologinuser_" + authUser);
+								// logger.debug("Got password for [" + authUser + "]: [" + authPass + "]");
+							}
 						}
 
 						EntityManager em = PersistenceManager.getInstance().getEntityManager();
@@ -93,40 +99,41 @@ public class BasicAuthentificationFilter implements Filter {
 							// verify password
 							String hashedPassword = Util.hashPassword(authPass);
 							if (user.getPassword() != null && user.getPassword().equals(hashedPassword)) {
-								logger.info(
-										"Authenticated [" + authUser + "] from IP [" + Util.getIpAddress(request) + "] URL[" + request.getRequestURI() + "] Query[" + request.getQueryString() + "]");
+								logger.info("Authenticated [" + authUser + "] from IP [" + Util.getIpAddress(httpServletRequest) + "] URL[" + httpServletRequest.getRequestURI() + "] Query["
+										+ httpServletRequest.getQueryString() + "]");
 
 								// we must create a session (to store the authorization)
-								httpSession = request.getSession(true);
+								httpSession = httpServletRequest.getSession(true);
 								httpSession.setAttribute(WWW_AUTHORIZATION, authHeader);
 
 							} else {
-								logger.warn("Authentication failed for [" + authUser + "] from IP [" + Util.getIpAddress(request) + "]");
+								logger.warn("Authentication failed for [" + authUser + "] from IP [" + Util.getIpAddress(httpServletRequest) + "]");
 
 								// if there is no local password, there is no risk
 								if (user.isLocalAccount() && user.getPassword() != null && !user.isGenericAccount()) {
 									// logger.info("Found the user [" + authUser + "]:" + user.getNbrFailedAttempts());
 									user.setNbrFailedAttempts(user.getNbrFailedAttempts() + 1);
 								}
-								setBasicAuthFailed(response);
+								setBasicAuthFailed(httpServletResponse);
 							}
 						} catch (NoResultException ex1) {
 							// not a valid username
-							setBasicAuthFailed(response);
+							setBasicAuthFailed(httpServletResponse);
 						} finally {
 							// close the connection
 							PersistenceManager.getInstance().commitAndClose(em);
 						}
 					}
 				} catch (Exception e) {
-					setBasicAuthFailed(response);
+					setBasicAuthFailed(httpServletResponse);
 				}
 
 				if (httpSession != null && httpSession.getAttribute(WWW_AUTHORIZATION) != null) {
-					chain.doFilter(new ExpressoHttpServletRequestWrapper(authUser, request), response);
+					chain.doFilter(new ExpressoHttpServletRequestWrapper(authUser, httpServletRequest), httpServletResponse);
 				}
 			}
 		}
+		ServerTimingUtil.endTiming();
 	}
 
 	/**

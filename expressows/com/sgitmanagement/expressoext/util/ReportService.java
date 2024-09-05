@@ -5,16 +5,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.sgitmanagement.expresso.base.IUser;
 import com.sgitmanagement.expresso.exception.ForbiddenException;
 import com.sgitmanagement.expressoext.base.BaseService;
-import com.sgitmanagement.expressoext.security.User;
 
 import jakarta.ws.rs.core.MultivaluedMap;
 
 public class ReportService extends BaseService {
 
 	public void executeReport(MultivaluedMap<String, String> params) throws Exception {
-		User user = getUser();
+		IUser user = getUser();
 
 		String reportName = params.getFirst("reportName");
 		String resourceSecurityPath = params.getFirst("resourceSecurityPath");

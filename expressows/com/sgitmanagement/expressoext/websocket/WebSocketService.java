@@ -6,7 +6,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.reflect.TypeToken;
 import com.sgitmanagement.expressoext.base.BaseService;
 
 import jakarta.websocket.Session;
@@ -16,6 +18,7 @@ public class WebSocketService extends BaseService {
 
 	public void addWebSocketSession(Session session, String resourceSecurityPath) {
 		if (resourceSecurityPath != null) {
+			logger.debug("Adding session to [" + resourceSecurityPath + "]");
 			Set<Session> sessions = webSocketSessions.get(resourceSecurityPath);
 			if (sessions == null) {
 				sessions = Collections.synchronizedSet(new HashSet<>());
@@ -29,6 +32,7 @@ public class WebSocketService extends BaseService {
 
 	public void removeWebSocketSession(Session session, String resourceSecurityPath) {
 		if (resourceSecurityPath != null) {
+			logger.debug("Removing session to [" + resourceSecurityPath + "]");
 			Set<Session> sessions = webSocketSessions.get(resourceSecurityPath);
 			if (sessions != null) {
 				sessions.remove(session);
@@ -39,7 +43,17 @@ public class WebSocketService extends BaseService {
 	}
 
 	public void broadcast(String resourceSecurityPath, JsonElement message) throws Exception {
+		broadcast(resourceSecurityPath, new Gson().toJson(message));
+	}
+
+	public void broadcast(String resourceSecurityPath, Map<String, ?> map) throws Exception {
+		broadcast(resourceSecurityPath, new Gson().toJson(map, new TypeToken<Map<String, ?>>() {
+		}.getType()));
+	}
+
+	public void broadcast(String resourceSecurityPath, String message) throws Exception {
 		if (resourceSecurityPath != null) {
+			logger.debug("Broadcasting message [" + message + "] to [" + resourceSecurityPath + "]");
 			Set<Session> sessions = webSocketSessions.get(resourceSecurityPath);
 			if (sessions != null) {
 				sessions.forEach(s -> {

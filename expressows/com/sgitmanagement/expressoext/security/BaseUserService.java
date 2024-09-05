@@ -79,8 +79,8 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 
 			// make sure that the user does create a user with a job title that it does not managed
 			if (!isUserInRole("UserManager.admin")) {
-				if (user.getJobTitle() != null && getUser().getJobTitle() != null) {
-					if (!getUser().getJobTitle().getManagedJobTitles().contains(user.getJobTitle())) {
+				if (user.getJobTitle() != null && getUser().getExtended().getJobTitle() != null) {
+					if (!getUser().getExtended().getJobTitle().getManagedJobTitles().contains(user.getJobTitle())) {
 						throw new ValidationException("cannotCreateUserWithTitle");
 					}
 				}
@@ -452,18 +452,12 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 		return password;
 	}
 
-	public List<Privilege> getPrivileges(Integer userId) throws Exception {
+	public Set<Privilege> getPrivileges(Integer userId) throws Exception {
 		return AuthorizationHelper.getPrivileges(get(userId));
 	}
 
 	public List<Application> getAllApplications(Integer userId) throws Exception {
 		return AuthorizationHelper.getApplications(get(userId));
-	}
-
-	@SuppressWarnings("unchecked")
-	public List<U> getUsersInRole(Integer roleId) throws Exception {
-		// get all users from this role
-		return (List<U>) AuthorizationHelper.getUsersInRole(newService(RoleService.class, Role.class).get(roleId).getPgmKey());
 	}
 
 	public void sendWelcomeEmail(U user) throws Exception {
@@ -619,8 +613,8 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 
 			// user manager can manage only user in their managed job title
 			else if (isUserInRole("UserManager.user")) {
-				if (user.getJobTitle() != null && getUser().getJobTitle() != null) {
-					if (getUser().getJobTitle().getManagedJobTitles().contains(user.getJobTitle())) {
+				if (user.getJobTitle() != null && getUser().getExtended().getJobTitle() != null) {
+					if (getUser().getExtended().getJobTitle().getManagedJobTitles().contains(user.getJobTitle())) {
 						allowed = true;
 						// logger.debug("Allowed managed user");
 					}
@@ -673,7 +667,7 @@ public class BaseUserService<U extends User> extends BasePersonService<U> {
 			// ok
 		} else {
 			// only if its role manage other role
-			if (getUser().getJobTitle() != null && getUser().getJobTitle().getManagedJobTitles() != null) {
+			if (getUser().getExtended().getJobTitle() != null && getUser().getExtended().getJobTitle().getManagedJobTitles() != null) {
 				// ok
 			} else {
 				throw new ForbiddenException();

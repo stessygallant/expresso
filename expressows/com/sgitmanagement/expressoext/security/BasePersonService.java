@@ -18,9 +18,9 @@ public class BasePersonService<E extends Person> extends BaseDeactivableEntitySe
 		if (isUserInRole("UserManager.user") || isUserInRole("UserManager.viewAllUsers")) {
 			// admin can see all
 			return null;
-		} else if (getUser().getCompanyId() != null) {
+		} else if (getUser().getExtended().getCompanyId() != null) {
 			// they are limited to see their own company
-			return new Filter("companyId", getUser().getCompanyId());
+			return new Filter("companyId", getUser().getExtended().getCompanyId());
 		} else {
 			// they are limited to see their own user
 			return new Filter("id", getUser().getId());

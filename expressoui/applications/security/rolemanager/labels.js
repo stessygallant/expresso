@@ -16,6 +16,8 @@ expresso.applications.security.rolemanager.Labels = {
     accessToRole: "Ayant accès à ce rôle",
     allowAccessTo: "Donne accès à",
 
+    resetButtonLabel: "Rafraîchir la sécurité",
+    resetButtonTitle: "Rafraîchir la sécurité",
 
     _: ""
 };

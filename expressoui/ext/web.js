@@ -616,7 +616,7 @@ expresso.Main = function () {
      * init the list of notifications
      */
     var initDuties = function () {
-        if (expresso.Common.isProduction() && expresso.Security.isUserInRole("DutyUserManager.user")) {
+        if (expresso.Security.isUserInRole("DutyUserManager.user") && !expresso.Security.isAdmin()) {
             var $div = $(".main .user-div");
 
             window.setTimeout(function () {
@@ -627,9 +627,8 @@ expresso.Main = function () {
 
                         resizeContent();
 
-                        // listen on duty
-                        $div.find(".duties .on-duty-button").on("click", function (e) {
-                            e.preventDefault();
+                        // Utility method
+                        var displayOnDutyDialog = function () {
                             expresso.Common.displayApplication("DutyController", expresso.Common.getLabel("duties"), {}, {
                                 height: 200,
                                 width: 800
@@ -637,6 +636,24 @@ expresso.Main = function () {
                                 // refresh the button
                                 // $div.find(".duties .on-duty-button").addClass("on-duty");
                             });
+                        };
+
+                        // listen on duty
+                        $div.find(".duties .on-duty-button").on("click", function (e) {
+                            e.preventDefault();
+                            displayOnDutyDialog();
+                        });
+
+                        // display the duties dialog if not already on duty
+                        expresso.Common.sendRequest("duty/0/user", null, null, null,
+                            {waitOnElement: null, ignoreErrors: true}).done(function (dutyUsers) {
+                            var myUserId = expresso.Security.getUserProfile().id;
+                            var onDuty = $.grep(dutyUsers.data, function (d) {
+                                return d.userId == myUserId;
+                            }).length > 0;
+                            if (!onDuty) {
+                                displayOnDutyDialog();
+                            }
                         });
                     }
                 });
@@ -711,6 +728,11 @@ expresso.Main = function () {
         }
         $userDiv.find(".username").text(userName);
 
+        // listen for logo
+        $body.on("click", ".logo", function () {
+            // reload page no query parameter
+            window.location = window.location.href.split("?")[0];
+        });
 
         // // display the logs file on demand
         // $infoDiv.find(".fa-fire").on("click", function () {
@@ -1068,6 +1090,7 @@ expresso.Main = function () {
      * @returns {*} a Promise when the script is loaded
      */
     var loadMainApplication = function (appName, options) {
+        options = options || {};
         // console.log("loadMainApplication [" + appName + "]", options);
 
         if (expresso.Common.getScreenMode() != expresso.Common.SCREEN_MODES.DESKTOP) {
@@ -1095,10 +1118,10 @@ expresso.Main = function () {
                     {title: app.title}));
             } else {
                 // then load the new application
-                console.log("Loading main application [" + appName + "]", options || "");
                 if (app.options) { // if defined in the applications.js
                     options = $.extend(options || {}, app.options);
                 }
+                console.log("Loading main application [" + appName + "]", options);
                 return expresso.Common.loadApplication(app, options, $contentDiv).done(function (appInstance) {
                     currentAppInstance = appInstance;
                     currentAppName = appName;
@@ -1118,10 +1141,14 @@ expresso.Main = function () {
 
                     // render the application to the content div
                     appInstance.render(true).done(function () {
-                        if (options && options.queryParameters && (
-                            options.queryParameters["fullscreen"] !== undefined || // deprecated
-                            options.queryParameters["fullScreen"] !== undefined)) {
-                            appInstance.setFullScreenMode(true);
+                        if (options && options.queryParameters &&
+                            options.queryParameters["fullScreen"] !== undefined) {
+                            appInstance.setFullScreenMode();
+                        }
+
+                        if (options && (options["noMenu"] || (options.queryParameters &&
+                            options.queryParameters["noMenu"]))) {
+                            appInstance.hideMenu();
                         }
                     });
                 });

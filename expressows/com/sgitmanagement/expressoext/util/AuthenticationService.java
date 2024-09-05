@@ -16,6 +16,8 @@ import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.mail.Mailer;
 import com.sgitmanagement.expressoext.base.BaseService;
 import com.sgitmanagement.expressoext.security.AuthorizationHelper;
+import com.sgitmanagement.expressoext.security.BasicUser;
+import com.sgitmanagement.expressoext.security.BasicUserService;
 import com.sgitmanagement.expressoext.security.User;
 import com.sgitmanagement.expressoext.security.UserService;
 
@@ -164,7 +166,7 @@ public class AuthenticationService extends BaseService {
 				}
 			} else {
 				// reset is done because the password is expired
-				user = getUser();
+				user = getUser().getExtended();
 				if (user.isGenericAccount() || !user.isLocalAccount() || user.getUserName().equals(AuthorizationHelper.PUBLIC_USERNAME)
 						|| user.getUserName().equals(AuthorizationHelper.SYSTEM_USERNAME)) {
 					throw new InvalidCredentialsException("invalidUser");
@@ -173,7 +175,7 @@ public class AuthenticationService extends BaseService {
 
 			// if no exception, set the new password (we must use the user to invoke the service, otherwise any user
 			// can update any password)
-			newService(UserService.class, User.class, user).setNewPassword(user, newPassword, true);
+			newService(UserService.class, User.class, newService(BasicUserService.class, BasicUser.class).get(user.getId())).setNewPassword(user, newPassword, true);
 		} catch (NoResultException ex) {
 			throw new InvalidCredentialsException("invalidUserName");
 		}
@@ -210,4 +212,37 @@ public class AuthenticationService extends BaseService {
 
 		Mailer.INSTANCE.sendMail(user.getEmail(), "user-email-token", params);
 	}
+
+	/**
+	 * Switch user (use by Maintenance Schedule Viewer to switch to the supervisor on duty)
+	 * 
+	 * @param userName
+	 * @param securityTokenNo
+	 */
+	public void switchUser(String userName, String securityTokenNo) throws Exception {
+		if (userName != null) {
+			UserService userService = newService(UserService.class, User.class);
+			User user = userService.get(new Filter("userName", userName));
+
+			// first, make sure the token is valid
+			try {
+				// then delete the token
+				validateSecurityToken(user, securityTokenNo, true);
+			} catch (Exception ex) {
+				throw new BaseException(424, "invalidSecurityToken");// Failed Dependency
+			}
+
+			// at this point, both the security token and the userName are validated
+			// switch the user from the session
+			logger.info("Switching session user from [" + getUser().getUserName() + "] to [" + userName + "]");
+			getRequest().getSession().setAttribute("originalUserName", getUser().getUserName());
+			getRequest().getSession().setAttribute("userName", userName);
+		} else {
+			// back to the original user
+			if (getRequest().getSession().getAttribute("originalUserName") != null) {
+				getRequest().getSession().setAttribute("userName", getRequest().getSession().getAttribute("originalUserName"));
+			}
+		}
+	}
+
 }

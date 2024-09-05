@@ -61,5 +61,4 @@ public class Privilege extends BaseEntity {
 	public void setResourceId(Integer resourceId) {
 		this.resourceId = resourceId;
 	}
-
 }

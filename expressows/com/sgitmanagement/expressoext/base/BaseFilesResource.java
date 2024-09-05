@@ -17,7 +17,7 @@ import com.sgitmanagement.expresso.base.AbstractBaseEntitiesResource;
 import com.sgitmanagement.expresso.exception.InvalidCredentialsException;
 import com.sgitmanagement.expresso.util.SystemEnv;
 import com.sgitmanagement.expresso.util.Util;
-import com.sgitmanagement.expressoext.security.User;
+import com.sgitmanagement.expressoext.security.BasicUser;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,7 +29,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
 
-public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileService<E>, R extends BaseFileResource<E, S>> extends AbstractBaseEntitiesResource<E, S, R, User, Integer> {
+public abstract class BaseFilesResource<E extends BaseFile, S extends BaseFileService<E>, R extends BaseFileResource<E, S>> extends AbstractBaseEntitiesResource<E, S, R, BasicUser, Integer> {
 	public BaseFilesResource(Class<E> typeOfE, @Context HttpServletRequest request, @Context HttpServletResponse response, R baseFileResource, Class<S> serviceClass) {
 		super(typeOfE, request, response, baseFileResource, serviceClass);
 	}

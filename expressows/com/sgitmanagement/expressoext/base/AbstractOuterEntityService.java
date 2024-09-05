@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.sgitmanagement.expresso.base.AbstractBaseEntityService;
 import com.sgitmanagement.expressoext.security.AuthorizationHelper;
-import com.sgitmanagement.expressoext.security.User;
+import com.sgitmanagement.expressoext.security.BasicUser;
 
-abstract public class AbstractOuterEntityService<E extends AbstractOuterEntity<I>, I> extends AbstractBaseEntityService<E, User, I> {
+abstract public class AbstractOuterEntityService<E extends AbstractOuterEntity<I>, I> extends AbstractBaseEntityService<E, BasicUser, I> {
 	@Override
 	final public boolean isUserInRole(String rolePgmKey) {
 		return AuthorizationHelper.isUserInRole(getUser(), rolePgmKey);
@@ -23,17 +23,17 @@ abstract public class AbstractOuterEntityService<E extends AbstractOuterEntity<I
 	}
 
 	@Override
-	final public User getUser(String userName) {
+	final public BasicUser getUser(String userName) {
 		return AuthorizationHelper.getUser(userName);
 	}
 
 	@Override
-	final public User getSystemUser() {
+	final public BasicUser getSystemUser() {
 		return AuthorizationHelper.getSystemUser();
 	}
 
 	@Override
-	final public User getPublicUser() {
+	final public BasicUser getPublicUser() {
 		return AuthorizationHelper.getPublicUser();
 	}
 }

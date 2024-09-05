@@ -2,12 +2,12 @@ package com.sgitmanagement.expressoext.base;
 
 import com.sgitmanagement.expresso.base.AbstractBaseResource;
 import com.sgitmanagement.expresso.base.AbstractBaseService;
-import com.sgitmanagement.expressoext.security.User;
+import com.sgitmanagement.expressoext.security.BasicUser;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-public abstract class BaseResource<S extends AbstractBaseService<User>> extends AbstractBaseResource<S, User> {
+public abstract class BaseResource<S extends AbstractBaseService<BasicUser>> extends AbstractBaseResource<S, BasicUser> {
 
 	protected BaseResource(HttpServletRequest request, HttpServletResponse response) {
 		super(request, response);

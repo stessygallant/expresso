@@ -12,6 +12,7 @@ expresso.applications.general.notification.notificationviewer.Labels = {
     APPROVED: "Approved",
     INPROGRESS: "In progress",
     COMPLETED: "Completed",
+    ESTIMATED: "Estimated",
 
     _: ""
 };

@@ -38,7 +38,15 @@ expresso.util.Util = (function () {
         for (var i = 0; i < urlVariables.length; i++) {
             var param = urlVariables[i].split("=");
             if (param[0]) {
-                parameters[param[0]] = (param[1] === undefined ? true : decodeURIComponent(param[1]));
+                var paramName = param[0];
+                // handle deprecated keys
+                if (paramName == "fullscreen") {
+                    paramName = "fullScreen";
+                }
+                if (paramName == "nomenu") {
+                    paramName = "noMenu";
+                }
+                parameters[paramName] = (param[1] === undefined ? true : decodeURIComponent(param[1]));
             }
         }
         return parameters;

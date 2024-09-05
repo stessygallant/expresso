@@ -81,7 +81,7 @@ public class ApprovalService extends BaseEntityService<Approval> {
 	 * @throws Exception
 	 */
 	private ApprovalFlow getFirstPossibleApprovalFlow(Approvable approvable) throws Exception {
-		JobTitle userJobtitle = getUser().getJobTitle();
+		JobTitle userJobtitle = getUser().getExtended().getJobTitle();
 
 		Approval approval = approvable.getApproval();
 		ApprovalFlow lastApprovalFlow = approval.getLastApprovalFlow();

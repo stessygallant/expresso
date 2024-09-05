@@ -46,10 +46,16 @@
                 }
             } else {
                 if ($this.attr("type") === "checkbox") {
-                    $this.prop("checked", !!value).trigger("change");
+                    $this.prop("checked", !!value);
+                    if (triggerChangeEvent !== false) {
+                        $this.trigger("change");
+                    }
                     return this;
                 } else if ($this.attr("type") === "radio") {
-                    $this.filter("[value='" + value + "']").prop("checked", true).trigger("change");
+                    $this.filter("[value='" + value + "']").prop("checked", true);
+                    if (triggerChangeEvent !== false) {
+                        $this.filter("[value='" + value + "']").trigger("change");
+                    }
                     return this;
                 }
             }

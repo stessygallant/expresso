@@ -858,7 +858,7 @@ expresso.layout.resourcemanager.Form = expresso.layout.resourcemanager.SectionBa
 
         if (field && field.inlineGridResourceManager) {
             // verify if there is at least one row in the grid
-            var $div = $window.find("[name='" + fieldName + "']").siblings(".exp-grid-inline");
+            var $div = $window.find("[name='" + fieldName + "']").closest(".exp-grid-inline");
             var inlineGridResourceManager = $div.data("resourceManager");
             if (inlineGridResourceManager) {
                 var inlineGridDataSource = inlineGridResourceManager.sections.grid.dataSource;

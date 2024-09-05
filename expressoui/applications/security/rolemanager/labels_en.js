@@ -17,5 +17,8 @@ expresso.applications.security.rolemanager.Labels = {
     accessToRole: "Granted access",
     allowAccessTo: "Grant access to",
 
+    resetButtonLabel: "Refresh security cache",
+    resetButtonTitle: "Refresh security cache",
+
     _: ""
 };

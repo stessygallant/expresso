@@ -10,7 +10,7 @@ import com.sgitmanagement.expresso.base.UserManager;
 import com.sgitmanagement.expresso.exception.BaseException;
 import com.sgitmanagement.expresso.util.Util;
 import com.sgitmanagement.expressoext.security.AuthorizationHelper;
-import com.sgitmanagement.expressoext.security.User;
+import com.sgitmanagement.expressoext.security.BasicUser;
 import com.sgitmanagement.expressoext.util.AuthenticationService;
 
 import jakarta.persistence.EntityManager;
@@ -54,7 +54,7 @@ public class EmailAuthentificationFilter implements Filter {
 				AuthenticationService authenticationService = AuthenticationService.newServiceStatic(AuthenticationService.class);
 
 				// get the user
-				User user = (User) UserManager.getInstance().getUser();
+				BasicUser user = (BasicUser) UserManager.getInstance().getUser();
 				String action = Util.getParameterValue(request, "action");
 
 				// bypass if the user has the role
@@ -68,13 +68,13 @@ public class EmailAuthentificationFilter implements Filter {
 					String emailToken = request.getParameter("emailToken");
 					if (emailToken != null) {
 						// validate the token
-						authenticationService.validateSecurityToken(user, emailToken.trim(), false);
+						authenticationService.validateSecurityToken(user.getExtended(), emailToken.trim(), false);
 						session.setAttribute(EMAIL_TOKEN_VALIDATED, true);
 						valid = true;
 					} else {
 						// send an email with a token
 						PersistenceManager.getInstance().startTransaction(entityManager);
-						authenticationService.sendEmailTokenMail(user);
+						authenticationService.sendEmailTokenMail(user.getExtended());
 						response.setStatus(424); // Failed Dependency
 					}
 				}

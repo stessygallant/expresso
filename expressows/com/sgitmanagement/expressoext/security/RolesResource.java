@@ -17,12 +17,17 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 @Path("/role")
 public class RolesResource extends BaseOptionsResource<Role, RoleService, RoleResource> {
 
 	public RolesResource(@Context HttpServletRequest request, @Context HttpServletResponse response) {
 		super(Role.class, request, response, new RoleResource(request, response), RoleService.class);
+	}
+
+	public void reset(MultivaluedMap<String, String> formParams) throws Exception {
+		AuthorizationHelper.clearCache();
 	}
 
 	static public class RoleResource extends BaseOptionResource<Role, RoleService> {

@@ -9,6 +9,7 @@ import org.ietf.jgss.GSSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sgitmanagement.expresso.util.ServerTimingUtil;
 import com.sgitmanagement.expresso.util.Util;
 
 import jakarta.servlet.Filter;
@@ -42,6 +43,7 @@ public class SpnegoResponseFilter implements Filter {
 		HttpServletRequest httpServletRequest = (HttpServletRequest) req;
 		HttpServletResponse httpServletResponse = (HttpServletResponse) resp;
 
+		ServerTimingUtil.startTiming("SpnegoResponseFilter");
 		String requestAuthorization = httpServletRequest.getHeader(WWW_AUTHORIZATION);
 
 		try {
@@ -154,6 +156,8 @@ public class SpnegoResponseFilter implements Filter {
 				// if user is not authenticated, it will return
 				// WWW-Authenticate: Negotiate
 			}
+			ServerTimingUtil.endTiming();
+
 		} catch (Exception ex) {
 			if (ex instanceof ServletException && ex.getCause() != null && ex.getCause() instanceof GSSException) {
 				httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
