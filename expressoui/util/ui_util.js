@@ -1582,7 +1582,6 @@ expresso.util.UIUtil = (function () {
                             if (dataTextFieldFunction) {
                                 $.each(response, function () {
                                     var item = this;
-
                                     item.label = dataTextFieldFunction(item);
                                 });
                             }

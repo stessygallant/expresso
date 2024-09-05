@@ -1,5 +1,6 @@
 package com.sgitmanagement.expresso.util;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
@@ -13,7 +14,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.WinHttpClients;
@@ -48,21 +51,25 @@ public class HttpRESTUtil {
 		return performRESTRequest(urlString, method, null, body, null, username, password);
 	}
 
+	public JsonObject performRESTRequest(String urlString, Map<String, Object> multiparts, String username, String password) throws Exception {
+		return performRESTRequest(urlString, "POST", null, null, null, username, password, null, multiparts);
+	}
+
 	public JsonObject performRESTRequest(String urlString, String method, String username, String password) throws Exception {
 		return performRESTRequest(urlString, method, null, null, null, username, password);
 	}
 
 	public JsonObject performRESTRequest(String urlString, String method, String contentType, String body, String encoding, String username, String password) throws Exception {
-		return performRESTRequest(urlString, method, contentType, body, encoding, username, password, null);
+		return performRESTRequest(urlString, method, contentType, body, encoding, username, password, null, null);
 	}
 
-	public JsonObject performRESTRequest(String urlString, String method, String contentType, String body, String encoding, String username, String password, Map<String, String> headers)
-			throws Exception {
+	public JsonObject performRESTRequest(String urlString, String method, String contentType, String body, String encoding, String username, String password, Map<String, String> headers,
+			Map<String, Object> multiparts) throws Exception {
 
 		// Timeout after 60 seconds
 		int timeout = 60 * 1000; // ms
 
-		return performRESTRequest(urlString, method, contentType, body, encoding, username, password, headers, timeout);
+		return performRESTRequest(urlString, method, contentType, body, encoding, username, password, headers, timeout, multiparts);
 	}
 
 	/**
@@ -80,7 +87,7 @@ public class HttpRESTUtil {
 	 * @throws Exception
 	 */
 	public JsonObject performRESTRequest(String urlString, String method, String contentType, String body, String encoding, String username, String password, Map<String, String> headers,
-			int timeoutInMs) throws Exception {
+			int timeoutInMs, Map<String, Object> multiparts) throws Exception {
 
 		CloseableHttpClient httpClient;
 		RequestConfig config = RequestConfig.custom().setConnectTimeout(timeoutInMs).setConnectionRequestTimeout(timeoutInMs).setSocketTimeout(timeoutInMs).build();
@@ -141,10 +148,28 @@ public class HttpRESTUtil {
 				((HttpEntityEnclosingRequestBase) httpRequest).setEntity(entity);
 			}
 
+			// add the multiparts if needed
+			if (multiparts != null) {
+				MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+				for (Map.Entry<String, Object> multipart : multiparts.entrySet()) {
+					String name = multipart.getKey();
+					Object value = multipart.getValue();
+					if (value instanceof String) {
+						builder.addTextBody(name, (String) value, ContentType.TEXT_PLAIN);
+					} else if (value instanceof File) {
+						builder.addBinaryBody("file", (File) value, ContentType.DEFAULT_BINARY, name);
+					} else if (value instanceof byte[]) {
+						builder.addBinaryBody("file", (byte[]) value, ContentType.DEFAULT_BINARY, name);
+					}
+				}
+				HttpEntity entity = builder.build();
+				((HttpEntityEnclosingRequestBase) httpRequest).setEntity(entity);
+			}
+
 			CloseableHttpResponse response = httpClient.execute(httpRequest);
 			try {
 				HttpEntity entity = response.getEntity();
-				if (response.getStatusLine().getStatusCode() == 200) {
+				if (response.getStatusLine().getStatusCode() == 200 || response.getStatusLine().getStatusCode() == 201) {
 					Gson gson = new GsonBuilder().serializeNulls().create();
 					String jsonResponse = EntityUtils.toString(entity);
 					try {
