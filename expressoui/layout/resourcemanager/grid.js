@@ -87,6 +87,9 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
     // previous selection before the add
     previousSelectedResource: null,
 
+    // the new resource being added
+    newResourceInitialization: null,
+
     // the object contains a list of objects needed in an entity to avoid null pointer in Kendo Grid
     objectsNeededForColumns: undefined,
 
@@ -2121,11 +2124,14 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
         });
     },
 
-    performCreate: function () {
+    performCreate: function (newResourceInitialization) {
         var _this = this;
 
         // keep a copy of the previous selection
         this.previousSelectedResource = this.resourceManager.currentResource;
+
+        // if any resource initialization
+        this.newResourceInitialization = newResourceInitialization;
 
         // send an event to clear the preview
         this.clearSelection();
@@ -4160,6 +4166,10 @@ expresso.layout.resourcemanager.Grid = expresso.layout.resourcemanager.SectionBa
      * @param newResource
      */
     initializeNewResource: function (newResource) {
+        if (this.newResourceInitialization) {
+            $.extend(true, newResource, this.newResourceInitialization);
+        }
+
         // initialize the parent to the current resource if it is a hierarchical data source
         if (this.hierarchical) {
             if (this.previousSelectedResource) {

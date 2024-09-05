@@ -1524,6 +1524,11 @@ expresso.util.UIUtil = (function () {
 
             var dataValueField = customOptions.dataValueField || "id";
             var dataTextField = customOptions.dataTextField || customOptions.fieldValues.dataTextField || "label";
+            var dataTextFieldFunction;
+            if (typeof dataTextField === "function") {
+                dataTextFieldFunction = dataTextField;
+                dataTextField = "label";
+            }
 
             // get the info from the field if defined
             if (customOptions.field && customOptions.field.values) {
@@ -1574,11 +1579,10 @@ expresso.util.UIUtil = (function () {
                                 response = response.data;
                             }
 
-                            if (typeof dataTextField === "function") {
+                            if (dataTextFieldFunction) {
                                 $.each(response, function () {
                                     var item = this;
-
-                                    item.label = dataTextField(item);
+                                    item.label = dataTextFieldFunction(item);
                                 });
                             }
 
@@ -1619,7 +1623,7 @@ expresso.util.UIUtil = (function () {
             // console.log("initValue: " + initValue);
             var defaultOptions = {
                 dataValueField: dataValueField,
-                dataTextField: (typeof dataTextField === "function" ? "label" : dataTextField),
+                dataTextField: dataTextField,
                 valuePrimitive: true,
                 dataSource: dataSource,
                 enable: customOptions.enable,
@@ -2995,7 +2999,7 @@ expresso.util.UIUtil = (function () {
                     // console.log("bindOnChange waiting: " + $input[0].name);
                     $waitingPromise.done(function () {
                         //console.log("bindOnChange DONE: " + $input[0].name);
-                        if (e.userTriggered === undefined) {
+                        if (e && e.userTriggered === undefined) {
                             // for radio button, user e.originalEvent
                             if ($input[0].nodeName == "INPUT" && $input.attr("type") == "radio") {
                                 e.userTriggered = !!e.originalEvent;

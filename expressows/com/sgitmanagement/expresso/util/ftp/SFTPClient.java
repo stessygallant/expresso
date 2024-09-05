@@ -3,11 +3,11 @@ package com.sgitmanagement.expresso.util.ftp;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.NotImplementedException;
-
 import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 
@@ -77,17 +77,26 @@ public class SFTPClient extends FTPClient {
 
 	@Override
 	public List<String> listFiles(String remoteDir) throws Exception {
-		throw new NotImplementedException("todo");
+		channel.cd(remoteDir);
+		List<String> files = new ArrayList<>();
+		for (Object lsEntry : channel.ls(".")) {
+			LsEntry fileEntry = (LsEntry) lsEntry;
+			String fileName = fileEntry.getFilename();
+			if (!fileEntry.getAttrs().isDir()) {
+				files.add(fileName);
+			}
+		}
+		return files;
 	}
 
 	@Override
 	public void renameFile(String oldFileName, String newFileName) throws Exception {
-		throw new NotImplementedException("todo");
+		channel.rename(oldFileName, newFileName);
 	}
 
 	@Override
 	public void deleteFile(String fileName) throws Exception {
-		throw new NotImplementedException("todo");
+		channel.rm(fileName);
 	}
 
 }
